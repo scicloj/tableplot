@@ -540,6 +540,11 @@
 ;; (WIP)
 
 ;; ### geo
+;; (coming soon)
+
+;; ### 3d
+;; (coming soon)
+
 
 ;; ### polar
 
@@ -637,5 +642,7 @@
 ;; ## Coming soon
 
 ;; ### Facets
+;; (coming soon)
 
 ;; ### Scales
+;; (coming soon)
