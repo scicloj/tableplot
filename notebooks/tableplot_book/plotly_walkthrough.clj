@@ -540,7 +540,35 @@
 ;; (WIP)
 
 ;; ### geo
-;; (coming soon)
+
+;; Inspired by Plotly's tutorial for [Scatter Plots on Maps in JavaScript](https://plotly.com/javascript/scatter-plots-on-maps/):
+
+(-> {:lat [45.5, 43.4, 49.13, 51.1, 53.34, 45.24,
+           44.64, 48.25, 49.89, 50.45]
+     :lon [-73.57, -79.24, -123.06, -114.1, -113.28,
+           -75.43, -63.57, -123.21, -97.13, -104.6]
+     :text ["Montreal", "Toronto", "Vancouver", "Calgary", "Edmonton",
+            "Ottawa", "Halifax", "Victoria", "Winnepeg", "Regina"],}
+    tc/dataset
+    (plotly/base {:=coordinates :geo
+                  :=lat :lat
+                  :=lon :lon})
+    (plotly/layer-point {:=mark-opacity 0.5
+                         :=mark-color "grey"
+                         :=mark-size 10})
+    (plotly/layer-text {:=text :text
+                        :=textfont {:size 7
+                                    :color :purple}})
+    plotly/plot
+    (assoc-in [:layout :geo]
+              {:scope "north america"
+               :resolution 10
+               :lonaxis {:range [-130 -55]}
+               :lataxis {:range [40 60]}
+               :countrywidth 1.5
+               :showland true
+               :showlakes true
+               :showrivers true}))
 
 ;; ### 3d
 ;; (coming soon)
@@ -551,14 +579,14 @@
 ;; Monthly rain amounts - polar bar-chart
 
 (def rain-data
-  (tc/dataset
-   {:month [:Jan :Feb :Mar :Apr
-            :May :Jun :Jul :Aug
-            :Sep :Oct :Nov :Dec]
-    :rain (repeatedly #(rand-int 200))}))
+(tc/dataset
+ {:month [:Jan :Feb :Mar :Apr
+          :May :Jun :Jul :Aug
+          :Sep :Oct :Nov :Dec]
+  :rain (repeatedly #(rand-int 200))}))
 
 (-> rain-data
-    (plotly/layer-bar
+(plotly/layer-bar
      {:=r :rain
       :=theta :month
       :=coordinates :polar
