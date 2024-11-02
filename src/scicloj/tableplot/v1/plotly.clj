@@ -162,6 +162,8 @@
    :y1 :=y1-after-stat
    :r :=r
    :theta :=theta
+   :lat :=lat
+   :lon :=lon
    :coordinates :=coordinates
    :x-title :=x-title
    :y-title :=y-title
@@ -190,6 +192,7 @@
                  x y
                  x0 y0 x1 y1
                  r theta
+                 lat lon
                  coordinates
                  color color-type
                  size size-type
@@ -227,6 +230,8 @@
                                          (str/join " "))}
                              {:r (some-> r group-dataset vec)
                               :theta (some-> theta group-dataset vec)}
+                             {:lat (some-> lat group-dataset vec)
+                              :lon (some-> lon group-dataset vec)}
                              {:text (some-> text group-dataset vec)}
                              ;; else
                              (if (= mark :segment)
@@ -317,6 +322,8 @@
    :=y-type-after-stat (submap->field-type-after-stat :=y-after-stat)
    :=r hc/RMV
    :=theta hc/RMV
+   :=lat hc/RMV
+   :=lon hc/RMV
    :=color-type (submap->field-type :=color)
    :=size-type (submap->field-type :=size)
    :=mark-color hc/RMV
