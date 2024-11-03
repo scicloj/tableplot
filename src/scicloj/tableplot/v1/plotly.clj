@@ -256,7 +256,7 @@
 
 
 (dag/defn-with-deps submap->layout
-  [=width =height =background =title
+  [=width =height =margin =automargin =background =title
    =xaxis-gridcolor =yaxis-gridcolor
    =x-after-stat =y-after-stat
    =x-title =y-title
@@ -283,6 +283,8 @@
                                last))]
     {:width =width
      :height =height
+     :margin =margin
+     :automargin =automargin
      :plot_bgcolor =background
      :xaxis {:gridcolor =xaxis-gridcolor
              :title final-x-title}
@@ -348,6 +350,8 @@
    :=coordinates hc/RMV
    :=height 400
    :=width 500
+   :=margin {:t 25}
+   :=automargin false
    :=x-title hc/RMV
    :=y-title hc/RMV
    :=title hc/RMV

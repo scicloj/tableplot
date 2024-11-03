@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [1-alpha11] - 2024-01-02
+- plotly: added support for configuring the margin, and sensible defaults
+
+## [1-alpha11] - 2024-01-02
 - initial support for geo coordinates
 
 ## [1-alpha10] - 2024-10-20
