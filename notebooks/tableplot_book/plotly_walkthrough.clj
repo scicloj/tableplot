@@ -204,6 +204,14 @@
 
 ;; ## Varying color and size
 
+(-> {:x (range 10)}
+    tc/dataset
+    (plotly/layer-point {:=x :x
+                         :=y :x
+                         :=mark-size (range 15 65 5)
+                         :=mark-color ["#bebada", "#fdb462", "#fb8072", "#d9d9d9", "#bc80bd",
+                                       "#b3de69", "#8dd3c7", "#80b1d3", "#fccde5", "#ffffb3"]}))
+
 (-> {:ABCD (range 1 11)
      :EFGH [5 2.5 5 7.5 5 2.5 7.5 4.5 5.5 5]
      :IJKL [:A :A :A :A :A :B :B :B :B :B]
