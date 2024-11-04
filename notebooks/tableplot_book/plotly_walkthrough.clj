@@ -553,9 +553,11 @@
     (plotly/base {:=coordinates :geo
                   :=lat :lat
                   :=lon :lon})
-    (plotly/layer-point {:=mark-opacity 0.5
-                         :=mark-color "grey"
-                         :=mark-size 10})
+    (plotly/layer-point {:=mark-opacity 0.8
+                         :=mark-color ["#bebada", "#fdb462", "#fb8072", "#d9d9d9", "#bc80bd",
+                                       "#b3de69", "#8dd3c7", "#80b1d3", "#fccde5", "#ffffb3"]
+                         :=mark-size 20
+                         :=name "Canadian cities"})
     (plotly/layer-text {:=text :text
                         :=textfont {:size 7
                                     :color :purple}})
