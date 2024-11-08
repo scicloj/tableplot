@@ -581,7 +581,21 @@
                :showrivers true}))
 
 ;; ### 3d
-;; (coming soon)
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=z :petal-length
+                         :=color :petal-width
+                         :=coordinates :3d}))
+
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=z :petal-length
+                         :=color :species
+                         :=coordinates :3d}))
 
 
 ;; ### polar
