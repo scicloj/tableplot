@@ -1,10 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [1-alpha12] - 2024-01-03
+## [1-alpha13] - 2024-11-08
+- plotly: added support for 3d coordinates (3d scatterplots)
+
+## [1-alpha12] - 2024-11-03
 - plotly: added support for configuring the margin with sensible defaults (breaking the previous default behavior)
 
-## [1-alpha11] - 2024-01-02
+## [1-alpha11] - 2024-11-02
 - initial support for geo coordinates
 
 ## [1-alpha10] - 2024-10-20

@@ -125,6 +125,7 @@
        (case =coordinates
          :polar "polar"
          :geo "geo"
+         :3d "3d"
          ;; else
          nil)))
 
@@ -156,6 +157,7 @@
    :mark :=mark
    :x :=x-after-stat
    :y :=y-after-stat
+   :z :=z-after-stat
    :x0 :=x0-after-stat
    :y0 :=y0-after-stat
    :x1 :=x1-after-stat
@@ -189,7 +191,7 @@
     (fn [{:as layer
           :keys [dataset
                  mark
-                 x y
+                 x y z
                  x0 y0 x1 y1
                  r theta
                  lat lon
@@ -233,6 +235,7 @@
                              {:lat (some-> lat group-dataset vec)
                               :lon (some-> lon group-dataset vec)}
                              {:text (some-> text group-dataset vec)}
+                             {:z (some-> z group-dataset vec)}
                              ;; else
                              (if (= mark :segment)
                                {:x (vec
@@ -308,6 +311,8 @@
    :=x-after-stat :=x
    :=y :y
    :=y-after-stat :=y
+   :=z hc/RMV
+   :=z-after-stat :=z
    :=x0 hc/RMV
    :=x0-after-stat :=x0
    :=y0 hc/RMV
@@ -322,6 +327,8 @@
    :=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)
    :=y-type (submap->field-type :=y)
    :=y-type-after-stat (submap->field-type-after-stat :=y-after-stat)
+   :=z-type (submap->field-type :=z)
+   :=z-type-after-stat (submap->field-type-after-stat :=z-after-stat)
    :=r hc/RMV
    :=theta hc/RMV
    :=lat hc/RMV
