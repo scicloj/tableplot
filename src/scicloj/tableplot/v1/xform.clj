@@ -4,22 +4,23 @@
             [com.rpl.specter :as sp]))
 
 (defn xform
+  "and adapted port of Hanami's xform function"
   ([spec xkv]
-   (let [xkv (if (not (xkv ::spec)) (assoc xkv ::spec spec) xkv)
+   (let [xkv (if (not (xkv ::hc/spec)) (assoc xkv ::hc/spec spec) xkv)
          defaults @hc/_defaults
-         use-defaults? (get xkv ::use-defaults? (defaults ::use-defaults?))
+         use-defaults? (get xkv ::hc/use-defaults? (defaults ::hc/use-defaults?))
          xkv (if use-defaults? (merge defaults xkv) xkv)
          template-defaults (if (map? spec) (spec ::ht/defaults) false)
          spec (if template-defaults (dissoc spec ::ht/defaults) spec)
          xkv (if template-defaults
-               (merge xkv template-defaults (xkv ::user-kvs))
+               (merge xkv template-defaults (xkv ::hc/user-kvs))
                xkv)]
      (sp/transform
       sp/ALL
       (fn [v]
         (if (coll? v)
           (let [xv (xform v xkv)
-                rmv? (xkv ::rmv-empty?)]
+                rmv? (xkv ::hc/rmv-empty?)]
             (if (seq xv) xv (if rmv? hc/RMV xv)))
           (let [subval (get xkv v v)
                 subval (if (fn? subval) (subval xkv) subval)
@@ -39,7 +40,7 @@
 
               :else ;substitution val is coll
               (let [xv (xform subval xkv)
-                    rmv? (xkv ::rmv-empty?)]
+                    rmv? (xkv ::hc/rmv-empty?)]
                 (if (seq xv) xv (if rmv? hc/RMV xv)))))))
       spec)))
 
@@ -48,7 +49,7 @@
                            (->> kvs (partition-all 2)
                                 (mapv (fn [[k v]] [k v]))))
          ;; Need to keep these to override new template defaults
-         start-kv-map (assoc user-kv-map ::user-kvs user-kv-map)]
+         start-kv-map (assoc user-kv-map ::hc/user-kvs user-kv-map)]
      (xform spec start-kv-map)))
 
   ([spec] (xform spec {})))
