@@ -13,7 +13,8 @@
             [scicloj.tableplot.v1.dag :as dag]
             [clojure.string :as str]
             [scicloj.tableplot.v1.util :as util]
-            [scicloj.tableplot.v1.cache :as cache]))
+            [scicloj.tableplot.v1.cache :as cache]
+            [scicloj.tableplot.v1.xform :as xform]))
 
 (def submap->dataset-after-stat
   (dag/fn-with-deps-keys
@@ -370,7 +371,7 @@
 (defn plotly-xform [template]
   (cache/with-clean-cache
     (-> template
-        hc/xform
+        xform/xform 
         kind/plotly
         (dissoc :kindly/f))))
 

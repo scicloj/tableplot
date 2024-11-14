@@ -1,7 +1,8 @@
 (ns scicloj.tableplot.v1.dag
   (:require [aerial.hanami.common :as hc]
             [aerial.hanami.templates :as ht]
-            [scicloj.tableplot.v1.cache :as cache]))
+            [scicloj.tableplot.v1.cache :as cache]
+            [scicloj.tableplot.v1.xform :as xform]))
 
 (defn xform-k
   "Apply Hanami xform
@@ -17,7 +18,7 @@
   "
   [k submap]
   (-> {:result k}
-      (hc/xform submap)
+      (xform/xform submap)
       :result))
 
 (defn cached-xform-k
@@ -71,7 +72,7 @@
                         :C (fn-with-deps-keys
                                  [:B]
                                  (fn [{:keys [B]}] (inc B)))}}
-        (hc/xform :A 9)))
+        (xform/xform :A 9)))
 
   => {:b 10 :c 11}
 
@@ -84,7 +85,7 @@
                         :C (fn-with-deps-keys
                                  [:A :B]
                                  (fn [{:keys [A B]}] (+ A B)))}}
-        (hc/xform :A 9)))
+        (xform/xform :A 9)))
 
   => {:b 10 :c 19}
   ```
@@ -118,7 +119,7 @@
          :c :C
          ::ht/defaults {:B (fn-with-deps [A] (inc A))
                         :C (fn-with-deps [B] (inc B))}}
-        (hc/xform :A 9)))
+        (xform/xform :A 9)))
 
   => {:b 10 :c 11}
   ```
@@ -150,7 +151,7 @@
          :c :C
          ::ht/defaults {:B A->B
                         :C B->C}}
-        (hc/xform :A 9)))
+        (xform/xform :A 9)))
 
   => {:b 10 :c 11}
   ```
