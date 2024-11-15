@@ -1,7 +1,8 @@
 (ns scicloj.tableplot.v1.xform
   (:require [aerial.hanami.common :as hc]
             [aerial.hanami.templates :as ht]
-            [com.rpl.specter :as sp]))
+            [com.rpl.specter :as sp]
+            [tech.v3.dataset.impl.dataset]))
 
 (defn xform
   "and adapted port of Hanami's xform function"
@@ -26,12 +27,16 @@
                 subval (if (fn? subval) (subval xkv) subval)
                 subkeyfn (@hc/subkeyfns v)
                 subval (if subkeyfn (subkeyfn xkv v subval) subval)]
-           (cond
+            (cond
               ;; leaf value => termination
               (= v subval) v
 
               ;; Do not xform the data
-              (= v hc/data-key) subval
+              (or (= v hc/data-key)
+                  (-> subval 
+                      type 
+                      (= tech.v3.dataset.impl.dataset.Dataset)))
+              subval
 
               ;; Potential new subkey as subval
               (or (string? subval)

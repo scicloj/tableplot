@@ -2,7 +2,8 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [1-alpha14] - unreleased
-- using our own port of Hanami `xform` function
+- using our own port of Hanami template `xform` function
+- avoiding recursion into datasets in Hanami template `xform`
 
 ## [1-alpha13] - 2024-11-08
 - plotly: added support for 3d coordinates (3d scatterplots)
