@@ -3,7 +3,8 @@ All notable changes to this project will be documented in this file. This change
 
 ## [1-alpha14] - unreleased
 - using our own port of Hanami template `xform` function
-- avoiding recursion into datasets in Hanami template `xform`
+- avoiding recursion into datasets in `xform`
+- avoiding the wrapping of datasets which is unnecessary with the new `xform`
 
 ## [1-alpha13] - 2024-11-08
 - plotly: added support for 3d coordinates (3d scatterplots)
