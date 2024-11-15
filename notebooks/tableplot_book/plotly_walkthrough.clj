@@ -315,8 +315,8 @@
     tc/dataset
     (tc/sq :y :x)
     (plotly/layer-point {:=mark-size 20})
-    (plotly/layer-line {:=dataset (plotly/dataset {:x [0 3]
-                                                   :y [1 10]})
+    (plotly/layer-line {:=dataset (tc/dataset {:x [0 3]
+                                               :y [1 10]})
                         :=mark-size 5}))
 
 ;; ## Smoothing
