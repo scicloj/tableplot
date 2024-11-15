@@ -305,7 +305,7 @@
                          :=mark-size 15
                          :=mark-opacity 0.5}))
 
-;; ## Overriding specific layer data
+;; ## Overriding layer data
 
 (-> (tc/dataset {:x (range 4)
                  :y [1 2 5 9]})
