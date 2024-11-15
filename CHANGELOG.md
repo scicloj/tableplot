@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [1-alpha14] - unreleased
+## [1-alpha14] - 2024-11-15
 - using our own port of Hanami template `xform` function
 - avoiding recursion into datasets in `xform`
 - avoiding the wrapping of datasets which is unnecessary with the new `xform`
