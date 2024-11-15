@@ -511,10 +511,6 @@
                           data
                           submap)))))
 
-(defn dataset [dataset]
-  (-> dataset
-      tc/dataset))
-
 (dag/defn-with-deps histogram-stat
   [=dataset =x =histogram-nbins]
   (when-not (=dataset =x)
