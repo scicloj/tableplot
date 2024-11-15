@@ -23,16 +23,15 @@
    [:=dataset :=stat]
    (fn [{:as submap
          :keys [=dataset =stat]}]
-     (when-not (tc/dataset? @=dataset)
+     (when-not (tc/dataset? =dataset)
        (throw (ex-info "missing :=dataset"
                        submap)))
      (if =stat
-       (util/->WrappedValue
-        (@=stat submap))
+       (@=stat submap)
        =dataset))))
 
 (dag/defn-with-deps submap->csv [=dataset-after-stat]
-  (util/dataset->csv @=dataset-after-stat))
+  (util/dataset->csv =dataset-after-stat))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
@@ -42,7 +41,6 @@
        (if-let [colname (submap colname-key)]
          (let [column (-> submap
                           (get dataset-key)
-                          deref
                           (get colname))]
            (cond (tcc/typeof? column :numerical) :quantitative
                  (tcc/typeof? column :datetime) :temporal
@@ -68,7 +66,6 @@
        (if-let [colname (submap colname-key)]
          (let [column (-> submap
                           (get dataset-key)
-                          deref
                           (get colname))
                colname-before-stat (submap
                                     colname-key-before-stat)]
@@ -140,20 +137,20 @@
    :=y-bin hc/RMV
    :=x2-encoding (dag/fn-with-deps [=x2-after-stat
                                     =x-type-after-stat]
-                   (if =x2-after-stat
-                     (-> xy-encoding
-                         :x
-                         (assoc :field =x2-after-stat
-                                :type =x-type-after-stat))
-                     hc/RMV))
+                                   (if =x2-after-stat
+                                     (-> xy-encoding
+                                         :x
+                                         (assoc :field =x2-after-stat
+                                                :type =x-type-after-stat))
+                                     hc/RMV))
    :=y2-encoding (dag/fn-with-deps [=y2-after-stat
                                     =y-type-after-stat]
-                   (if =y2-after-stat
-                     (-> xy-encoding
-                         :y
-                         (assoc :field =y2-after-stat
-                                :type =y-type-after-stat))
-                     hc/RMV))
+                                   (if =y2-after-stat
+                                     (-> xy-encoding
+                                         :y
+                                         (assoc :field =y2-after-stat
+                                                :type =y-type-after-stat))
+                                     hc/RMV))
    :=color-type (submap->field-type :=color)
    :=size-type (submap->field-type :=size)
    :=renderer :svg
@@ -205,7 +202,7 @@
 
 
 (defn dataset->defaults [dataset]
-  (let [w (util/->WrappedValue dataset)]
+  (let [w dataset]
     {:=base-dataset w
      :=layer-dataset w}))
 
@@ -258,8 +255,8 @@
                        (update :=layer
                                util/conjv
                                (assoc template
-                                      :data (if (and (= @(:=layer-dataset defaults)
-                                                        @(:=base-dataset defaults))
+                                      :data (if (and (= (:=layer-dataset defaults)
+                                                        (:=base-dataset defaults))
                                                      (not (:=stat defaults)))
                                               hc/RMV
                                               :=data)
@@ -288,18 +285,18 @@
 
 (dag/defn-with-deps smooth-stat
   [=dataset =y =predictors =group]
-  (when-not (@=dataset =y)
+  (when-not (=dataset =y)
     (throw (ex-info "missing =y column"
                     {:missing-column-name =y})))
   (->> =predictors
        (run! (fn [p]
-               (when-not (@=dataset p)
+               (when-not (=dataset p)
                  (throw (ex-info "missing predictor column"
                                  {:predictors =predictors
                                   :missing-column-name p}))))))
   (->> =group
        (run! (fn [g]
-               (when-not (@=dataset g)
+               (when-not (=dataset g)
                  (throw (ex-info "missing =group column"
                                  {:group =group
                                   :missing-column-name g}))))))
@@ -316,11 +313,11 @@
                                tc/rows
                                (->> (map (partial regression/predict model))))))]
     (if =group
-      (-> @=dataset
+      (-> =dataset
           (tc/group-by =group)
           (tc/add-or-replace-column =y predictions-fn)
           tc/ungroup)
-      (-> @=dataset
+      (-> =dataset
           (tc/add-or-replace-column =y predictions-fn)))))
 
 (defn layer-smooth
@@ -339,19 +336,18 @@
 (defn update-data [template dataset-fn & submap]
   (-> template
       (update-in [::ht/defaults :=layer-dataset]
-                 (fn [wrapped-data]
-                   (util/->WrappedValue
-                    (apply dataset-fn
-                           @wrapped-data
-                           submap))))))
+                 (fn [data]
+                   (apply dataset-fn
+                          data
+                          submap)))))
 
 
 (dag/defn-with-deps histogram-stat
   [=dataset =x =histogram-nbins]
-  (when-not (@=dataset =x)
+  (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
                     {:missing-column-name =x})))
-  (let [{:keys [bins max step]} (-> @=dataset
+  (let [{:keys [bins max step]} (-> =dataset
                                     (get =x)
                                     (fastmath.stats/histogram
                                      =histogram-nbins))

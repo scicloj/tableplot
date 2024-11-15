@@ -21,12 +21,11 @@
    [:=dataset :=stat]
    (fn [{:as submap
          :keys [=dataset =stat]}]
-     (when-not (tc/dataset? @=dataset)
+     (when-not (tc/dataset? =dataset)
        (throw (ex-info "missing :=dataset"
                        submap)))
      (if =stat
-       (util/->WrappedValue
-        (@=stat submap))
+       (@=stat submap)
        =dataset))))
 
 (defn submap->field-type [colname-key]
@@ -37,7 +36,6 @@
        (if-let [colname (submap colname-key)]
          (let [column (-> submap
                           (get dataset-key)
-                          deref
                           (get colname))]
            (cond (tcc/typeof? column :numerical) :quantitative
                  (tcc/typeof? column :datetime) :temporal
@@ -63,7 +61,6 @@
        (if-let [colname (submap colname-key)]
          (let [column (-> submap
                           (get dataset-key)
-                          deref
                           (get colname))
                colname-before-stat (submap
                                     colname-key-before-stat)]
@@ -89,11 +86,9 @@
      (if-let [column-selector (submap
                                column-selector-key)]
        (do (-> submap
-               (get :=dataset)
-               deref)
+               (get :=dataset))
            (or (-> submap
                    (get :=dataset)
-                   deref
                    (select-column column-selector)
                    vec)
                hc/RMV))))))
@@ -204,9 +199,9 @@
                  inferred-group
                  trace-base]}]
       (let [group-kvs (if inferred-group
-                        (-> @dataset
+                        (-> dataset
                             (tc/group-by inferred-group {:result-type :as-map}))
-                        {nil @dataset})]
+                        {nil dataset})]
         (-> group-kvs
             (->> (map
                   (fn [[group-key group-dataset]]
@@ -371,7 +366,7 @@
 (defn plotly-xform [template]
   (cache/with-clean-cache
     (-> template
-        xform/xform 
+        xform/xform
         kind/plotly
         (dissoc :kindly/f))))
 
@@ -396,7 +391,7 @@
    (-> template
        (update ::ht/defaults merge
                standard-defaults
-               {:=dataset (util/->WrappedValue dataset)})
+               {:=dataset dataset})
        (base submap))))
 
 
@@ -448,18 +443,18 @@
 
 (dag/defn-with-deps smooth-stat
   [=dataset =x =y =predictors =group =design-matrix =model-options]
-  (when-not (@=dataset =y)
+  (when-not (=dataset =y)
     (throw (ex-info "missing =y column"
                     {:missing-column-name =y})))
   (->> =predictors
        (run! (fn [p]
-               (when-not (@=dataset p)
+               (when-not (=dataset p)
                  (throw (ex-info "missing predictor column"
                                  {:predictors =predictors
                                   :missing-column-name p}))))))
   (->> =group
        (run! (fn [g]
-               (when-not (@=dataset g)
+               (when-not (=dataset g)
                  (throw (ex-info "missing =group column"
                                  {:group =group
                                   :missing-column-name g}))))))
@@ -478,12 +473,12 @@
                                (ml/predict model)
                                =y)))]
     (if =group
-      (-> @=dataset
+      (-> =dataset
           (tc/group-by =group)
           (tc/add-column =y predictions-fn)
           (tc/order-by [=x])
           tc/ungroup)
-      (-> @=dataset
+      (-> =dataset
           (tc/add-column =y predictions-fn)
           (tc/order-by [=x])))))
 
@@ -511,23 +506,21 @@
 (defn update-data [template dataset-fn & submap]
   (-> template
       (update-in [::ht/defaults :=dataset]
-                 (fn [wrapped-data]
-                   (util/->WrappedValue
-                    (apply dataset-fn
-                           @wrapped-data
-                           submap))))))
+                 (fn [data]
+                   (apply dataset-fn
+                          data
+                          submap)))))
 
 (defn dataset [dataset]
   (-> dataset
-      tc/dataset
-      util/->WrappedValue))
+      tc/dataset))
 
 (dag/defn-with-deps histogram-stat
   [=dataset =x =histogram-nbins]
-  (when-not (@=dataset =x)
+  (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
                     {:missing-column-name =x})))
-  (let [{:keys [bins max step]} (-> @=dataset
+  (let [{:keys [bins max step]} (-> =dataset
                                     (get =x)
                                     (fastmath.stats/histogram
                                      =histogram-nbins))
