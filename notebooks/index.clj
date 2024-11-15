@@ -29,7 +29,7 @@
 
 * [Hanami API Walkthrough](./tableplot_book.hanami_walkthrough.html) 👣
 
-* [Plotly API Walkthrough](./tableplot_book.plotly_walkthrough.html) 👣 - experimental 🛠")
+* [Plotly API Walkthrough](./tableplot_book.plotly_walkthrough.html) 👣")
 
 ;; # Preface
 

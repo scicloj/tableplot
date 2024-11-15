@@ -1,13 +1,10 @@
-;; # Plotly walkthrough 👣 - experimental 🛠
+;; # Plotly walkthrough 👣
 
 ;; Tableplot offers a Clojure API for creating [Plotly.js](https://plotly.com/javascript/) plots through layered pipelines.
 
 ;; The API not uses [Hanami templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations) but is completely separate from the classical Hanami templates and parameters.
 
 ;; Here, we provide a walkthrough of that API.
-
-;; 🛠 This part of Tableplot is still in experimental stage.
-;; Some of the details will change soon. Feedback and comments will help.
 
 ;; Soon, we will provide more in-depth explanations in additional chapters.
 
@@ -308,7 +305,7 @@
                          :=mark-size 15
                          :=mark-opacity 0.5}))
 
-;; ## Overriding specific layer data (experimental)
+;; ## Overriding specific layer data
 
 (-> (tc/dataset {:x (range 4)
                  :y [1 2 5 9]})
