@@ -25,9 +25,11 @@
 
 (md "See more examples:
 
-* [Hanami API Walkthrough](./tableplot_book.hanami_walkthrough.html) 👣
+* [Plotly API Walkthrough](./tableplot_book.plotly_walkthrough.html) 👣
 
-* [Plotly API Walkthrough](./tableplot_book.plotly_walkthrough.html) 👣")
+* [Hanami API Walkthrough](./tableplot_book.hanami_walkthrough.html) 👣
+     
+     ")
 
 ;; # Preface
 
@@ -60,9 +62,9 @@ such as [Clay](https://scicloj.github.io/clay/).
 
 Tableplot currently supports two APIs:
 
-- `scicloj.tableplot.v1.hanami` generates [Vega-Lite](https://vega.github.io/vega-lite/) plots and parially composes with the original Hanami templates.
-
 - `scicloj.tableplot.v1.plotly` generates the [Plotly.js](https://plotly.com/javascript/) plots.
+
+- `scicloj.tableplot.v1.hanami` generates [Vega-Lite](https://vega.github.io/vega-lite/) plots and parially composes with the original Hanami templates.
 
 Each of these APIs builds upon the strengths of its target platform and partially uses its naming and concepts. Thus, the two APIs are not completely compatible. The Plotly-based API is expected to grow a little further in terms of its flexibility and the kinds of idioms it can express. ")
 
