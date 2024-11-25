@@ -117,5 +117,5 @@ In the longer term, this project is part of the Scicloj effort to create a gramm
             (format "\n- [%s](tableplot_book.%s.html)\n"
                     (chapter->title chapter)
                     chapter)))
-     (string/join "\n")
+     (str/join "\n")
      md)
