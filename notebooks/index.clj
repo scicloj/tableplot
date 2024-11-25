@@ -6,8 +6,6 @@
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
             [clojure.string :as str]
-            [clojure.string :as string]
-            [scicloj.clay.v2.api :as clay]
             [scicloj.tableplot.v1.hanami :as hanami]
             [tableplot-book.datasets :as datasets]
             [tablecloth.api :as tc]))
@@ -35,17 +33,18 @@
 
 (md
  "
-Tableplot is a composition of
-[Hanami](https://github.com/jsa-aerial/hanami) data visualization [templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations)
-and [Tablecloth](https://scicloj.github.io/tablecloth/) datasets.
-
-It adds a simplified set of Hanami templates and defaults alongside those of Hanami,
-as well as a set of template-processing functions
+Tableplot is a Clojure library for data visualization 
 inspired by [ggplot2](https://ggplot2.tidyverse.org/)'s
-[layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html).
+[layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html). 
 
-The current draft was written by Daniel Slutsky,
-mentored by jsa-aerial (Hanami author) and Kira McLean.
+It is built to be composable with [Tablecloth](https://scicloj.github.io/tablecloth/) table processing
+and extend the plotting
+[templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations)
+of [Hanami](https://github.com/jsa-aerial/hanami).
+
+Tableplot works with any tool that supports 
+the [Kindly](https://scicloj.github.io/kindly-noted/) data visualization standard,
+such as [Clay](https://scicloj.github.io/clay/).
 
 **Source:** [![(GitHub repo)](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/scicloj/tableplot)
 
@@ -53,22 +52,15 @@ mentored by jsa-aerial (Hanami author) and Kira McLean.
 
 **Status:** The API is almost stable and will soon move to beta stage.
 
--------------------
-
-An early version of this library was demonstrated in Kira Mclean's
-April 2024 talk at London Clojurians:
 ")
 
-^{:kind/video true
-  :kindly/hide-code true}
-{:youtube-id "eUFf3-og_-Y"}
 
 (md "
 ## Two APIs
 
 Tableplot currently supports two APIs:
 
-- `scicloj.tableplot.v1.hanami` generates [Vega-Lite](https://vega.github.io/vega-lite/) plots and parially composes with the classic Hanami templates.
+- `scicloj.tableplot.v1.hanami` generates [Vega-Lite](https://vega.github.io/vega-lite/) plots and parially composes with the original Hanami templates.
 
 - `scicloj.tableplot.v1.plotly` generates the [Plotly.js](https://plotly.com/javascript/) plots.
 
@@ -76,9 +68,9 @@ Each of these APIs builds upon the strengths of its target platform and partiall
 
 (md "
 
-## Near term plan
-- Stabilize both the Vega-Lite-based API and the Plotly.js-based API as Beta stage.
-- Keep developing main ly the Plotly.js-based API (as it will be more flexible to extend).
+## Near term plan (Nov 2024):
+- Stabilize both the APIs as Beta stage.
+- Keep developing mainly the Plotly.js-based API.
 
 ## Goals
 
@@ -90,9 +82,9 @@ Each of these APIs builds upon the strengths of its target platform and partiall
 - Catch common errors using the data (e.g., missing fields).
 - Be able to use backend Clojure for relevant statistical tasks (e.g., smoothing by regression, histograms, density estimation).
 - Be able to rely on Vega-Lite/Plotly.js for other some components of the pipeline (e.g., scales and coordinates).
-- Provide simpler Hanami templates, compared to the original ones.
+- Provide simple Hanami templates in addition to the original ones.
 - Still have the option of using the original Hanami templates.
-- Still be able to use all of Vega-Lite/Plotly.js in its raw format for the highest flexibility.
+- Still be able to use all of Vega-Lite/Plotly.js in their raw format for the highest flexibility.
 
 In the longer term, this project is part of the Scicloj effort to create a grammar-of-graphics visualization library in Clojure.
 
