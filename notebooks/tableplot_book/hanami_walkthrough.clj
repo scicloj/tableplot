@@ -2,7 +2,7 @@
 
 ;; Tableplot offers a Clojure API for creating [Vega-Lite](https://vega.github.io/vega-lite/) plots through layered pipelines.
 
-;; The API not only uses [Hanami templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations) but also partially composes with the classical Hanami templates and parameters.
+;; The API not only uses [Hanami templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations) but also partially composes with the original Hanami templates and parameters.
 
 ;; Here, we provide a walkthrough of the API.
 
@@ -56,10 +56,10 @@
 ;; Hanami templates and substitution keys.
 ;; For now, please see the [Hanami documentation](https://github.com/jsa-aerial/hanami).
 
-;; While Tableplot allows using the classic Hanami templates and substitution keys,
+;; While Tableplot allows using the original Hanami templates and substitution keys,
 ;; it also offers its own sets of templates, that we just used here.
 
-;; Unlike the classic Hanami keys of using
+;; Unlike the original Hanami keys of using
 ;; capital letter substitution keys (e.g. `:COLOR`)
 ;; Tableplot uses the convention of
 ;; substitution keys beginning with `=` (e.g. `:=color`)
@@ -101,7 +101,7 @@
                   :=mark-size 200})
     meta)
 
-;; ## Using classic Hanami templates and defaults
+;; ## Using original Hanami templates and defaults
 
 ;; We can also use Hanami's original templates (`ht/chart`)
 ;; and substitution keys (`:X`, `:Y`, `:MSIZE`).
