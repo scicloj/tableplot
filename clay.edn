@@ -3,5 +3,6 @@
  :quarto {:format {:html {:toc true
                           :toc-depth 4
                           :theme [:cosmo "notebooks/custom.scss"]}}
-          :fontsize "0.9em"}
+          :fontsize "0.9em"
+          :title "Tablecloth documentation"}
  :base-target-path "temp"}
