@@ -4,5 +4,5 @@
                           :toc-depth 4
                           :theme [:cosmo "notebooks/custom.scss"]}}
           :fontsize "0.9em"
-          :title "Tablecloth documentation"}
+          :title "Tableplot documentation"}
  :base-target-path "temp"}
