@@ -3,6 +3,5 @@
  :quarto {:format {:html {:toc true
                           :toc-depth 4
                           :theme [:cosmo "notebooks/custom.scss"]}}
-          :fontsize "0.9em"
-          :title "Tableplot documentation"}
+          :fontsize "0.9em"}
  :base-target-path "temp"}
