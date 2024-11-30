@@ -159,6 +159,17 @@
      {:=x :cyl
       :=y :disp}))
 
+;; ### Area chart
+
+(-> datasets/mtcars
+    (tc/group-by [:cyl])
+    (tc/aggregate {:total-disp #(-> % :disp tcc/sum)})
+    (tc/order-by [:cyl])
+    (plotly/layer-line
+     {:=x :cyl
+      :=mark-fill :tozeroy
+      :=y :total-disp}))
+
 ;; ### Bar chart
 
 (-> datasets/mtcars
@@ -166,6 +177,15 @@
     (tc/aggregate {:total-disp #(-> % :disp tcc/sum)})
     (plotly/layer-bar
      {:=x :cyl
+      :=y :total-disp}))
+
+(-> datasets/mtcars
+    (tc/group-by [:cyl])
+    (tc/aggregate {:total-disp #(-> % :disp tcc/sum)})
+    (tc/add-column :bar-width 0.5)
+    (plotly/layer-bar
+     {:=x :cyl
+      :=bar-width :bar-width
       :=y :total-disp}))
 
 ;; ### Text
