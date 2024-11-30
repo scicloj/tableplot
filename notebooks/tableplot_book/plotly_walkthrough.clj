@@ -541,6 +541,11 @@
     (plotly/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
 
+(-> datasets/iris
+    (plotly/layer-histogram {:=x :sepal-width
+                             :=color :species
+                             :=mark-opacity 0.5}))
+
 ;; ## Coordinates
 ;; (WIP)
 
