@@ -600,14 +600,14 @@
                                (fastmath.kernel/kernel-density :gaussian xs))
                            min-x (tcc/reduce-min xs)
                            max-x (tcc/reduce-max xs)
-                           step (/ (- max-x min-x)
-                                   100.5)]
+                           range-width (- max-x min-x)]
                        (when-not (< min-x max-x)
                          (throw (ex-info "invalid range"
                                          [min-x max-x])))
                        ;; using an int range to avoid the following bug:
                        ;; https://clojurians.zulipchat.com/#narrow/channel/236259-tech.2Eml.2Edataset.2Edev/topic/a.20strange.20bug.20with.20a.20range.20column
-                       (-> {:x (-> (->> [min-x max-x]
+                       (-> {:x (-> (->> [(- min-x (* 0.5 range-width))
+                                         (+ max-x (* 0.5 range-width))]
                                         (map #(int (* 100 %)))
                                         (apply range))
                                    (tcc/* 0.01))}
