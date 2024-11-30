@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [1-beta-1] - unreleased
+## [1-beta-1] - 2024-12-01
 - replaced the ad-hoc `WrappedValue` daratype with the Clojure `delay` idiom 
 (used to avoid the recursive transformations of certain functions)
 - plotly: corrected bar width for histograms
