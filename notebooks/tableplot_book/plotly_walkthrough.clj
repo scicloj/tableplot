@@ -546,6 +546,23 @@
                              :=color :species
                              :=mark-opacity 0.5}))
 
+;; ## Density
+
+(-> datasets/iris
+    (plotly/layer-density {:=x :sepal-width}))
+
+(-> datasets/iris
+    (plotly/layer-density {:=x :sepal-width
+                           :=density-bandwidth 0.05}))
+
+(-> datasets/iris
+    (plotly/layer-density {:=x :sepal-width
+                           :=density-bandwidth 1}))
+
+(-> datasets/iris
+    (plotly/layer-density {:=x :sepal-width
+                           :=color :species}))
+
 ;; ## Coordinates
 ;; (WIP)
 
