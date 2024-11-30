@@ -359,6 +359,7 @@
    :=design-matrix submap->design-matrix
    :=model-options {:model-type :fastmath/ols}
    :=histogram-nbins 10
+   :=density-bandwidth hc/RMV
    :=coordinates hc/RMV
    :=height 400
    :=width 500
@@ -582,7 +583,7 @@
 
 
 (dag/defn-with-deps density-stat
-  [=dataset =group =x]
+  [=dataset =group =x =density-bandwidth]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
                     {:missing-column-name =x})))
@@ -594,7 +595,9 @@
                                   :missing-column-name g}))))))
   (let [summary-fn (fn [dataset]
                      (let [xs (=x dataset)
-                           k (fastmath.kernel/kernel-density :gaussian xs)
+                           k (if =density-bandwidth
+                               (fastmath.kernel/kernel-density :gaussian xs =density-bandwidth)
+                               (fastmath.kernel/kernel-density :gaussian xs))
                            min-x (tcc/reduce-min xs)
                            max-x (tcc/reduce-max xs)
                            step (/ (- max-x min-x)
