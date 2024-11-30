@@ -16,12 +16,11 @@
    [:=dataset :=stat]
    (fn [{:as submap
          :keys [=dataset =stat]}]
-     (when-not (tc/dataset? @=dataset)
+     (when-not (tc/dataset? =dataset)
        (throw (ex-info "missing :=dataset"
                        submap)))
      (if =stat
-       (util/->WrappedValue
-        (@=stat submap))
+       (@=stat submap)
        =dataset))))
 
 (defn dataset->echarts-dataset [dataset]
@@ -31,7 +30,7 @@
           (tc/rows dataset)))})
 
 (dag/defn-with-deps submap->echarts-dataset [=dataset-after-stat]
-  (dataset->echarts-dataset @=dataset-after-stat))
+  (dataset->echarts-dataset =dataset-after-stat))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
