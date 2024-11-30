@@ -158,6 +158,7 @@
    :y0 :=y0-after-stat
    :x1 :=x1-after-stat
    :y1 :=y1-after-stat
+   :barwidth :=barwidth
    :r :=r
    :theta :=theta
    :lat :=lat
@@ -189,6 +190,7 @@
                  mark
                  x y z
                  x0 y0 x1 y1
+                 barwidth
                  r theta
                  lat lon
                  coordinates
@@ -232,6 +234,7 @@
                               :lon (some-> lon group-dataset vec)}
                              {:text (some-> text group-dataset vec)}
                              {:z (some-> z group-dataset vec)}
+                             {:width (some-> barwidth group-dataset vec)}
                              ;; else
                              (if (= mark :segment)
                                {:x (vec
@@ -317,6 +320,7 @@
    :=x1-after-stat :=x1
    :=y1 hc/RMV
    :=y1-after-stat :=y1
+   :=barwidth hc/RMV
    :=color hc/RMV
    :=size hc/RMV
    :=x-type (submap->field-type :=x)
@@ -512,24 +516,47 @@
                           submap)))))
 
 (dag/defn-with-deps histogram-stat
-  [=dataset =x =histogram-nbins]
+  [=dataset =group =x =histogram-nbins]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
                     {:missing-column-name =x})))
-  (let [{:keys [bins max step]} (-> =dataset
-                                    (get =x)
-                                    (fastmath.stats/histogram
-                                     =histogram-nbins))
-        left (map first bins)]
-    (-> {:left left
-         :right (concat (rest left)
-                        [max])
-         :count (map second bins)}
-        tc/dataset
-        (tc/add-column :middle #(tcc/*
-                                 0.5
-                                 (tcc/+ (:left %)
-                                        (:right %)))))))
+  (->> =group
+       (run! (fn [g]
+               (when-not (=dataset g)
+                 (throw (ex-info "missing =group column"
+                                 {:group =group
+                                  :missing-column-name g}))))))
+  (let [summary-fn (fn [dataset]
+                     (let [{:keys [bins max step]} (-> dataset
+                                                       (get =x)
+                                                       (fastmath.stats/histogram
+                                                        =histogram-nbins))
+                           left (map first bins)]
+                       (-> {:left left
+                            :right (concat (rest left)
+                                           [max])
+                            :count (map second bins)}
+                           tc/dataset
+                           (tc/add-columns {:middle #(tcc/*
+                                                      0.5
+                                                      (tcc/+ (:left %)
+                                                             (:right %)))
+                                            :width #(tcc/- (:right %)
+                                                           (:left %))}))))]
+    (if =group
+      (-> =dataset
+          (tc/group-by =group {:result-type :as-map})
+          (->> (map (fn [[group ds]]
+                      (-> ds
+                          summary-fn
+                          (tc/add-columns group))))
+               (apply tc/concat)))
+      (-> =dataset
+          summary-fn))))
+
+
+
+
 
 (defn layer-histogram
   ([context]
@@ -541,6 +568,7 @@
                   :=mark :bar
                   :=x-after-stat :middle
                   :=y-after-stat :count
+                  :=barwidth :width
                   :=x-title :=x
                   :=y-title "count"
                   :=x-bin {:binned true}}
