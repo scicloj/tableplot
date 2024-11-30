@@ -159,7 +159,7 @@
    :y0 :=y0-after-stat
    :x1 :=x1-after-stat
    :y1 :=y1-after-stat
-   :barwidth :=barwidth
+   :bar-width :=bar-width
    :r :=r
    :theta :=theta
    :lat :=lat
@@ -192,7 +192,7 @@
                  mark
                  x y z
                  x0 y0 x1 y1
-                 barwidth
+                 bar-width
                  r theta
                  lat lon
                  coordinates
@@ -238,7 +238,7 @@
                               :lon (some-> lon group-dataset vec)}
                              {:text (some-> text group-dataset vec)}
                              {:z (some-> z group-dataset vec)}
-                             {:width (some-> barwidth group-dataset vec)}
+                             {:width (some-> bar-width group-dataset vec)}
                              ;; else
                              (if (= mark :segment)
                                {:x (vec
@@ -324,7 +324,7 @@
    :=x1-after-stat :=x1
    :=y1 hc/RMV
    :=y1-after-stat :=y1
-   :=barwidth hc/RMV
+   :=bar-width hc/RMV
    :=color hc/RMV
    :=size hc/RMV
    :=x-type (submap->field-type :=x)
@@ -574,7 +574,7 @@
                   :=mark :bar
                   :=x-after-stat :middle
                   :=y-after-stat :count
-                  :=barwidth :width
+                  :=bar-width :width
                   :=x-title :=x
                   :=y-title "count"
                   :=x-bin {:binned true}}
