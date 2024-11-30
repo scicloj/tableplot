@@ -7,6 +7,7 @@
             [tech.v3.dataset :as ds]
             [tech.v3.dataset.modelling :as dsmod]
             [fastmath.stats]
+            [fastmath.kernel]
             [scicloj.metamorph.ml :as ml]
             [scicloj.metamorph.ml.regression]
             [scicloj.metamorph.ml.design-matrix :as design-matrix]
@@ -574,6 +575,61 @@
                   :=x-bin {:binned true}}
                  submap))))
 
+
+
+(dag/defn-with-deps density-stat
+  [=dataset =group =x]
+  (when-not (=dataset =x)
+    (throw (ex-info "missing =x column"
+                    {:missing-column-name =x})))
+  (->> =group
+       (run! (fn [g]
+               (when-not (=dataset g)
+                 (throw (ex-info "missing =group column"
+                                 {:group =group
+                                  :missing-column-name g}))))))
+  (let [summary-fn (fn [dataset]
+                     (let [xs (=x dataset)
+                           k (fastmath.kernel/kernel-density :gaussian xs)
+                           min-x (tcc/reduce-min xs)
+                           max-x (tcc/reduce-max xs)
+                           step (/ (- max-x min-x)
+                                   100.5)]
+                       (when-not (< min-x max-x)
+                         (throw (ex-info "invalid range"
+                                         [min-x max-x])))
+                       (-> {:x (-> (->> [min-x max-x]
+                                        (map #(int (* 100 %)))
+                                        (apply range))
+                                   (tcc/* 0.01))}
+                           tc/dataset
+                           (tc/map-columns :y [:x] k))))]
+    (if =group
+      (-> =dataset
+          (tc/group-by =group {:result-type :as-map})
+          (->> (map (fn [[group ds]]
+                      (-> ds
+                          summary-fn
+                          (tc/add-columns group))))
+               (apply tc/concat)))
+      (-> =dataset
+          summary-fn))))
+
+
+
+(defn layer-density
+  ([context]
+   (layer-histogram context {}))
+  ([context submap]
+   (layer context
+          layer-base
+          (merge {:=stat (delay density-stat)
+                  :=mark :line
+                  :=x-after-stat :x
+                  :=y-after-stat :y
+                  :=x-title :=x
+                  :=y-title "density"}
+                 submap))))
 
 (defn dag [template]
   (let [edges (->> template

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This change
 (used to avoid the recursive transformations of certain functions)
 - corrected bar width for histograms
 - added support for overlapping histograms
+- added support for density plots
 
 ## [1-alpha14.1] - 2024-11-15
 - updated deps (Hanami, metamorph.ml, Fastmath, Kindly)
