@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file. This change
 ## [1-beta-1] - unreleased
 - replaced the ad-hoc `WrappedValue` daratype with the Clojure `delay` idiom 
 (used to avoid the recursive transformations of certain functions)
-- corrected bar width for histograms
-- added support for overlapping histograms
-- added support for density plots
+- plotly: corrected bar width for histograms
+- plotly: added support for overlapping histograms
+- plotly: added support for density layers
+- plotly: added mark-fill support (in use by default for density layers)
 
 ## [1-alpha14.1] - 2024-11-15
 - updated deps (Hanami, metamorph.ml, Fastmath, Kindly)

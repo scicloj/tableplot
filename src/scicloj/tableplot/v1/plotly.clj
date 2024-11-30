@@ -175,6 +175,7 @@
    :inferred-group :=inferred-group
    :group :=group :marker-override {:color :=mark-color
                                     :=marker-size-key :=mark-size}
+   :fill :=mark-fill
    :trace-base {:mode :=mode
                 :type :=type
                 :opacity :=mark-opacity
@@ -199,6 +200,7 @@
                  size size-type
                  text
                  marker-override
+                 fill
                  inferred-group
                  trace-base]}]
       (let [group-kvs (if inferred-group
@@ -229,6 +231,7 @@
                                                    (str/join " "))]
                                          (remove nil?)
                                          (str/join " "))}
+                             {:fill fill}
                              {:r (some-> r group-dataset vec)
                               :theta (some-> theta group-dataset vec)}
                              {:lat (some-> lat group-dataset vec)
@@ -339,6 +342,7 @@
    :=mark-color hc/RMV
    :=mark-size hc/RMV
    :=marker-size-key submap->marker-size-key
+   :=mark-fill hc/RMV
    :=mark-opacity hc/RMV
    :=text hc/RMV
    :=textfont hc/RMV
@@ -598,6 +602,8 @@
                        (when-not (< min-x max-x)
                          (throw (ex-info "invalid range"
                                          [min-x max-x])))
+                       ;; using an int range to avoid the following bug:
+                       ;; https://clojurians.zulipchat.com/#narrow/channel/236259-tech.2Eml.2Edataset.2Edev/topic/a.20strange.20bug.20with.20a.20range.20column
                        (-> {:x (-> (->> [min-x max-x]
                                         (map #(int (* 100 %)))
                                         (apply range))
@@ -625,6 +631,7 @@
           layer-base
           (merge {:=stat (delay density-stat)
                   :=mark :line
+                  :=mark-fill :tozeroy
                   :=x-after-stat :x
                   :=y-after-stat :y
                   :=x-title :=x
