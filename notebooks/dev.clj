@@ -2,7 +2,7 @@
   (:require [scicloj.clay.v2.api :as clay]))
 
 (clay/make! {:format [:quarto :html]
-            :base-source-path "notebooks"
+             :base-source-path "notebooks"
              :source-path (->> "notebooks/chapters.edn"
                                slurp
                                clojure.edn/read-string
