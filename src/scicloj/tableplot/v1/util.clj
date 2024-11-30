@@ -10,21 +10,6 @@
             [scicloj.tableplot.v1.dag :as dag]
             [clojure.string :as str]))
 
-
-;; We wrap certain values with this datatype
-;; in order to prevent Hanami from trying to walk throug them.
-(deftype WrappedValue [value]
-  clojure.lang.IDeref
-  (deref [this] value)
-
-  Object
-  (hashCode [this]
-    (hash value))
-  (equals [this other]
-    (and (-> other class (= WrappedValue))
-         (= value @other))))
-
-
 (defn dataset->csv
   "Represent a dataset as a CSV string."
   [dataset]

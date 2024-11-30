@@ -499,7 +499,7 @@
   ([context submap]
    (layer context
           layer-base
-          (merge {:=stat (util/->WrappedValue smooth-stat)
+          (merge {:=stat (delay smooth-stat)
                   :=mark :line}
                  submap))))
 
@@ -537,7 +537,7 @@
   ([context submap]
    (layer context
           layer-base
-          (merge {:=stat (util/->WrappedValue histogram-stat)
+          (merge {:=stat (delay histogram-stat)
                   :=mark :bar
                   :=x-after-stat :middle
                   :=y-after-stat :count

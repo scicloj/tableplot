@@ -327,7 +327,7 @@
    (layer context
           {:mark mark-base
            :encoding :=encoding}
-          (merge {:=stat (util/->WrappedValue smooth-stat)
+          (merge {:=stat (delay smooth-stat)
                   :=mark :line}
                  submap))))
 
@@ -365,7 +365,7 @@
    (layer context
           {:mark mark-base
            :encoding :=encoding}
-          (merge {:=stat (util/->WrappedValue histogram-stat)
+          (merge {:=stat (delay histogram-stat)
                   :=mark :bar
                   :=x-after-stat :left
                   :=x2-after-stat :right

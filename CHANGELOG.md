@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta-1] - unreleased
+- replaced the ad-hoc `WrappedValue` daratype with the Clojure `delay` idiom 
+(used to avoid the recursive transformations of certain functions)
+
 ## [1-alpha14.1] - 2024-11-15
 - updated deps (Hanami, metamorph.ml, Fastmath, Kindly)
 
