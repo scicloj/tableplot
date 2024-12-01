@@ -307,71 +307,81 @@
                    (-> k name symbol))]))))
 
 (def standard-defaults
-  {:=stat hc/RMV
-   :=dataset hc/RMV
-   :=dataset-after-stat submap->dataset-after-stat
-   :=x :x
-   :=x-after-stat :=x
-   :=y :y
-   :=y-after-stat :=y
-   :=z hc/RMV
-   :=z-after-stat :=z
-   :=x0 hc/RMV
-   :=x0-after-stat :=x0
-   :=y0 hc/RMV
-   :=y0-after-stat :=y0
-   :=x1 hc/RMV
-   :=x1-after-stat :=x1
-   :=y1 hc/RMV
-   :=y1-after-stat :=y1
-   :=bar-width hc/RMV
-   :=color hc/RMV
-   :=size hc/RMV
-   :=x-type (submap->field-type :=x)
-   :=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)
-   :=y-type (submap->field-type :=y)
-   :=y-type-after-stat (submap->field-type-after-stat :=y-after-stat)
-   :=z-type (submap->field-type :=z)
-   :=z-type-after-stat (submap->field-type-after-stat :=z-after-stat)
-   :=r hc/RMV
-   :=theta hc/RMV
-   :=lat hc/RMV
-   :=lon hc/RMV
-   :=color-type (submap->field-type :=color)
-   :=size-type (submap->field-type :=size)
-   :=mark-color hc/RMV
-   :=mark-size hc/RMV
-   :=marker-size-key submap->marker-size-key
-   :=mark-fill hc/RMV
-   :=mark-opacity hc/RMV
-   :=text hc/RMV
-   :=textfont hc/RMV
-   :=mark :point
-   :=mode submap->mode
-   :=type submap->type
-   :=name hc/RMV
-   :=layers []
-   :=traces submap->traces
-   :=layout submap->layout
-   :=inferred-group submap->group
-   :=group :=inferred-group
-   :=predictors [:=x]
-   :=design-matrix submap->design-matrix
-   :=model-options {:model-type :fastmath/ols}
-   :=histogram-nbins 10
-   :=density-bandwidth hc/RMV
-   :=coordinates hc/RMV
-   :=height 400
-   :=width 500
-   :=margin {:t 25}
-   :=automargin false
-   :=x-title hc/RMV
-   :=y-title hc/RMV
-   :=title hc/RMV
-   :=background "rgb(235,235,235)"
-   :=xaxis-gridcolor "rgb(255,255,255)"
-   :=yaxis-gridcolor "rgb(255,255,255)"})
+  [:=stat hc/RMV
+   "A user-defined or layer-specific statistical transformation.
+Received the whole substituion map and returns a new dataset."]
+  [:=dataset hc/RMV
+   "The data to be plotted."]
+  [:=dataset-after-stat submap->dataset-after-stat
+   "The data after a possible statistical transformation."]
+  [:=x :x
+   "The column for the x axis."]
+  [:=x-after-stat :=x
+   "The column for the x axis to be used after =stat."]
+  [:=y :y]
+  [:=y-after-stat :=y]
+  [:=z hc/RMV]
+  [:=z-after-stat :=z]
+  [:=x0 hc/RMV]
+  [:=x0-after-stat :=x0]
+  [:=y0 hc/RMV]
+  [:=y0-after-stat :=y0]
+  [:=x1 hc/RMV]
+  [:=x1-after-stat :=x1]
+  [:=y1 hc/RMV]
+  [:=y1-after-stat :=y1]
+  [:=bar-width hc/RMV]
+  [:=color hc/RMV]
+  [:=size hc/RMV]
+  [:=x-type (submap->field-type :=x)]
+  [:=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)]
+  [:=y-type (submap->field-type :=y)]
+  [:=y-type-after-stat (submap->field-type-after-stat :=y-after-stat)]
+  [:=z-type (submap->field-type :=z)]
+  [:=z-type-after-stat (submap->field-type-after-stat :=z-after-stat)]
+  [:=r hc/RMV]
+  [:=theta hc/RMV]
+  [:=lat hc/RMV]
+  [:=lon hc/RMV]
+  [:=color-type (submap->field-type :=color)]
+  [:=size-type (submap->field-type :=size)]
+  [:=mark-color hc/RMV]
+  [:=mark-size hc/RMV]
+  [:=marker-size-key submap->marker-size-key]
+  [:=mark-fill hc/RMV]
+  [:=mark-opacity hc/RMV]
+  [:=text hc/RMV]
+  [:=textfont hc/RMV]
+  [:=mark :point]
+  [:=mode submap->mode]
+  [:=type submap->type]
+  [:=name hc/RMV]
+  [:=layers []]
+  [:=traces submap->traces]
+  [:=layout submap->layout]
+  [:=inferred-group submap->group]
+  [:=group :=inferred-group]
+  [:=predictors [:=x]]
+  [:=design-matrix submap->design-matrix]
+  [:=model-options {:model-type :fastmath/ols}]
+  [:=histogram-nbins 10]
+  [:=density-bandwidth hc/RMV]
+  [:=coordinates hc/RMV]
+  [:=height 400]
+  [:=width 500]
+  [:=margin {:t 25}]
+  [:=automargin false]
+  [:=x-title hc/RMV]
+  [:=y-title hc/RMV]
+  [:=title hc/RMV]
+  [:=background "rgb(235,235,235)"]
+  [:=xaxis-gridcolor "rgb(255,255,255)"]
+  [:=yaxis-gridcolor "rgb(255,255,255)"])
 
+(def standard-defaults-map
+  (->> standard-defaults
+       (map (partial take 2))
+       (into {})))
 
 (defn plotly-xform [template]
   (cache/with-clean-cache
@@ -400,7 +410,7 @@
   ([dataset template submap]
    (-> template
        (update ::ht/defaults merge
-               standard-defaults
+               standard-defaults-map
                {:=dataset dataset})
        (base submap))))
 
@@ -426,7 +436,7 @@
                                util/conjv
                                (assoc template
                                       ::ht/defaults (merge
-                                                     standard-defaults
+                                                     standard-defaults-map
                                                      defaults
                                                      submap))))))))))
 
