@@ -18,30 +18,30 @@
             [scicloj.tableplot.v1.xform :as xform]))
 
 (def submap->dataset-after-stat
-  (dag/fn-with-deps-keys
-   [:=dataset :=stat]
-   (fn [{:as submap
-         :keys [=dataset =stat]}]
-     (when-not (tc/dataset? =dataset)
-       (throw (ex-info "missing :=dataset"
-                       submap)))
-     (if =stat
-       (@=stat submap)
-       =dataset))))
+  (dag/fn-with-deps-keys ""
+                         [:=dataset :=stat]
+                         (fn [{:as submap
+                               :keys [=dataset =stat]}]
+                           (when-not (tc/dataset? =dataset)
+                             (throw (ex-info "missing :=dataset"
+                                             submap)))
+                           (if =stat
+                             (@=stat submap)
+                             =dataset))))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
-    (dag/fn-with-deps-keys
-     [colname-key dataset-key]
-     (fn [submap]
-       (if-let [colname (submap colname-key)]
-         (let [column (-> submap
-                          (get dataset-key)
-                          (get colname))]
-           (cond (tcc/typeof? column :numerical) :quantitative
-                 (tcc/typeof? column :datetime) :temporal
-                 :else :nominal))
-         hc/RMV)))))
+    (dag/fn-with-deps-keys ""
+                           [colname-key dataset-key]
+                           (fn [submap]
+                             (if-let [colname (submap colname-key)]
+                               (let [column (-> submap
+                                                (get dataset-key)
+                                                (get colname))]
+                                 (cond (tcc/typeof? column :numerical) :quantitative
+                                       (tcc/typeof? column :datetime) :temporal
+                                       :else :nominal))
+                               hc/RMV)))))
 
 (defn submap->field-type-after-stat [colname-key]
   (let [dataset-key :=dataset-after-stat
@@ -53,24 +53,24 @@
                                          name
                                          (str "-type")
                                          keyword)]
-    (dag/fn-with-deps-keys
-     [colname-key
-      colname-key-before-stat
-      colname-key-type-before-stat
-      dataset-key]
-     (fn [submap]
-       (if-let [colname (submap colname-key)]
-         (let [column (-> submap
-                          (get dataset-key)
-                          (get colname))
-               colname-before-stat (submap
-                                    colname-key-before-stat)]
-           (or (when (= colname colname-before-stat)
-                 (submap colname-key-type-before-stat))
-               (cond (tcc/typeof? column :numerical) :quantitative
-                     (tcc/typeof? column :datetime) :temporal
-                     :else :nominal)))
-         hc/RMV)))))
+    (dag/fn-with-deps-keys ""
+                           [colname-key
+                            colname-key-before-stat
+                            colname-key-type-before-stat
+                            dataset-key]
+                           (fn [submap]
+                             (if-let [colname (submap colname-key)]
+                               (let [column (-> submap
+                                                (get dataset-key)
+                                                (get colname))
+                                     colname-before-stat (submap
+                                                          colname-key-before-stat)]
+                                 (or (when (= colname colname-before-stat)
+                                       (submap colname-key-type-before-stat))
+                                     (cond (tcc/typeof? column :numerical) :quantitative
+                                           (tcc/typeof? column :datetime) :temporal
+                                           :else :nominal)))
+                               hc/RMV)))))
 
 
 (defn select-column [dataset column-selector]
@@ -81,21 +81,22 @@
 
 
 (defn submap->data [column-selector-key]
-  (dag/fn-with-deps-keys
-   [column-selector-key :=dataset]
-   (fn [submap]
-     (if-let [column-selector (submap
-                               column-selector-key)]
-       (do (-> submap
-               (get :=dataset))
-           (or (-> submap
-                   (get :=dataset)
-                   (select-column column-selector)
-                   vec)
-               hc/RMV))))))
+  (dag/fn-with-deps-keys ""
+                         [column-selector-key :=dataset]
+                         (fn [submap]
+                           (if-let [column-selector (submap
+                                                     column-selector-key)]
+                             (do (-> submap
+                                     (get :=dataset))
+                                 (or (-> submap
+                                         (get :=dataset)
+                                         (select-column column-selector)
+                                         vec)
+                                     hc/RMV))))))
 
 
-(dag/defn-with-deps submap->group [=color =color-type =size =size-type]
+(dag/defn-with-deps submap->group ""
+  [=color =color-type =size =size-type]
   (concat (when (= =color-type :nominal)
             [=color])
           (when (= =size-type :nominal)
@@ -110,10 +111,12 @@
     :bar nil
     :segment :lines))
 
-(dag/defn-with-deps submap->mode [=mark]
+(dag/defn-with-deps submap->mode ""
+  [=mark]
   (mark->mode =mark))
 
-(dag/defn-with-deps submap->type [=mark =coordinates]
+(dag/defn-with-deps submap->type ""
+  [=mark =coordinates]
   (str (case =mark
          :box "box"
          :bar "bar"
@@ -144,7 +147,8 @@
   {:data :=traces
    :layout :=layout})
 
-(dag/defn-with-deps submap->marker-size-key [=mode =type]
+(dag/defn-with-deps submap->marker-size-key ""
+  [=mode =type]
   (if (or (= =mode :lines)
           (= =type :line)) :width
       :size))
@@ -183,7 +187,8 @@
    :name :=name})
 
 
-(dag/defn-with-deps submap->traces [=layers]
+(dag/defn-with-deps submap->traces ""
+  [=layers]
   (->>
    =layers
    (mapcat
@@ -261,7 +266,7 @@
    vec))
 
 
-(dag/defn-with-deps submap->layout
+(dag/defn-with-deps submap->layout ""
   [=width =height =margin =automargin =background =title
    =xaxis-gridcolor =yaxis-gridcolor
    =x-after-stat =y-after-stat
@@ -298,7 +303,7 @@
              :title final-y-title}
      :title =title}))
 
-(dag/defn-with-deps submap->design-matrix
+(dag/defn-with-deps submap->design-matrix ""
   [=predictors]
   (->> =predictors
        (mapv (fn [k]
@@ -461,7 +466,7 @@ Received the whole substituion map and returns a new dataset."]
 
 
 
-(dag/defn-with-deps smooth-stat
+(dag/defn-with-deps smooth-stat ""
   [=dataset =x =y =predictors =group =design-matrix =model-options]
   (when-not (=dataset =y)
     (throw (ex-info "missing =y column"
@@ -531,7 +536,7 @@ Received the whole substituion map and returns a new dataset."]
                           data
                           submap)))))
 
-(dag/defn-with-deps histogram-stat
+(dag/defn-with-deps histogram-stat ""
   [=dataset =group =x =histogram-nbins]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
@@ -592,7 +597,7 @@ Received the whole substituion map and returns a new dataset."]
 
 
 
-(dag/defn-with-deps density-stat
+(dag/defn-with-deps density-stat ""
   [=dataset =group =x =density-bandwidth]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
