@@ -380,7 +380,7 @@ Received the whole substituion map and returns a new dataset."]
 
 (def standard-defaults-map
   (->> standard-defaults
-       (map (partial take 2))
+       (map (comp vec (partial take 2)))
        (into {})))
 
 (defn plotly-xform [template]
