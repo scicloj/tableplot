@@ -17,6 +17,8 @@ code {font-family: 'Fira Code Medium', monospace;}
 }
 
 .printedClojure {
+  max-width:100%;
+  overflow-x: auto;
   max-height:400px;
   overflow-y: auto;
 }
