@@ -169,3 +169,14 @@
      (fn-with-deps ~doc
                    ~dep-symbols
                    ~@forms)))
+
+(defmacro defn-with-deps-
+  "Defining a private function using fn-with-deps-impl."
+  [fsymbol doc dep-symbols & forms]
+  (concat (list 'defn-with-deps
+                '^:private fsymbol
+                ;; (with-meta fsymbol {:private true})
+                doc dep-symbols)
+          forms))
+
+
