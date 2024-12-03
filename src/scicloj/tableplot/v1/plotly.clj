@@ -18,16 +18,19 @@
             [scicloj.tableplot.v1.xform :as xform]))
 
 (def submap->dataset-after-stat
-  (dag/fn-with-deps-keys ""
-                         [:=dataset :=stat]
-                         (fn [{:as submap
-                               :keys [=dataset =stat]}]
-                           (when-not (tc/dataset? =dataset)
-                             (throw (ex-info "missing :=dataset"
-                                             submap)))
-                           (if =stat
-                             (@=stat submap)
-                             =dataset))))
+  (dag/fn-with-deps-keys
+   "If the statistical transformation `:=stat` is specified,
+apply it to the whole context.
+Otherwise, keep the original `:=dataset`."
+   [:=dataset :=stat]
+   (fn [{:as submap
+         :keys [=dataset =stat]}]
+     (when-not (tc/dataset? =dataset)
+       (throw (ex-info "missing :=dataset"
+                       submap)))
+     (if =stat
+       (@=stat submap)
+       =dataset))))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
@@ -314,7 +317,7 @@
 (def standard-defaults
   [[:=stat hc/RMV
     "A user-defined or layer-specific statistical transformation.
-Received the whole substituion map and returns a new dataset."]
+Received the whole context and returns a new dataset."]
    [:=dataset hc/RMV
     "The data to be plotted."]
    [:=dataset-after-stat submap->dataset-after-stat
