@@ -10,3 +10,13 @@ code {font-family: 'Fira Code Medium', monospace;}
     @extend .table-striped;
     @extend .table-responsive;
 }
+
+.clay-dataset {
+  max-height:400px;
+  overflow-y: auto;
+}
+
+.printedClojure {
+  max-height:400px;
+  overflow-y: auto;
+}
