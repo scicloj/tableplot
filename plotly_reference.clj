@@ -12,7 +12,53 @@
             [clojure.string :as str]
             [tablecloth.api :as tc]
             [tableplot-book.datasets :as datasets]
-            [tablecloth.column.api :as tcc]))
+            [tablecloth.column.api :as tcc]
+            [scicloj.kindly.v4.api :as kindly]))
+
+^:kindly/hide-code
+(defn include-form [form]
+  (format "`%s`" (pr-str form)))
+
+^:kindly/hide-code
+(defn include-key [k]
+  (format "[`%s`](#%s)"
+          (pr-str k)
+          (-> k name (str/replace #"^=" ""))))
+
+^:kindly/hide-code
+(defn include-fn [f]
+  (format "%s\n\n **depends on**: %s"
+          (-> f
+              meta
+              :doc)
+          (->> f
+               meta
+               ::dag/dep-ks
+               (mapcat include-key)
+               (str/join " "))))
+
+^:kindly/hide-code
+(defn include-all-keys []
+  (->> plotly/standard-defaults
+       (map (fn [[k v doc]]
+              (kind/md
+               [(format "### %s" (include-key k))
+                (some->> doc
+                         (format "**role:** %s\n"))
+                (format "**default:** %s\n"
+                        (cond (fn? v) (include-fn v)
+                              (= v hc/RMV) "`NONE`"
+                              (keyword? v) (include-key v)
+                              :else (include-form v)))])))
+       kind/fragment))
+
+^:kindly/hide-code
+(defn md [& strings]
+  (->> strings
+       (str/join " ")
+       kind/md
+       kindly/hide-code))
+
 
 ;; ## Overview
 
@@ -79,8 +125,12 @@
 
 ;; Throughout this notebook, we will sometimes use the `debug` function that
 ;; allows one to look into the value of a given substitution key in a given
-;; context. For example, here we learn about the `:=background` key for background
-;; color, which is a grey colour by default.
+;; context.
+
+(md
+ "For example, here we learn about the"
+ (include-key :=background)
+ "key for background color, which is a grey colour by default.")
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -246,9 +296,11 @@
 
 ;; The return value is always a template which is set up to be visualized as plotly.
 
-;; In the full case of three arguments `(dataset template submap)`,
-;; `dataset` is added to `template` as the value substituted for the key `:=dataset`,
-;; and the substitution map `submap` is added as well.
+(md
+ "In the full case of three arguments `(dataset template submap)`,
+`dataset` is added to `template` as the value substituted for the "
+ (include-key :=dataset)
+ "key, and the substitution map `submap` is added as well.")
 
 ;; In the other cases, if the `template` is not passed missing, it is replaced by a minimal base
 ;; template to be carried along the pipeline. If the `dataset` or `submap` parts are not passed,
@@ -279,8 +331,11 @@
 ;; It is a generic way to create more specific functions to add layers.
 ;; such as `layer-point`.
 
-;; If `dataset-or-template` is a dataset, it is converted to
-;; a basic template where it is substituted at the `:=dataset` key.
+(md
+ "If `dataset-or-template` is a dataset, it is converted to"
+ "a basic template where it is substituted at the"
+ (include-key :=dataset) "key.")
+
 ;; Otherwise, it is already template and can be processed further.
 ;; The `layer-template` template is added as an additional layer
 ;; to our template.
@@ -450,6 +505,36 @@
                   :color :purple}
       :=mark-size 20}))
 
+;; ### `layer-histogram`
+
+;; Add a histogram layer to the given `dataset-or-template`,
+;; with possible additional substitutions if `submap` is provided.
+
+;; The histogram's binning and counting are computed in Clojure.
+
+;; Example:
+
+(-> datasets/iris
+    (plotly/layer-histogram {:=x :sepal-width}))
+
+(md "The"
+    (include-key :=histogram-nbins)
+    "key controls the number of bins.")
+
+(-> datasets/iris
+    (plotly/layer-histogram {:=x :sepal-width
+                             :=histogram-nbins 30}))
+
+;; If the plot is colored by a nominal type,
+;; then the data is groupped by this column,
+;; and overlapping histograms are generated.
+
+(-> datasets/iris
+    (plotly/layer-histogram {:=x :sepal-width
+                             :=color :species
+                             :=mark-opacity 0.5}))
+
+
 ;; ### Realizing the plot
 
 ;; ### Debugging (experimental)
@@ -457,37 +542,4 @@
 ;; ## Substitution Keys 
 
 ^:kindly/hide-code
-(defn include-form [form]
-  (format "`%s`" (pr-str form)))
-
-^:kindly/hide-code
-(defn include-key [k]
-  (format "[`%s`](#%s)"
-          (pr-str k)
-          (-> k name (str/replace #"^=" ""))))
-
-^:kindly/hide-code
-(defn include-fn [f]
-  (format "%s\n\n **depends on**: %s"
-          (-> f
-              meta
-              :doc)
-          (->> f
-               meta
-               ::dag/dep-ks
-               (map include-key)
-               (str/join " "))))
-
-^:kindly/hide-code
-(->> plotly/standard-defaults
-     (map (fn [[k v doc]]
-            (kind/md
-             [(format "### %s" (include-key k))
-              (some->> doc
-                       (format "**role:** %s\n"))
-              (format "**default:** %s\n"
-                      (cond (fn? v) (include-fn v)
-                            (= v hc/RMV) "`NONE`"
-                            (keyword? v) (include-key v)
-                            :else (include-form v)))])))
-     kind/fragment)
+(include-all-keys)
