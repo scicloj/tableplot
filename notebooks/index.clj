@@ -52,8 +52,6 @@ such as [Clay](https://scicloj.github.io/clay/).
 
 **Artifact:** [![(Clojars coordinates)](https://img.shields.io/clojars/v/org.scicloj/tableplot.svg)](https://clojars.org/org.scicloj/tableplot)
 
-**Status:** The API is almost stable and will soon move to beta stage.
-
 ")
 
 
