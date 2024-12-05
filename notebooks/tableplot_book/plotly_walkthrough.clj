@@ -338,12 +338,9 @@
 
 ;; ## Smoothing
 
-;; `layer-smooth` is a layer that applies some statistical
-;; processing to the dataset to model it as a smooth shape.
+;; `layer-smooth` is a layer that applies statistical regression methods
+;; to the dataset to model it as a smooth shape.
 ;; It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
-
-;; At the moment, it can only be used to model `:=y` by linear regression.
-;; Soon we will add more ways of modelling the data.
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
