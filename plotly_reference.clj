@@ -319,26 +319,7 @@
                          :=mark-opacity 0.3})
     (plotly/layer-point {:=color :species}))
 
-;; ### `layer` 
-
-;; `(dataset-or-template layer-template submap)`
-
-;; The `layer` function is typically not used on the user side.
-;; It is a generic way to create more specific functions to add layers.
-;; such as `layer-point`.
-
-(md
- "If `dataset-or-template` is a dataset, it is converted to"
- "a basic template where it is substituted at the"
- (include-key :=dataset) "key.")
-
-;; Otherwise, it is already template and can be processed further.
-;; The `layer-template` template is added as an additional layer
-;; to our template.
-;; The `submap` substitution map is added as additional substitutions
-;; to that layer.
-
-;; The var `layer-base` is typicall used as the `layer-template`.
+(include-fnvar #'plotly/layer)
 
 ;; For example, we could write someting like:
 
@@ -354,21 +335,7 @@
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length}))
 
-;; ### `mark-based-layer`
-
-;; `(mark)`
-
-;; This function is typically not used on the user side.
-;; It is used to generate more specific functions to add specific types of layer.
-
-;; It returns a function of two possible arities:
-
-;; `(dataset-or-template)`
-
-;; `(dataset-or-template submap)`
-
-;; the returned function can be used to process a dataset or a template in a pipeline
-;; by adding a layer of a specificed kind and possibly some substutution maps.
+(include-fnvar #'plotly/mark-based-layer)
 
 ;; For example, we may do something like:
 (let [my-new-layer-function (plotly/mark-based-layer :point)]

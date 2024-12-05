@@ -449,6 +449,22 @@ Received the whole context and returns a new dataset."]
 
 
 (defn layer
+  "The `layer` function is typically not used on the user side.
+  It is a generic way to create more specific functions to add layers.
+  such as `layer-point`.
+
+  If `dataset-or-template` is a dataset, it is converted to
+  a basic template where it is substituted at the
+  `:=dataset` key.
+
+  Otherwise, it is already template and can be processed further.
+  The `layer-template` template is added as an additional layer
+  to our template.
+  The `submap` substitution map is added as additional substitutions
+  to that layer.
+
+  The var `layer-base` is typicall used as the `layer-template`.
+  "
   ([dataset-or-template layer-template submap]
    (if (tc/dataset? dataset-or-template)
      (layer (base dataset-or-template {})
@@ -467,7 +483,20 @@ Received the whole context and returns a new dataset."]
                                                      defaults
                                                      submap))))))))))
 
-(defn mark-based-layer [mark]
+(defn mark-based-layer
+  "  This function is typically not used on the user side.
+  It is used to generate more specific functions to add specific types of layer.
+
+  It returns a function of two possible arities:
+
+  `[dataset-or-template]`
+
+  `[dataset-or-template submap]`
+
+  the returned function can be used to process a dataset or a template in a pipeline
+  by adding a layer of a specificed kind and possibly some substutution maps.
+  "
+  [mark]
   (fn f
     ([dataset-or-template]
      (f dataset-or-template {}))
@@ -476,6 +505,8 @@ Received the whole context and returns a new dataset."]
             layer-base
             (merge {:=mark mark}
                    submap)))))
+
+
 
 (def layer-point (mark-based-layer :point))
 (def layer-line (mark-based-layer :line))
