@@ -426,35 +426,40 @@
                   :color :purple}
       :=mark-size 20}))
 
-;; ### `layer-histogram`
+(include-fnvar #'plotly/layer-histogram)
 
-;; Add a histogram layer to the given `dataset-or-template`,
-;; with possible additional substitutions if `submap` is provided.
-
-;; The histogram's binning and counting are computed in Clojure.
-
-;; Example:
+;; Examples:
 
 (-> datasets/iris
     (plotly/layer-histogram {:=x :sepal-width}))
 
-(md "The"
-    (include-key :=histogram-nbins)
-    "key controls the number of bins.")
-
 (-> datasets/iris
     (plotly/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
-
-;; If the plot is colored by a nominal type,
-;; then the data is groupped by this column,
-;; and overlapping histograms are generated.
 
 (-> datasets/iris
     (plotly/layer-histogram {:=x :sepal-width
                              :=color :species
                              :=mark-opacity 0.5}))
 
+(include-fnvar #'plotly/layer-density)
+
+;; Examples:
+
+(-> datasets/iris
+    (plotly/layer-density {:=x :sepal-width}))
+
+(-> datasets/iris
+    (plotly/layer-density {:=x :sepal-width
+                           :=density-bandwidth 0.05}))
+
+(-> datasets/iris
+    (plotly/layer-density {:=x :sepal-width
+                           :=density-bandwidth 1}))
+
+(-> datasets/iris
+    (plotly/layer-density {:=x :sepal-width
+                           :=color :species}))
 
 ;; ### Realizing the plot
 
