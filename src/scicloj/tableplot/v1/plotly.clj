@@ -430,19 +430,19 @@ Received the whole context and returns a new dataset."]
 
 
 (defn layer
-  ([context template submap]
-   (if (tc/dataset? context)
-     (layer (base context {})
-            template
+  ([dataset-or-template layer-template submap]
+   (if (tc/dataset? dataset-or-template)
+     (layer (base dataset-or-template {})
+            layer-template
             submap)
-     ;; else - the context is already a template
-     (-> context
+     ;; else - the dataset-or-template is already a template
+     (-> dataset-or-template
          (update ::ht/defaults
                  (fn [defaults]
                    (-> defaults
                        (update :=layers
                                util/conjv
-                               (assoc template
+                               (assoc layer-template
                                       ::ht/defaults (merge
                                                      standard-defaults-map
                                                      defaults
@@ -450,10 +450,10 @@ Received the whole context and returns a new dataset."]
 
 (defn mark-based-layer [mark]
   (fn f
-    ([context]
-     (f context {}))
-    ([context submap]
-     (layer context
+    ([dataset-or-template]
+     (f dataset-or-template {}))
+    ([dataset-or-template submap]
+     (layer dataset-or-template
             layer-base
             (merge {:=mark mark}
                    submap)))))
