@@ -395,7 +395,7 @@ Received the whole context and returns a new dataset."]
   (cache/with-clean-cache
     (-> template
         xform/xform
-        kind/plotly
+        (kind/plotly {:style {:height :auto}})
         (dissoc :kindly/f))))
 
 (defn base
