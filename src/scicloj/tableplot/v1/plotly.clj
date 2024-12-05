@@ -441,11 +441,9 @@ Received the whole context and returns a new dataset."]
        (base submap))))
 
 
-(defn plot [& template]
-  (->> template
-       (apply base)
-       plotly-xform))
-
+(defn plot [template]
+  "The `plot` function realizes a template as a Plotly.js specification."
+  (plotly-xform template))
 
 (defn layer
   "The `layer` function is typically not used on the user side.
