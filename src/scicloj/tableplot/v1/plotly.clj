@@ -126,11 +126,10 @@ Otherwise, keep the original `:=dataset`."
          ;; else
          "scatter")
        (case =coordinates
-         :polar "polar"
-         :geo "geo"
+         :2d nil
          :3d "3d"
-         ;; else
-         nil)))
+         :polar "polar"
+         :geo "geo")))
 
 
 (def colors-palette
@@ -374,7 +373,7 @@ Received the whole context and returns a new dataset."]
    [:=model-options {:model-type :fastmath/ols}]
    [:=histogram-nbins 10]
    [:=density-bandwidth hc/RMV]
-   [:=coordinates hc/RMV]
+   [:=coordinates :2d]
    [:=height 400]
    [:=width 500]
    [:=margin {:t 25}]

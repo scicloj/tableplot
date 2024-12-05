@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This change
 - styling: set the wrapping div height to be "auto"
 - renamed some fn arguments for clarity
 - updated docstrings
+- encoding the default coordinates as 2d rather than nil
 
 ## [-beta-1] - 2024-12-01
 - replaced the ad-hoc `WrappedValue` daratype with the Clojure `delay` idiom 
