@@ -304,6 +304,17 @@
     (plotly/debug :=traces)
     kind/pprint)
 
+;; ### Mark
+
+;; Mark is a Tableplot notion that is used to distinguish different types of layers,
+;; e.g. a layer of points from a layer of lines.
+;; To achieve this, it is mapped into the Plotly.js concept of a *mode*
+;; and affects the Plotly.js concept of a *type*.
+
+(-> {:mark [:point :text :line :box :bar :segment]}
+    tc/dataset
+    (tc/map-columns :mode [:mark] plotly/mark->mode))
+
 ;; ## API functions
 
 (include-fnvar #'plotly/base)
