@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. This change
 - improved handling of edges in density layers
 - styling: set the wrapping div height to be "auto"
 - renamed some fn arguments for clarity
+- updated docstrings
 
 ## [-beta-1] - 2024-12-01
 - replaced the ad-hoc `WrappedValue` daratype with the Clojure `delay` idiom 

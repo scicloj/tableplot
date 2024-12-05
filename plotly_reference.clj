@@ -37,6 +37,29 @@
                (mapcat include-key)
                (str/join " "))))
 
+(defn include-fnvar [fnvar]
+  (-> (let [{:keys [name arglists doc]} (meta fnvar)]
+        (str (format "### `%s`\n" name)
+             (->> arglists
+                  (map (fn [l]
+                         (->> l
+                              pr-str
+                              (format "`%s`\n\n"))))
+                  (str/join ""))
+             (->> doc
+                  (re-seq #"`\:\=[a-z]+`")
+                  (reduce (fn [s k]
+                            (str/replace
+                             s
+                             k
+                             (-> k
+                                 (str/replace #"[`|:]" "")
+                                 keyword
+                                 include-key)))
+                          doc))))
+      kind/md
+      kindly/hide-code))
+
 ^:kindly/hide-code
 (defn include-all-keys []
   (->> plotly/standard-defaults
@@ -283,32 +306,8 @@
 
 ;; ## API functions
 
-;; ### `base`
+(include-fnvar #'plotly/base)
 
-;; `(dataset-or-template)`
-
-;; `(dataset-or-template submap)`
-
-;; `(dataset template submap)`
-
-;; The `base` function can be used to create the basis template too which we can add layers.
-;; It can be used to set up some substitution keys to be shared by the various layers.
-
-;; The return value is always a template which is set up to be visualized as plotly.
-
-(md
- "In the full case of three arguments `(dataset template submap)`,
-`dataset` is added to `template` as the value substituted for the "
- (include-key :=dataset)
- "key, and the substitution map `submap` is added as well.")
-
-;; In the other cases, if the `template` is not passed missing, it is replaced by a minimal base
-;; template to be carried along the pipeline. If the `dataset` or `submap` parts are not passed,
-;; they are simply not substituted into the template.
-
-;; If the first argument is a dataset, it is converted to a very basic template
-
-;; We typically use `base` with other layers added to it.
 ;; For example:
 
 (-> datasets/iris
@@ -319,9 +318,6 @@
                          :=mark-size 20
                          :=mark-opacity 0.3})
     (plotly/layer-point {:=color :species}))
-
-;; You see, the base substitutions are shared between layers,
-;; and the layers can override them and add substitutions of their own.
 
 ;; ### `layer` 
 

@@ -399,6 +399,25 @@ Received the whole context and returns a new dataset."]
         (dissoc :kindly/f))))
 
 (defn base
+  "  The `base` function can be used to create the basis template too which we can add layers.
+  It can be used to set up some substitution keys to be shared by the various layers.
+
+  The return value is always a template which is set up to be visualized as plotly.
+  
+  In the full case of three arguments `(dataset template submap)`,
+  `dataset` is added to `template` as the value substituted for the 
+  `:=dataset`key, and the substitution map `submap` is added as well.
+
+  In the other cases, if the `template` is not passed missing, it is replaced by a minimal base
+  template to be carried along the pipeline. If the `dataset` or `submap` parts are not passed,
+  they are simply not substituted into the template.
+
+  If the first argument is a dataset, it is converted to a very basic template
+
+  We typically use `base` with other layers added to it.
+  The base substitutions are shared between layers,
+  and the layers can override them and add substitutions of their own.
+  "  
   ;;
   ([dataset-or-template]
    (base dataset-or-template {}))
