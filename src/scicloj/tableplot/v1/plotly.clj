@@ -513,10 +513,10 @@ Received the whole context and returns a new dataset."]
 
 (defn mark-based-layer [mark]
   (fn f
-    ([context]
-     (f context {}))
-    ([context submap]
-     (layer context
+    ([dataset-or-template]
+     (f dataset-or-template {}))
+    ([dataset-or-template submap]
+     (layer dataset-or-template
             layer-base
             (merge {:=mark mark}
                    submap)))))
