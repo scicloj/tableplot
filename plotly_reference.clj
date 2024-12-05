@@ -40,7 +40,7 @@
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-height
+                         :=y :sepal-length
                          :=color :species
                          :=mark-size 10}))
 
@@ -48,7 +48,7 @@
 ;; that this template should rather be pretty-printed as a data structure.
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-height
+                         :=y :sepal-length
                          :=color :species
                          :=mark-size 10})
     kind/pprint)
@@ -61,7 +61,7 @@
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-height
+                         :=y :sepal-length
                          :=color :species
                          :=mark-size 10})
     plotly/plot
@@ -74,6 +74,12 @@
 ;; functions, the way layers are defined, the substitution keys, and the relationships
 ;; among them.
 
+;; ## How templates work 💡
+;; For typical user needs, it is ok to skip this section.
+;; It is here for the curious ones who wish to have a slightly clearer picture of the internals.
+
+;; (coming soon)
+
 ;; ## Debugging
 
 ;; Throughout this notebook, we will sometimes use the `debug` function that
@@ -83,7 +89,7 @@
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-height
+                         :=y :sepal-length
                          :=color :species
                          :=mark-size 10})
     (plotly/debug :=background))
@@ -138,9 +144,7 @@
   :layout {:title {:text "Bubble Chart Hover Text"}
            :showlegend false
            :height 600
-           :width 600}}
- ;; Style the wrapping div:
- {:style {:height :auto}})
+           :width 600}})
 
 ;; Sometimes, this raw way is all we need; but in common situations, Tableplot make things easier.
 
@@ -183,11 +187,13 @@
 ;; but they are a slightly higher-level concept, that makes it easier to bind our data to
 ;; what we receive as the plot.
 
+;; Layers are themselves templates, so they can have their own substitutions.
+
 ;; For example:
 (-> datasets/iris
     (tc/random 10 {:seed 1})
     (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-height
+                         :=y :sepal-length
                          :=color :species
                          :=mark-size 20})
     (plotly/layer-text {:=text :species}))
@@ -199,7 +205,7 @@
 (-> datasets/iris
     (tc/random 10 {:seed 1})
     (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-height
+                         :=y :sepal-length
                          :=color :species
                          :=mark-size 20})
     (plotly/layer-text {:=text :species})
@@ -217,7 +223,7 @@
 (-> datasets/iris
     (tc/random 10 {:seed 1})
     (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-height
+                         :=y :sepal-length
                          :=color :species
                          :=mark-size 20})
     (plotly/layer-text {:=text :species})
@@ -226,15 +232,81 @@
 
 ;; ## API functions
 
-;; ### Simple layers
+;; ### `base`
 
-;; ### Statistical layers
+;; `(dataset-or-template)`
 
-;; ### Base
+;; `(dataset-or-template submap)`
+
+;; `(dataset template submap)`
+
+;; The `base` function can be used to create the basis template too which we can add layers.
+;; It can be used to set up some substitution keys to be shared by the various layers.
+
+;; The return value is always a template which is set up to be visualized as plotly.
+
+;; In the full case of three arguments `(dataset template submap)`,
+;; `dataset` is added to `template` as the value substituted for the key `:=dataset`,
+;; and the substitution map `submap` is added as well.
+
+;; In the other cases, if the `template` is not passed missing, it is replaced by a minimal base
+;; template to be carried along the pipeline. If the `dataset` or `submap` parts are not passed,
+;; they are simply not substituted into the template.
+
+;; If the first argument is a dataset, it is converted to a very basic template
+
+;; We typically use `base` with other layers added to it.
+;; For example:
+
+(-> datasets/iris
+    (plotly/base {:=x :sepal-width
+                  :=y :sepal-length
+                  :=mark-size 10})
+    (plotly/layer-point {:=mark-color "grey"
+                         :=mark-size 20
+                         :=mark-opacity 0.3})
+    (plotly/layer-point {:=color :species}))
+
+;; You see, the base substitutions are shared between layers,
+;; and the layers can override them and add substitutions of their own.
+
+;; ### `layer` 
+
+;; `(dataset-or-template layer-template submap)`
+
+;; The `layer` function is typically not used on the user side.
+;; It is a generic way to create more specific functions to add layers.
+;; such as `layer-point`.
+
+;; If `dataset-or-template` is a dataset, it is converted to
+;; a basic template where it is substituted at the `:=dataset` key.
+;; Otherwise, it is already template and can be processed further.
+;; The `layer-template` template is added as an additional layer
+;; to our template.
+;; The `submap` substitution map is added as additional substitutions
+;; to that layer.
+
+;; The var `layer-base` is typicall used as the `layer-template`.
+
+;; For example, we could write someting like:
+
+(-> datasets/iris
+    (plotly/layer plotly/layer-base
+                  {:=mark :point}))
+
+;; All the `layer-*` receive a template and possibly a subsutution map,
+;; and update the template by adding the possible
+
+;; functions add layers to the template.
+;; Recall, 
+
+;; #### `:layer-point`
 
 ;; ### Realizing the plot
 
-;; ## Keys 
+;; ### Debugging (experimental)
+
+;; ## Substitution Keys 
 
 ^:kindly/hide-code
 (defn include-form [form]
