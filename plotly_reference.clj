@@ -11,7 +11,8 @@
             [aerial.hanami.common :as hc]
             [clojure.string :as str]
             [tablecloth.api :as tc]
-            [tableplot-book.datasets :as datasets]))
+            [tableplot-book.datasets :as datasets]
+            [tablecloth.column.api :as tcc]))
 
 ;; ## Overview
 
@@ -73,12 +74,6 @@
 ;; In the remainder of this chapter, we will offer a detailed reference to the API
 ;; functions, the way layers are defined, the substitution keys, and the relationships
 ;; among them.
-
-;; ## How templates work 💡
-;; For typical user needs, it is ok to skip this section.
-;; It is here for the curious ones who wish to have a slightly clearer picture of the internals.
-
-;; (coming soon)
 
 ;; ## Debugging
 
@@ -149,6 +144,12 @@
 ;; Sometimes, this raw way is all we need; but in common situations, Tableplot make things easier.
 
 ;; ## Concepts
+
+;; ### Templates 💡
+;; For typical user needs, it is ok to skip this section.
+;; It is here for the curious ones who wish to have a slightly clearer picture of the internals.
+
+;; (coming soon)
 
 ;; ### Traces
 
@@ -292,15 +293,162 @@
 
 (-> datasets/iris
     (plotly/layer plotly/layer-base
-                  {:=mark :point}))
+                  {:=mark :point
+                   :=x :sepal-width
+                   :=y :sepal-length}))
 
-;; All the `layer-*` receive a template and possibly a subsutution map,
-;; and update the template by adding the possible
+;; As we will see below, this can also be expressed as:
 
-;; functions add layers to the template.
-;; Recall, 
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length}))
 
-;; #### `:layer-point`
+;; ### `mark-based-layer`
+
+;; `(mark)`
+
+;; This function is typically not used on the user side.
+;; It is used to generate more specific functions to add specific types of layer.
+
+;; It returns a function of two possible arities:
+
+;; `(dataset-or-template)`
+
+;; `(dataset-or-template submap)`
+
+;; the returned function can be used to process a dataset or a template in a pipeline
+;; by adding a layer of a specificed kind and possibly some substutution maps.
+
+;; For example, we may do something like:
+(let [my-new-layer-function (plotly/mark-based-layer :point)]
+  (-> datasets/iris
+      (my-new-layer-function {:=x :sepal-width
+                              :=y :sepal-length})))
+
+;; But of course, this is not needed, as `layer-point` is defined
+;; exactly this way, so we can simply write:
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length}))
+
+;; All the `layer-*` below are created using `mark-based-layer`
+;; with specific substitutions.
+
+;; ### `layer-point`
+
+;; `(dataset-or-template)`
+
+;; `(dataset-or-template submap)`
+
+;; Add a point layer to the given `dataset-or-template`,
+;; with possible additional substitutions if `submap` is provided.
+
+;; Example:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=color :cyl
+      :=color-type :nominal
+      :=mark-size 20}))
+
+;; ### `layer-line`
+
+;; `(dataset-or-template)`
+
+;; `(dataset-or-template submap)`
+
+;; Add a line layer to the given `dataset-or-template`,
+;; with possible additional substitutions if `submap` is provided.
+
+;; Example:
+
+(-> datasets/economics-long
+    (tc/select-rows #(-> % :variable (= "unemploy")))
+    (plotly/layer-line
+     {:=x :date
+      :=y :value
+      :=mark-color "purple"}))
+
+;; ### `layer-bar`
+
+;; `(dataset-or-template)`
+
+;; `(dataset-or-template submap)`
+
+;; Add a bar layer to the given `dataset-or-template`,
+;; with possible additional substitutions if `submap` is provided.
+
+;; Example:
+
+(-> datasets/mtcars
+    (tc/group-by [:cyl])
+    (tc/aggregate {:total-disp #(-> % :disp tcc/sum)})
+    (tc/add-column :bar-width 0.5)
+    (plotly/layer-bar
+     {:=x :cyl
+      :=bar-width :bar-width
+      :=y :total-disp}))
+
+;; ### `layer-boxplot`
+
+;; `(dataset-or-template)`
+
+;; `(dataset-or-template submap)`
+
+;; Add a [boxplot](https://en.wikipedia.org/wiki/Box_plot) layer to the given `dataset-or-template`,
+;; with possible additional substitutions if `submap` is provided.
+
+;; Example:
+
+(-> datasets/mtcars
+    (plotly/layer-boxplot
+     {:=x :cyl
+      :=y :disp}))
+
+;; ### `layer-segment`
+
+;; `(dataset-or-template)`
+
+;; `(dataset-or-template submap)`
+
+;; Add a segment layer to the given `dataset-or-template`,
+;; with possible additional substitutions if `submap` is provided.
+
+;; Example:
+
+(-> datasets/iris
+    (plotly/layer-segment
+     {:=x0 :sepal-width
+      :=y0 :sepal-length
+      :=x1 :petal-width
+      :=y1 :petal-length
+      :=mark-opacity 0.4
+      :=mark-size 3
+      :=color :species}))
+
+;; ### `layer-text`
+
+;; `(dataset-or-template)`
+
+;; `(dataset-or-template submap)`
+
+;; Add a text layer to the given `dataset-or-template`,
+;; with possible additional substitutions if `submap` is provided.
+
+;; Example:
+
+(-> datasets/mtcars
+    (plotly/layer-text
+     {:=x :mpg
+      :=y :disp
+      :=text :cyl
+      :=textfont {:family "Courier New, monospace"
+                  :size 16
+                  :color :purple}
+      :=mark-size 20}))
 
 ;; ### Realizing the plot
 
