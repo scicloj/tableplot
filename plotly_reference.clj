@@ -329,29 +329,11 @@
                    :=x :sepal-width
                    :=y :sepal-length}))
 
-;; As we will see below, this can also be expressed as:
+;; Of course, this can also be expressed more succinctly using `layer-point`.
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length}))
-
-(include-fnvar #'plotly/mark-based-layer)
-
-;; For example, we may do something like:
-(let [my-new-layer-function (plotly/mark-based-layer :point)]
-  (-> datasets/iris
-      (my-new-layer-function {:=x :sepal-width
-                              :=y :sepal-length})))
-
-;; But of course, this is not needed, as `layer-point` is defined
-;; exactly this way, so we can simply write:
-
-(-> datasets/iris
-    (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-length}))
-
-;; All the `layer-*` below are created using `mark-based-layer`
-;; with specific substitutions.
 
 (include-fnvar #'plotly/layer-point)
 
@@ -460,6 +442,82 @@
 (-> datasets/iris
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
+
+
+(include-fnvar #'plotly/layer-smooth)
+
+;; Examples:
+
+(md "Simple linear regression of"
+    (include-key :=y)
+    "by"
+    (include-key :=x))
+
+(-> datasets/iris
+    (plotly/base {:=x :sepal-width
+                  :=y :sepal-length})
+    (plotly/layer-point {:=mark-color "green"
+                         :=name "Actual"})
+    (plotly/layer-smooth {:=mark-color "orange"
+                          :=name "Predicted"}))
+
+(md "Multiple linear regression of"
+    (include-key :=y)
+    "by"
+    (include-key :=predictors))
+
+(-> datasets/iris
+    (plotly/base {:=x :sepal-width
+                  :=y :sepal-length})
+    (plotly/layer-point {:=mark-color "green"
+                         :=name "Actual"})
+    (plotly/layer-smooth {:=predictors [:petal-width
+                                        :petal-length]
+                          :=mark-opacity 0.5
+                          :=name "Predicted"}))
+
+(md "Polynomial regression of"
+    (include-key :=y)
+    "by polynomial expressions defined by"
+    (include-key :=design-matrix))
+
+(-> datasets/iris
+    (plotly/base {:=x :sepal-width
+                  :=y :sepal-length})
+    (plotly/layer-point {:=mark-color "green"
+                         :=name "Actual"})
+    (plotly/layer-smooth {:=design-matrix [[:sepal-width '(identity sepal-width)]
+                                           [:sepal-width-2 '(* sepal-width
+                                                               sepal-width)]]
+                          :=mark-opacity 0.5
+                          :=name "Predicted"}))
+
+(md "Custom regression"
+    "defined by"
+    (include-key :model-options))
+
+(require 'scicloj.ml.tribuo)
+
+(def regression-tree-options
+  {:model-type :scicloj.ml.tribuo/regression
+   :tribuo-components [{:name "cart"
+                        :type "org.tribuo.regression.rtree.CARTRegressionTrainer"
+                        :properties {:maxDepth "8"
+                                     :fractionFeaturesInSplit "1.0"
+                                     :seed "12345"
+                                     :impurity "mse"}}
+                       {:name "mse"
+                        :type "org.tribuo.regression.rtree.impurity.MeanSquaredError"}]
+   :tribuo-trainer-name "cart"})
+
+(-> datasets/iris
+    (plotly/base {:=x :sepal-width
+                  :=y :sepal-length})
+    (plotly/layer-point {:=mark-color "green"
+                         :=name "Actual"})
+    (plotly/layer-smooth {:=model-options regression-tree-options
+                          :=mark-opacity 0.5
+                          :=name "Predicted"}))
 
 ;; ### Realizing the plot
 

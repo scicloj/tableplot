@@ -572,6 +572,24 @@ Received the whole context and returns a new dataset."]
 
 
 (defn layer-smooth
+  "
+`layer-smooth` is a applies statistical regression methods
+to the dataset to model it as a smooth shape.
+It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
+
+By default, the regression is computed with only one predictor variable,
+which is `:=x`.
+  This can be overriden using the `:=predictors` key, which allows
+  computing a regression with more than one predictor.
+
+  One can also specify the predictor columns as expressions
+  through the `:=design-matrix` key.
+  Here, we use the design matrix functionality of
+  [Metamorph.ml](https://github.com/scicloj/metamorph.ml).
+
+  One can also provide the regression model details through `:=model-options`
+  and use any regression model and parameters registered by Metamorph.ml.
+  "
   ([context]
    (layer-smooth context {}))
   ([context submap]
@@ -636,9 +654,10 @@ Received the whole context and returns a new dataset."]
   "  Add a histogram layer to the given `dataset-or-template`,
   with possible additional substitutions if `submap` is provided.
   
-  The histogram's binning and counting are computed in Clojure.
+  The histogram's binning and counting are computed
+  using [Fastmath](https://github.com/generateme/fastmath).
   
-  The `:=histogram-nbins`key controls the number of bins.
+  The `:=histogram-nbins` key controls the number of bins.
 
   If the plot is colored by a nominal type,
   then the data is grouped by this column,
@@ -709,7 +728,8 @@ Received the whole context and returns a new dataset."]
   "Add an estimated density layer to the given `dataset-or-template`,
   with possible additional substitutions if `submap` is provided.
   
-  The density is estimated using Gaussian kernel density estimation.
+  The density is estimated by Gaussian kernel density estimation
+  using [Fastmath](https://github.com/generateme/fastmath).
 
   The `:=density-bandwidth` can controls the bandwidth.
   Otherwise, it is determined by a rule of thumb.
