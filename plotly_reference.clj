@@ -13,7 +13,8 @@
             [tablecloth.api :as tc]
             [tableplot-book.datasets :as datasets]
             [tablecloth.column.api :as tcc]
-            [scicloj.kindly.v4.api :as kindly]))
+            [scicloj.kindly.v4.api :as kindly]
+            [aerial.hanami.templates :as ht]))
 
 ^:kindly/hide-code
 (defn include-form [form]
@@ -37,6 +38,19 @@
                (mapcat include-key)
                (str/join " "))))
 
+(defn turn-keys-into-links [text]
+  (some->> text
+           (re-seq #"`\:\=[a-z|\-]+`")
+           (reduce (fn [s k]
+                     (str/replace
+                      s
+                      k
+                      (-> k
+                          (str/replace #"[`|:]" "")
+                          keyword
+                          include-key)))
+                   text)))
+
 (defn include-fnvar [fnvar]
   (-> (let [{:keys [name arglists doc]} (meta fnvar)]
         (str (format "### `%s`\n" name)
@@ -46,17 +60,7 @@
                               pr-str
                               (format "`%s`\n\n"))))
                   (str/join ""))
-             (->> doc
-                  (re-seq #"`\:\=[a-z]+`")
-                  (reduce (fn [s k]
-                            (str/replace
-                             s
-                             k
-                             (-> k
-                                 (str/replace #"[`|:]" "")
-                                 keyword
-                                 include-key)))
-                          doc))))
+             (turn-keys-into-links doc)))
       kind/md
       kindly/hide-code))
 
@@ -79,6 +83,7 @@
 (defn md [& strings]
   (->> strings
        (str/join " ")
+       turn-keys-into-links
        kind/md
        kindly/hide-code))
 
@@ -308,12 +313,49 @@
 
 ;; Mark is a Tableplot notion that is used to distinguish different types of layers,
 ;; e.g. a layer of points from a layer of lines.
-;; To achieve this, it is mapped into the Plotly.js concept of a *mode*
-;; and affects the Plotly.js concept of a *type*.
+;; It is similar to the ggplot notion of 'geom'.
 
+;; Its possible values are:
+[:point :text :line :box :bar :segment]
+
+;; Here, `:box` means [boxplot](https://en.wikipedia.org/wiki/Box_plot).
+
+;; ### Coordinates
+
+;; Coordinates are a Tableplot notion that defines
+;; how marks are eventually mapped over to the cranvas,
+;; similar to ggplot's notion.
+
+;; We currently support the following:
+[:2d :3d :polar :geo]
+
+;; Here, 2d and 3d mean Eucledian coordinates of the corresponding dimensions,
+;; and `:geo` means latitude and longitude.
+
+;; ### Mode and Type  
+
+;; Mode and type are Plotl.js notions that are used to distinguish
+;; diffetent types of layers.
+
+;; Combinations of Tableplot's marks and coordinates
+;; are mapped into combinations of Plotly.js mode and type,
+;; but currently we do not use all the meaningful combinations
+;; supported by Plotly.js.
+
+;; Mode is defined as follows:
+
+^:kindly/hide-code
 (-> {:mark [:point :text :line :box :bar :segment]}
     tc/dataset
     (tc/map-columns :mode [:mark] plotly/mark->mode))
+
+;; Type is defined as the concatenation of a mark-based string
+;; (`"box"` or `"bar"` in the cases we have these marks, and `"scatter"` in all other marks)
+;; with a coordinates-based string
+;; (`"3d"`, `"polar"`, or `"geo"` in the cases whre we have such coordinates, nil otherwise).
+
+;; Thus, for example, if the mark is `:point` and the coordinates are `:polar`,
+;; then the type is `"scatterpolar"`.
 
 ;; ## API functions
 
@@ -459,10 +501,7 @@
 
 ;; Examples:
 
-(md "Simple linear regression of"
-    (include-key :=y)
-    "by"
-    (include-key :=x))
+(md "Simple linear regression of `:=y` by `:=x`:")
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -472,10 +511,7 @@
     (plotly/layer-smooth {:=mark-color "orange"
                           :=name "Predicted"}))
 
-(md "Multiple linear regression of"
-    (include-key :=y)
-    "by"
-    (include-key :=predictors))
+(md "Multiple linear regression of `:=y` by `:=predictors`:")
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -487,10 +523,7 @@
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-(md "Polynomial regression of"
-    (include-key :=y)
-    "by polynomial expressions defined by"
-    (include-key :=design-matrix))
+(md "Polynomial regression of `:=y` by `:=design-matrix`:")
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -503,9 +536,7 @@
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-(md "Custom regression"
-    "defined by"
-    (include-key :model-options))
+(md "Custom regression defined by `:=model-options`:")
 
 (require 'scicloj.ml.tribuo)
 
@@ -530,9 +561,48 @@
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-;; ### Realizing the plot
+(include-fnvar #'plotly/plot)
 
-;; ### Debugging (experimental)
+;; For example:
+(-> datasets/iris
+    tc/head
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length})
+    plotly/plot
+    kind/pprint)
+
+;; This can be useful for editing the plot as a raw Plotly.js specification.
+;; For example:
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length})
+    plotly/plot
+    (assoc-in [:layout :plot_bgcolor] "floralwhite"))
+
+(include-fnvar #'plotly/debug)
+
+;; For example:
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species}))
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species})
+    (plotly/debug :=background))
+
+(md "Here, we see that `:=background` is deterimined to be grey.")
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species})
+    (plotly/debug 0 :=color-type))
+
+(md "Here, we see that `:=color-type` for the 0th layer is deterimined to be `:nominal`.")
 
 ;; ## Substitution Keys 
 
