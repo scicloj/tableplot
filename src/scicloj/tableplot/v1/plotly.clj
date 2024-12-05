@@ -483,11 +483,11 @@ Received the whole context and returns a new dataset."]
                                                      defaults
                                                      submap))))))))))
 
-(defn mark-based-layer
-  "  This function is typically not used on the user side.
-  It is used to generate more specific functions to add specific types of layer.
+(defmacro def-mark-based-layer
+  "  This macro is typically not used on the user side.
+  It is used to generate more specific functions to add specific types of layers.
 
-  It returns a function of two possible arities:
+  It creates a function definition of two possible arities:
 
   `[dataset-or-template]`
 
@@ -496,28 +496,38 @@ Received the whole context and returns a new dataset."]
   the returned function can be used to process a dataset or a template in a pipeline
   by adding a layer of a specificed kind and possibly some substutution maps.
   "
-  [mark]
-  (fn f
-    ([dataset-or-template]
-     (f dataset-or-template {}))
-    ([dataset-or-template submap]
-     (layer dataset-or-template
-            layer-base
-            (merge {:=mark mark}
-                   submap)))))
+  [fsymbol mark description]
+  (list 'defn fsymbol
+        (format
+         "Add a %s layer to the given `dataset-or-template`,
+         with possible additional substitutions if `submap` is provided."
+         (or description (name mark)))
+        (list '[dataset-or-template]
+              (list fsymbol 'dataset-or-template {}))
+        (list '[dataset-or-template submap]
+              (list `layer 'dataset-or-template
+                    `layer-base
+                    (list `merge {:=mark mark}
+                          'submap)))))
 
+(def-mark-based-layer layer-point
+  :point nil)
 
+(def-mark-based-layer layer-line
+  :line nil)
 
-(def layer-point (mark-based-layer :point))
-(def layer-line (mark-based-layer :line))
-(def layer-bar (mark-based-layer :bar))
-(def layer-boxplot (mark-based-layer :box))
-(def layer-segment (mark-based-layer :segment))
-(def layer-text (mark-based-layer :text))
+(def-mark-based-layer layer-bar
+  :bar nil)
 
+(def-mark-based-layer layer-boxplot
+  :box
+  "[boxplot](https://en.wikipedia.org/wiki/Box_plot)")
 
+(def-mark-based-layer layer-segment
+  :segment nil)
 
-
+(def-mark-based-layer layer-text
+  :text nil)
 
 (dag/defn-with-deps smooth-stat ""
   [=dataset =x =y =predictors =group =design-matrix =model-options]

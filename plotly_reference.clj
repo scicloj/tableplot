@@ -353,14 +353,7 @@
 ;; All the `layer-*` below are created using `mark-based-layer`
 ;; with specific substitutions.
 
-;; ### `layer-point`
-
-;; `(dataset-or-template)`
-
-;; `(dataset-or-template submap)`
-
-;; Add a point layer to the given `dataset-or-template`,
-;; with possible additional substitutions if `submap` is provided.
+(include-fnvar #'plotly/layer-point)
 
 ;; Example:
 
@@ -372,14 +365,7 @@
       :=color-type :nominal
       :=mark-size 20}))
 
-;; ### `layer-line`
-
-;; `(dataset-or-template)`
-
-;; `(dataset-or-template submap)`
-
-;; Add a line layer to the given `dataset-or-template`,
-;; with possible additional substitutions if `submap` is provided.
+(include-fnvar #'plotly/layer-line)
 
 ;; Example:
 
@@ -390,14 +376,7 @@
       :=y :value
       :=mark-color "purple"}))
 
-;; ### `layer-bar`
-
-;; `(dataset-or-template)`
-
-;; `(dataset-or-template submap)`
-
-;; Add a bar layer to the given `dataset-or-template`,
-;; with possible additional substitutions if `submap` is provided.
+(include-fnvar #'plotly/layer-bar)
 
 ;; Example:
 
@@ -410,14 +389,7 @@
       :=bar-width :bar-width
       :=y :total-disp}))
 
-;; ### `layer-boxplot`
-
-;; `(dataset-or-template)`
-
-;; `(dataset-or-template submap)`
-
-;; Add a [boxplot](https://en.wikipedia.org/wiki/Box_plot) layer to the given `dataset-or-template`,
-;; with possible additional substitutions if `submap` is provided.
+(include-fnvar #'plotly/layer-boxplot)
 
 ;; Example:
 
@@ -426,14 +398,7 @@
      {:=x :cyl
       :=y :disp}))
 
-;; ### `layer-segment`
-
-;; `(dataset-or-template)`
-
-;; `(dataset-or-template submap)`
-
-;; Add a segment layer to the given `dataset-or-template`,
-;; with possible additional substitutions if `submap` is provided.
+(include-fnvar #'plotly/layer-segment)
 
 ;; Example:
 
@@ -447,14 +412,7 @@
       :=mark-size 3
       :=color :species}))
 
-;; ### `layer-text`
-
-;; `(dataset-or-template)`
-
-;; `(dataset-or-template submap)`
-
-;; Add a text layer to the given `dataset-or-template`,
-;; with possible additional substitutions if `submap` is provided.
+(include-fnvar #'plotly/layer-text)
 
 ;; Example:
 
