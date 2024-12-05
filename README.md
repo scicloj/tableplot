@@ -4,18 +4,20 @@ Easy layered graphics with Hanami & Tablecloth
 
 [![Clojars Project](https://img.shields.io/clojars/v/org.scicloj/tableplot.svg)](https://clojars.org/org.scicloj/tableplot)
 
-Tableplot is a composition of
-[Hanami](https://github.com/jsa-aerial/hanami) data visualization [templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations)
-and [Tablecloth](https://scicloj.github.io/tablecloth/) datasets.
+Tableplot is a Clojure library for data visualization 
+inspired by [ggplot2](https://ggplot2.tidyverse.org/)'s
+[layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html). 
 
-It is inspired by [ggplot2](https://ggplot2.tidyverse.org/)'s
-[layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html) and currently draws the plots in the browser using either [Vega-Lite](https://vega.github.io/vega-lite/) or [Plotly.js](https://plotly.com/javascript/).
+It is built to be composable with [Tablecloth](https://scicloj.github.io/tablecloth/) table processing
+and extend the plotting
+[templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations)
+of [Hanami](https://github.com/jsa-aerial/hanami).
 
-[Documentation](https://scicloj.github.io/tableplot/)
+Tableplot works with any tool that supports 
+the [Kindly](https://scicloj.github.io/kindly-noted/) data visualization standard,
+such as [Clay](https://scicloj.github.io/clay/).
 
-## Status
-
-The API is almost stable and will soon move to beta stage.
+📖 [Documentation](https://scicloj.github.io/tableplot/) 
 
 ## Discussion
 
