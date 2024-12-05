@@ -511,15 +511,7 @@ Received the whole context and returns a new dataset."]
           (tc/order-by [=x])))))
 
 
-(defn mark-based-layer [mark]
-  (fn f
-    ([dataset-or-template]
-     (f dataset-or-template {}))
-    ([dataset-or-template submap]
-     (layer dataset-or-template
-            layer-base
-            (merge {:=mark mark}
-                   submap)))))
+
 
 (defn layer-smooth
   ([context]
