@@ -569,6 +569,8 @@
 
 ;; ## Density
 
+;; Density estimates are handled similarly to Histograms:
+
 (-> datasets/iris
     (plotly/layer-density {:=x :sepal-width}))
 
