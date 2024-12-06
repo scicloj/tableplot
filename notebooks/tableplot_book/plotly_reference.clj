@@ -1,4 +1,4 @@
-e; # Plotly API reference 📖
+;; # Plotly API reference 📖
 
 ;; This chapter is a detailed refernce of Tableplot's Plotly API.
 ;; For diverse examples, see the
