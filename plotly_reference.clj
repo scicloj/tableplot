@@ -158,9 +158,8 @@
 ;; context.
 
 (md
- "For example, here we learn about the"
- (include-key :=background)
- "key for background color, which is a grey colour by default.")
+ "For example, here we learn about the `:=background`
+key for background color, which is a grey colour by default.")
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -404,7 +403,7 @@
 
 (include-fnvar #'plotly/base)
 
-;; For example:
+;; #### For example:
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -417,7 +416,9 @@
 
 (include-fnvar #'plotly/layer)
 
-;; For example, we could write someting like:
+;; #### For example:
+
+;; we could write someting like:
 
 (-> datasets/iris
     (plotly/layer plotly/layer-base
@@ -433,7 +434,7 @@
 
 (include-fnvar #'plotly/layer-point)
 
-;; Example:
+;; #### Example:
 
 (-> datasets/mtcars
     (plotly/layer-point
@@ -445,7 +446,7 @@
 
 (include-fnvar #'plotly/layer-line)
 
-;; Example:
+;; #### Example:
 
 (-> datasets/economics-long
     (tc/select-rows #(-> % :variable (= "unemploy")))
@@ -456,7 +457,7 @@
 
 (include-fnvar #'plotly/layer-bar)
 
-;; Example:
+;; #### Example:
 
 (-> datasets/mtcars
     (tc/group-by [:cyl])
@@ -469,7 +470,7 @@
 
 (include-fnvar #'plotly/layer-boxplot)
 
-;; Example:
+;; #### Example:
 
 (-> datasets/mtcars
     (plotly/layer-boxplot
@@ -478,7 +479,7 @@
 
 (include-fnvar #'plotly/layer-segment)
 
-;; Example:
+;; #### Example:
 
 (-> datasets/iris
     (plotly/layer-segment
@@ -492,7 +493,7 @@
 
 (include-fnvar #'plotly/layer-text)
 
-;; Example:
+;; #### Example:
 
 (-> datasets/mtcars
     (plotly/layer-text
@@ -506,7 +507,7 @@
 
 (include-fnvar #'plotly/layer-histogram)
 
-;; Examples:
+;; #### Examples:
 
 (-> datasets/iris
     (plotly/layer-histogram {:=x :sepal-width}))
@@ -522,7 +523,7 @@
 
 (include-fnvar #'plotly/layer-density)
 
-;; Examples:
+;; #### Examples:
 
 (-> datasets/iris
     (plotly/layer-density {:=x :sepal-width}))
@@ -542,7 +543,7 @@
 
 (include-fnvar #'plotly/layer-smooth)
 
-;; Examples:
+;; #### Examples:
 
 (md "Simple linear regression of `:=y` by `:=x`:")
 
@@ -628,7 +629,7 @@ since `:=color-type` is `:nominal`:")
 
 (include-fnvar #'plotly/plot)
 
-;; For example:
+;; #### For example:
 (-> datasets/iris
     tc/head
     (plotly/layer-point {:=x :sepal-width
@@ -647,7 +648,7 @@ since `:=color-type` is `:nominal`:")
 
 (include-fnvar #'plotly/debug)
 
-;; For example:
+;; #### For example:
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
