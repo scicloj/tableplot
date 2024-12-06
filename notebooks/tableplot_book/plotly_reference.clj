@@ -1,4 +1,4 @@
-;; # Plotly API reference 📖
+e; # Plotly API reference 📖
 
 ;; This chapter is a detailed refernce of Tableplot's Plotly API.
 ;; For diverse examples, see the
@@ -158,8 +158,9 @@ substitutions. Let us apply this function to a dataset with some user substituti
 As you can see below, all the substitution keys are keywords beginning with `=`. E.g., `:=color-type`.
 This is just a convention that helps distinguish their role from other keys.
 
-By default, this template is displayed by realizing it as  an actual Plotly.js
-specification.     
+By default, this template is annotated by the [Kindly](https://scicloj.github.io/kindly/)
+standared so that tools supporting Kindly (such as [Clay](https://scicloj.github.io/clay/))
+will display by realizing it and using it as a Plotly.js specification.     
 ")
 
 (-> datasets/iris
