@@ -1,4 +1,4 @@
-;; # Plotly API reference
+;; # Plotly API reference 📖
 
 ;; This chapter is a detailed refernce of Tableplot's Plotly API.
 ;; For diverse examples, see the
@@ -24,7 +24,8 @@
             [scicloj.tableplot.v1.dag :as dag]
             [tableplot-book.datasets :as datasets]
             [clojure.string :as str]
-            [aerial.hanami.common :as hc]))
+            [aerial.hanami.common :as hc]
+            [scicloj.clay.v2.api :as clay]))
 
 ^:kindly/hide-code
 (defn include-form [form]
@@ -60,7 +61,7 @@
               turn-keys-into-links)
           (->> f
                meta
-               ::dag/dep-ks
+               :scicloj.tableplot.v1.dag/dep-ks
                (map include-key)
                (str/join " "))))
 
@@ -701,3 +702,5 @@ since `:=color-type` is `:nominal`:")
 
 ^:kindly/hide-code
 (include-all-keys)
+
+
