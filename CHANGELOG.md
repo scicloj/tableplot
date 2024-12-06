@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This change
 - encoding the default coordinates as 2d rather than nil
 - made sure the `plotly/plot` function would accept only one arity
 - extended the plotly debug function to handle layers
+- simpilified the internal workflow of applying statistical transformations
 
 ## [-beta-1] - 2024-12-01
 - replaced the ad-hoc `WrappedValue` daratype with the Clojure `delay` idiom 

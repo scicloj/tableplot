@@ -19,22 +19,9 @@
     =layer-dataset
     =base-dataset))
 
-(def submap->dataset-after-stat
-  (dag/fn-with-deps-keys
-   ""
-   [:=dataset :=stat]
-   (fn [{:as submap
-         :keys [=dataset =stat]}]
-     (when-not (tc/dataset? =dataset)
-       (throw (ex-info "missing :=dataset"
-                       submap)))
-     (if =stat
-       (@=stat submap)
-       =dataset))))
-
 (dag/defn-with-deps submap->csv ""
-  [=dataset-after-stat]
-  (util/dataset->csv =dataset-after-stat))
+  [=stat]
+  (util/dataset->csv =stat))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
@@ -51,7 +38,7 @@
                                hc/RMV)))))
 
 (defn submap->field-type-after-stat [colname-key]
-  (let [dataset-key :=dataset-after-stat
+  (let [dataset-key :=stat
         colname-key-before-stat (-> colname-key
                                     name
                                     (str/replace #"-after-stat" "")
@@ -112,12 +99,11 @@
    :DFMT {:type "csv"}
 
    ;; defaults for Tableplot's templates
-   :=stat hc/RMV
+   :=stat :=dataset
    :=base-dataset hc/RMV
    :=layer-dataset hc/RMV
    :=layer? hc/RMV
    :=dataset submap->dataset
-   :=dataset-after-stat submap->dataset-after-stat
    :=csv-data submap->csv
    :=data {:values :=csv-data
            :format {:type "csv"}}
@@ -264,7 +250,8 @@
                                (assoc template
                                       :data (if (and (= (:=layer-dataset defaults)
                                                         (:=base-dataset defaults))
-                                                     (not (:=stat defaults)))
+                                                     (not= (:=stat defaults)
+                                                           :=dataset))
                                               hc/RMV
                                               :=data)
                                       ::ht/defaults (merge
@@ -334,7 +321,7 @@
    (layer context
           {:mark mark-base
            :encoding :=encoding}
-          (merge {:=stat (delay smooth-stat)
+          (merge {:=stat smooth-stat
                   :=mark :line}
                  submap))))
 
@@ -372,7 +359,7 @@
    (layer context
           {:mark mark-base
            :encoding :=encoding}
-          (merge {:=stat (delay histogram-stat)
+          (merge {:=stat histogram-stat
                   :=mark :bar
                   :=x-after-stat :left
                   :=x2-after-stat :right

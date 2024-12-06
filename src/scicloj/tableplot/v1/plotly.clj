@@ -17,21 +17,6 @@
             [scicloj.tableplot.v1.cache :as cache]
             [scicloj.tableplot.v1.xform :as xform]))
 
-(def submap->dataset-after-stat
-  (dag/fn-with-deps-keys
-   "If the statistical transformation `:=stat` is specified,
-apply it to the whole substitution context.
-Otherwise, keep the original `:=dataset`."
-   [:=dataset :=stat]
-   (fn [{:as submap
-         :keys [=dataset =stat]}]
-     (when-not (tc/dataset? =dataset)
-       (throw (ex-info "missing :=dataset"
-                       submap)))
-     (if =stat
-       (@=stat submap)
-       =dataset))))
-
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
     (dag/fn-with-deps-keys
@@ -63,7 +48,7 @@ Otherwise, keep the original `:=dataset`."
 - `:temporal` - date-time columns
 - `:nominal` - all other column types (e.g., Strings, keywords)
 ")
-  (let [dataset-key :=dataset-after-stat
+  (let [dataset-key :=stat
         colname-key-before-stat (-> colname-key
                                     name
                                     (str/replace #"-after-stat" "")
@@ -181,7 +166,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
       :size))
 
 (def layer-base
-  {:dataset :=dataset-after-stat
+  {:dataset :=stat
    :mark :=mark
    :x :=x-after-stat
    :y :=y-after-stat
@@ -343,13 +328,10 @@ The design matrix simply uses these columns without any additional transformatio
                    (-> k name symbol))]))))
 
 (def standard-defaults
-  [:=stat hc/RMV
-   "A user-defined or layer-specific statistical transformation.
-    The stat receives the whole substitution context and returns a new dataset."
+  [[:=stat :=dataset
+    "The data resulting from a possible statistical transformation."]
    [:=dataset hc/RMV
     "The data to be plotted."]
-   [:=dataset-after-stat submap->dataset-after-stat
-    "The data after a possible statistical transformation."]
    [:=x :x
     "The column for the x axis."]
    [:=x-after-stat :=x
@@ -671,7 +653,7 @@ then the regression is computed in groups.
 
 (defn layer-smooth
   "
-  `layer-smooth` is a applies statistical regression methods
+  `layer-smooth` applies statistical regression methods
   to the dataset to model it as a smooth shape.
   It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
 
@@ -697,7 +679,7 @@ then the regression is computed in groups.
   ([context submap]
    (layer context
           layer-base
-          (merge {:=stat (delay smooth-stat)
+          (merge {:=stat smooth-stat
                   :=mark :line}
                  submap))))
 
@@ -779,7 +761,7 @@ then the histogram is computed in groups."
   ([context submap]
    (layer context
           layer-base
-          (merge {:=stat (delay histogram-stat)
+          (merge {:=stat histogram-stat
                   :=mark :bar
                   :=x-after-stat :middle
                   :=y-after-stat :count
@@ -865,7 +847,7 @@ then the density is estimated in groups."
   ([context submap]
    (layer context
           layer-base
-          (merge {:=stat (delay density-stat)
+          (merge {:=stat density-stat
                   :=mark :line
                   :=mark-fill :tozeroy
                   :=x-after-stat :x
