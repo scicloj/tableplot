@@ -490,8 +490,9 @@ Received the whole context and returns a new dataset."]
        (base submap))))
 
 
-(defn plot [template]
+(defn plot
   "The `plot` function realizes a template as a Plotly.js specification."
+  [template]
   (plotly-xform template))
 
 (defn layer
@@ -619,12 +620,12 @@ Received the whole context and returns a new dataset."]
 
 (defn layer-smooth
   "
-`layer-smooth` is a applies statistical regression methods
-to the dataset to model it as a smooth shape.
-It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
+  `layer-smooth` is a applies statistical regression methods
+  to the dataset to model it as a smooth shape.
+  It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
 
-By default, the regression is computed with only one predictor variable,
-which is `:=x`.
+  By default, the regression is computed with only one predictor variable,
+  which is `:=x`.
   This can be overriden using the `:=predictors` key, which allows
   computing a regression with more than one predictor.
 
@@ -635,6 +636,10 @@ which is `:=x`.
 
   One can also provide the regression model details through `:=model-options`
   and use any regression model and parameters registered by Metamorph.ml.
+
+  The regressions computed are done on a group level, where the grouping
+  can be inferred as `:=inferred-group`
+  but can also be user-overridden through `:=group`.
   "
   ([context]
    (layer-smooth context {}))

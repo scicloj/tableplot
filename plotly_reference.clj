@@ -603,6 +603,28 @@
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
+(md "Grouped regression where `:=inferred-group` is influenced by `:color`
+since `:=color-type` is `:nominal`:")
+
+(-> datasets/iris
+    (plotly/base {:=title "dummy"
+                  :=color :species
+                  :=x :sepal-width
+                  :=y :sepal-length})
+    plotly/layer-point
+    plotly/layer-smooth)
+
+(md "Regression where grouping is avoiding using through `:=group`:")
+
+(-> datasets/iris
+    (plotly/base {:=title "dummy"
+                  :=color :species
+                  :=group []
+                  :=x :sepal-width
+                  :=y :sepal-length})
+    plotly/layer-point
+    plotly/layer-smooth)
+
 (include-fnvar #'plotly/plot)
 
 ;; For example:
