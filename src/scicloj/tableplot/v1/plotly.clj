@@ -34,17 +34,25 @@ Otherwise, keep the original `:=dataset`."
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
-    (dag/fn-with-deps-keys ""
-                           [colname-key dataset-key]
-                           (fn [submap]
-                             (if-let [colname (submap colname-key)]
-                               (let [column (-> submap
-                                                (get dataset-key)
-                                                (get colname))]
-                                 (cond (tcc/typeof? column :numerical) :quantitative
-                                       (tcc/typeof? column :datetime) :temporal
-                                       :else :nominal))
-                               hc/RMV)))))
+    (dag/fn-with-deps-keys
+     (str (format "Check the field type of the column specified by `%s`."
+                  colname-key)
+          "
+
+- `:quantitative` - numerical columns
+- `:temporal` - date-time columns
+- `:nominal` - all other column types (e.g., Strings, keywords)
+")
+     [colname-key dataset-key]
+     (fn [submap]
+       (if-let [colname (submap colname-key)]
+         (let [column (-> submap
+                          (get dataset-key)
+                          (get colname))]
+           (cond (tcc/typeof? column :numerical) :quantitative
+                 (tcc/typeof? column :datetime) :temporal
+                 :else :nominal))
+         hc/RMV)))))
 
 (defn submap->field-type-after-stat [colname-key]
   (let [dataset-key :=dataset-after-stat
@@ -336,39 +344,49 @@ Received the whole context and returns a new dataset."]
    [:=x0 hc/RMV
     "The column for the first x axis value, in cases where pairs are needed, e.g. segment layers."]
    [:=x0-after-stat :=x0
-    "The column for the first x axis value after stat, in cases where pairs are needed, e.g. segment layers."]
+    "The column for the first x axis value after `:=stat`, in cases where pairs are needed, e.g. segment layers."]
    [:=y0 hc/RMV
     "The column for the first y axis value, in cases where pairs are needed, e.g. segment layers."]
    [:=y0-after-stat :=y0
-    "The column for the first y axis value after stat, in cases where pairs are needed, e.g. segment layers."]
+    "The column for the first y axis value after `:=stat`, in cases where pairs are needed, e.g. segment layers."]
    [:=x1 hc/RMV
     "The column for the second x axis value, in cases where pairs are needed, e.g. segment layers."]
    [:=x1-after-stat :=x1
-    "The column for the second x axis value after stat, in cases where pairs are needed, e.g. segment layers."]
+    "The column for the second x axis value after `:=stat`, in cases where pairs are needed, e.g. segment layers."]
    [:=y1 hc/RMV
     "The column for the second y axis value, in cases where pairs are needed, e.g. segment layers."]
    [:=y1-after-stat :=y1
-    "The column for the second y axis value after stat, in cases where pairs are needed, e.g. segment layers."]
+    "The column for the second y axis value after `:=stat`, in cases where pairs are needed, e.g. segment layers."]
    [:=bar-width hc/RMV
     "The column to determine the bar width in bar layers."]
    [:=color hc/RMV
     "The column to determine the color of marks."]
    [:=size hc/RMV
     "The column to determine the size of marks."]
-   [:=x-type (submap->field-type :=x)]
-   [:=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)]
-   [:=y-type (submap->field-type :=y)]
-   [:=y-type-after-stat (submap->field-type-after-stat :=y-after-stat)]
-   [:=z-type (submap->field-type :=z)]
-   [:=z-type-after-stat (submap->field-type-after-stat :=z-after-stat)]
-   [:=r hc/RMV]
-   [:=theta hc/RMV]
-   [:=lat hc/RMV]
-   [:=lon hc/RMV]
+   [:=x-type (submap->field-type :=x)
+    "The field type of the column used to determine the x axis."]
+   [:=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)
+    "The field type of the column used to determine the x axis after `:=stat`."]
+   [:=y-type (submap->field-type :=y)
+    "The field type of the column used to determine the y axis."]
+   [:=y-type-after-stat (submap->field-type-after-stat :=y-after-stat)
+    "The field type of the column used to determine the y axis after `:=stat`."]
+   [:=z-type (submap->field-type :=z)
+    "The field type of the column used to determine the z axis."]
+   [:=z-type-after-stat (submap->field-type-after-stat :=z-after-stat)
+    "The field type of the column used to determine the z axis after `:=stat`."]
+   [:=r hc/RMV
+    "The column for the radius in polar coordinates."]
+   [:=theta hc/RMV
+    "The column for the angle in polar coordinates."]
+   [:=lat hc/RMV
+    "The column for the latitude in geo coordinates."]
+   [:=lon hc/RMV
+    "The column for the longitude in geo coordinates."]
    [:=color-type (submap->field-type :=color)
-    "The data type of the column used to determine mark color."]
+    "The field type of the column used to determine mark color."]
    [:=size-type (submap->field-type :=size)
-    "The data type of the column used to determine mark size"]
+    "The field type of the column used to determine mark size"]
    [:=mark-color hc/RMV
     "A fixed color specification for marks."]
    [:=mark-size hc/RMV

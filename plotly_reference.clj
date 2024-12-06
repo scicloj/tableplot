@@ -358,9 +358,10 @@ key for background color, which is a grey colour by default.")
 ;; Thus, for example, if the mark is `:point` and the coordinates are `:polar`,
 ;; then the type is `"scatterpolar"`.
 
-;; ### Variable types
+;; ### Field types
 
 ;; Looking into the data in the columns, we may classify them into the following types:
+
 ;; - `:quantitative` - numerical columns
 ;; - `:temporal` - date-time columns
 ;; - `:nominal` - all other column types (e.g., Strings, keywords)
