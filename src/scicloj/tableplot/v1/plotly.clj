@@ -909,22 +909,22 @@ then the density is estimated in groups."
 (defn debug
   "(experimental)
 
-  Given a `template` and a substitution key `k`,
-  find out what value `k` would receive when realizing the template.
+  Given a `template` and a `result` structure involving substitution keys,
+  find out what value `result` would receive when realizing the template.
 
-  Given a `template`, a `layer-idx` integer, and a substitution key `k`,
-  find out what value `k` would receive when realizing the `layer-idx`th layer in the template.
+  Given a `template`, a `layer-idx` integer, and a `result` structure involving substitution keys,
+  find out what value `result` would receive when realizing the `layer-idx`th layer in the template.
   "
-  ([template k]
+  ([template result]
    (-> template
-       (assoc ::debug k)
+       (assoc ::debug result)
        plot
        ::debug))
-  ([template layer-idx k]
+  ([template layer-idx result]
    (-> template
        (assoc ::debug :=layers)
        (assoc-in [::ht/defaults :=layers layer-idx ::debug1]
-                 k)
+                 result)
        plot
        ::debug
        (nth layer-idx)

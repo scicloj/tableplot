@@ -672,13 +672,15 @@ since `:=color-type` is `:nominal`:")
                          :=y :sepal-length
                          :=color :species}))
 
+(md "Let us verify that `:=background` is deterimined to be grey.")
+
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species})
     (plotly/debug :=background))
 
-(md "Here, we see that `:=background` is deterimined to be grey.")
+(md "Here, let us verify `:=color-type` for the 0th layer is deterimined to be `:nominal`.")
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -686,7 +688,14 @@ since `:=color-type` is `:nominal`:")
                          :=color :species})
     (plotly/debug 0 :=color-type))
 
-(md "Here, we see that `:=color-type` for the 0th layer is deterimined to be `:nominal`.")
+(md "Here, let us check both `:=color` and `:=color-type` for the 0th layer.")
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species})
+    (plotly/debug 0 {:color :=color
+                     :color-type :=color-type}))
 
 ;; ## Substitution Keys 
 
