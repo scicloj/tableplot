@@ -616,10 +616,12 @@ Received the whole context and returns a new dataset."]
   :text nil)
 
 (dag/defn-with-deps smooth-stat
-  "Given a substitution context, compute a `:=dataset` to
+  "Given a substitution context, compute a `:=dataset`
 with the `:=y` column replaced with its value predicted by regression,
 and with the results ordered by the `:=x` column.
+
 The predictor columns are specified by `:=design-matrix`
+
 and the regression model is specified by `:=model-options`.
 If `:=group` is specified, then the regression in computed in groups.
 " 
