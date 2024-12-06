@@ -42,7 +42,7 @@
 
 ^:kindly/hide-code
 (defn include-fn [f]
-  (format "%s\n\n **depends on**: %s"
+  (format "%s\n\n **by default depends on**: %s"
           (-> f
               meta
               :doc
