@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file. This change
 - simpilified the internal workflow of applying statistical transformations
 - styling: set the wrapping div height to be "auto"
 
-## [1-beta-1.1] - 2024-12-01
+## [1-beta-1.1] - 2024-12-01 
 - improved handling of edges in density layers
 
 ## [1-beta-1] - 2024-12-01

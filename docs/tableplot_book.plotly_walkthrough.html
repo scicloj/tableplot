@@ -64,7 +64,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./tableplot_book.hanami_walkthrough.html" rel="next">
+<link href="./tableplot_book.plotly_reference.html" rel="next">
 <link href="./tableplot_book.datasets.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -143,13 +143,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Preface</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Preface 👋</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./tableplot_book.datasets.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Some datasets</span></span></a>
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Some datasets 📎</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -160,8 +160,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./tableplot_book.plotly_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Plotly API reference 📖</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./tableplot_book.hanami_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Hanami walkthrough 👣</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Hanami walkthrough 👣</span></span></a>
   </div>
 </li>
     </ul>
@@ -268,7 +274,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="3.2" class="anchored" data-anchor-id="setup"><span class="header-section-number">3.2</span> Setup</h2>
 <p>For this tutorial, we require:</p>
 <ul>
-<li><p>The Tablecloth plotly API namepace</p></li>
+<li><p>The Tableplot plotly API namepace</p></li>
 <li><p><a href="https://scicloj.github.io/tablecloth/">Tablecloth</a> for dataset processing</p></li>
 <li><p>the <a href="https://cnuernber.github.io/dtype-next/tech.v3.datatype.datetime.html">datetime namespace</a> of <a href="https://github.com/cnuernber/dtype-next">dtype-next</a></p></li>
 <li><p>the <a href="https://techascent.github.io/tech.ml.dataset/tech.v3.dataset.print.html">print namespace</a> of <a href="https://github.com/techascent/tech.ml.dataset">tech.ml.dataset</a> for customized dataset printing</p></li>
@@ -333,7 +339,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a> {:=textfont <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  :=x0 <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  :=y-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  :=coordinates <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  :=coordinates <span class="at">:2d</span>,</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  :=x0-after-stat :=x0,</span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  :=z-after-stat :=z,</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  :=layers</span>
@@ -363,7 +369,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    {:=textfont <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
 <span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>     :=x0 <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
 <span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>     :=y-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>     :=coordinates <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>     :=coordinates <span class="at">:2d</span>,</span>
 <span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>     :=x0-after-stat :=x0,</span>
 <span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>     :=z-after-stat :=z,</span>
 <span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>     :=layers [],</span>
@@ -404,7 +410,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>     :=x-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
 <span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>     :=histogram-nbins <span class="dv">10</span>,</span>
 <span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>     :=automargin <span class="va">false</span>,</span>
-<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>     :=stat <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>     :=stat :=dataset,</span>
 <span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a>     :=z <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
 <span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>     :=width <span class="dv">500</span>,</span>
 <span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>     :=lat <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
@@ -412,115 +418,113 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a>     :=color-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
 <span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>     :=xaxis-gridcolor <span class="st">"rgb(255,255,255)"</span>,</span>
 <span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>     :=mark <span class="at">:point</span>,</span>
-<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>     :=dataset-after-stat #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>     :=x-title <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>     :=layout #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>     :=y <span class="at">:sepal-length</span>,</span>
-<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>     :=x1-after-stat :=x1,</span>
-<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>     :=dataset datasets/iris [<span class="dv">10</span> <span class="dv">6</span>]:</span>
-<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>| <span class="at">:rownames</span> | <span class="at">:sepal-length</span> | <span class="at">:sepal-width</span> | <span class="at">:petal-length</span> | <span class="at">:petal-width</span> |   <span class="at">:species</span> |</span>
-<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>|----------:|--------------:|-------------:|--------------:|-------------:|------------|</span>
-<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">27</span> |           <span class="fl">5.0</span> |          <span class="fl">3.4</span> |           <span class="fl">1.6</span> |          <span class="fl">0.4</span> |     setosa |</span>
-<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">97</span> |           <span class="fl">5.7</span> |          <span class="fl">2.9</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
-<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">127</span> |           <span class="fl">6.2</span> |          <span class="fl">2.8</span> |           <span class="fl">4.8</span> |          <span class="fl">1.8</span> |  virginica |</span>
-<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">92</span> |           <span class="fl">6.1</span> |          <span class="fl">3.0</span> |           <span class="fl">4.6</span> |          <span class="fl">1.4</span> | versicolor |</span>
-<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>|         <span class="dv">7</span> |           <span class="fl">4.6</span> |          <span class="fl">3.4</span> |           <span class="fl">1.4</span> |          <span class="fl">0.3</span> |     setosa |</span>
-<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">95</span> |           <span class="fl">5.6</span> |          <span class="fl">2.7</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
-<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">125</span> |           <span class="fl">6.7</span> |          <span class="fl">3.3</span> |           <span class="fl">5.7</span> |          <span class="fl">2.1</span> |  virginica |</span>
-<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">61</span> |           <span class="fl">5.0</span> |          <span class="fl">2.0</span> |           <span class="fl">3.5</span> |          <span class="fl">1.0</span> | versicolor |</span>
-<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">73</span> |           <span class="fl">6.3</span> |          <span class="fl">2.5</span> |           <span class="fl">4.9</span> |          <span class="fl">1.5</span> | versicolor |</span>
-<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">42</span> |           <span class="fl">4.5</span> |          <span class="fl">2.3</span> |           <span class="fl">1.3</span> |          <span class="fl">0.3</span> |     setosa |</span>
-<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a>,</span>
-<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a>     :=background <span class="st">"rgb(235,235,235)"</span>,</span>
-<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>     :=theta <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>     :=y0-after-stat :=y0,</span>
-<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>     :=y-after-stat :=y,</span>
-<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>     :=predictors [:=x],</span>
-<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>     :=marker-size-key #function[clojure.lang.AFunction/<span class="dv">1</span>]},</span>
-<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>    <span class="at">:lat</span> :=lat,</span>
-<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>    <span class="at">:y0</span> :=y0-after-stat,</span>
-<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a>    <span class="at">:inferred-group</span> :=inferred-group,</span>
-<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>    <span class="at">:marker-override</span></span>
-<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:color</span> :=mark-color, :=marker-size-key :=mark-size},</span>
-<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>    <span class="at">:x</span> :=x-after-stat,</span>
-<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a>    <span class="at">:x1</span> :=x1-after-stat,</span>
-<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>    <span class="at">:x0</span> :=x0-after-stat,</span>
-<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a>    <span class="at">:y-title</span> :=y-title,</span>
-<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>    <span class="at">:dataset</span> :=dataset-after-stat,</span>
-<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>    <span class="at">:text</span> :=text}],</span>
-<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>  :=mark-fill <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>  :=x1 <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a>  :=title <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>  :=z-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a>  :=y1 <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a>  :=y-type-after-stat #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a>  :=height <span class="dv">400</span>,</span>
-<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>  :=name <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a>  :=mark-opacity <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>  :=inferred-group #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a>  :=density-bandwidth <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>  :=mode #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>  :=y-title <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>  :=z-type-after-stat #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a>  :=size <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>  :=model-options {<span class="at">:model-type</span> <span class="at">:fastmath/ols</span>},</span>
-<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a>  :=group :=inferred-group,</span>
-<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a>  :=y0 <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>  :=mark-size <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a>  :=design-matrix #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a>  :=size-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a>  :=r <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a>  :=color <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a>  :=mark-color <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a>  :=bar-width <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a>  :=y1-after-stat :=y1,</span>
-<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a>  :=x <span class="at">:x</span>,</span>
-<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>  :=x-after-stat :=x,</span>
-<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a>  :=yaxis-gridcolor <span class="st">"rgb(255,255,255)"</span>,</span>
-<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a>  :=lon <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>  :=text <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a>  :=type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>  :=x-type-after-stat #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a>  :=traces #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>  :=x-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a>  :=histogram-nbins <span class="dv">10</span>,</span>
-<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a>  :=automargin <span class="va">false</span>,</span>
-<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a>  :=stat <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a>  :=z <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a>  :=width <span class="dv">500</span>,</span>
-<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a>  :=lat <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a>  :=margin {<span class="at">:t</span> <span class="dv">25</span>},</span>
-<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a>  :=color-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>  :=xaxis-gridcolor <span class="st">"rgb(255,255,255)"</span>,</span>
-<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>  :=mark <span class="at">:point</span>,</span>
-<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>  :=dataset-after-stat #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>  :=x-title <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a>  :=layout #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
-<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>  :=y <span class="at">:y</span>,</span>
-<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a>  :=x1-after-stat :=x1,</span>
-<span id="cb5-173"><a href="#cb5-173" aria-hidden="true" tabindex="-1"></a>  :=dataset datasets/iris [<span class="dv">10</span> <span class="dv">6</span>]:</span>
-<span id="cb5-174"><a href="#cb5-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-175"><a href="#cb5-175" aria-hidden="true" tabindex="-1"></a>| <span class="at">:rownames</span> | <span class="at">:sepal-length</span> | <span class="at">:sepal-width</span> | <span class="at">:petal-length</span> | <span class="at">:petal-width</span> |   <span class="at">:species</span> |</span>
-<span id="cb5-176"><a href="#cb5-176" aria-hidden="true" tabindex="-1"></a>|----------:|--------------:|-------------:|--------------:|-------------:|------------|</span>
-<span id="cb5-177"><a href="#cb5-177" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">27</span> |           <span class="fl">5.0</span> |          <span class="fl">3.4</span> |           <span class="fl">1.6</span> |          <span class="fl">0.4</span> |     setosa |</span>
-<span id="cb5-178"><a href="#cb5-178" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">97</span> |           <span class="fl">5.7</span> |          <span class="fl">2.9</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
-<span id="cb5-179"><a href="#cb5-179" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">127</span> |           <span class="fl">6.2</span> |          <span class="fl">2.8</span> |           <span class="fl">4.8</span> |          <span class="fl">1.8</span> |  virginica |</span>
-<span id="cb5-180"><a href="#cb5-180" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">92</span> |           <span class="fl">6.1</span> |          <span class="fl">3.0</span> |           <span class="fl">4.6</span> |          <span class="fl">1.4</span> | versicolor |</span>
-<span id="cb5-181"><a href="#cb5-181" aria-hidden="true" tabindex="-1"></a>|         <span class="dv">7</span> |           <span class="fl">4.6</span> |          <span class="fl">3.4</span> |           <span class="fl">1.4</span> |          <span class="fl">0.3</span> |     setosa |</span>
-<span id="cb5-182"><a href="#cb5-182" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">95</span> |           <span class="fl">5.6</span> |          <span class="fl">2.7</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
-<span id="cb5-183"><a href="#cb5-183" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">125</span> |           <span class="fl">6.7</span> |          <span class="fl">3.3</span> |           <span class="fl">5.7</span> |          <span class="fl">2.1</span> |  virginica |</span>
-<span id="cb5-184"><a href="#cb5-184" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">61</span> |           <span class="fl">5.0</span> |          <span class="fl">2.0</span> |           <span class="fl">3.5</span> |          <span class="fl">1.0</span> | versicolor |</span>
-<span id="cb5-185"><a href="#cb5-185" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">73</span> |           <span class="fl">6.3</span> |          <span class="fl">2.5</span> |           <span class="fl">4.9</span> |          <span class="fl">1.5</span> | versicolor |</span>
-<span id="cb5-186"><a href="#cb5-186" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">42</span> |           <span class="fl">4.5</span> |          <span class="fl">2.3</span> |           <span class="fl">1.3</span> |          <span class="fl">0.3</span> |     setosa |</span>
-<span id="cb5-187"><a href="#cb5-187" aria-hidden="true" tabindex="-1"></a>,</span>
-<span id="cb5-188"><a href="#cb5-188" aria-hidden="true" tabindex="-1"></a>  :=background <span class="st">"rgb(235,235,235)"</span>,</span>
-<span id="cb5-189"><a href="#cb5-189" aria-hidden="true" tabindex="-1"></a>  :=theta <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
-<span id="cb5-190"><a href="#cb5-190" aria-hidden="true" tabindex="-1"></a>  :=y0-after-stat :=y0,</span>
-<span id="cb5-191"><a href="#cb5-191" aria-hidden="true" tabindex="-1"></a>  :=y-after-stat :=y,</span>
-<span id="cb5-192"><a href="#cb5-192" aria-hidden="true" tabindex="-1"></a>  :=predictors [:=x],</span>
-<span id="cb5-193"><a href="#cb5-193" aria-hidden="true" tabindex="-1"></a>  :=marker-size-key #function[clojure.lang.AFunction/<span class="dv">1</span>]},</span>
-<span id="cb5-194"><a href="#cb5-194" aria-hidden="true" tabindex="-1"></a> <span class="at">:kindly/f</span> <span class="va">#'scicloj.tableplot.v1.plotly/plotly-xform</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>     :=x-title <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>     :=layout #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>     :=y <span class="at">:sepal-length</span>,</span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>     :=x1-after-stat :=x1,</span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>     :=dataset datasets/iris [<span class="dv">10</span> <span class="dv">6</span>]:</span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>| <span class="at">:rownames</span> | <span class="at">:sepal-length</span> | <span class="at">:sepal-width</span> | <span class="at">:petal-length</span> | <span class="at">:petal-width</span> |   <span class="at">:species</span> |</span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>|----------:|--------------:|-------------:|--------------:|-------------:|------------|</span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">27</span> |           <span class="fl">5.0</span> |          <span class="fl">3.4</span> |           <span class="fl">1.6</span> |          <span class="fl">0.4</span> |     setosa |</span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">97</span> |           <span class="fl">5.7</span> |          <span class="fl">2.9</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">127</span> |           <span class="fl">6.2</span> |          <span class="fl">2.8</span> |           <span class="fl">4.8</span> |          <span class="fl">1.8</span> |  virginica |</span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">92</span> |           <span class="fl">6.1</span> |          <span class="fl">3.0</span> |           <span class="fl">4.6</span> |          <span class="fl">1.4</span> | versicolor |</span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>|         <span class="dv">7</span> |           <span class="fl">4.6</span> |          <span class="fl">3.4</span> |           <span class="fl">1.4</span> |          <span class="fl">0.3</span> |     setosa |</span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">95</span> |           <span class="fl">5.6</span> |          <span class="fl">2.7</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">125</span> |           <span class="fl">6.7</span> |          <span class="fl">3.3</span> |           <span class="fl">5.7</span> |          <span class="fl">2.1</span> |  virginica |</span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">61</span> |           <span class="fl">5.0</span> |          <span class="fl">2.0</span> |           <span class="fl">3.5</span> |          <span class="fl">1.0</span> | versicolor |</span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">73</span> |           <span class="fl">6.3</span> |          <span class="fl">2.5</span> |           <span class="fl">4.9</span> |          <span class="fl">1.5</span> | versicolor |</span>
+<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">42</span> |           <span class="fl">4.5</span> |          <span class="fl">2.3</span> |           <span class="fl">1.3</span> |          <span class="fl">0.3</span> |     setosa |</span>
+<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a>,</span>
+<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a>     :=background <span class="st">"rgb(235,235,235)"</span>,</span>
+<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a>     :=theta <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>     :=y0-after-stat :=y0,</span>
+<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>     :=y-after-stat :=y,</span>
+<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>     :=predictors [:=x],</span>
+<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>     :=marker-size-key #function[clojure.lang.AFunction/<span class="dv">1</span>]},</span>
+<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>    <span class="at">:lat</span> :=lat,</span>
+<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>    <span class="at">:y0</span> :=y0-after-stat,</span>
+<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>    <span class="at">:inferred-group</span> :=inferred-group,</span>
+<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a>    <span class="at">:marker-override</span></span>
+<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:color</span> :=mark-color, :=marker-size-key :=mark-size},</span>
+<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>    <span class="at">:x</span> :=x-after-stat,</span>
+<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>    <span class="at">:x1</span> :=x1-after-stat,</span>
+<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a>    <span class="at">:x0</span> :=x0-after-stat,</span>
+<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>    <span class="at">:y-title</span> :=y-title,</span>
+<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a>    <span class="at">:dataset</span> :=stat,</span>
+<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>    <span class="at">:text</span> :=text}],</span>
+<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>  :=mark-fill <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>  :=x1 <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>  :=title <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a>  :=z-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>  :=y1 <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a>  :=y-type-after-stat #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a>  :=height <span class="dv">400</span>,</span>
+<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a>  :=name <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>  :=mark-opacity <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a>  :=inferred-group #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>  :=density-bandwidth <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a>  :=mode #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>  :=y-title <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>  :=z-type-after-stat #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>  :=size <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a>  :=model-options {<span class="at">:model-type</span> <span class="at">:fastmath/ols</span>},</span>
+<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>  :=group :=inferred-group,</span>
+<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a>  :=y0 <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a>  :=mark-size <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>  :=design-matrix #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a>  :=size-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a>  :=r <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a>  :=color <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a>  :=mark-color <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a>  :=bar-width <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a>  :=y1-after-stat :=y1,</span>
+<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a>  :=x <span class="at">:x</span>,</span>
+<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a>  :=x-after-stat :=x,</span>
+<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>  :=yaxis-gridcolor <span class="st">"rgb(255,255,255)"</span>,</span>
+<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a>  :=lon <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a>  :=text <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>  :=type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a>  :=x-type-after-stat #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>  :=traces #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a>  :=x-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>  :=histogram-nbins <span class="dv">10</span>,</span>
+<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a>  :=automargin <span class="va">false</span>,</span>
+<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a>  :=stat :=dataset,</span>
+<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a>  :=z <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a>  :=width <span class="dv">500</span>,</span>
+<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a>  :=lat <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a>  :=margin {<span class="at">:t</span> <span class="dv">25</span>},</span>
+<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a>  :=color-type #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a>  :=xaxis-gridcolor <span class="st">"rgb(255,255,255)"</span>,</span>
+<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>  :=mark <span class="at">:point</span>,</span>
+<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>  :=x-title <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>  :=layout #function[clojure.lang.AFunction/<span class="dv">1</span>],</span>
+<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>  :=y <span class="at">:y</span>,</span>
+<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a>  :=x1-after-stat :=x1,</span>
+<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>  :=dataset datasets/iris [<span class="dv">10</span> <span class="dv">6</span>]:</span>
+<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-173"><a href="#cb5-173" aria-hidden="true" tabindex="-1"></a>| <span class="at">:rownames</span> | <span class="at">:sepal-length</span> | <span class="at">:sepal-width</span> | <span class="at">:petal-length</span> | <span class="at">:petal-width</span> |   <span class="at">:species</span> |</span>
+<span id="cb5-174"><a href="#cb5-174" aria-hidden="true" tabindex="-1"></a>|----------:|--------------:|-------------:|--------------:|-------------:|------------|</span>
+<span id="cb5-175"><a href="#cb5-175" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">27</span> |           <span class="fl">5.0</span> |          <span class="fl">3.4</span> |           <span class="fl">1.6</span> |          <span class="fl">0.4</span> |     setosa |</span>
+<span id="cb5-176"><a href="#cb5-176" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">97</span> |           <span class="fl">5.7</span> |          <span class="fl">2.9</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
+<span id="cb5-177"><a href="#cb5-177" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">127</span> |           <span class="fl">6.2</span> |          <span class="fl">2.8</span> |           <span class="fl">4.8</span> |          <span class="fl">1.8</span> |  virginica |</span>
+<span id="cb5-178"><a href="#cb5-178" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">92</span> |           <span class="fl">6.1</span> |          <span class="fl">3.0</span> |           <span class="fl">4.6</span> |          <span class="fl">1.4</span> | versicolor |</span>
+<span id="cb5-179"><a href="#cb5-179" aria-hidden="true" tabindex="-1"></a>|         <span class="dv">7</span> |           <span class="fl">4.6</span> |          <span class="fl">3.4</span> |           <span class="fl">1.4</span> |          <span class="fl">0.3</span> |     setosa |</span>
+<span id="cb5-180"><a href="#cb5-180" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">95</span> |           <span class="fl">5.6</span> |          <span class="fl">2.7</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
+<span id="cb5-181"><a href="#cb5-181" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">125</span> |           <span class="fl">6.7</span> |          <span class="fl">3.3</span> |           <span class="fl">5.7</span> |          <span class="fl">2.1</span> |  virginica |</span>
+<span id="cb5-182"><a href="#cb5-182" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">61</span> |           <span class="fl">5.0</span> |          <span class="fl">2.0</span> |           <span class="fl">3.5</span> |          <span class="fl">1.0</span> | versicolor |</span>
+<span id="cb5-183"><a href="#cb5-183" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">73</span> |           <span class="fl">6.3</span> |          <span class="fl">2.5</span> |           <span class="fl">4.9</span> |          <span class="fl">1.5</span> | versicolor |</span>
+<span id="cb5-184"><a href="#cb5-184" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">42</span> |           <span class="fl">4.5</span> |          <span class="fl">2.3</span> |           <span class="fl">1.3</span> |          <span class="fl">0.3</span> |     setosa |</span>
+<span id="cb5-185"><a href="#cb5-185" aria-hidden="true" tabindex="-1"></a>,</span>
+<span id="cb5-186"><a href="#cb5-186" aria-hidden="true" tabindex="-1"></a>  :=background <span class="st">"rgb(235,235,235)"</span>,</span>
+<span id="cb5-187"><a href="#cb5-187" aria-hidden="true" tabindex="-1"></a>  :=theta <span class="at">:com.rpl.specter.impl/NONE</span>,</span>
+<span id="cb5-188"><a href="#cb5-188" aria-hidden="true" tabindex="-1"></a>  :=y0-after-stat :=y0,</span>
+<span id="cb5-189"><a href="#cb5-189" aria-hidden="true" tabindex="-1"></a>  :=y-after-stat :=y,</span>
+<span id="cb5-190"><a href="#cb5-190" aria-hidden="true" tabindex="-1"></a>  :=predictors [:=x],</span>
+<span id="cb5-191"><a href="#cb5-191" aria-hidden="true" tabindex="-1"></a>  :=marker-size-key #function[clojure.lang.AFunction/<span class="dv">1</span>]},</span>
+<span id="cb5-192"><a href="#cb5-192" aria-hidden="true" tabindex="-1"></a> <span class="at">:kindly/f</span> <span class="va">#'scicloj.tableplot.v1.plotly/plotly-xform</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This template has all the necessary knowledge, including the substitution keys, to turn into a plot. This happens when your visual tool (e.g., Clay) displays the plot. The tool knows what to do thanks to the Kindly metadata and a special function attached to the plot.</p>
 <div class="sourceClojure">
@@ -608,7 +612,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">meta</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>#<span class="at">:kindly</span>{<span class="at">:kind</span> <span class="at">:kind/plotly</span>, <span class="at">:options</span> <span class="va">nil</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>#<span class="at">:kindly</span>{<span class="at">:kind</span> <span class="at">:kind/plotly</span>, <span class="at">:options</span> {<span class="at">:style</span> {<span class="at">:height</span> <span class="at">:auto</span>}}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This can be useful if you wish to process the Actual Plotly.js spec rather than use the Tableplot Plotly API. Let us change the background colour, for example:</p>
 <div class="sourceClojure">
@@ -616,7 +620,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    plotly/plot</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">assoc-in</span> [<span class="at">:layout</span> <span class="at">:plot</span>_bgcolor] <span class="st">"#eeeedd"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
               [{"y":[5.0,4.6,4.5],"r":null,"name":"setosa","marker":{"color":"#1B9E77","size":20},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.6,"lon":null,"lat":null,"x":[3.4,3.4,2.3],"text":null},{"y":[5.7,6.1,5.6,5.0,6.3],"r":null,"name":"versicolor","marker":{"color":"#D95F02","size":20},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.6,"lon":null,"lat":null,"x":[2.9,3.0,2.7,2.0,2.5],"text":null},{"y":[6.2,6.7],"r":null,"name":"virginica","marker":{"color":"#7570B3","size":20},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.6,"lon":null,"lat":null,"x":[2.8,3.3],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"#eeeedd","xaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-width"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-length"},"title":null}, {});</script></div>
 <p>For another example, let us use a logarithmic scale for the y axis:</p>
 <div class="sourceClojure">
@@ -624,7 +628,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    plotly/plot</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">assoc-in</span> [<span class="at">:layout</span> <span class="at">:yaxis</span> <span class="at">:type</span>] <span class="st">"log"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
               [{"y":[5.0,4.6,4.5],"r":null,"name":"setosa","marker":{"color":"#1B9E77","size":20},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.6,"lon":null,"lat":null,"x":[3.4,3.4,2.3],"text":null},{"y":[5.7,6.1,5.6,5.0,6.3],"r":null,"name":"versicolor","marker":{"color":"#D95F02","size":20},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.6,"lon":null,"lat":null,"x":[2.9,3.0,2.7,2.0,2.5],"text":null},{"y":[6.2,6.7],"r":null,"name":"virginica","marker":{"color":"#7570B3","size":20},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.6,"lon":null,"lat":null,"x":[2.8,3.3],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-width"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-length","type":"log"},"title":null}, {});</script></div>
 </section>
 <section id="field-type-inference" class="level2" data-number="3.6">
@@ -865,7 +869,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>                         :=mark-opacity <span class="fl">0.5</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-              [{"y":[2944.0,2945.0,2958.0,3143.0,3066.0,3018.0,2878.0,3001.0,2877.0,2709.0,2740.0,2938.0,2883.0,2768.0,2686.0,2689.0,2715.0,2685.0,2718.0,2692.0,2712.0,2758.0,2713.0,2816.0,2868.0,2856.0,3040.0,3049.0,2856.0,2884.0,3201.0,3453.0,3635.0,3797.0,3919.0,4071.0,4175.0,4256.0,4456.0,4591.0,4898.0,5076.0,4986.0,4903.0,4987.0,4959.0,4996.0,4949.0,5035.0,5134.0,5042.0,4954.0,5161.0,5154.0,5019.0,4928.0,5038.0,4959.0,4922.0,4923.0,4913.0,4939.0,4849.0,4875.0,4602.0,4543.0,4326.0,4452.0,4394.0,4459.0,4329.0,4363.0,4305.0,4305.0,4350.0,4144.0,4396.0,4489.0,4644.0,4731.0,4634.0,4618.0,4705.0,4927.0,5063.0,5022.0,5437.0,5523.0,6140.0,6636.0,7501.0,7520.0,7978.0,8210.0,8433.0,8220.0,8127.0,7928.0,7923.0,7897.0,7794.0,7744.0,7534.0,7326.0,7230.0,7330.0,7053.0,7322.0,7490.0,7518.0,7380.0,7430.0,7620.0,7545.0,7280.0,7443.0,7307.0,7059.0,6911.0,7134.0,6829.0,6925.0,6751.0,6763.0,6815.0,6386.0,6489.0,6318.0,6337.0,6180.0,6127.0,6028.0,6309.0,6080.0,6125.0,5947.0,6077.0,6228.0,6109.0,6173.0,6109.0,6069.0,5840.0,5959.0,5996.0,6320.0,6190.0,6296.0,6238.0,6325.0,6683.0,6702.0,6729.0,7358.0,7984.0,8098.0,8363.0,8281.0,8021.0,8088.0,8023.0,7718.0,8071.0,8051.0,7982.0,7869.0,8174.0,8098.0,7863.0,8036.0,8230.0,8646.0,9029.0,9267.0,9397.0,9705.0,9895.0,10244.0,10335.0,10538.0,10849.0,10881.0,11217.0,11529.0,11938.0,12051.0,11534.0,11545.0,11408.0,11268.0,11154.0,11246.0,10548.0,10623.0,10282.0,9887.0,9499.0,9331.0,9008.0,8791.0,8746.0,8762.0,8456.0,8226.0,8537.0,8519.0,8367.0,8381.0,8198.0,8358.0,8423.0,8321.0,8339.0,8395.0,8302.0,8460.0,8513.0,8196.0,8248.0,8298.0,8128.0,8138.0,7795.0,8402.0,8383.0,8364.0,8439.0,8508.0,8319.0,8135.0,8310.0,8243.0,8159.0,7883.0,7892.0,7865.0,7862.0,7542.0,7574.0,7398.0,7268.0,7261.0,7102.0,7227.0,7035.0,6936.0,6953.0,6929.0,6876.0,6601.0,6779.0,6546.0,6605.0,6843.0,6604.0,6568.0,6537.0,6518.0,6682.0,6359.0,6205.0,6468.0,6375.0,6577.0,6495.0,6511.0,6590.0,6630.0,6725.0,6667.0,6752.0,6651.0,6598.0,6797.0,6742.0,6590.0,6922.0,7188.0,7368.0,7459.0,7764.0,7901.0,8015.0,8265.0,8586.0,8439.0,8736.0,8692.0,8586.0,8666.0,8722.0,8842.0,8931.0,9198.0,9283.0,9454.0,9460.0,9415.0,9744.0,10040.0,9850.0,9787.0,9781.0,9398.0,9565.0,9557.0,9325.0,9183.0,9056.0,9110.0,9149.0,9121.0,8930.0,8763.0,8714.0,8750.0,8542.0,8477.0,8630.0,8583.0,8470.0,8331.0,7915.0,7927.0,7946.0,7933.0,7734.0,7632.0,7375.0,7230.0,7375.0,7187.0,7153.0,7645.0,7430.0,7427.0,7527.0,7484.0,7478.0,7328.0,7426.0,7423.0,7491.0,7313.0,7318.0,7415.0,7423.0,7095.0,7337.0,6882.0,6979.0,7031.0,7236.0,7253.0,7158.0,7102.0,7000.0,6873.0,6655.0,6799.0,6655.0,6608.0,6656.0,6454.0,6308.0,6476.0,6368.0,6306.0,6422.0,5941.0,6047.0,6212.0,6259.0,6179.0,6300.0,6280.0,6100.0,6032.0,5976.0,6111.0,5783.0,6004.0,5796.0,5951.0,6025.0,5838.0,5915.0,5778.0,5716.0,5653.0,5708.0,5858.0,5733.0,5481.0,5758.0,5651.0,5747.0,5853.0,5625.0,5534.0,5639.0,5634.0,6023.0,6089.0,6141.0,6271.0,6226.0,6484.0,6583.0,7042.0,7142.0,7694.0,8003.0,8258.0,8182.0,8215.0,8304.0,8599.0,8399.0,8393.0,8390.0,8304.0,8251.0,8307.0,8520.0,8640.0,8520.0,8618.0,8588.0,8842.0,8957.0,9266.0,9011.0,8896.0,8921.0,8732.0,8576.0,8317.0,8370.0,8167.0,8491.0,8170.0,8212.0,8286.0,8136.0,7990.0,7927.0,8061.0,7932.0,7934.0,7784.0,7980.0,7737.0,7672.0,7651.0,7524.0,7406.0,7345.0,7553.0,7453.0,7566.0,7279.0,7064.0,7184.0,7072.0,7120.0,6980.0,7001.0,7175.0,7091.0,6847.0,6727.0,6872.0,6762.0,7116.0,6927.0,6731.0,6850.0,6766.0,6979.0,7149.0,7067.0,7170.0,7237.0,7240.0,7645.0,7685.0,7497.0,7822.0,7637.0,8395.0,8575.0,8937.0,9438.0,9494.0,10074.0,10538.0,11286.0,12058.0,12898.0,13426.0,13853.0,14499.0,14707.0,14601.0,14814.0,15009.0,15352.0,15219.0,15098.0,15046.0,15113.0,15202.0,15325.0,14849.0,14474.0,14512.0,14648.0,14579.0,14516.0,15081.0,14348.0,14013.0,13820.0,13737.0,13957.0,13855.0,13962.0,13763.0,13818.0,13948.0,13594.0,13302.0,13093.0,12797.0,12813.0,12713.0,12646.0,12660.0,12692.0,12656.0,12471.0,12115.0,12124.0,12005.0,12298.0,12471.0,11950.0,11689.0,11760.0,11654.0,11751.0,11335.0,11279.0,11270.0,11136.0,10787.0,10404.0,10202.0,10349.0,10380.0,9702.0,9859.0,9460.0,9608.0,9599.0,9262.0,8990.0,9090.0,8717.0,8903.0,8610.0,8504.0,8526.0],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"purple"},"lon":null,"lat":null,"x":["1967-07-01","1967-08-01","1967-09-01","1967-10-01","1967-11-01","1967-12-01","1968-01-01","1968-02-01","1968-03-01","1968-04-01","1968-05-01","1968-06-01","1968-07-01","1968-08-01","1968-09-01","1968-10-01","1968-11-01","1968-12-01","1969-01-01","1969-02-01","1969-03-01","1969-04-01","1969-05-01","1969-06-01","1969-07-01","1969-08-01","1969-09-01","1969-10-01","1969-11-01","1969-12-01","1970-01-01","1970-02-01","1970-03-01","1970-04-01","1970-05-01","1970-06-01","1970-07-01","1970-08-01","1970-09-01","1970-10-01","1970-11-01","1970-12-01","1971-01-01","1971-02-01","1971-03-01","1971-04-01","1971-05-01","1971-06-01","1971-07-01","1971-08-01","1971-09-01","1971-10-01","1971-11-01","1971-12-01","1972-01-01","1972-02-01","1972-03-01","1972-04-01","1972-05-01","1972-06-01","1972-07-01","1972-08-01","1972-09-01","1972-10-01","1972-11-01","1972-12-01","1973-01-01","1973-02-01","1973-03-01","1973-04-01","1973-05-01","1973-06-01","1973-07-01","1973-08-01","1973-09-01","1973-10-01","1973-11-01","1973-12-01","1974-01-01","1974-02-01","1974-03-01","1974-04-01","1974-05-01","1974-06-01","1974-07-01","1974-08-01","1974-09-01","1974-10-01","1974-11-01","1974-12-01","1975-01-01","1975-02-01","1975-03-01","1975-04-01","1975-05-01","1975-06-01","1975-07-01","1975-08-01","1975-09-01","1975-10-01","1975-11-01","1975-12-01","1976-01-01","1976-02-01","1976-03-01","1976-04-01","1976-05-01","1976-06-01","1976-07-01","1976-08-01","1976-09-01","1976-10-01","1976-11-01","1976-12-01","1977-01-01","1977-02-01","1977-03-01","1977-04-01","1977-05-01","1977-06-01","1977-07-01","1977-08-01","1977-09-01","1977-10-01","1977-11-01","1977-12-01","1978-01-01","1978-02-01","1978-03-01","1978-04-01","1978-05-01","1978-06-01","1978-07-01","1978-08-01","1978-09-01","1978-10-01","1978-11-01","1978-12-01","1979-01-01","1979-02-01","1979-03-01","1979-04-01","1979-05-01","1979-06-01","1979-07-01","1979-08-01","1979-09-01","1979-10-01","1979-11-01","1979-12-01","1980-01-01","1980-02-01","1980-03-01","1980-04-01","1980-05-01","1980-06-01","1980-07-01","1980-08-01","1980-09-01","1980-10-01","1980-11-01","1980-12-01","1981-01-01","1981-02-01","1981-03-01","1981-04-01","1981-05-01","1981-06-01","1981-07-01","1981-08-01","1981-09-01","1981-10-01","1981-11-01","1981-12-01","1982-01-01","1982-02-01","1982-03-01","1982-04-01","1982-05-01","1982-06-01","1982-07-01","1982-08-01","1982-09-01","1982-10-01","1982-11-01","1982-12-01","1983-01-01","1983-02-01","1983-03-01","1983-04-01","1983-05-01","1983-06-01","1983-07-01","1983-08-01","1983-09-01","1983-10-01","1983-11-01","1983-12-01","1984-01-01","1984-02-01","1984-03-01","1984-04-01","1984-05-01","1984-06-01","1984-07-01","1984-08-01","1984-09-01","1984-10-01","1984-11-01","1984-12-01","1985-01-01","1985-02-01","1985-03-01","1985-04-01","1985-05-01","1985-06-01","1985-07-01","1985-08-01","1985-09-01","1985-10-01","1985-11-01","1985-12-01","1986-01-01","1986-02-01","1986-03-01","1986-04-01","1986-05-01","1986-06-01","1986-07-01","1986-08-01","1986-09-01","1986-10-01","1986-11-01","1986-12-01","1987-01-01","1987-02-01","1987-03-01","1987-04-01","1987-05-01","1987-06-01","1987-07-01","1987-08-01","1987-09-01","1987-10-01","1987-11-01","1987-12-01","1988-01-01","1988-02-01","1988-03-01","1988-04-01","1988-05-01","1988-06-01","1988-07-01","1988-08-01","1988-09-01","1988-10-01","1988-11-01","1988-12-01","1989-01-01","1989-02-01","1989-03-01","1989-04-01","1989-05-01","1989-06-01","1989-07-01","1989-08-01","1989-09-01","1989-10-01","1989-11-01","1989-12-01","1990-01-01","1990-02-01","1990-03-01","1990-04-01","1990-05-01","1990-06-01","1990-07-01","1990-08-01","1990-09-01","1990-10-01","1990-11-01","1990-12-01","1991-01-01","1991-02-01","1991-03-01","1991-04-01","1991-05-01","1991-06-01","1991-07-01","1991-08-01","1991-09-01","1991-10-01","1991-11-01","1991-12-01","1992-01-01","1992-02-01","1992-03-01","1992-04-01","1992-05-01","1992-06-01","1992-07-01","1992-08-01","1992-09-01","1992-10-01","1992-11-01","1992-12-01","1993-01-01","1993-02-01","1993-03-01","1993-04-01","1993-05-01","1993-06-01","1993-07-01","1993-08-01","1993-09-01","1993-10-01","1993-11-01","1993-12-01","1994-01-01","1994-02-01","1994-03-01","1994-04-01","1994-05-01","1994-06-01","1994-07-01","1994-08-01","1994-09-01","1994-10-01","1994-11-01","1994-12-01","1995-01-01","1995-02-01","1995-03-01","1995-04-01","1995-05-01","1995-06-01","1995-07-01","1995-08-01","1995-09-01","1995-10-01","1995-11-01","1995-12-01","1996-01-01","1996-02-01","1996-03-01","1996-04-01","1996-05-01","1996-06-01","1996-07-01","1996-08-01","1996-09-01","1996-10-01","1996-11-01","1996-12-01","1997-01-01","1997-02-01","1997-03-01","1997-04-01","1997-05-01","1997-06-01","1997-07-01","1997-08-01","1997-09-01","1997-10-01","1997-11-01","1997-12-01","1998-01-01","1998-02-01","1998-03-01","1998-04-01","1998-05-01","1998-06-01","1998-07-01","1998-08-01","1998-09-01","1998-10-01","1998-11-01","1998-12-01","1999-01-01","1999-02-01","1999-03-01","1999-04-01","1999-05-01","1999-06-01","1999-07-01","1999-08-01","1999-09-01","1999-10-01","1999-11-01","1999-12-01","2000-01-01","2000-02-01","2000-03-01","2000-04-01","2000-05-01","2000-06-01","2000-07-01","2000-08-01","2000-09-01","2000-10-01","2000-11-01","2000-12-01","2001-01-01","2001-02-01","2001-03-01","2001-04-01","2001-05-01","2001-06-01","2001-07-01","2001-08-01","2001-09-01","2001-10-01","2001-11-01","2001-12-01","2002-01-01","2002-02-01","2002-03-01","2002-04-01","2002-05-01","2002-06-01","2002-07-01","2002-08-01","2002-09-01","2002-10-01","2002-11-01","2002-12-01","2003-01-01","2003-02-01","2003-03-01","2003-04-01","2003-05-01","2003-06-01","2003-07-01","2003-08-01","2003-09-01","2003-10-01","2003-11-01","2003-12-01","2004-01-01","2004-02-01","2004-03-01","2004-04-01","2004-05-01","2004-06-01","2004-07-01","2004-08-01","2004-09-01","2004-10-01","2004-11-01","2004-12-01","2005-01-01","2005-02-01","2005-03-01","2005-04-01","2005-05-01","2005-06-01","2005-07-01","2005-08-01","2005-09-01","2005-10-01","2005-11-01","2005-12-01","2006-01-01","2006-02-01","2006-03-01","2006-04-01","2006-05-01","2006-06-01","2006-07-01","2006-08-01","2006-09-01","2006-10-01","2006-11-01","2006-12-01","2007-01-01","2007-02-01","2007-03-01","2007-04-01","2007-05-01","2007-06-01","2007-07-01","2007-08-01","2007-09-01","2007-10-01","2007-11-01","2007-12-01","2008-01-01","2008-02-01","2008-03-01","2008-04-01","2008-05-01","2008-06-01","2008-07-01","2008-08-01","2008-09-01","2008-10-01","2008-11-01","2008-12-01","2009-01-01","2009-02-01","2009-03-01","2009-04-01","2009-05-01","2009-06-01","2009-07-01","2009-08-01","2009-09-01","2009-10-01","2009-11-01","2009-12-01","2010-01-01","2010-02-01","2010-03-01","2010-04-01","2010-05-01","2010-06-01","2010-07-01","2010-08-01","2010-09-01","2010-10-01","2010-11-01","2010-12-01","2011-01-01","2011-02-01","2011-03-01","2011-04-01","2011-05-01","2011-06-01","2011-07-01","2011-08-01","2011-09-01","2011-10-01","2011-11-01","2011-12-01","2012-01-01","2012-02-01","2012-03-01","2012-04-01","2012-05-01","2012-06-01","2012-07-01","2012-08-01","2012-09-01","2012-10-01","2012-11-01","2012-12-01","2013-01-01","2013-02-01","2013-03-01","2013-04-01","2013-05-01","2013-06-01","2013-07-01","2013-08-01","2013-09-01","2013-10-01","2013-11-01","2013-12-01","2014-01-01","2014-02-01","2014-03-01","2014-04-01","2014-05-01","2014-06-01","2014-07-01","2014-08-01","2014-09-01","2014-10-01","2014-11-01","2014-12-01","2015-01-01","2015-02-01","2015-03-01","2015-04-01"],"text":null},{"y":[7307.0,9781.0,8937.0,8367.0,7237.0],"r":null,"name":"","marker":{"color":"green","size":15},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.5,"lon":null,"lat":null,"x":["1977-03-01","1992-09-01","2008-07-01","1984-09-01","2007-10-01"],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"date"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"value"},"title":null}, {});</script></div>
+              [{"y":[2944.0,2945.0,2958.0,3143.0,3066.0,3018.0,2878.0,3001.0,2877.0,2709.0,2740.0,2938.0,2883.0,2768.0,2686.0,2689.0,2715.0,2685.0,2718.0,2692.0,2712.0,2758.0,2713.0,2816.0,2868.0,2856.0,3040.0,3049.0,2856.0,2884.0,3201.0,3453.0,3635.0,3797.0,3919.0,4071.0,4175.0,4256.0,4456.0,4591.0,4898.0,5076.0,4986.0,4903.0,4987.0,4959.0,4996.0,4949.0,5035.0,5134.0,5042.0,4954.0,5161.0,5154.0,5019.0,4928.0,5038.0,4959.0,4922.0,4923.0,4913.0,4939.0,4849.0,4875.0,4602.0,4543.0,4326.0,4452.0,4394.0,4459.0,4329.0,4363.0,4305.0,4305.0,4350.0,4144.0,4396.0,4489.0,4644.0,4731.0,4634.0,4618.0,4705.0,4927.0,5063.0,5022.0,5437.0,5523.0,6140.0,6636.0,7501.0,7520.0,7978.0,8210.0,8433.0,8220.0,8127.0,7928.0,7923.0,7897.0,7794.0,7744.0,7534.0,7326.0,7230.0,7330.0,7053.0,7322.0,7490.0,7518.0,7380.0,7430.0,7620.0,7545.0,7280.0,7443.0,7307.0,7059.0,6911.0,7134.0,6829.0,6925.0,6751.0,6763.0,6815.0,6386.0,6489.0,6318.0,6337.0,6180.0,6127.0,6028.0,6309.0,6080.0,6125.0,5947.0,6077.0,6228.0,6109.0,6173.0,6109.0,6069.0,5840.0,5959.0,5996.0,6320.0,6190.0,6296.0,6238.0,6325.0,6683.0,6702.0,6729.0,7358.0,7984.0,8098.0,8363.0,8281.0,8021.0,8088.0,8023.0,7718.0,8071.0,8051.0,7982.0,7869.0,8174.0,8098.0,7863.0,8036.0,8230.0,8646.0,9029.0,9267.0,9397.0,9705.0,9895.0,10244.0,10335.0,10538.0,10849.0,10881.0,11217.0,11529.0,11938.0,12051.0,11534.0,11545.0,11408.0,11268.0,11154.0,11246.0,10548.0,10623.0,10282.0,9887.0,9499.0,9331.0,9008.0,8791.0,8746.0,8762.0,8456.0,8226.0,8537.0,8519.0,8367.0,8381.0,8198.0,8358.0,8423.0,8321.0,8339.0,8395.0,8302.0,8460.0,8513.0,8196.0,8248.0,8298.0,8128.0,8138.0,7795.0,8402.0,8383.0,8364.0,8439.0,8508.0,8319.0,8135.0,8310.0,8243.0,8159.0,7883.0,7892.0,7865.0,7862.0,7542.0,7574.0,7398.0,7268.0,7261.0,7102.0,7227.0,7035.0,6936.0,6953.0,6929.0,6876.0,6601.0,6779.0,6546.0,6605.0,6843.0,6604.0,6568.0,6537.0,6518.0,6682.0,6359.0,6205.0,6468.0,6375.0,6577.0,6495.0,6511.0,6590.0,6630.0,6725.0,6667.0,6752.0,6651.0,6598.0,6797.0,6742.0,6590.0,6922.0,7188.0,7368.0,7459.0,7764.0,7901.0,8015.0,8265.0,8586.0,8439.0,8736.0,8692.0,8586.0,8666.0,8722.0,8842.0,8931.0,9198.0,9283.0,9454.0,9460.0,9415.0,9744.0,10040.0,9850.0,9787.0,9781.0,9398.0,9565.0,9557.0,9325.0,9183.0,9056.0,9110.0,9149.0,9121.0,8930.0,8763.0,8714.0,8750.0,8542.0,8477.0,8630.0,8583.0,8470.0,8331.0,7915.0,7927.0,7946.0,7933.0,7734.0,7632.0,7375.0,7230.0,7375.0,7187.0,7153.0,7645.0,7430.0,7427.0,7527.0,7484.0,7478.0,7328.0,7426.0,7423.0,7491.0,7313.0,7318.0,7415.0,7423.0,7095.0,7337.0,6882.0,6979.0,7031.0,7236.0,7253.0,7158.0,7102.0,7000.0,6873.0,6655.0,6799.0,6655.0,6608.0,6656.0,6454.0,6308.0,6476.0,6368.0,6306.0,6422.0,5941.0,6047.0,6212.0,6259.0,6179.0,6300.0,6280.0,6100.0,6032.0,5976.0,6111.0,5783.0,6004.0,5796.0,5951.0,6025.0,5838.0,5915.0,5778.0,5716.0,5653.0,5708.0,5858.0,5733.0,5481.0,5758.0,5651.0,5747.0,5853.0,5625.0,5534.0,5639.0,5634.0,6023.0,6089.0,6141.0,6271.0,6226.0,6484.0,6583.0,7042.0,7142.0,7694.0,8003.0,8258.0,8182.0,8215.0,8304.0,8599.0,8399.0,8393.0,8390.0,8304.0,8251.0,8307.0,8520.0,8640.0,8520.0,8618.0,8588.0,8842.0,8957.0,9266.0,9011.0,8896.0,8921.0,8732.0,8576.0,8317.0,8370.0,8167.0,8491.0,8170.0,8212.0,8286.0,8136.0,7990.0,7927.0,8061.0,7932.0,7934.0,7784.0,7980.0,7737.0,7672.0,7651.0,7524.0,7406.0,7345.0,7553.0,7453.0,7566.0,7279.0,7064.0,7184.0,7072.0,7120.0,6980.0,7001.0,7175.0,7091.0,6847.0,6727.0,6872.0,6762.0,7116.0,6927.0,6731.0,6850.0,6766.0,6979.0,7149.0,7067.0,7170.0,7237.0,7240.0,7645.0,7685.0,7497.0,7822.0,7637.0,8395.0,8575.0,8937.0,9438.0,9494.0,10074.0,10538.0,11286.0,12058.0,12898.0,13426.0,13853.0,14499.0,14707.0,14601.0,14814.0,15009.0,15352.0,15219.0,15098.0,15046.0,15113.0,15202.0,15325.0,14849.0,14474.0,14512.0,14648.0,14579.0,14516.0,15081.0,14348.0,14013.0,13820.0,13737.0,13957.0,13855.0,13962.0,13763.0,13818.0,13948.0,13594.0,13302.0,13093.0,12797.0,12813.0,12713.0,12646.0,12660.0,12692.0,12656.0,12471.0,12115.0,12124.0,12005.0,12298.0,12471.0,11950.0,11689.0,11760.0,11654.0,11751.0,11335.0,11279.0,11270.0,11136.0,10787.0,10404.0,10202.0,10349.0,10380.0,9702.0,9859.0,9460.0,9608.0,9599.0,9262.0,8990.0,9090.0,8717.0,8903.0,8610.0,8504.0,8526.0],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"purple"},"lon":null,"lat":null,"x":["1967-07-01","1967-08-01","1967-09-01","1967-10-01","1967-11-01","1967-12-01","1968-01-01","1968-02-01","1968-03-01","1968-04-01","1968-05-01","1968-06-01","1968-07-01","1968-08-01","1968-09-01","1968-10-01","1968-11-01","1968-12-01","1969-01-01","1969-02-01","1969-03-01","1969-04-01","1969-05-01","1969-06-01","1969-07-01","1969-08-01","1969-09-01","1969-10-01","1969-11-01","1969-12-01","1970-01-01","1970-02-01","1970-03-01","1970-04-01","1970-05-01","1970-06-01","1970-07-01","1970-08-01","1970-09-01","1970-10-01","1970-11-01","1970-12-01","1971-01-01","1971-02-01","1971-03-01","1971-04-01","1971-05-01","1971-06-01","1971-07-01","1971-08-01","1971-09-01","1971-10-01","1971-11-01","1971-12-01","1972-01-01","1972-02-01","1972-03-01","1972-04-01","1972-05-01","1972-06-01","1972-07-01","1972-08-01","1972-09-01","1972-10-01","1972-11-01","1972-12-01","1973-01-01","1973-02-01","1973-03-01","1973-04-01","1973-05-01","1973-06-01","1973-07-01","1973-08-01","1973-09-01","1973-10-01","1973-11-01","1973-12-01","1974-01-01","1974-02-01","1974-03-01","1974-04-01","1974-05-01","1974-06-01","1974-07-01","1974-08-01","1974-09-01","1974-10-01","1974-11-01","1974-12-01","1975-01-01","1975-02-01","1975-03-01","1975-04-01","1975-05-01","1975-06-01","1975-07-01","1975-08-01","1975-09-01","1975-10-01","1975-11-01","1975-12-01","1976-01-01","1976-02-01","1976-03-01","1976-04-01","1976-05-01","1976-06-01","1976-07-01","1976-08-01","1976-09-01","1976-10-01","1976-11-01","1976-12-01","1977-01-01","1977-02-01","1977-03-01","1977-04-01","1977-05-01","1977-06-01","1977-07-01","1977-08-01","1977-09-01","1977-10-01","1977-11-01","1977-12-01","1978-01-01","1978-02-01","1978-03-01","1978-04-01","1978-05-01","1978-06-01","1978-07-01","1978-08-01","1978-09-01","1978-10-01","1978-11-01","1978-12-01","1979-01-01","1979-02-01","1979-03-01","1979-04-01","1979-05-01","1979-06-01","1979-07-01","1979-08-01","1979-09-01","1979-10-01","1979-11-01","1979-12-01","1980-01-01","1980-02-01","1980-03-01","1980-04-01","1980-05-01","1980-06-01","1980-07-01","1980-08-01","1980-09-01","1980-10-01","1980-11-01","1980-12-01","1981-01-01","1981-02-01","1981-03-01","1981-04-01","1981-05-01","1981-06-01","1981-07-01","1981-08-01","1981-09-01","1981-10-01","1981-11-01","1981-12-01","1982-01-01","1982-02-01","1982-03-01","1982-04-01","1982-05-01","1982-06-01","1982-07-01","1982-08-01","1982-09-01","1982-10-01","1982-11-01","1982-12-01","1983-01-01","1983-02-01","1983-03-01","1983-04-01","1983-05-01","1983-06-01","1983-07-01","1983-08-01","1983-09-01","1983-10-01","1983-11-01","1983-12-01","1984-01-01","1984-02-01","1984-03-01","1984-04-01","1984-05-01","1984-06-01","1984-07-01","1984-08-01","1984-09-01","1984-10-01","1984-11-01","1984-12-01","1985-01-01","1985-02-01","1985-03-01","1985-04-01","1985-05-01","1985-06-01","1985-07-01","1985-08-01","1985-09-01","1985-10-01","1985-11-01","1985-12-01","1986-01-01","1986-02-01","1986-03-01","1986-04-01","1986-05-01","1986-06-01","1986-07-01","1986-08-01","1986-09-01","1986-10-01","1986-11-01","1986-12-01","1987-01-01","1987-02-01","1987-03-01","1987-04-01","1987-05-01","1987-06-01","1987-07-01","1987-08-01","1987-09-01","1987-10-01","1987-11-01","1987-12-01","1988-01-01","1988-02-01","1988-03-01","1988-04-01","1988-05-01","1988-06-01","1988-07-01","1988-08-01","1988-09-01","1988-10-01","1988-11-01","1988-12-01","1989-01-01","1989-02-01","1989-03-01","1989-04-01","1989-05-01","1989-06-01","1989-07-01","1989-08-01","1989-09-01","1989-10-01","1989-11-01","1989-12-01","1990-01-01","1990-02-01","1990-03-01","1990-04-01","1990-05-01","1990-06-01","1990-07-01","1990-08-01","1990-09-01","1990-10-01","1990-11-01","1990-12-01","1991-01-01","1991-02-01","1991-03-01","1991-04-01","1991-05-01","1991-06-01","1991-07-01","1991-08-01","1991-09-01","1991-10-01","1991-11-01","1991-12-01","1992-01-01","1992-02-01","1992-03-01","1992-04-01","1992-05-01","1992-06-01","1992-07-01","1992-08-01","1992-09-01","1992-10-01","1992-11-01","1992-12-01","1993-01-01","1993-02-01","1993-03-01","1993-04-01","1993-05-01","1993-06-01","1993-07-01","1993-08-01","1993-09-01","1993-10-01","1993-11-01","1993-12-01","1994-01-01","1994-02-01","1994-03-01","1994-04-01","1994-05-01","1994-06-01","1994-07-01","1994-08-01","1994-09-01","1994-10-01","1994-11-01","1994-12-01","1995-01-01","1995-02-01","1995-03-01","1995-04-01","1995-05-01","1995-06-01","1995-07-01","1995-08-01","1995-09-01","1995-10-01","1995-11-01","1995-12-01","1996-01-01","1996-02-01","1996-03-01","1996-04-01","1996-05-01","1996-06-01","1996-07-01","1996-08-01","1996-09-01","1996-10-01","1996-11-01","1996-12-01","1997-01-01","1997-02-01","1997-03-01","1997-04-01","1997-05-01","1997-06-01","1997-07-01","1997-08-01","1997-09-01","1997-10-01","1997-11-01","1997-12-01","1998-01-01","1998-02-01","1998-03-01","1998-04-01","1998-05-01","1998-06-01","1998-07-01","1998-08-01","1998-09-01","1998-10-01","1998-11-01","1998-12-01","1999-01-01","1999-02-01","1999-03-01","1999-04-01","1999-05-01","1999-06-01","1999-07-01","1999-08-01","1999-09-01","1999-10-01","1999-11-01","1999-12-01","2000-01-01","2000-02-01","2000-03-01","2000-04-01","2000-05-01","2000-06-01","2000-07-01","2000-08-01","2000-09-01","2000-10-01","2000-11-01","2000-12-01","2001-01-01","2001-02-01","2001-03-01","2001-04-01","2001-05-01","2001-06-01","2001-07-01","2001-08-01","2001-09-01","2001-10-01","2001-11-01","2001-12-01","2002-01-01","2002-02-01","2002-03-01","2002-04-01","2002-05-01","2002-06-01","2002-07-01","2002-08-01","2002-09-01","2002-10-01","2002-11-01","2002-12-01","2003-01-01","2003-02-01","2003-03-01","2003-04-01","2003-05-01","2003-06-01","2003-07-01","2003-08-01","2003-09-01","2003-10-01","2003-11-01","2003-12-01","2004-01-01","2004-02-01","2004-03-01","2004-04-01","2004-05-01","2004-06-01","2004-07-01","2004-08-01","2004-09-01","2004-10-01","2004-11-01","2004-12-01","2005-01-01","2005-02-01","2005-03-01","2005-04-01","2005-05-01","2005-06-01","2005-07-01","2005-08-01","2005-09-01","2005-10-01","2005-11-01","2005-12-01","2006-01-01","2006-02-01","2006-03-01","2006-04-01","2006-05-01","2006-06-01","2006-07-01","2006-08-01","2006-09-01","2006-10-01","2006-11-01","2006-12-01","2007-01-01","2007-02-01","2007-03-01","2007-04-01","2007-05-01","2007-06-01","2007-07-01","2007-08-01","2007-09-01","2007-10-01","2007-11-01","2007-12-01","2008-01-01","2008-02-01","2008-03-01","2008-04-01","2008-05-01","2008-06-01","2008-07-01","2008-08-01","2008-09-01","2008-10-01","2008-11-01","2008-12-01","2009-01-01","2009-02-01","2009-03-01","2009-04-01","2009-05-01","2009-06-01","2009-07-01","2009-08-01","2009-09-01","2009-10-01","2009-11-01","2009-12-01","2010-01-01","2010-02-01","2010-03-01","2010-04-01","2010-05-01","2010-06-01","2010-07-01","2010-08-01","2010-09-01","2010-10-01","2010-11-01","2010-12-01","2011-01-01","2011-02-01","2011-03-01","2011-04-01","2011-05-01","2011-06-01","2011-07-01","2011-08-01","2011-09-01","2011-10-01","2011-11-01","2011-12-01","2012-01-01","2012-02-01","2012-03-01","2012-04-01","2012-05-01","2012-06-01","2012-07-01","2012-08-01","2012-09-01","2012-10-01","2012-11-01","2012-12-01","2013-01-01","2013-02-01","2013-03-01","2013-04-01","2013-05-01","2013-06-01","2013-07-01","2013-08-01","2013-09-01","2013-10-01","2013-11-01","2013-12-01","2014-01-01","2014-02-01","2014-03-01","2014-04-01","2014-05-01","2014-06-01","2014-07-01","2014-08-01","2014-09-01","2014-10-01","2014-11-01","2014-12-01","2015-01-01","2015-02-01","2015-03-01","2015-04-01"],"text":null},{"y":[6109.0,6568.0,8167.0,7268.0,8439.0],"r":null,"name":"","marker":{"color":"green","size":15},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.5,"lon":null,"lat":null,"x":["1979-01-01","1988-10-01","2004-02-01","1987-07-01","1986-05-01"],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"date"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"value"},"title":null}, {});</script></div>
 </section>
 <section id="overriding-layer-data" class="level2" data-number="3.12">
 <h2 data-number="3.12" class="anchored" data-anchor-id="overriding-layer-data"><span class="header-section-number">3.12</span> Overriding layer data</h2>
@@ -884,8 +888,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="smoothing" class="level2" data-number="3.13">
 <h2 data-number="3.13" class="anchored" data-anchor-id="smoothing"><span class="header-section-number">3.13</span> Smoothing</h2>
-<p><code>layer-smooth</code> is a layer that applies some statistical processing to the dataset to model it as a smooth shape. It is inspired by ggplot’s <a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html">geom_smooth</a>.</p>
-<p>At the moment, it can only be used to model <code>:=y</code> by linear regression. Soon we will add more ways of modelling the data.</p>
+<p><code>layer-smooth</code> is a layer that applies statistical regression methods to the dataset to model it as a smooth shape. It is inspired by ggplot’s <a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html">geom_smooth</a>.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb33"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> datasets/iris</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=x <span class="at">:sepal-width</span></span>
@@ -897,7 +900,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
               [{"y":[5.1,4.9,4.7,4.6,5.0,5.4,4.6,5.0,4.4,4.9,5.4,4.8,4.8,4.3,5.8,5.7,5.4,5.1,5.7,5.1,5.4,5.1,4.6,5.1,4.8,5.0,5.0,5.2,5.2,4.7,4.8,5.4,5.2,5.5,4.9,5.0,5.5,4.9,4.4,5.1,5.0,4.5,4.4,5.0,5.1,4.8,5.1,4.6,5.3,5.0,7.0,6.4,6.9,5.5,6.5,5.7,6.3,4.9,6.6,5.2,5.0,5.9,6.0,6.1,5.6,6.7,5.6,5.8,6.2,5.6,5.9,6.1,6.3,6.1,6.4,6.6,6.8,6.7,6.0,5.7,5.5,5.5,5.8,6.0,5.4,6.0,6.7,6.3,5.6,5.5,5.5,6.1,5.8,5.0,5.6,5.7,5.7,6.2,5.1,5.7,6.3,5.8,7.1,6.3,6.5,7.6,4.9,7.3,6.7,7.2,6.5,6.4,6.8,5.7,5.8,6.4,6.5,7.7,7.7,6.0,6.9,5.6,7.7,6.3,6.7,7.2,6.2,6.1,6.4,7.2,7.4,7.9,6.4,6.3,6.1,7.7,6.3,6.4,6.0,6.9,6.7,6.9,5.8,6.8,6.7,6.7,6.3,6.5,6.2,5.9],"r":null,"name":"Actual","marker":{"color":"green"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[3.5,3.0,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1,3.7,3.4,3.0,3.0,4.0,4.4,3.9,3.5,3.8,3.8,3.4,3.7,3.6,3.3,3.4,3.0,3.4,3.5,3.4,3.2,3.1,3.4,4.1,4.2,3.1,3.2,3.5,3.6,3.0,3.4,3.5,2.3,3.2,3.5,3.8,3.0,3.8,3.2,3.7,3.3,3.2,3.2,3.1,2.3,2.8,2.8,3.3,2.4,2.9,2.7,2.0,3.0,2.2,2.9,2.9,3.1,3.0,2.7,2.2,2.5,3.2,2.8,2.5,2.8,2.9,3.0,2.8,3.0,2.9,2.6,2.4,2.4,2.7,2.7,3.0,3.4,3.1,2.3,3.0,2.5,2.6,3.0,2.6,2.3,2.7,3.0,2.9,2.9,2.5,2.8,3.3,2.7,3.0,2.9,3.0,3.0,2.5,2.9,2.5,3.6,3.2,2.7,3.0,2.5,2.8,3.2,3.0,3.8,2.6,2.2,3.2,2.8,2.8,2.7,3.3,3.2,2.8,3.0,2.8,3.0,2.8,3.8,2.8,2.8,2.6,3.0,3.4,3.1,3.0,3.1,3.1,3.1,2.7,3.2,3.3,3.0,2.5,3.0,3.4,3.0],"text":null},{"y":[6.079500428634684,6.034828216408703,6.034828216408703,6.034828216408703,6.012492110295713,6.012492110295713,6.012492110295713,6.012492110295713,5.990156004182722,5.990156004182722,5.990156004182722,5.967819898069732,5.967819898069732,5.967819898069732,5.967819898069732,5.967819898069732,5.967819898069732,5.967819898069732,5.967819898069732,5.945483791956741,5.945483791956741,5.945483791956741,5.945483791956741,5.945483791956741,5.923147685843751,5.923147685843751,5.923147685843751,5.923147685843751,5.923147685843751,5.923147685843751,5.923147685843751,5.923147685843751,5.923147685843751,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.900811579730761,5.878475473617771,5.878475473617771,5.878475473617771,5.878475473617771,5.878475473617771,5.878475473617771,5.878475473617771,5.878475473617771,5.878475473617771,5.878475473617771,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.85613936750478,5.83380326139179,5.83380326139179,5.83380326139179,5.83380326139179,5.83380326139179,5.83380326139179,5.83380326139179,5.83380326139179,5.83380326139179,5.83380326139179,5.83380326139179,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.811467155278799,5.7891310491658095,5.7891310491658095,5.7891310491658095,5.7891310491658095,5.7891310491658095,5.7891310491658095,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.766794943052819,5.744458836939828,5.744458836939828,5.744458836939828,5.744458836939828,5.744458836939828,5.744458836939828,5.722122730826838,5.722122730826838,5.722122730826838,5.722122730826838,5.699786624713847,5.699786624713847,5.699786624713847,5.677450518600858,5.677450518600858,5.677450518600858,5.677450518600858,5.677450518600858,5.677450518600858,5.655114412487867,5.655114412487867,5.632778306374877,5.610442200261886,5.588106094148896,5.543433881922915],"r":null,"name":"Predicted","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"orange"},"lon":null,"lat":null,"x":[2.0,2.2,2.2,2.2,2.3,2.3,2.3,2.3,2.4,2.4,2.4,2.5,2.5,2.5,2.5,2.5,2.5,2.5,2.5,2.6,2.6,2.6,2.6,2.6,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.3,3.3,3.3,3.3,3.3,3.3,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.5,3.5,3.5,3.5,3.5,3.5,3.6,3.6,3.6,3.6,3.7,3.7,3.7,3.8,3.8,3.8,3.8,3.8,3.8,3.9,3.9,4.0,4.1,4.2,4.4],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-width"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-length"},"title":null}, {});</script></div>
-<p>By default, the regression is computed with only one predictor variable, which is <code>:=x</code>. But this can be overriden using the <code>:predictors</code> key. We may compute a regression with more than one predictor.</p>
+<p>By default, the regression is computed with only one predictor variable, which is <code>:=x</code>. But this can be overriden using the <code>:=predictors</code> key. We may compute a regression with more than one predictor.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb34"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> datasets/iris</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=x <span class="at">:sepal-width</span></span>
@@ -911,7 +914,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
               [{"y":[5.1,4.9,4.7,4.6,5.0,5.4,4.6,5.0,4.4,4.9,5.4,4.8,4.8,4.3,5.8,5.7,5.4,5.1,5.7,5.1,5.4,5.1,4.6,5.1,4.8,5.0,5.0,5.2,5.2,4.7,4.8,5.4,5.2,5.5,4.9,5.0,5.5,4.9,4.4,5.1,5.0,4.5,4.4,5.0,5.1,4.8,5.1,4.6,5.3,5.0,7.0,6.4,6.9,5.5,6.5,5.7,6.3,4.9,6.6,5.2,5.0,5.9,6.0,6.1,5.6,6.7,5.6,5.8,6.2,5.6,5.9,6.1,6.3,6.1,6.4,6.6,6.8,6.7,6.0,5.7,5.5,5.5,5.8,6.0,5.4,6.0,6.7,6.3,5.6,5.5,5.5,6.1,5.8,5.0,5.6,5.7,5.7,6.2,5.1,5.7,6.3,5.8,7.1,6.3,6.5,7.6,4.9,7.3,6.7,7.2,6.5,6.4,6.8,5.7,5.8,6.4,6.5,7.7,7.7,6.0,6.9,5.6,7.7,6.3,6.7,7.2,6.2,6.1,6.4,7.2,7.4,7.9,6.4,6.3,6.1,7.7,6.3,6.4,6.0,6.9,6.7,6.9,5.8,6.8,6.7,6.7,6.3,6.5,6.2,5.9],"r":null,"name":"Actual","marker":{"color":"green"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[3.5,3.0,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1,3.7,3.4,3.0,3.0,4.0,4.4,3.9,3.5,3.8,3.8,3.4,3.7,3.6,3.3,3.4,3.0,3.4,3.5,3.4,3.2,3.1,3.4,4.1,4.2,3.1,3.2,3.5,3.6,3.0,3.4,3.5,2.3,3.2,3.5,3.8,3.0,3.8,3.2,3.7,3.3,3.2,3.2,3.1,2.3,2.8,2.8,3.3,2.4,2.9,2.7,2.0,3.0,2.2,2.9,2.9,3.1,3.0,2.7,2.2,2.5,3.2,2.8,2.5,2.8,2.9,3.0,2.8,3.0,2.9,2.6,2.4,2.4,2.7,2.7,3.0,3.4,3.1,2.3,3.0,2.5,2.6,3.0,2.6,2.3,2.7,3.0,2.9,2.9,2.5,2.8,3.3,2.7,3.0,2.9,3.0,3.0,2.5,2.9,2.5,3.6,3.2,2.7,3.0,2.5,2.8,3.2,3.0,3.8,2.6,2.2,3.2,2.8,2.8,2.7,3.3,3.2,2.8,3.0,2.8,3.0,2.8,3.8,2.8,2.8,2.6,3.0,3.4,3.1,3.0,3.1,3.1,3.1,2.7,3.2,3.3,3.0,2.5,3.0,3.4,3.0],"text":null},{"y":[5.767251906091401,6.149253779506225,6.038140482961454,6.420142356376278,5.942275314766285,6.158986176262327,4.799027560318565,5.65889647534338,5.875607336839423,5.65889647534338,5.897829996148376,6.085343667376112,6.757698911173192,5.942275314766285,5.464408273156292,6.292322132116052,5.952007711522388,6.365964641002267,6.260367076050995,6.190941232327384,5.767251906091401,7.193878499962027,6.777163704685397,5.974230370831341,6.346499847490062,6.4423650156852315,6.346499847490062,6.092318198335464,6.270099472807098,5.920052655457331,6.050630745514306,6.4548552782380835,5.856142543327218,6.353474378449415,5.942275314766285,6.203431494880235,6.213163891636338,6.215921757433087,7.181388237409175,6.206189360676985,6.186724567164779,6.8882770012301675,5.996453030140295,6.474320071750288,6.553478312230002,6.343741981693313,6.521523256164945,6.267341607010348,6.289564266319303,4.885160331757632,7.028587488043245,6.649343480425171,6.104808460888316,6.050630745514306,6.149253779506225,6.104808460888316,5.725564453270243,4.885160331757632,4.9171153878226885,4.754582241700657,4.993515762505653,4.830982616383621,4.853205275692575,5.986720633384193,6.149253779506225,6.127031120197271,6.356232244246165,6.149253779506225,5.996453030140295,6.235386550945291,6.082585801579363,6.716011458352034,6.629878686912966,7.095255465970107,6.499300596855991,6.595165765051161,6.270099472807098,6.821609023303305,6.760456776969942,6.215921757433087,6.272857338603847,6.368722506799016,6.378454903555118,4.993515762505653,6.595165765051161,4.9712931031966985,6.44512288148198,4.939338047131642,6.365964641002267,4.939338047131642,6.257609210254246,6.218679623229836,6.127031120197271,6.457613144034832,6.866054341921213,6.6521013462219205,4.77680490100961,4.830982616383621,4.993515762505653,4.885160331757632,6.215921757433087,6.314544791425005,6.289564266319303,6.149253779506225,6.327035053977857,4.830982616383621,6.5437459154739,4.885160331757632,6.22565415418919,6.607656027604012,6.479835803343787,6.642368949465818,4.951828309684494,4.853205275692575,4.939338047131642,4.993515762505653,4.885160331757632,4.92960565037554,4.875427935001529,5.156048908627684,5.047693477879664,4.939338047131642,6.117298723441168,6.381212769351868,6.457613144034832,4.830982616383621,4.939338047131642,4.885160331757632,4.853205275692575,4.865695538245427,4.799027560318565,6.696546664839829,4.6684494702615895,4.885160331757632,4.9171153878226885,4.939338047131642,4.875427935001529,4.939338047131642,4.907382991066585,5.015738421814607,4.993515762505653,5.092138796497571,7.0188550912871435,7.117478125279062,4.9837833657495505,4.767072504253508,4.77680490100961,4.9712931031966985,4.885160331757632,4.875427935001529],"r":null,"name":"Predicted","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.5,"lon":null,"lat":null,"x":[2.0,2.2,2.2,2.2,2.3,2.3,2.3,2.3,2.4,2.4,2.4,2.5,2.5,2.5,2.5,2.5,2.5,2.5,2.5,2.6,2.6,2.6,2.6,2.6,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.3,3.3,3.3,3.3,3.3,3.3,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.5,3.5,3.5,3.5,3.5,3.5,3.6,3.6,3.6,3.6,3.7,3.7,3.7,3.8,3.8,3.8,3.8,3.8,3.8,3.9,3.9,4.0,4.1,4.2,4.4],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-width"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-length"},"title":null}, {});</script></div>
-<p>We can also provide the design matrix.</p>
+<p>We can also specify the predictor columns as expressions through the <code>:=design-matrix</code> key. Here, we use the design matrix functionality of <a href="https://github.com/scicloj/metamorph.ml">Metamorph.ml</a>.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb35"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> datasets/iris</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=x <span class="at">:sepal-width</span></span>
@@ -944,7 +947,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
               [{"y":[5.1,4.9,4.7,4.6,5.0,5.4,4.6,5.0,4.4,4.9,5.4,4.8,4.8,4.3,5.8,5.7,5.4,5.1,5.7,5.1,5.4,5.1,4.6,5.1,4.8,5.0,5.0,5.2,5.2,4.7,4.8,5.4,5.2,5.5,4.9,5.0,5.5,4.9,4.4,5.1,5.0,4.5,4.4,5.0,5.1,4.8,5.1,4.6,5.3,5.0,7.0,6.4,6.9,5.5,6.5,5.7,6.3,4.9,6.6,5.2,5.0,5.9,6.0,6.1,5.6,6.7,5.6,5.8,6.2,5.6,5.9,6.1,6.3,6.1,6.4,6.6,6.8,6.7,6.0,5.7,5.5,5.5,5.8,6.0,5.4,6.0,6.7,6.3,5.6,5.5,5.5,6.1,5.8,5.0,5.6,5.7,5.7,6.2,5.1,5.7,6.3,5.8,7.1,6.3,6.5,7.6,4.9,7.3,6.7,7.2,6.5,6.4,6.8,5.7,5.8,6.4,6.5,7.7,7.7,6.0,6.9,5.6,7.7,6.3,6.7,7.2,6.2,6.1,6.4,7.2,7.4,7.9,6.4,6.3,6.1,7.7,6.3,6.4,6.0,6.9,6.7,6.9,5.8,6.8,6.7,6.7,6.3,6.5,6.2,5.9],"r":null,"name":"Actual","marker":{"color":"green"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[3.5,3.0,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1,3.7,3.4,3.0,3.0,4.0,4.4,3.9,3.5,3.8,3.8,3.4,3.7,3.6,3.3,3.4,3.0,3.4,3.5,3.4,3.2,3.1,3.4,4.1,4.2,3.1,3.2,3.5,3.6,3.0,3.4,3.5,2.3,3.2,3.5,3.8,3.0,3.8,3.2,3.7,3.3,3.2,3.2,3.1,2.3,2.8,2.8,3.3,2.4,2.9,2.7,2.0,3.0,2.2,2.9,2.9,3.1,3.0,2.7,2.2,2.5,3.2,2.8,2.5,2.8,2.9,3.0,2.8,3.0,2.9,2.6,2.4,2.4,2.7,2.7,3.0,3.4,3.1,2.3,3.0,2.5,2.6,3.0,2.6,2.3,2.7,3.0,2.9,2.9,2.5,2.8,3.3,2.7,3.0,2.9,3.0,3.0,2.5,2.9,2.5,3.6,3.2,2.7,3.0,2.5,2.8,3.2,3.0,3.8,2.6,2.2,3.2,2.8,2.8,2.7,3.3,3.2,2.8,3.0,2.8,3.0,2.8,3.8,2.8,2.8,2.6,3.0,3.4,3.1,3.0,3.1,3.1,3.1,2.7,3.2,3.3,3.0,2.5,3.0,3.4,3.0],"text":null},{"y":[4.820520496666543,5.445547049443292,5.445547049443292,5.445547049443292,5.666009864680397,5.666009864680397,5.666009864680397,5.666009864680397,5.832200401345862,5.832200401345862,5.832200401345862,5.949439681086599,5.949439681086599,5.949439681086599,5.949439681086599,5.949439681086599,5.949439681086599,5.949439681086599,5.949439681086599,6.023048725549533,6.023048725549533,6.023048725549533,6.023048725549533,6.023048725549533,6.058348556381549,6.058348556381549,6.058348556381549,6.058348556381549,6.058348556381549,6.058348556381549,6.058348556381549,6.058348556381549,6.058348556381549,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.060660195229573,6.035304663740511,6.035304663740511,6.035304663740511,6.035304663740511,6.035304663740511,6.035304663740511,6.035304663740511,6.035304663740511,6.035304663740511,6.035304663740511,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.9876029835612705,5.92287617633874,5.92287617633874,5.92287617633874,5.92287617633874,5.92287617633874,5.92287617633874,5.92287617633874,5.92287617633874,5.92287617633874,5.92287617633874,5.92287617633874,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.846445263719865,5.763631267351549,5.763631267351549,5.763631267351549,5.763631267351549,5.763631267351549,5.763631267351549,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.679755208880675,5.600138109954177,5.600138109954177,5.600138109954177,5.600138109954177,5.600138109954177,5.600138109954177,5.530100992218944,5.530100992218944,5.530100992218944,5.530100992218944,5.474964877321906,5.474964877321906,5.474964877321906,5.440050786909946,5.440050786909946,5.440050786909946,5.440050786909946,5.440050786909946,5.440050786909946,5.43067974263003,5.43067974263003,5.4521727661290065,5.509850879053797,5.609035103051365,5.953205970852249],"r":null,"name":"Predicted","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"opacity":0.5,"lon":null,"lat":null,"x":[2.0,2.2,2.2,2.2,2.3,2.3,2.3,2.3,2.4,2.4,2.4,2.5,2.5,2.5,2.5,2.5,2.5,2.5,2.5,2.6,2.6,2.6,2.6,2.6,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.7,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,2.9,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.1,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.2,3.3,3.3,3.3,3.3,3.3,3.3,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.4,3.5,3.5,3.5,3.5,3.5,3.5,3.6,3.6,3.6,3.6,3.7,3.7,3.7,3.8,3.8,3.8,3.8,3.8,3.8,3.9,3.9,4.0,4.1,4.2,4.4],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-width"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sepal-length"},"title":null}, {});</script></div>
-<p>We can also provide the regression model details as metamorph.ml options:</p>
+<p>One can also provide the regression model details through <code>:=model-options</code> and use any regression model and parameters registered by Metamorph.ml.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb37"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> <span class="at">'scicloj.ml.tribuo</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -1328,6 +1331,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="density" class="level2" data-number="3.17">
 <h2 data-number="3.17" class="anchored" data-anchor-id="density"><span class="header-section-number">3.17</span> Density</h2>
+<p>(experimental)</p>
+<p>Density estimates are handled similarly to Histograms:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb50"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> datasets/iris</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-density {:=x <span class="at">:sepal-width</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1392,7 +1397,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb54-27"><a href="#cb54-27" aria-hidden="true" tabindex="-1"></a>               <span class="at">:showlakes</span> <span class="va">true</span></span>
 <span id="cb54-28"><a href="#cb54-28" aria-hidden="true" tabindex="-1"></a>               <span class="at">:showrivers</span> <span class="va">true</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
               [{"r":null,"name":"Canadian cities","marker":{"color":["#bebada","#fdb462","#fb8072","#d9d9d9","#bc80bd","#b3de69","#8dd3c7","#80b1d3","#fccde5","#ffffb3"],"size":20},"fill":null,"mode":"markers","width":null,"type":"scattergeo","theta":null,"z":null,"opacity":0.8,"lon":[-73.57,-79.24,-123.06,-114.1,-113.28,-75.43,-63.57,-123.21,-97.13,-104.6],"lat":[45.5,43.4,49.13,51.1,53.34,45.24,44.64,48.25,49.89,50.45],"text":null},{"r":null,"name":"","fill":null,"mode":"text","width":null,"type":"scattergeo","theta":null,"textfont":{"size":7,"color":"purple"},"z":null,"lon":[-73.57,-79.24,-123.06,-114.1,-113.28,-75.43,-63.57,-123.21,-97.13,-104.6],"lat":[45.5,43.4,49.13,51.1,53.34,45.24,44.64,48.25,49.89,50.45],"text":["Montreal","Toronto","Vancouver","Calgary","Edmonton","Ottawa","Halifax","Victoria","Winnepeg","Regina"]}], {"plot_bgcolor":"rgb(235,235,235)","geo":{"scope":"north america","resolution":10,"lonaxis":{"range":[-130,-55]},"lataxis":{"range":[40,60]},"countrywidth":1.5,"showland":true,"showlakes":true,"showrivers":true},"width":500,"automargin":false,"xaxis":{"gridcolor":"rgb(255,255,255)","title":"x"},"title":null,"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y"},"height":400,"margin":{"t":25}}, {});</script></div>
 </section>
 <section id="d" class="level3" data-number="3.18.2">
@@ -1439,7 +1444,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>      :=mark-opacity <span class="fl">0.6</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-              [{"r":[87,142,173,126,180,110,160,48,9,192,29,141],"name":"","marker":{"size":20},"fill":null,"mode":null,"width":null,"type":"barpolar","theta":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"z":null,"opacity":0.6,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y"},"title":null}, {});</script></div>
+              [{"r":[170,42,87,4,13,114,50,178,34,69,111,130],"name":"","marker":{"size":20},"fill":null,"mode":null,"width":null,"type":"barpolar","theta":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"z":null,"opacity":0.6,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y"},"title":null}, {});</script></div>
 <p>Controlling the polar layout (by manipulating the raw Plotly.js spec):</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb59"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> rain-data</span>
@@ -1458,8 +1463,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb59-14"><a href="#cb59-14" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:direction</span> <span class="st">"counterclockwise"</span>}</span>
 <span id="cb59-15"><a href="#cb59-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">:sector</span> [<span class="dv">0</span> <span class="dv">180</span>]}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-              [{"r":[87,142,173,126,180,110,160,48,9,192,29,141],"name":"","marker":{"size":20},"fill":null,"mode":null,"width":null,"type":"barpolar","theta":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"z":null,"opacity":0.6,"lon":null,"lat":null,"text":null}], {"polar":{"angularaxis":{"tickfont":{"size":16},"rotation":90,"direction":"counterclockwise"},"sector":[0,180]},"plot_bgcolor":"rgb(235,235,235)","width":500,"automargin":false,"xaxis":{"gridcolor":"rgb(255,255,255)","title":"x"},"title":null,"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y"},"height":400,"margin":{"t":25}}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+              [{"r":[170,42,87,4,13,114,50,178,34,69,111,130],"name":"","marker":{"size":20},"fill":null,"mode":null,"width":null,"type":"barpolar","theta":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"z":null,"opacity":0.6,"lon":null,"lat":null,"text":null}], {"polar":{"angularaxis":{"tickfont":{"size":16},"rotation":90,"direction":"counterclockwise"},"sector":[0,180]},"plot_bgcolor":"rgb(235,235,235)","width":500,"automargin":false,"xaxis":{"gridcolor":"rgb(255,255,255)","title":"x"},"title":null,"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y"},"height":400,"margin":{"t":25}}, {});</script></div>
 <p>A polar random walk - polar line-chart</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb60"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [n <span class="dv">50</span>]</span>
@@ -1484,7 +1489,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb60-20"><a href="#cb60-20" aria-hidden="true" tabindex="-1"></a>        :=mark-opacity <span class="fl">0.6</span>})))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-              [{"r":[-0.4206349434215917,-0.3841559448857257,-0.8119421062100896,-1.0281802431113993,-1.232025126826604,-1.4291641346544748,-1.7524361940629163,-2.035471343809716,-1.893003607202061,-1.9090985833373408,-2.167829288557703,-1.947152828965438,-2.226287329951278,-2.3014395844958093,-2.1731976324054596,-2.66429842727731,-2.3685500227484217,-2.2296804696101047,-1.8361145798732064,-1.6875151098271464,-1.328164379999075,-0.9691162598490657,-1.3892450778731167,-1.5708516577581235,-1.846135498961675,-1.5626060946825624,-1.34459492343293,-0.8544978537191347,-0.7116451807406615,-0.889374002486932,-0.6908846529477011,-0.3658190328543889,-0.26780442547819094,-0.6277439465765521,-0.3943601962398384,-0.7977797574162454,-1.1954067026462898,-1.2253096797341922,-1.1825658030982227,-1.5882720932767742,-1.9675825852403435,-2.326362899165475,-2.373048724060439,-1.881036991961896,-1.584176655278315,-2.082317513258905,-2.552512684826291,-2.4468971095113674,-2.576829522657285,-2.1635996889073024],"name":"","marker":{"size":10},"fill":null,"mode":"markers","width":null,"type":"scatterpolar","theta":[4.5279186153498205,14.28344275797063,15.225640440865844,21.349873124190964,21.981607705654724,26.649257736129158,30.38232836788483,37.34194025235172,44.557932203950614,53.44689882594286,54.20829255161894,64.15151792025102,71.87787750088218,81.37748311908427,89.78598858473774,92.77711390234983,99.95209927778623,105.40239185506279,105.98101854143765,107.14942487607375,110.63606850300296,116.74455815372181,117.18593272870075,121.9763965199457,129.12803655043942,138.56714002213533,142.95372470806657,145.9126553191248,149.94494890927888,159.2720032718205,167.33832989255197,169.52991898731057,176.12254030434093,182.82298060746518,189.83001065446572,195.73755163510285,203.29041902966435,205.48605883202518,215.0552772816756,221.8180068323446,229.2187058469444,237.7551076212486,244.6506672943511,249.06609782941158,257.68364840218175,264.1377465739328,265.15562742162683,266.67539626274964,275.1457495985866,283.64747952572253],"z":null,"opacity":0.6,"lon":null,"lat":null,"text":null},{"r":[-0.4206349434215917,-0.3841559448857257,-0.8119421062100896,-1.0281802431113993,-1.232025126826604,-1.4291641346544748,-1.7524361940629163,-2.035471343809716,-1.893003607202061,-1.9090985833373408,-2.167829288557703,-1.947152828965438,-2.226287329951278,-2.3014395844958093,-2.1731976324054596,-2.66429842727731,-2.3685500227484217,-2.2296804696101047,-1.8361145798732064,-1.6875151098271464,-1.328164379999075,-0.9691162598490657,-1.3892450778731167,-1.5708516577581235,-1.846135498961675,-1.5626060946825624,-1.34459492343293,-0.8544978537191347,-0.7116451807406615,-0.889374002486932,-0.6908846529477011,-0.3658190328543889,-0.26780442547819094,-0.6277439465765521,-0.3943601962398384,-0.7977797574162454,-1.1954067026462898,-1.2253096797341922,-1.1825658030982227,-1.5882720932767742,-1.9675825852403435,-2.326362899165475,-2.373048724060439,-1.881036991961896,-1.584176655278315,-2.082317513258905,-2.552512684826291,-2.4468971095113674,-2.576829522657285,-2.1635996889073024],"name":"","fill":null,"mode":"lines","width":null,"type":"scatterpolar","theta":[4.5279186153498205,14.28344275797063,15.225640440865844,21.349873124190964,21.981607705654724,26.649257736129158,30.38232836788483,37.34194025235172,44.557932203950614,53.44689882594286,54.20829255161894,64.15151792025102,71.87787750088218,81.37748311908427,89.78598858473774,92.77711390234983,99.95209927778623,105.40239185506279,105.98101854143765,107.14942487607375,110.63606850300296,116.74455815372181,117.18593272870075,121.9763965199457,129.12803655043942,138.56714002213533,142.95372470806657,145.9126553191248,149.94494890927888,159.2720032718205,167.33832989255197,169.52991898731057,176.12254030434093,182.82298060746518,189.83001065446572,195.73755163510285,203.29041902966435,205.48605883202518,215.0552772816756,221.8180068323446,229.2187058469444,237.7551076212486,244.6506672943511,249.06609782941158,257.68364840218175,264.1377465739328,265.15562742162683,266.67539626274964,275.1457495985866,283.64747952572253],"z":null,"line":{"width":3},"opacity":0.6,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y"},"title":null}, {});</script></div>
+              [{"r":[0.010592508236276443,-0.41060206905023766,0.08130241906333735,0.38385084604770503,0.48005509465888097,0.33889484046012575,-0.06597996735590328,0.03368597582577548,0.05685068175719188,-0.1408954337506063,-0.47354812333665675,-0.6695843123140444,-0.9812978279526706,-0.5401307716763663,-1.0045427775620217,-1.0393056150025757,-1.0932194206941512,-1.2661514789241601,-1.7292808998610227,-2.2123003621195507,-2.0321080040841344,-1.6517038697916158,-1.876731857759372,-1.6231247330153231,-1.7280544570110177,-2.1907156009690585,-2.5988679229278073,-2.504228114843961,-2.6027440561740676,-2.3486085755838957,-2.649449300411229,-2.523957937278343,-2.741933822233797,-2.806208004699121,-3.2115215638293195,-3.338998403659888,-2.99607479530592,-2.896123946422759,-3.197223272388221,-3.3143032995294135,-3.6035972958774116,-4.012555681858407,-4.27679350434258,-4.345141152000129,-4.393536640859295,-4.657322276472582,-4.407771103676499,-4.045373685954458,-3.585326733382976,-3.310347798140051],"name":"","marker":{"size":10},"fill":null,"mode":"markers","width":null,"type":"scatterpolar","theta":[0.7663036166452253,7.293888935840209,13.022113630746293,21.335204740016977,25.690928741200025,34.510799397074486,39.527367391977066,48.18982281855921,57.332287399879846,59.13630170925347,63.5015171012616,64.32676898303092,74.06204448613788,80.0093089866645,89.83148498269342,91.95038945625501,98.24203476520518,100.57036002430632,102.2175193698256,105.35543271975945,113.86738465113137,120.94217184723205,127.51950776998801,137.1213230334203,138.70386135222085,147.7673197427061,152.0601013444984,159.8195178455773,162.5400169369513,164.21853549277444,167.02947418330353,174.28337999847022,182.44535627461724,184.23999492993482,187.65536305728912,188.04345715520037,192.0676045008533,193.19423554485505,202.93958713465122,211.02120747965986,215.26510739400445,217.23717602567905,227.00017075537502,235.27269319401444,241.2328562816607,247.1924097311224,254.29625131887354,260.319430943424,268.7179491880309,276.6366356815222],"z":null,"opacity":0.6,"lon":null,"lat":null,"text":null},{"r":[0.010592508236276443,-0.41060206905023766,0.08130241906333735,0.38385084604770503,0.48005509465888097,0.33889484046012575,-0.06597996735590328,0.03368597582577548,0.05685068175719188,-0.1408954337506063,-0.47354812333665675,-0.6695843123140444,-0.9812978279526706,-0.5401307716763663,-1.0045427775620217,-1.0393056150025757,-1.0932194206941512,-1.2661514789241601,-1.7292808998610227,-2.2123003621195507,-2.0321080040841344,-1.6517038697916158,-1.876731857759372,-1.6231247330153231,-1.7280544570110177,-2.1907156009690585,-2.5988679229278073,-2.504228114843961,-2.6027440561740676,-2.3486085755838957,-2.649449300411229,-2.523957937278343,-2.741933822233797,-2.806208004699121,-3.2115215638293195,-3.338998403659888,-2.99607479530592,-2.896123946422759,-3.197223272388221,-3.3143032995294135,-3.6035972958774116,-4.012555681858407,-4.27679350434258,-4.345141152000129,-4.393536640859295,-4.657322276472582,-4.407771103676499,-4.045373685954458,-3.585326733382976,-3.310347798140051],"name":"","fill":null,"mode":"lines","width":null,"type":"scatterpolar","theta":[0.7663036166452253,7.293888935840209,13.022113630746293,21.335204740016977,25.690928741200025,34.510799397074486,39.527367391977066,48.18982281855921,57.332287399879846,59.13630170925347,63.5015171012616,64.32676898303092,74.06204448613788,80.0093089866645,89.83148498269342,91.95038945625501,98.24203476520518,100.57036002430632,102.2175193698256,105.35543271975945,113.86738465113137,120.94217184723205,127.51950776998801,137.1213230334203,138.70386135222085,147.7673197427061,152.0601013444984,159.8195178455773,162.5400169369513,164.21853549277444,167.02947418330353,174.28337999847022,182.44535627461724,184.23999492993482,187.65536305728912,188.04345715520037,192.0676045008533,193.19423554485505,202.93958713465122,211.02120747965986,215.26510739400445,217.23717602567905,227.00017075537502,235.27269319401444,241.2328562816607,247.1924097311224,254.29625131887354,260.319430943424,268.7179491880309,276.6366356815222],"z":null,"line":{"width":3},"opacity":0.6,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y"},"title":null}, {});</script></div>
 </section>
 </section>
 <section id="debugging-wip" class="level2" data-number="3.19">
@@ -1505,7 +1510,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div style="height:400px;width:100%;"><script>
 {
-  value = {"elements":{"nodes":[{"data":{"id":"=y"}},{"data":{"id":"=y-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=y-type"}},{"data":{"id":"=z"}},{"data":{"id":"=z-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=z-type"}},{"data":{"id":"=y-after-stat"}},{"data":{"id":"=y-type-after-stat"}},{"data":{"id":"=y"}},{"data":{"id":"=y-type-after-stat"}},{"data":{"id":"=y-type"}},{"data":{"id":"=y-type-after-stat"}},{"data":{"id":"=dataset-after-stat"}},{"data":{"id":"=y-type-after-stat"}},{"data":{"id":"=color"}},{"data":{"id":"=inferred-group"}},{"data":{"id":"=color-type"}},{"data":{"id":"=inferred-group"}},{"data":{"id":"=size"}},{"data":{"id":"=inferred-group"}},{"data":{"id":"=size-type"}},{"data":{"id":"=inferred-group"}},{"data":{"id":"=mark"}},{"data":{"id":"=mode"}},{"data":{"id":"=z-after-stat"}},{"data":{"id":"=z-type-after-stat"}},{"data":{"id":"=z"}},{"data":{"id":"=z-type-after-stat"}},{"data":{"id":"=z-type"}},{"data":{"id":"=z-type-after-stat"}},{"data":{"id":"=dataset-after-stat"}},{"data":{"id":"=z-type-after-stat"}},{"data":{"id":"=predictors"}},{"data":{"id":"=design-matrix"}},{"data":{"id":"=size"}},{"data":{"id":"=size-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=size-type"}},{"data":{"id":"=mark"}},{"data":{"id":"=type"}},{"data":{"id":"=coordinates"}},{"data":{"id":"=type"}},{"data":{"id":"=x-after-stat"}},{"data":{"id":"=x-type-after-stat"}},{"data":{"id":"=x"}},{"data":{"id":"=x-type-after-stat"}},{"data":{"id":"=x-type"}},{"data":{"id":"=x-type-after-stat"}},{"data":{"id":"=dataset-after-stat"}},{"data":{"id":"=x-type-after-stat"}},{"data":{"id":"=layers"}},{"data":{"id":"=traces"}},{"data":{"id":"=x"}},{"data":{"id":"=x-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=x-type"}},{"data":{"id":"=color"}},{"data":{"id":"=color-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=color-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=dataset-after-stat"}},{"data":{"id":"=stat"}},{"data":{"id":"=dataset-after-stat"}},{"data":{"id":"=width"}},{"data":{"id":"=layout"}},{"data":{"id":"=height"}},{"data":{"id":"=layout"}},{"data":{"id":"=margin"}},{"data":{"id":"=layout"}},{"data":{"id":"=automargin"}},{"data":{"id":"=layout"}},{"data":{"id":"=background"}},{"data":{"id":"=layout"}},{"data":{"id":"=title"}},{"data":{"id":"=layout"}},{"data":{"id":"=xaxis-gridcolor"}},{"data":{"id":"=layout"}},{"data":{"id":"=yaxis-gridcolor"}},{"data":{"id":"=layout"}},{"data":{"id":"=x-after-stat"}},{"data":{"id":"=layout"}},{"data":{"id":"=y-after-stat"}},{"data":{"id":"=layout"}},{"data":{"id":"=x-title"}},{"data":{"id":"=layout"}},{"data":{"id":"=y-title"}},{"data":{"id":"=layout"}},{"data":{"id":"=layers"}},{"data":{"id":"=layout"}},{"data":{"id":"=mode"}},{"data":{"id":"=marker-size-key"}},{"data":{"id":"=type"}},{"data":{"id":"=marker-size-key"}}],"edges":[{"data":{"id":":=y:=y-type","source":"=y","target":"=y-type"}},{"data":{"id":":=dataset:=y-type","source":"=dataset","target":"=y-type"}},{"data":{"id":":=z:=z-type","source":"=z","target":"=z-type"}},{"data":{"id":":=dataset:=z-type","source":"=dataset","target":"=z-type"}},{"data":{"id":":=y-after-stat:=y-type-after-stat","source":"=y-after-stat","target":"=y-type-after-stat"}},{"data":{"id":":=y:=y-type-after-stat","source":"=y","target":"=y-type-after-stat"}},{"data":{"id":":=y-type:=y-type-after-stat","source":"=y-type","target":"=y-type-after-stat"}},{"data":{"id":":=dataset-after-stat:=y-type-after-stat","source":"=dataset-after-stat","target":"=y-type-after-stat"}},{"data":{"id":":=color:=inferred-group","source":"=color","target":"=inferred-group"}},{"data":{"id":":=color-type:=inferred-group","source":"=color-type","target":"=inferred-group"}},{"data":{"id":":=size:=inferred-group","source":"=size","target":"=inferred-group"}},{"data":{"id":":=size-type:=inferred-group","source":"=size-type","target":"=inferred-group"}},{"data":{"id":":=mark:=mode","source":"=mark","target":"=mode"}},{"data":{"id":":=z-after-stat:=z-type-after-stat","source":"=z-after-stat","target":"=z-type-after-stat"}},{"data":{"id":":=z:=z-type-after-stat","source":"=z","target":"=z-type-after-stat"}},{"data":{"id":":=z-type:=z-type-after-stat","source":"=z-type","target":"=z-type-after-stat"}},{"data":{"id":":=dataset-after-stat:=z-type-after-stat","source":"=dataset-after-stat","target":"=z-type-after-stat"}},{"data":{"id":":=predictors:=design-matrix","source":"=predictors","target":"=design-matrix"}},{"data":{"id":":=size:=size-type","source":"=size","target":"=size-type"}},{"data":{"id":":=dataset:=size-type","source":"=dataset","target":"=size-type"}},{"data":{"id":":=mark:=type","source":"=mark","target":"=type"}},{"data":{"id":":=coordinates:=type","source":"=coordinates","target":"=type"}},{"data":{"id":":=x-after-stat:=x-type-after-stat","source":"=x-after-stat","target":"=x-type-after-stat"}},{"data":{"id":":=x:=x-type-after-stat","source":"=x","target":"=x-type-after-stat"}},{"data":{"id":":=x-type:=x-type-after-stat","source":"=x-type","target":"=x-type-after-stat"}},{"data":{"id":":=dataset-after-stat:=x-type-after-stat","source":"=dataset-after-stat","target":"=x-type-after-stat"}},{"data":{"id":":=layers:=traces","source":"=layers","target":"=traces"}},{"data":{"id":":=x:=x-type","source":"=x","target":"=x-type"}},{"data":{"id":":=dataset:=x-type","source":"=dataset","target":"=x-type"}},{"data":{"id":":=color:=color-type","source":"=color","target":"=color-type"}},{"data":{"id":":=dataset:=color-type","source":"=dataset","target":"=color-type"}},{"data":{"id":":=dataset:=dataset-after-stat","source":"=dataset","target":"=dataset-after-stat"}},{"data":{"id":":=stat:=dataset-after-stat","source":"=stat","target":"=dataset-after-stat"}},{"data":{"id":":=width:=layout","source":"=width","target":"=layout"}},{"data":{"id":":=height:=layout","source":"=height","target":"=layout"}},{"data":{"id":":=margin:=layout","source":"=margin","target":"=layout"}},{"data":{"id":":=automargin:=layout","source":"=automargin","target":"=layout"}},{"data":{"id":":=background:=layout","source":"=background","target":"=layout"}},{"data":{"id":":=title:=layout","source":"=title","target":"=layout"}},{"data":{"id":":=xaxis-gridcolor:=layout","source":"=xaxis-gridcolor","target":"=layout"}},{"data":{"id":":=yaxis-gridcolor:=layout","source":"=yaxis-gridcolor","target":"=layout"}},{"data":{"id":":=x-after-stat:=layout","source":"=x-after-stat","target":"=layout"}},{"data":{"id":":=y-after-stat:=layout","source":"=y-after-stat","target":"=layout"}},{"data":{"id":":=x-title:=layout","source":"=x-title","target":"=layout"}},{"data":{"id":":=y-title:=layout","source":"=y-title","target":"=layout"}},{"data":{"id":":=layers:=layout","source":"=layers","target":"=layout"}},{"data":{"id":":=mode:=marker-size-key","source":"=mode","target":"=marker-size-key"}},{"data":{"id":":=type:=marker-size-key","source":"=type","target":"=marker-size-key"}}]},"style":[{"selector":"node","css":{"content":"data(id)","text-valign":"center","text-halign":"center"}},{"selector":"parent","css":{"text-valign":"top","text-halign":"center"}},{"selector":"edge","css":{"curve-style":"bezier","target-arrow-shape":"triangle"}}],"layout":{"name":"breadthfirst","padding":5}};
+  value = {"elements":{"nodes":[{"data":{"id":"=y"}},{"data":{"id":"=y-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=y-type"}},{"data":{"id":"=z"}},{"data":{"id":"=z-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=z-type"}},{"data":{"id":"=y-after-stat"}},{"data":{"id":"=y-type-after-stat"}},{"data":{"id":"=y"}},{"data":{"id":"=y-type-after-stat"}},{"data":{"id":"=y-type"}},{"data":{"id":"=y-type-after-stat"}},{"data":{"id":"=stat"}},{"data":{"id":"=y-type-after-stat"}},{"data":{"id":"=color"}},{"data":{"id":"=inferred-group"}},{"data":{"id":"=color-type"}},{"data":{"id":"=inferred-group"}},{"data":{"id":"=size"}},{"data":{"id":"=inferred-group"}},{"data":{"id":"=size-type"}},{"data":{"id":"=inferred-group"}},{"data":{"id":"=mark"}},{"data":{"id":"=mode"}},{"data":{"id":"=z-after-stat"}},{"data":{"id":"=z-type-after-stat"}},{"data":{"id":"=z"}},{"data":{"id":"=z-type-after-stat"}},{"data":{"id":"=z-type"}},{"data":{"id":"=z-type-after-stat"}},{"data":{"id":"=stat"}},{"data":{"id":"=z-type-after-stat"}},{"data":{"id":"=predictors"}},{"data":{"id":"=design-matrix"}},{"data":{"id":"=size"}},{"data":{"id":"=size-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=size-type"}},{"data":{"id":"=mark"}},{"data":{"id":"=type"}},{"data":{"id":"=coordinates"}},{"data":{"id":"=type"}},{"data":{"id":"=x-after-stat"}},{"data":{"id":"=x-type-after-stat"}},{"data":{"id":"=x"}},{"data":{"id":"=x-type-after-stat"}},{"data":{"id":"=x-type"}},{"data":{"id":"=x-type-after-stat"}},{"data":{"id":"=stat"}},{"data":{"id":"=x-type-after-stat"}},{"data":{"id":"=layers"}},{"data":{"id":"=traces"}},{"data":{"id":"=x"}},{"data":{"id":"=x-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=x-type"}},{"data":{"id":"=color"}},{"data":{"id":"=color-type"}},{"data":{"id":"=dataset"}},{"data":{"id":"=color-type"}},{"data":{"id":"=width"}},{"data":{"id":"=layout"}},{"data":{"id":"=height"}},{"data":{"id":"=layout"}},{"data":{"id":"=margin"}},{"data":{"id":"=layout"}},{"data":{"id":"=automargin"}},{"data":{"id":"=layout"}},{"data":{"id":"=background"}},{"data":{"id":"=layout"}},{"data":{"id":"=title"}},{"data":{"id":"=layout"}},{"data":{"id":"=xaxis-gridcolor"}},{"data":{"id":"=layout"}},{"data":{"id":"=yaxis-gridcolor"}},{"data":{"id":"=layout"}},{"data":{"id":"=x-after-stat"}},{"data":{"id":"=layout"}},{"data":{"id":"=y-after-stat"}},{"data":{"id":"=layout"}},{"data":{"id":"=x-title"}},{"data":{"id":"=layout"}},{"data":{"id":"=y-title"}},{"data":{"id":"=layout"}},{"data":{"id":"=layers"}},{"data":{"id":"=layout"}},{"data":{"id":"=mode"}},{"data":{"id":"=marker-size-key"}},{"data":{"id":"=type"}},{"data":{"id":"=marker-size-key"}}],"edges":[{"data":{"id":":=y:=y-type","source":"=y","target":"=y-type"}},{"data":{"id":":=dataset:=y-type","source":"=dataset","target":"=y-type"}},{"data":{"id":":=z:=z-type","source":"=z","target":"=z-type"}},{"data":{"id":":=dataset:=z-type","source":"=dataset","target":"=z-type"}},{"data":{"id":":=y-after-stat:=y-type-after-stat","source":"=y-after-stat","target":"=y-type-after-stat"}},{"data":{"id":":=y:=y-type-after-stat","source":"=y","target":"=y-type-after-stat"}},{"data":{"id":":=y-type:=y-type-after-stat","source":"=y-type","target":"=y-type-after-stat"}},{"data":{"id":":=stat:=y-type-after-stat","source":"=stat","target":"=y-type-after-stat"}},{"data":{"id":":=color:=inferred-group","source":"=color","target":"=inferred-group"}},{"data":{"id":":=color-type:=inferred-group","source":"=color-type","target":"=inferred-group"}},{"data":{"id":":=size:=inferred-group","source":"=size","target":"=inferred-group"}},{"data":{"id":":=size-type:=inferred-group","source":"=size-type","target":"=inferred-group"}},{"data":{"id":":=mark:=mode","source":"=mark","target":"=mode"}},{"data":{"id":":=z-after-stat:=z-type-after-stat","source":"=z-after-stat","target":"=z-type-after-stat"}},{"data":{"id":":=z:=z-type-after-stat","source":"=z","target":"=z-type-after-stat"}},{"data":{"id":":=z-type:=z-type-after-stat","source":"=z-type","target":"=z-type-after-stat"}},{"data":{"id":":=stat:=z-type-after-stat","source":"=stat","target":"=z-type-after-stat"}},{"data":{"id":":=predictors:=design-matrix","source":"=predictors","target":"=design-matrix"}},{"data":{"id":":=size:=size-type","source":"=size","target":"=size-type"}},{"data":{"id":":=dataset:=size-type","source":"=dataset","target":"=size-type"}},{"data":{"id":":=mark:=type","source":"=mark","target":"=type"}},{"data":{"id":":=coordinates:=type","source":"=coordinates","target":"=type"}},{"data":{"id":":=x-after-stat:=x-type-after-stat","source":"=x-after-stat","target":"=x-type-after-stat"}},{"data":{"id":":=x:=x-type-after-stat","source":"=x","target":"=x-type-after-stat"}},{"data":{"id":":=x-type:=x-type-after-stat","source":"=x-type","target":"=x-type-after-stat"}},{"data":{"id":":=stat:=x-type-after-stat","source":"=stat","target":"=x-type-after-stat"}},{"data":{"id":":=layers:=traces","source":"=layers","target":"=traces"}},{"data":{"id":":=x:=x-type","source":"=x","target":"=x-type"}},{"data":{"id":":=dataset:=x-type","source":"=dataset","target":"=x-type"}},{"data":{"id":":=color:=color-type","source":"=color","target":"=color-type"}},{"data":{"id":":=dataset:=color-type","source":"=dataset","target":"=color-type"}},{"data":{"id":":=width:=layout","source":"=width","target":"=layout"}},{"data":{"id":":=height:=layout","source":"=height","target":"=layout"}},{"data":{"id":":=margin:=layout","source":"=margin","target":"=layout"}},{"data":{"id":":=automargin:=layout","source":"=automargin","target":"=layout"}},{"data":{"id":":=background:=layout","source":"=background","target":"=layout"}},{"data":{"id":":=title:=layout","source":"=title","target":"=layout"}},{"data":{"id":":=xaxis-gridcolor:=layout","source":"=xaxis-gridcolor","target":"=layout"}},{"data":{"id":":=yaxis-gridcolor:=layout","source":"=yaxis-gridcolor","target":"=layout"}},{"data":{"id":":=x-after-stat:=layout","source":"=x-after-stat","target":"=layout"}},{"data":{"id":":=y-after-stat:=layout","source":"=y-after-stat","target":"=layout"}},{"data":{"id":":=x-title:=layout","source":"=x-title","target":"=layout"}},{"data":{"id":":=y-title:=layout","source":"=y-title","target":"=layout"}},{"data":{"id":":=layers:=layout","source":"=layers","target":"=layout"}},{"data":{"id":":=mode:=marker-size-key","source":"=mode","target":"=marker-size-key"}},{"data":{"id":":=type:=marker-size-key","source":"=type","target":"=marker-size-key"}}]},"style":[{"selector":"node","css":{"content":"data(id)","text-valign":"center","text-halign":"center"}},{"selector":"parent","css":{"text-valign":"top","text-halign":"center"}},{"selector":"edge","css":{"curve-style":"bezier","target-arrow-shape":"triangle"}}],"layout":{"name":"breadthfirst","padding":5}};
   value['container'] = document.currentScript.parentElement;
   cytoscape(value);
 };</script></div>
@@ -1515,126 +1520,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Layers (tableplot’s intermediate data representation)</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb63"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> example-to-debug</span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    (plotly/debug :=layers))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    (plotly/debug :=layers)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    kind/pprint)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div><p>[</p><div class="clay-sequential" style="margin-left:10%;width:110%;"><div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><div><pre><code class="sourceCode language-clojure printed-clojure">:y :sepal-length</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:trace-base {:mode :markers, :type "scatter"}</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:color-type :nominal</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:group (:species)</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:color :species</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:mark :point</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:inferred-group (:species)</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:x :sepal-width</code></pre></div>
-<table class="caption-top table" data-quarto-postprocess="true">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<tbody>
-<tr class="odd">
-<td data-valign="top"><div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:dataset</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div></td>
-<td><div style="margin-left:10px;">
-<div class="clay-dataset">
-<p>datasets/iris [10 6]:</p>
-<table class="table caption-top" data-quarto-postprocess="true">
-<thead>
-<tr class="header">
-<th style="text-align: right;" data-quarto-table-cell-role="th">:rownames</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:sepal-length</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:sepal-width</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:petal-length</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:petal-width</th>
-<th data-quarto-table-cell-role="th">:species</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">5.0</td>
-<td style="text-align: right;">3.4</td>
-<td style="text-align: right;">1.6</td>
-<td style="text-align: right;">0.4</td>
-<td>setosa</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">97</td>
-<td style="text-align: right;">5.7</td>
-<td style="text-align: right;">2.9</td>
-<td style="text-align: right;">4.2</td>
-<td style="text-align: right;">1.3</td>
-<td>versicolor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">127</td>
-<td style="text-align: right;">6.2</td>
-<td style="text-align: right;">2.8</td>
-<td style="text-align: right;">4.8</td>
-<td style="text-align: right;">1.8</td>
-<td>virginica</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">92</td>
-<td style="text-align: right;">6.1</td>
-<td style="text-align: right;">3.0</td>
-<td style="text-align: right;">4.6</td>
-<td style="text-align: right;">1.4</td>
-<td>versicolor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">4.6</td>
-<td style="text-align: right;">3.4</td>
-<td style="text-align: right;">1.4</td>
-<td style="text-align: right;">0.3</td>
-<td>setosa</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">95</td>
-<td style="text-align: right;">5.6</td>
-<td style="text-align: right;">2.7</td>
-<td style="text-align: right;">4.2</td>
-<td style="text-align: right;">1.3</td>
-<td>versicolor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">125</td>
-<td style="text-align: right;">6.7</td>
-<td style="text-align: right;">3.3</td>
-<td style="text-align: right;">5.7</td>
-<td style="text-align: right;">2.1</td>
-<td>virginica</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">61</td>
-<td style="text-align: right;">5.0</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">3.5</td>
-<td style="text-align: right;">1.0</td>
-<td>versicolor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">73</td>
-<td style="text-align: right;">6.3</td>
-<td style="text-align: right;">2.5</td>
-<td style="text-align: right;">4.9</td>
-<td style="text-align: right;">1.5</td>
-<td>versicolor</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">4.5</td>
-<td style="text-align: right;">2.3</td>
-<td style="text-align: right;">1.3</td>
-<td style="text-align: right;">0.3</td>
-<td>setosa</td>
-</tr>
-</tbody>
-</table>
+<div class="printedClojure">
+<div class="sourceCode" id="cb64"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>[{<span class="at">:y</span> <span class="at">:sepal-length</span>,</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">:trace-base</span> {<span class="at">:mode</span> <span class="at">:markers</span>, <span class="at">:type</span> <span class="st">"scatter"</span>},</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:color-type</span> <span class="at">:nominal</span>,</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:coordinates</span> <span class="at">:2d</span>,</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">:group</span> (<span class="at">:species</span>),</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">:color</span> <span class="at">:species</span>,</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">:mark</span> <span class="at">:point</span>,</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">:inferred-group</span> (<span class="at">:species</span>),</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">:x</span> <span class="at">:sepal-width</span>,</span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">:dataset</span> datasets/iris [<span class="dv">10</span> <span class="dv">6</span>]:</span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a>| <span class="at">:rownames</span> | <span class="at">:sepal-length</span> | <span class="at">:sepal-width</span> | <span class="at">:petal-length</span> | <span class="at">:petal-width</span> |   <span class="at">:species</span> |</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>|----------:|--------------:|-------------:|--------------:|-------------:|------------|</span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">27</span> |           <span class="fl">5.0</span> |          <span class="fl">3.4</span> |           <span class="fl">1.6</span> |          <span class="fl">0.4</span> |     setosa |</span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">97</span> |           <span class="fl">5.7</span> |          <span class="fl">2.9</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">127</span> |           <span class="fl">6.2</span> |          <span class="fl">2.8</span> |           <span class="fl">4.8</span> |          <span class="fl">1.8</span> |  virginica |</span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">92</span> |           <span class="fl">6.1</span> |          <span class="fl">3.0</span> |           <span class="fl">4.6</span> |          <span class="fl">1.4</span> | versicolor |</span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a>|         <span class="dv">7</span> |           <span class="fl">4.6</span> |          <span class="fl">3.4</span> |           <span class="fl">1.4</span> |          <span class="fl">0.3</span> |     setosa |</span>
+<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">95</span> |           <span class="fl">5.6</span> |          <span class="fl">2.7</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">125</span> |           <span class="fl">6.7</span> |          <span class="fl">3.3</span> |           <span class="fl">5.7</span> |          <span class="fl">2.1</span> |  virginica |</span>
+<span id="cb64-21"><a href="#cb64-21" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">61</span> |           <span class="fl">5.0</span> |          <span class="fl">2.0</span> |           <span class="fl">3.5</span> |          <span class="fl">1.0</span> | versicolor |</span>
+<span id="cb64-22"><a href="#cb64-22" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">73</span> |           <span class="fl">6.3</span> |          <span class="fl">2.5</span> |           <span class="fl">4.9</span> |          <span class="fl">1.5</span> | versicolor |</span>
+<span id="cb64-23"><a href="#cb64-23" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">42</span> |           <span class="fl">4.5</span> |          <span class="fl">2.3</span> |           <span class="fl">1.3</span> |          <span class="fl">0.3</span> |     setosa |</span>
+<span id="cb64-24"><a href="#cb64-24" aria-hidden="true" tabindex="-1"></a>}]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div></td>
-</tr>
-</tbody>
-</table>
-</div><p>}</p></div></div><p>]</p></div>
 <p>Traces (part of the Plotly spec)</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb65"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> example-to-debug</span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    (plotly/debug :=traces))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    (plotly/debug :=traces)</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>    kind/pprint)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb66"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>[{<span class="at">:y</span> [<span class="fl">5.0</span> <span class="fl">4.6</span> <span class="fl">4.5</span>],</span>
@@ -1684,173 +1603,79 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceClojure">
 <div class="sourceCode" id="cb67"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> example-to-debug</span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    (plotly/debug {<span class="at">:layers</span> :=layers</span>
-<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">:traces</span> :=traces}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">:traces</span> :=traces})</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    kind/pprint)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;">
-<table class="caption-top table" data-quarto-postprocess="true">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<tbody>
-<tr class="odd">
-<td data-valign="top"><div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:layers</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div></td>
-<td><div style="margin-left:10px;">
-<div>
-<p>[</p>
-<div class="clay-sequential" style="margin-left:10%;width:110%;">
-<div>
-<p>{</p>
-<div class="clay-map" style="margin-left:10%;width:110%;">
-<div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:y :sepal-length</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
+<div class="printedClojure">
+<div class="sourceCode" id="cb68"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:layers</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a> [{<span class="at">:y</span> <span class="at">:sepal-length</span>,</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:trace-base</span> {<span class="at">:mode</span> <span class="at">:markers</span>, <span class="at">:type</span> <span class="st">"scatter"</span>},</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:color-type</span> <span class="at">:nominal</span>,</span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">:coordinates</span> <span class="at">:2d</span>,</span>
+<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">:group</span> (<span class="at">:species</span>),</span>
+<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>   <span class="at">:color</span> <span class="at">:species</span>,</span>
+<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>   <span class="at">:mark</span> <span class="at">:point</span>,</span>
+<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a>   <span class="at">:inferred-group</span> (<span class="at">:species</span>),</span>
+<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a>   <span class="at">:x</span> <span class="at">:sepal-width</span>,</span>
+<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a>   <span class="at">:dataset</span> datasets/iris [<span class="dv">10</span> <span class="dv">6</span>]:</span>
+<span id="cb68-12"><a href="#cb68-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-13"><a href="#cb68-13" aria-hidden="true" tabindex="-1"></a>| <span class="at">:rownames</span> | <span class="at">:sepal-length</span> | <span class="at">:sepal-width</span> | <span class="at">:petal-length</span> | <span class="at">:petal-width</span> |   <span class="at">:species</span> |</span>
+<span id="cb68-14"><a href="#cb68-14" aria-hidden="true" tabindex="-1"></a>|----------:|--------------:|-------------:|--------------:|-------------:|------------|</span>
+<span id="cb68-15"><a href="#cb68-15" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">27</span> |           <span class="fl">5.0</span> |          <span class="fl">3.4</span> |           <span class="fl">1.6</span> |          <span class="fl">0.4</span> |     setosa |</span>
+<span id="cb68-16"><a href="#cb68-16" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">97</span> |           <span class="fl">5.7</span> |          <span class="fl">2.9</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
+<span id="cb68-17"><a href="#cb68-17" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">127</span> |           <span class="fl">6.2</span> |          <span class="fl">2.8</span> |           <span class="fl">4.8</span> |          <span class="fl">1.8</span> |  virginica |</span>
+<span id="cb68-18"><a href="#cb68-18" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">92</span> |           <span class="fl">6.1</span> |          <span class="fl">3.0</span> |           <span class="fl">4.6</span> |          <span class="fl">1.4</span> | versicolor |</span>
+<span id="cb68-19"><a href="#cb68-19" aria-hidden="true" tabindex="-1"></a>|         <span class="dv">7</span> |           <span class="fl">4.6</span> |          <span class="fl">3.4</span> |           <span class="fl">1.4</span> |          <span class="fl">0.3</span> |     setosa |</span>
+<span id="cb68-20"><a href="#cb68-20" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">95</span> |           <span class="fl">5.6</span> |          <span class="fl">2.7</span> |           <span class="fl">4.2</span> |          <span class="fl">1.3</span> | versicolor |</span>
+<span id="cb68-21"><a href="#cb68-21" aria-hidden="true" tabindex="-1"></a>|       <span class="dv">125</span> |           <span class="fl">6.7</span> |          <span class="fl">3.3</span> |           <span class="fl">5.7</span> |          <span class="fl">2.1</span> |  virginica |</span>
+<span id="cb68-22"><a href="#cb68-22" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">61</span> |           <span class="fl">5.0</span> |          <span class="fl">2.0</span> |           <span class="fl">3.5</span> |          <span class="fl">1.0</span> | versicolor |</span>
+<span id="cb68-23"><a href="#cb68-23" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">73</span> |           <span class="fl">6.3</span> |          <span class="fl">2.5</span> |           <span class="fl">4.9</span> |          <span class="fl">1.5</span> | versicolor |</span>
+<span id="cb68-24"><a href="#cb68-24" aria-hidden="true" tabindex="-1"></a>|        <span class="dv">42</span> |           <span class="fl">4.5</span> |          <span class="fl">2.3</span> |           <span class="fl">1.3</span> |          <span class="fl">0.3</span> |     setosa |</span>
+<span id="cb68-25"><a href="#cb68-25" aria-hidden="true" tabindex="-1"></a>}],</span>
+<span id="cb68-26"><a href="#cb68-26" aria-hidden="true" tabindex="-1"></a> <span class="at">:traces</span></span>
+<span id="cb68-27"><a href="#cb68-27" aria-hidden="true" tabindex="-1"></a> [{<span class="at">:y</span> [<span class="fl">5.0</span> <span class="fl">4.6</span> <span class="fl">4.5</span>],</span>
+<span id="cb68-28"><a href="#cb68-28" aria-hidden="true" tabindex="-1"></a>   <span class="at">:r</span> <span class="va">nil</span>,</span>
+<span id="cb68-29"><a href="#cb68-29" aria-hidden="true" tabindex="-1"></a>   <span class="at">:name</span> <span class="st">"setosa"</span>,</span>
+<span id="cb68-30"><a href="#cb68-30" aria-hidden="true" tabindex="-1"></a>   <span class="at">:marker</span> {<span class="at">:color</span> <span class="st">"#1B9E77"</span>},</span>
+<span id="cb68-31"><a href="#cb68-31" aria-hidden="true" tabindex="-1"></a>   <span class="at">:fill</span> <span class="va">nil</span>,</span>
+<span id="cb68-32"><a href="#cb68-32" aria-hidden="true" tabindex="-1"></a>   <span class="at">:mode</span> <span class="at">:markers</span>,</span>
+<span id="cb68-33"><a href="#cb68-33" aria-hidden="true" tabindex="-1"></a>   <span class="at">:width</span> <span class="va">nil</span>,</span>
+<span id="cb68-34"><a href="#cb68-34" aria-hidden="true" tabindex="-1"></a>   <span class="at">:type</span> <span class="st">"scatter"</span>,</span>
+<span id="cb68-35"><a href="#cb68-35" aria-hidden="true" tabindex="-1"></a>   <span class="at">:theta</span> <span class="va">nil</span>,</span>
+<span id="cb68-36"><a href="#cb68-36" aria-hidden="true" tabindex="-1"></a>   <span class="at">:z</span> <span class="va">nil</span>,</span>
+<span id="cb68-37"><a href="#cb68-37" aria-hidden="true" tabindex="-1"></a>   <span class="at">:lon</span> <span class="va">nil</span>,</span>
+<span id="cb68-38"><a href="#cb68-38" aria-hidden="true" tabindex="-1"></a>   <span class="at">:lat</span> <span class="va">nil</span>,</span>
+<span id="cb68-39"><a href="#cb68-39" aria-hidden="true" tabindex="-1"></a>   <span class="at">:x</span> [<span class="fl">3.4</span> <span class="fl">3.4</span> <span class="fl">2.3</span>],</span>
+<span id="cb68-40"><a href="#cb68-40" aria-hidden="true" tabindex="-1"></a>   <span class="at">:text</span> <span class="va">nil</span>}</span>
+<span id="cb68-41"><a href="#cb68-41" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:y</span> [<span class="fl">5.7</span> <span class="fl">6.1</span> <span class="fl">5.6</span> <span class="fl">5.0</span> <span class="fl">6.3</span>],</span>
+<span id="cb68-42"><a href="#cb68-42" aria-hidden="true" tabindex="-1"></a>   <span class="at">:r</span> <span class="va">nil</span>,</span>
+<span id="cb68-43"><a href="#cb68-43" aria-hidden="true" tabindex="-1"></a>   <span class="at">:name</span> <span class="st">"versicolor"</span>,</span>
+<span id="cb68-44"><a href="#cb68-44" aria-hidden="true" tabindex="-1"></a>   <span class="at">:marker</span> {<span class="at">:color</span> <span class="st">"#D95F02"</span>},</span>
+<span id="cb68-45"><a href="#cb68-45" aria-hidden="true" tabindex="-1"></a>   <span class="at">:fill</span> <span class="va">nil</span>,</span>
+<span id="cb68-46"><a href="#cb68-46" aria-hidden="true" tabindex="-1"></a>   <span class="at">:mode</span> <span class="at">:markers</span>,</span>
+<span id="cb68-47"><a href="#cb68-47" aria-hidden="true" tabindex="-1"></a>   <span class="at">:width</span> <span class="va">nil</span>,</span>
+<span id="cb68-48"><a href="#cb68-48" aria-hidden="true" tabindex="-1"></a>   <span class="at">:type</span> <span class="st">"scatter"</span>,</span>
+<span id="cb68-49"><a href="#cb68-49" aria-hidden="true" tabindex="-1"></a>   <span class="at">:theta</span> <span class="va">nil</span>,</span>
+<span id="cb68-50"><a href="#cb68-50" aria-hidden="true" tabindex="-1"></a>   <span class="at">:z</span> <span class="va">nil</span>,</span>
+<span id="cb68-51"><a href="#cb68-51" aria-hidden="true" tabindex="-1"></a>   <span class="at">:lon</span> <span class="va">nil</span>,</span>
+<span id="cb68-52"><a href="#cb68-52" aria-hidden="true" tabindex="-1"></a>   <span class="at">:lat</span> <span class="va">nil</span>,</span>
+<span id="cb68-53"><a href="#cb68-53" aria-hidden="true" tabindex="-1"></a>   <span class="at">:x</span> [<span class="fl">2.9</span> <span class="fl">3.0</span> <span class="fl">2.7</span> <span class="fl">2.0</span> <span class="fl">2.5</span>],</span>
+<span id="cb68-54"><a href="#cb68-54" aria-hidden="true" tabindex="-1"></a>   <span class="at">:text</span> <span class="va">nil</span>}</span>
+<span id="cb68-55"><a href="#cb68-55" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:y</span> [<span class="fl">6.2</span> <span class="fl">6.7</span>],</span>
+<span id="cb68-56"><a href="#cb68-56" aria-hidden="true" tabindex="-1"></a>   <span class="at">:r</span> <span class="va">nil</span>,</span>
+<span id="cb68-57"><a href="#cb68-57" aria-hidden="true" tabindex="-1"></a>   <span class="at">:name</span> <span class="st">"virginica"</span>,</span>
+<span id="cb68-58"><a href="#cb68-58" aria-hidden="true" tabindex="-1"></a>   <span class="at">:marker</span> {<span class="at">:color</span> <span class="st">"#7570B3"</span>},</span>
+<span id="cb68-59"><a href="#cb68-59" aria-hidden="true" tabindex="-1"></a>   <span class="at">:fill</span> <span class="va">nil</span>,</span>
+<span id="cb68-60"><a href="#cb68-60" aria-hidden="true" tabindex="-1"></a>   <span class="at">:mode</span> <span class="at">:markers</span>,</span>
+<span id="cb68-61"><a href="#cb68-61" aria-hidden="true" tabindex="-1"></a>   <span class="at">:width</span> <span class="va">nil</span>,</span>
+<span id="cb68-62"><a href="#cb68-62" aria-hidden="true" tabindex="-1"></a>   <span class="at">:type</span> <span class="st">"scatter"</span>,</span>
+<span id="cb68-63"><a href="#cb68-63" aria-hidden="true" tabindex="-1"></a>   <span class="at">:theta</span> <span class="va">nil</span>,</span>
+<span id="cb68-64"><a href="#cb68-64" aria-hidden="true" tabindex="-1"></a>   <span class="at">:z</span> <span class="va">nil</span>,</span>
+<span id="cb68-65"><a href="#cb68-65" aria-hidden="true" tabindex="-1"></a>   <span class="at">:lon</span> <span class="va">nil</span>,</span>
+<span id="cb68-66"><a href="#cb68-66" aria-hidden="true" tabindex="-1"></a>   <span class="at">:lat</span> <span class="va">nil</span>,</span>
+<span id="cb68-67"><a href="#cb68-67" aria-hidden="true" tabindex="-1"></a>   <span class="at">:x</span> [<span class="fl">2.8</span> <span class="fl">3.3</span>],</span>
+<span id="cb68-68"><a href="#cb68-68" aria-hidden="true" tabindex="-1"></a>   <span class="at">:text</span> <span class="va">nil</span>}]}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:trace-base {:mode :markers, :type "scatter"}</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div>
-<div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:color-type :nominal</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div>
-<div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:group (:species)</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div>
-<div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:color :species</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div>
-<div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:mark :point</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div>
-<div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:inferred-group (:species)</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div>
-<div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:x :sepal-width</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div>
-<table class="caption-top table" data-quarto-postprocess="true">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<tbody>
-<tr class="odd">
-<td data-valign="top"><div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:dataset</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
-</div></td>
-<td><div style="margin-left:10px;">
-<div class="clay-dataset">
-<p>datasets/iris [10 6]:</p>
-<table class="table caption-top" data-quarto-postprocess="true">
-<thead>
-<tr class="header">
-<th style="text-align: right;" data-quarto-table-cell-role="th">:rownames</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:sepal-length</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:sepal-width</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:petal-length</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:petal-width</th>
-<th data-quarto-table-cell-role="th">:species</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">5.0</td>
-<td style="text-align: right;">3.4</td>
-<td style="text-align: right;">1.6</td>
-<td style="text-align: right;">0.4</td>
-<td>setosa</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">97</td>
-<td style="text-align: right;">5.7</td>
-<td style="text-align: right;">2.9</td>
-<td style="text-align: right;">4.2</td>
-<td style="text-align: right;">1.3</td>
-<td>versicolor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">127</td>
-<td style="text-align: right;">6.2</td>
-<td style="text-align: right;">2.8</td>
-<td style="text-align: right;">4.8</td>
-<td style="text-align: right;">1.8</td>
-<td>virginica</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">92</td>
-<td style="text-align: right;">6.1</td>
-<td style="text-align: right;">3.0</td>
-<td style="text-align: right;">4.6</td>
-<td style="text-align: right;">1.4</td>
-<td>versicolor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">4.6</td>
-<td style="text-align: right;">3.4</td>
-<td style="text-align: right;">1.4</td>
-<td style="text-align: right;">0.3</td>
-<td>setosa</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">95</td>
-<td style="text-align: right;">5.6</td>
-<td style="text-align: right;">2.7</td>
-<td style="text-align: right;">4.2</td>
-<td style="text-align: right;">1.3</td>
-<td>versicolor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">125</td>
-<td style="text-align: right;">6.7</td>
-<td style="text-align: right;">3.3</td>
-<td style="text-align: right;">5.7</td>
-<td style="text-align: right;">2.1</td>
-<td>virginica</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">61</td>
-<td style="text-align: right;">5.0</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">3.5</td>
-<td style="text-align: right;">1.0</td>
-<td>versicolor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">73</td>
-<td style="text-align: right;">6.3</td>
-<td style="text-align: right;">2.5</td>
-<td style="text-align: right;">4.9</td>
-<td style="text-align: right;">1.5</td>
-<td>versicolor</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">4.5</td>
-<td style="text-align: right;">2.3</td>
-<td style="text-align: right;">1.3</td>
-<td style="text-align: right;">0.3</td>
-<td>setosa</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>}</p>
-</div>
-</div>
-<p>]</p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
-<div><pre><code class="sourceCode language-clojure printed-clojure">:traces [{:y [5.0 4.6 4.5], :r nil, :name "setosa", :marker {:color "#1B9E77"}, :fill nil, :mode :markers, :width nil, :type "scatter", :theta nil, :z nil, :lon nil, :lat nil, :x [3.4 3.4 2.3], :text nil} {:y [5.7 6.1 5.6 5.0 6.3], :r nil, :name "versicolor", :marker {:color "#D95F02"}, :fill nil, :mode :markers, :width nil, :type "scatter", :theta nil, :z nil, :lon nil, :lat nil, :x [2.9 3.0 2.7 2.0 2.5], :text nil} {:y [6.2 6.7], :r nil, :name "virginica", :marker {:color "#7570B3"}, :fill nil, :mode :markers, :width nil, :type "scatter", :theta nil, :z nil, :lon nil, :lat nil, :x [2.8 3.3], :text nil}]</code></pre></div></div><p>}</p></div>
 </section>
 </section>
 <section id="coming-soon" class="level2" data-number="3.20">
@@ -2292,13 +2117,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./tableplot_book.datasets.html" class="pagination-link" aria-label="Some datasets">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Some datasets</span></span>
+      <a href="./tableplot_book.datasets.html" class="pagination-link" aria-label="Some datasets 📎">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Some datasets 📎</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./tableplot_book.hanami_walkthrough.html" class="pagination-link" aria-label="Hanami walkthrough 👣">
-        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Hanami walkthrough 👣</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./tableplot_book.plotly_reference.html" class="pagination-link" aria-label="Plotly API reference 📖">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Plotly API reference 📖</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
