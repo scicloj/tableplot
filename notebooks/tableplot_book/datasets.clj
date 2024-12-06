@@ -1,4 +1,4 @@
-;; # Some datasets 
+;; # Some datasets 📎
 
 ;; In this documentation, we will use a few datasets from [RDatasets](https://vincentarelbundock.github.io/Rdatasets/articles/data.html) and from the [Plotly datasets](https://plotly.github.io/datasets/).
 

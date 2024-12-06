@@ -31,7 +31,7 @@
      
      ")
 
-;; # Preface
+;; # Preface 👋
 
 (md
  "
