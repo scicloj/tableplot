@@ -518,7 +518,7 @@ The design matrix simply uses these columns without any additional transformatio
 
 (defn layer
   "The `layer` function is typically not used on the user side.
-  It is a generic way to create more specific functions to add layers.
+  It is a generic way to create more specific functions to add layers
   such as `layer-point`.
 
   If `dataset-or-template` is a dataset, it is converted to
