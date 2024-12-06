@@ -616,14 +616,17 @@ Received the whole context and returns a new dataset."]
   :text nil)
 
 (dag/defn-with-deps smooth-stat
-  "Given a substitution context, compute a `:=dataset`
-with the `:=y` column replaced with its value predicted by regression,
+  "Given a substitution context, compute a dataset
+with the `:=y` column in `:=dataset` replaced with
+its value predicted by regression,
 and with the results ordered by the `:=x` column.
 
 The predictor columns are specified by `:=design-matrix`
 
 and the regression model is specified by `:=model-options`.
-If `:=group` is specified, then the regression in computed in groups.
+
+If the grouping list of columns `:=group` is specified,
+then the regression is computed in groups.
 " 
   [=dataset =x =y =predictors =group =design-matrix =model-options]
   (when-not (=dataset =y)
@@ -706,7 +709,17 @@ If `:=group` is specified, then the regression in computed in groups.
                           data
                           submap)))))
 
-(dag/defn-with-deps histogram-stat ""
+(dag/defn-with-deps histogram-stat
+  "Compute a dataset representing the [histogram](https://en.wikipedia.org/wiki/Histogram)
+of the `:=x` column in `:=dataset`.
+
+The histogram's binning and counting are computed
+using [Fastmath](https://github.com/generateme/fastmath).
+
+The number of bins is specified by `:histogram-nbins`.
+
+If the grouping list of columns `:=group` is specified,
+then the histogram is computed in groups."
   [=dataset =group =x =histogram-nbins]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
@@ -746,11 +759,9 @@ If `:=group` is specified, then the regression in computed in groups.
           summary-fn))))
 
 
-
-
-
 (defn layer-histogram
-  "  Add a histogram layer to the given `dataset-or-template`,
+  "Add a [histogram](https://en.wikipedia.org/wiki/Histogram)
+  layer to the given `dataset-or-template`,
   with possible additional substitutions if `submap` is provided.
   
   The histogram's binning and counting are computed
@@ -758,7 +769,8 @@ If `:=group` is specified, then the regression in computed in groups.
   
   The `:=histogram-nbins` key controls the number of bins.
 
-  If the plot is colored by a nominal type,
+  If a list of grouping columns `:hroup` is specified,
+  e.g., when the plot is colored by a nominal type,
   then the data is grouped by this column,
   and overlapping histograms are generated.
   "
@@ -779,7 +791,18 @@ If `:=group` is specified, then the regression in computed in groups.
 
 
 
-(dag/defn-with-deps density-stat ""
+(dag/defn-with-deps density-stat
+  "Compute a dataset representing the approximated [density](https://en.wikipedia.org/wiki/Histogram)
+of the `:=x` column in `:=dataset`.
+
+The density is estimated by Gaussian [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation)
+using [Fastmath](https://github.com/generateme/fastmath).
+
+The `:=density-bandwidth` can controls the bandwidth.
+Otherwise, it is determined by a rule of thumb.
+
+If the grouping list of columns `:=group` is specified,
+then the density is estimated in groups." 
   [=dataset =group =x =density-bandwidth]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
@@ -827,16 +850,16 @@ If `:=group` is specified, then the regression in computed in groups.
   "Add an estimated density layer to the given `dataset-or-template`,
   with possible additional substitutions if `submap` is provided.
   
-  The density is estimated by Gaussian kernel density estimation
+  The density is estimated by Gaussian [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation)
   using [Fastmath](https://github.com/generateme/fastmath).
 
   The `:=density-bandwidth` can controls the bandwidth.
   Otherwise, it is determined by a rule of thumb.
 
-  If the plot is colored by a nominal type,
+  If a list of grouping columns `:hroup` is specified,
+  e.g., when the plot is colored by a nominal type,
   then the data is grouped by this column,
-  and overlapping histograms are generated.
-  "
+  and overlapping densities are generated."
   ([context]
    (layer-histogram context {}))
   ([context submap]
