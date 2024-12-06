@@ -1,17 +1,20 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta-2] - 2024-12-06
+- updated docstrings
+- refactored the plotly implementation and added detailed for reference generation
+- renamed some fn arguments for clarity
+- encoded the default coordinates as 2d rather than nil
+- made sure the `plotly/plot` function would accept only one arity
+- extended the `plotly/debug` function to handle layers
+- simpilified the internal workflow of applying statistical transformations
+- styling: set the wrapping div height to be "auto"
+
 ## [1-beta-1.1] - 2024-12-01
 - improved handling of edges in density layers
-- styling: set the wrapping div height to be "auto"
-- renamed some fn arguments for clarity
-- updated docstrings
-- encoding the default coordinates as 2d rather than nil
-- made sure the `plotly/plot` function would accept only one arity
-- extended the plotly debug function to handle layers
-- simpilified the internal workflow of applying statistical transformations
 
-## [-beta-1] - 2024-12-01
+## [1-beta-1] - 2024-12-01
 - replaced the ad-hoc `WrappedValue` daratype with the Clojure `delay` idiom 
 (used to avoid the recursive transformations of certain functions)
 - plotly: corrected bar width for histograms
