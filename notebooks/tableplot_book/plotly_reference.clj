@@ -10,10 +10,10 @@
 
 ;; * The Tableplot plotly API namepace
 ;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing and column processing
-;; * [Kindly](https://scicloj.github.io/kindly-noted/) (to specify how certaiun values should be visualized)
+;; * [Kindly](https://scicloj.github.io/kindly-noted/) (to specify how certain values should be visualized)
 ;; * the datasets defined in the [Datasets chapter](./tableplot_book.datasets.html)
 
-;; We require a few aditional namespaces which are internally to generate this reference.
+;; We require a few aditional namespaces which are used internally to generate this reference.
 
 (ns tableplot-book.plotly-reference
   (:require [scicloj.tableplot.v1.plotly :as plotly]
@@ -50,16 +50,18 @@
   (-> s
       (str/replace #"`" "")
       symbol
-      ('#{base
+      ('#{base layer
           layer-point layer-line layer-bar layer-boxplot layer-segment layer-text
           layer-histogram layer-density layer-smooth
           plot
-          debug})))
+          debug
+          smooth-stat histogram-stat density-stat})))
 
 ^:kindly/hide-code
 (defn enrich-text-with-links [text]
   (or (some->> text
                (re-seq symbol-or-key-pattern)
+               distinct
                (reduce (fn [current-text s]
                          (if (or (re-matches subkey-pattern s)
                                  (known-symbol? s))
@@ -71,6 +73,8 @@
                            current-text))
                        text))
       text))
+
+
 
 ^:kindly/hide-code
 (defn include-dag-fn [f]
@@ -84,6 +88,7 @@
                :scicloj.tableplot.v1.dag/dep-ks
                (map include-key-or-symbol-name)
                (str/join " "))))
+
 
 ^:kindly/hide-code
 (defn include-dag-fn-as-section [fnsymbol f]
@@ -130,13 +135,11 @@
        kind/md
        kindly/hide-code))
 
-
-
 (md
  
  "## Overview
 The Tableplot Plotly API allows the user to write functional pipelines
-to create and process *templates* of plots, that can eventually be realized
+that create and process *templates* of plots, that can eventually be realized
 as [Plotly.js](https://plotly.com/javascript/) specifications.
 
 The data is assumed to be held in datasets defined by [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset)
@@ -148,11 +151,11 @@ Hanami transforms templates by recursively applying a simple set of rules.
 The rules are based on looking up *substitution keys* according to standard defaults
 as well as user substitutions overriding those defaults.
 Tableplot uses a slighly adapted version of Hanami's template transformations,
-which make sure not to recurse into datasets.
+which makes sure not to recurse into datasets.
 
 For example, the `layer-point` function generates a template with some specified
 substitutions. Let us apply this function to a dataset with some user substitutions.
-As you can see below, all the substitution keys are keywords beginning with `=`.
+As you can see below, all the substitution keys are keywords beginning with `=`. E.g., `:=color-type`.
 This is just a convention that helps distinguish their role from other keys.
 
 By default, this template is displayed by realizing it as  an actual Plotly.js
@@ -165,15 +168,24 @@ specification.
                          :=color :species
                          :=mark-size 10}))
 
-(md "To inspect it, let use [Kindly](https://scicloj.github.io/kindly-noted/) to request
-that this template should rather be pretty-printed as a data structure.")
+(md "To inspect it, let us use [Kindly](https://scicloj.github.io/kindly-noted/) to request
+that this template would rather be pretty-printed as a data structure.")
 (-> datasets/iris
-
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species
                          :=mark-size 10})
     kind/pprint)
+
+(md "We may also inspect it with [Portal](https://github.com/djblue/portal):")
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species
+                         :=mark-size 10})
+    plotly/plot
+    kind/portal)
 
 (md "
 For now, you are not supposed to make sense of this data representation.
@@ -190,6 +202,8 @@ the `plot` function:
     plotly/plot
     kind/pprint)
 
+
+
 (md "
 This is useful for debugging, and also when one wishes to edit the Plotly.js
 spec directly.
@@ -205,7 +219,8 @@ allows one to look into the value of a given substitution key in a given
 context.
 
 For example, here we learn about the `:=background`
-key for background color, which is a grey colour by default.")
+key for background color. In this example,
+we kept it grey, which is its default.")
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -218,8 +233,8 @@ key for background color, which is a grey colour by default.")
 ## Raw Plotly specifications
 
 Before beginning the exploration of Tableplot's Plotly API, let us remember we may
-also use the raw format of specifying plots to Plotly.js.
-We simply use JSON data structures to represent the JSON format expected by Plotly.js
+also use the raw format supported by Plotly.js.
+We simply use plain Clojuree data structures to represent the JSON format expected by Plotly.js
 and annotate it as `kind/plotly`, so that our Clojure tooling knows to treat it as such
 when displaying it.
 
@@ -255,7 +270,7 @@ Plotly.newPlot('myDiv', data, layout);
 
 Here is how we represent that in Clojure:
 ")
-(kind/plotly
+(plotly/plot
  {:data [{:x [1 2 3 4]
           :y [10 11 12 13]
           :text ["A<br>size: 40" "B<br>size: 60" "C<br>size: 80" "D<br>size: 100"]
@@ -265,12 +280,10 @@ Here is how we represent that in Clojure:
   :layout {:title {:text "Bubble Chart Hover Text"}
            :showlegend false
            :height 600
-           :width 600}}
- ;; Adjust the height of the surrounding HTML element:
- {:style {:height :auto}})
+           :width 600}})
 
 (md "
-Sometimes, this raw way is all we need; but in common situations, Tableplot make things easier.
+Sometimes, this raw way is all we need; but in common situations, Tableplot makes things easier.
 
 ## Concepts
 
@@ -282,7 +295,7 @@ but may vary in their visual nature.
 
 For example, here is a raw Plotly.js spec with two traces.
 ")
-(kind/plotly
+(plotly/plot
  {:data [{:x [1 2 3 4]
           :y [10 15 12 13]
           :color "blue"
@@ -298,19 +311,17 @@ For example, here is a raw Plotly.js spec with two traces.
 
 (md "
 In Tableplot, we often do not need to think about traces, as they are drawn for us.
-But it is helpful to know about them if we wish to understand the Plotly specs
-generated by Tableplot.
+But it is helpful to know about them if we wish to understand the specs generated by Tableplot.
 
 ### Layers
 
-Layers are a more high-level concept. We introduce them in Tableplot following
+Layers are a higher-level concept. We introduce them in Tableplot following
 [ggplot2](https://ggplot2.tidyverse.org/)'s
 [layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html).
 Plotly bindings in other languages have similar concepts.
 
 Like traces, layers are also parts of the plot that can be drawn on the same canvas,
-but they are a slightly higher-level concept, that makes it easier to bind our data to
-what we receive as the plot.
+but they are a slightly higher-level concept, that makes it easier to bind our data to parts of the plot.
 
 Layers are themselves templates, so they can have their own substitutions.
 
@@ -342,7 +353,7 @@ Let us see that using `debug`:
 You see, a layer is an intermediate data representation of Tableplot
 that takes care of the details necessary to generate traces.
 
-In our example, the two layers are realied as **four traces**: since the point layer is colored
+In our example, the two layers are realized as **four traces**: since the point layer is colored
 by species, it is realized as three traces.
 
 Let us see that using `debug`:
@@ -361,10 +372,11 @@ Let us see that using `debug`:
 ### Mark
 
 Mark is a Tableplot notion that is used to distinguish different types of layers,
-e.g. a layer of points from a layer of lines.
+e.g. `point-layer` vs `line-layer`.
 It is similar to the ggplot notion of 'geom'.
 
 Its possible values are:")
+^:kindly/hide-code
 [:point :text :line :box :bar :segment]
 
 (md "
@@ -377,6 +389,7 @@ how marks are eventually mapped over to the cranvas,
 similar to ggplot's notion.
 
 We currently support the following:")
+^:kindly/hide-code
 [:2d :3d :polar :geo]
 
 (md "
@@ -385,15 +398,15 @@ and `:geo` means latitude and longitude.
 
 ### Plotly.js mode and type  
 
-Mode and type are Plotl.js notions that are used to distinguish
-diffetent types of layers.
+Mode and type are Plotly.js notions that are used to distinguish
+diffetent types of traces.
 
-Combinations of Tableplot's marks and coordinates
-are mapped into combinations of Plotly.js mode and type,
+Combinations of Tableplot's mark and coordinates
+are mapped onto combinations of Plotly.js mode and type,
 but currently we do not use all the meaningful combinations
 supported by Plotly.js.
 
-Mode is defined as follows:
+Mode is derived from mark as follows:
 ")
 ^:kindly/hide-code
 (-> {:mark [:point :text :line :box :bar :segment]}
@@ -401,10 +414,10 @@ Mode is defined as follows:
     (tc/map-columns :mode [:mark] plotly/mark->mode))
 
 (md "
-Type is defined as the concatenation of a mark-based string
-(`\"box\"` or `\"bar\"` in the cases we have these marks, and `\"scatter\"` in all other marks)
+Type is defined as the concatenation of a mark-based string:
+(`\"box\"` or `\"bar\"` if that is the mark, and `\"scatter\"` otherwise)
 with a coordinates-based string
-(`\"3d\"`, `\"polar\"`, or `\"geo\"` in the cases whre we have such coordinates, nil otherwise).
+(`\"3d\"`, `\"polar\"`, or `\"geo\"` if we have such coordinates, `nil` otherwise).
 
 Thus, for example, if the mark is `:point` and the coordinates are `:polar`,
 then the type is `\"scatterpolar\"`.
@@ -421,9 +434,9 @@ In certain situations, the types of data in relevant columns determines the way 
 should be plotted.
 
 For example, when a column is used for coloring a plot, we should use gradient colors
-if it is quantitative but more distinct colors if it is nominal.
+when it is quantitative but more distinct colors when it is nominal.
 
-Nominal color column:
+Colorin gby a nominal column:
 ")
 (-> datasets/iris
     (plotly/layer-point
@@ -433,7 +446,7 @@ Nominal color column:
       :=mark-size 20}))
 
 (md "
-Quantitative color column:
+Coloring by a Quantitative column:
 ")
 (-> datasets/mtcars
     (plotly/layer-point
@@ -443,7 +456,7 @@ Quantitative color column:
       :=mark-size 20}))
 
 (md "
-This can be overridden through the `:=color-type` key:
+Overriding a quantitative column to be considered nominal by the `:=color-type` key:
 ")
 (-> datasets/mtcars
     (plotly/layer-point
@@ -458,14 +471,15 @@ This can be overridden through the `:=color-type` key:
 
 A stat is a statistical transformation that takes the substitution context
 and returns a new dataset.
-Stats are used in a few of the layer functions, such as
+Stats such as `smooth-stat`, `histogram-stat`, and `density-stat` are used in a few of the layer functions, such as
 `layer-smooth`, `layer-histogram`, and `layer-density`.
 
-The user will typically not need to think about them direcrly, but they
+The user will typically not need to think about them, but they
 are a useful concept in extending Tableplot.
 
 ## API functions
 ")
+
 (include-fnvar-as-section #'plotly/base)
 
 (md "#### For example:")

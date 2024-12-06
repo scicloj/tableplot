@@ -446,20 +446,25 @@ The design matrix simply uses these columns without any additional transformatio
         (dissoc :kindly/f))))
 
 (defn base
-  "  The `base` function can be used to create the basis template too which we can add layers.
-  It can be used to set up some substitution keys to be shared by the various layers.
+  "  The `base` function can be used to create the basis
+  template to which we can add layers.
+  It can be used to set up some substitution keys to be shared
+  by the various layers.
 
-  The return value is always a template which is set up to be visualized as plotly.
+  The return value is always a template which is set up
+  to be visualized as Plotly.js.
   
   In the full case of three arguments `(dataset template submap)`,
   `dataset` is added to `template` as the value substituted for the 
-  `:=dataset`key, and the substitution map `submap` is added as well.
+  `:=dataset` key, and the substitution map `submap` is added as well.
 
-  In the other cases, if the `template` is not passed missing, it is replaced by a minimal base
-  template to be carried along the pipeline. If the `dataset` or `submap` parts are not passed,
+  In the other cases, if the `template` is not passed missing,
+  it is replaced by a minimal base template to be carried along
+  the pipeline. If the `dataset` or `submap` parts are not passed,
   they are simply not substituted into the template.
 
-  If the first argument is a dataset, it is converted to a very basic template
+  If the first argument is a dataset, it is converted to
+  a very basic template where it is substituted at the `:=dataset` key.
 
   We typically use `base` with other layers added to it.
   The base substitutions are shared between layers,
@@ -631,9 +636,14 @@ then the regression is computed in groups.
 
 (defn layer-smooth
   "
-  `layer-smooth` applies statistical regression methods
-  to the dataset to model it as a smooth shape.
+  Add a smoothed layer layer to the given `dataset-or-template`,
+  with possible additional substitutions if `submap` is provided.
+
+  Statistical [regression](https://en.wikipedia.org/wiki/Regression_analysis)
+  methods are applied to the dataset to model it as a smooth shape.
   It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
+  
+  `smooth-stat` is used internally as `:=stat`.
 
   By default, the regression is computed with only one predictor variable,
   which is `:=x`.
@@ -724,12 +734,14 @@ then the histogram is computed in groups."
   layer to the given `dataset-or-template`,
   with possible additional substitutions if `submap` is provided.
   
+  `histogram-stat` is used internally as `:=stat`.
+  
   The histogram's binning and counting are computed
   using [Fastmath](https://github.com/generateme/fastmath).
   
   The `:=histogram-nbins` key controls the number of bins.
 
-  If a list of grouping columns `:hroup` is specified,
+  If a list of grouping columns `:=group` is specified,
   e.g., when the plot is colored by a nominal type,
   then the data is grouped by this column,
   and overlapping histograms are generated.
@@ -807,8 +819,13 @@ then the density is estimated in groups."
 
 
 (defn layer-density
-  "Add an estimated density layer to the given `dataset-or-template`,
+  "
+  (experimental)
+  
+  Add an estimated density layer to the given `dataset-or-template`,
   with possible additional substitutions if `submap` is provided.
+
+  `density-stat` is used internally as `:=stat`.
   
   The density is estimated by Gaussian [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation)
   using [Fastmath](https://github.com/generateme/fastmath).
@@ -816,7 +833,7 @@ then the density is estimated in groups."
   The `:=density-bandwidth` can controls the bandwidth.
   Otherwise, it is determined by a rule of thumb.
 
-  If a list of grouping columns `:hroup` is specified,
+  If a list of grouping columns `:=group` is specified,
   e.g., when the plot is colored by a nominal type,
   then the data is grouped by this column,
   and overlapping densities are generated."

@@ -569,6 +569,8 @@
 
 ;; ## Density
 
+;; (experimental)
+
 ;; Density estimates are handled similarly to Histograms:
 
 (-> datasets/iris
