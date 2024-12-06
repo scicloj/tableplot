@@ -27,17 +27,18 @@
           (-> k name (str/replace #"^=" ""))))
 
 (defn turn-keys-into-links [text]
-  (some->> text
-           (re-seq #"`\:\=[a-z|\-]+`")
-           (reduce (fn [s k]
-                     (str/replace
-                      s
-                      k
-                      (-> k
-                          (str/replace #"[`|:]" "")
-                          keyword
-                          include-key)))
-                   text)))
+  (or (some->> text
+               (re-seq #"`\:\=[a-z|\-]+`")
+               (reduce (fn [s k]
+                         (str/replace
+                          s
+                          k
+                          (-> k
+                              (str/replace #"[`|:]" "")
+                              keyword
+                              include-key)))
+                       text))
+      text))
 
 ^:kindly/hide-code
 (defn include-fn [f]
