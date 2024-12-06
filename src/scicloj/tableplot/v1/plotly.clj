@@ -35,7 +35,7 @@ Otherwise, keep the original `:=dataset`."
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
     (dag/fn-with-deps-keys
-     (str (format "Check the field type of the column specified by `%s`."
+     (str (format "Check the field type of the column specified by `%s` after `:=stat`."
                   colname-key)
           "
 
@@ -55,6 +55,14 @@ Otherwise, keep the original `:=dataset`."
          hc/RMV)))))
 
 (defn submap->field-type-after-stat [colname-key]
+  (str (format "Check the field type of the column specified by `%s` after `:=stat`."
+               colname-key)
+       "
+
+- `:quantitative` - numerical columns
+- `:temporal` - date-time columns
+- `:nominal` - all other column types (e.g., Strings, keywords)
+")
   (let [dataset-key :=dataset-after-stat
         colname-key-before-stat (-> colname-key
                                     name
