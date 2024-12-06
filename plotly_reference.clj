@@ -26,18 +26,6 @@
           (pr-str k)
           (-> k name (str/replace #"^=" ""))))
 
-^:kindly/hide-code
-(defn include-fn [f]
-  (format "%s\n\n **depends on**: %s"
-          (-> f
-              meta
-              :doc)
-          (->> f
-               meta
-               ::dag/dep-ks
-               (mapcat include-key)
-               (str/join " "))))
-
 (defn turn-keys-into-links [text]
   (some->> text
            (re-seq #"`\:\=[a-z|\-]+`")
@@ -50,6 +38,19 @@
                           keyword
                           include-key)))
                    text)))
+
+^:kindly/hide-code
+(defn include-fn [f]
+  (format "%s\n\n **depends on**: %s"
+          (-> f
+              meta
+              :doc
+              turn-keys-into-links)
+          (->> f
+               meta
+               ::dag/dep-ks
+               (map include-key)
+               (str/join " "))))
 
 (defn include-fnvar [fnvar]
   (-> (let [{:keys [name arglists doc]} (meta fnvar)]
@@ -229,7 +230,7 @@
 
 ;; (coming soon)
 
-;; ### Traces
+;; ### Plotly.js traces
 
 ;; Traces are a core concept in Plotly.js.
 ;; They specify separate parts of the plots which can be drawn on the same canvas
@@ -332,7 +333,7 @@
 ;; Here, 2d and 3d mean Eucledian coordinates of the corresponding dimensions,
 ;; and `:geo` means latitude and longitude.
 
-;; ### Mode and Type  
+;; ### Plotly.js mode and type  
 
 ;; Mode and type are Plotl.js notions that are used to distinguish
 ;; diffetent types of layers.
@@ -356,6 +357,47 @@
 
 ;; Thus, for example, if the mark is `:point` and the coordinates are `:polar`,
 ;; then the type is `"scatterpolar"`.
+
+;; ### Variable types
+
+;; Looking into the data in the columns, we may classify them into the following types:
+;; - `:quantitative` - numerical columns
+;; - `:temporal` - date-time columns
+;; - `:nominal` - all other column types (e.g., Strings, keywords)
+
+;; In certain situations, the types of data in relevant columns determines the way things
+;; should be plotted.
+
+;; For example, when a column is used for coloring a plot, we should use gradient colors
+;; if it is quantitative but more distinct colors if it is nominal.
+
+;; Nominal color column:
+
+(-> datasets/iris
+    (plotly/layer-point
+     {:=x :sepal-width
+      :=y :sepal-length
+      :=color :species
+      :=mark-size 20}))
+
+;; Quantitative color column:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=color :cyl
+      :=mark-size 20}))
+
+;; This can be overridden through the `:=color-type` key:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=color :cyl
+      :=color-type :nominal
+      :=mark-size 20}))
 
 ;; ## API functions
 
