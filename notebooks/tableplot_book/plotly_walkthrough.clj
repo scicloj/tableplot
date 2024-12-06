@@ -718,18 +718,21 @@
 ;; Layers (tableplot's intermediate data representation)
 
 (-> example-to-debug
-    (plotly/debug :=layers))
+    (plotly/debug :=layers)
+    kind/pprint)
 
 ;; Traces (part of the Plotly spec)
 
 (-> example-to-debug
-    (plotly/debug :=traces))
+    (plotly/debug :=traces)
+    kind/pprint)
 
 ;; Both
 
 (-> example-to-debug
     (plotly/debug {:layers :=layers
-                   :traces :=traces}))
+                   :traces :=traces})
+    kind/pprint)
 
 ;; ## Coming soon
 
