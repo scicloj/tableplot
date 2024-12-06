@@ -77,28 +77,6 @@
                                hc/RMV)))))
 
 
-;; (defn select-column [dataset column-selector]
-;;   (-> dataset
-;;       (tc/select-columns column-selector)
-;;       vals
-;;       first))
-
-
-;; (defn submap->data [column-selector-key]
-;;   (dag/fn-with-deps-keys
-;;    ""
-;;    [column-selector-key :=dataset]
-;;    (fn [submap]
-;;      (if-let [column-selector (submap
-;;                                column-selector-key)]
-;;        (do (-> submap
-;;                (get :=dataset))
-;;            (or (-> submap
-;;                    (get :=dataset)
-;;                    (select-column column-selector)
-;;                    vec)
-;;                hc/RMV))))))
-
 
 (dag/defn-with-deps submap->group
   "Infer the relevant grouping for statistical layers such as `layer-smooth`.
