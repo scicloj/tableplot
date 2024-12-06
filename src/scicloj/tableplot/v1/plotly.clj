@@ -437,9 +437,9 @@ Received the whole context and returns a new dataset."]
    [:=layout submap->layout
     "The layout part of the resulting Plotly.js specification."]
    [:=inferred-group submap->group
-    "The grouping of columns, that can be inferred from other keys and data (e.g., `:=color`) and can influence statistical layers such as `layer-smooth`."]
+    "A list of columns to be used for grouping of statistical computations, inferred from other keys and data (e.g., `:=color`)."]
    [:=group :=inferred-group
-    "A possible user override of `:=inerred-group`."]
+    "A list of columns to be used for grouping of statisticsl computations, a possible user override of `:=inerred-group`."]
    [:=predictors [:=x]
     "The list of predictors to be used in regression (`layer-smooth`)."]
    [:=design-matrix submap->design-matrix
@@ -615,7 +615,14 @@ Received the whole context and returns a new dataset."]
 (def-mark-based-layer layer-text
   :text nil)
 
-(dag/defn-with-deps smooth-stat ""
+(dag/defn-with-deps smooth-stat
+  "Given a substitution context, compute a `:=dataset` to
+with the `:=y` column replaced with its value predicted by regression,
+and with the results ordered by the `:=x` column.
+The predictor columns are specified by `:=design-matrix`
+and the regression model is specified by `:=model-options`.
+If `:=group` is specified, then the regression in computed in groups.
+" 
   [=dataset =x =y =predictors =group =design-matrix =model-options]
   (when-not (=dataset =y)
     (throw (ex-info "missing =y column"
