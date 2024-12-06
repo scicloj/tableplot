@@ -324,22 +324,37 @@ Received the whole context and returns a new dataset."]
    [:=x :x
     "The column for the x axis."]
    [:=x-after-stat :=x
-    "The column for the x axis to be used after =stat."]
-   [:=y :y]
-   [:=y-after-stat :=y]
-   [:=z hc/RMV]
-   [:=z-after-stat :=z]
-   [:=x0 hc/RMV]
-   [:=x0-after-stat :=x0]
-   [:=y0 hc/RMV]
-   [:=y0-after-stat :=y0]
-   [:=x1 hc/RMV]
-   [:=x1-after-stat :=x1]
-   [:=y1 hc/RMV]
-   [:=y1-after-stat :=y1]
-   [:=bar-width hc/RMV]
-   [:=color hc/RMV]
-   [:=size hc/RMV]
+    "The column for the x axis to be used after `:=stat`."]
+   [:=y :y
+    "The column for the y axis."]
+   [:=y-after-stat :=y
+    "The column for the y axis to be used after `:=stat`."]
+   [:=z hc/RMV
+    "The column for the z axis."]
+   [:=z-after-stat :=z
+    "The column for the z axis to be used after `:=stat`."]
+   [:=x0 hc/RMV
+    "The column for the first x axis value, in cases where pairs are needed, e.g. segment layers."]
+   [:=x0-after-stat :=x0
+    "The column for the first x axis value after stat, in cases where pairs are needed, e.g. segment layers."]
+   [:=y0 hc/RMV
+    "The column for the first y axis value, in cases where pairs are needed, e.g. segment layers."]
+   [:=y0-after-stat :=y0
+    "The column for the first y axis value after stat, in cases where pairs are needed, e.g. segment layers."]
+   [:=x1 hc/RMV
+    "The column for the second x axis value, in cases where pairs are needed, e.g. segment layers."]
+   [:=x1-after-stat :=x1
+    "The column for the second x axis value after stat, in cases where pairs are needed, e.g. segment layers."]
+   [:=y1 hc/RMV
+    "The column for the second y axis value, in cases where pairs are needed, e.g. segment layers."]
+   [:=y1-after-stat :=y1
+    "The column for the second y axis value after stat, in cases where pairs are needed, e.g. segment layers."]
+   [:=bar-width hc/RMV
+    "The column to determine the bar width in bar layers."]
+   [:=color hc/RMV
+    "The column to determine the color of marks."]
+   [:=size hc/RMV
+    "The column to determine the size of marks."]
    [:=x-type (submap->field-type :=x)]
    [:=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)]
    [:=y-type (submap->field-type :=y)]
@@ -350,40 +365,74 @@ Received the whole context and returns a new dataset."]
    [:=theta hc/RMV]
    [:=lat hc/RMV]
    [:=lon hc/RMV]
-   [:=color-type (submap->field-type :=color)]
-   [:=size-type (submap->field-type :=size)]
-   [:=mark-color hc/RMV]
-   [:=mark-size hc/RMV]
-   [:=marker-size-key submap->marker-size-key]
-   [:=mark-fill hc/RMV]
-   [:=mark-opacity hc/RMV]
-   [:=text hc/RMV]
-   [:=textfont hc/RMV]
-   [:=mark :point]
-   [:=mode submap->mode]
-   [:=type submap->type]
-   [:=name hc/RMV]
-   [:=layers []]
-   [:=traces submap->traces]
-   [:=layout submap->layout]
-   [:=inferred-group submap->group]
-   [:=group :=inferred-group]
-   [:=predictors [:=x]]
-   [:=design-matrix submap->design-matrix]
-   [:=model-options {:model-type :fastmath/ols}]
-   [:=histogram-nbins 10]
-   [:=density-bandwidth hc/RMV]
-   [:=coordinates :2d]
-   [:=height 400]
-   [:=width 500]
-   [:=margin {:t 25}]
-   [:=automargin false]
-   [:=x-title hc/RMV]
-   [:=y-title hc/RMV]
-   [:=title hc/RMV]
-   [:=background "rgb(235,235,235)"]
-   [:=xaxis-gridcolor "rgb(255,255,255)"]
-   [:=yaxis-gridcolor "rgb(255,255,255)"]])
+   [:=color-type (submap->field-type :=color)
+    "The data type of the column used to determine mark color."]
+   [:=size-type (submap->field-type :=size)
+    "The data type of the column used to determine mark size"]
+   [:=mark-color hc/RMV
+    "A fixed color specification for marks."]
+   [:=mark-size hc/RMV
+    "A fixed size specification for marks."]
+   [:=marker-size-key submap->marker-size-key
+    "What key does Plotly.js use to hold the marker size?"]
+   [:=mark-fill hc/RMV
+    "A fixed fill specification for marks."]
+   [:=mark-opacity hc/RMV
+    "A fixed opacity specification for marks."]
+   [:=text hc/RMV
+    "The column to determine the text of marks (relevant for text layer)."]
+   [:=textfont hc/RMV
+    "Text font specification as defined in Plotly.js. See [Text and oFnt Styling](https://plotly.com/javascript/font/)."]
+   [:=mark :point
+    "The mark used for a layer (a Tablepot concept)."]
+   [:=mode submap->mode
+    "The Plotly.js mode used in a trace."]
+   [:=type submap->type
+    "The Plotly.js type used in a trace."]
+   [:=name hc/RMV
+    "The layer name (which affects the Plotly.js traces names)."]
+   [:=layers []
+    "A vector of all lyaers in the plot (an inermediate Tableplot representation before converting to Plotly.js traces)."]
+   [:=traces submap->traces
+    "A vector of all Plotly.js traces in the plot."]
+   [:=layout submap->layout
+    "The layout part of the resulting Plotly.js specification."]
+   [:=inferred-group submap->group
+    "The grouping of columns, that can be inferred from other keys and data (e.g., `:=color`) and can influence statistical layers such as `layer-smooth`."]
+   [:=group :=inferred-group
+    "A possible user override of `:=inerred-group`."]
+   [:=predictors [:=x]
+    "The list of predictors to be used in regression (`layer-smooth`)."]
+   [:=design-matrix submap->design-matrix
+    "The design matrix definition to be used in regression (`layer-smooth`)."]
+   [:=model-options {:model-type :fastmath/ols}
+    "The optional specification of a model for regression (`layer-smooth`)."]
+   [:=histogram-nbins 10
+    "The number of bins for `layer-histogram`."]
+   [:=density-bandwidth hc/RMV
+    "The bandwidth of density estimation for `layer-density`."]
+   [:=coordinates :2d
+    "The coordinates to use: `:2d`/`:3d`/`:polar`/`:geo`."]
+   [:=height 400
+    "The plot's height."]
+   [:=width 500
+    "The plot's width."]
+   [:=margin {:t 25}
+    "Plotly.js margin specification. See [Setting Graph Size in Javaspcrit](https://plotly.com/javascript/setting-graph-size/)."]
+   [:=automargin false
+    "Should Plotly.js margins be automatically adjusted? See [Setting Graph Size in Javaspcrit](https://plotly.com/javascript/setting-graph-size/)."]
+   [:=x-title hc/RMV
+    "The title for x axis."]
+   [:=y-title hc/RMV
+    "The title for y axis."]
+   [:=title hc/RMV
+    "The plot title."]
+   [:=background "rgb(235,235,235)"
+    "The plot background color."]
+   [:=xaxis-gridcolor "rgb(255,255,255)"
+    "The color for the x axis grid lines."]
+   [:=yaxis-gridcolor "rgb(255,255,255)"
+    "The color for the y axis grid lines."]])
 
 (def standard-defaults-map
   (->> standard-defaults
