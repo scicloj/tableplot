@@ -4,17 +4,27 @@
 ;; For diverse examples, see the
 ;; [Plotly API Walkthrough](./tableplot_book.plotly_walkthrough.html).
 
+;; ## Setup
+
+;; In this tutorial, we use:
+
+;; * The Tableplot plotly API namepace
+;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing and column processing
+;; * [Kindly](https://scicloj.github.io/kindly-noted/) (to specify how certaiun values should be visualized)
+;; * the datasets defined in the [Datasets chapter](./tableplot_book.datasets.html)
+
+;; We require a few aditional namespaces which are internally to generate this reference.
+
 (ns tableplot-book.plotly-reference
   (:require [scicloj.tableplot.v1.plotly :as plotly]
-            [scicloj.tableplot.v1.dag :as dag]
-            [scicloj.kindly.v4.kind :as kind]
-            [aerial.hanami.common :as hc]
-            [clojure.string :as str]
             [tablecloth.api :as tc]
-            [tableplot-book.datasets :as datasets]
             [tablecloth.column.api :as tcc]
+            [scicloj.kindly.v4.kind :as kind]
             [scicloj.kindly.v4.api :as kindly]
-            [aerial.hanami.templates :as ht]))
+            [scicloj.tableplot.v1.dag :as dag]
+            [tableplot-book.datasets :as datasets]
+            [clojure.string :as str]
+            [aerial.hanami.common :as hc]))
 
 ^:kindly/hide-code
 (defn include-form [form]
@@ -26,6 +36,7 @@
           (pr-str k)
           (-> k name (str/replace #"^=" ""))))
 
+^:kindly/hide-code
 (defn turn-keys-into-links [text]
   (or (some->> text
                (re-seq #"`\:\=[a-z|\-]+`")
@@ -53,6 +64,7 @@
                (map include-key)
                (str/join " "))))
 
+^:kindly/hide-code
 (defn include-fnvar [fnvar]
   (-> (let [{:keys [name arglists doc]} (meta fnvar)]
         (str (format "### `%s`\n" name)
@@ -109,8 +121,8 @@
 
 ;; For example, the `layer-point` function generates a template with some specified
 ;; substitutions. Let us apply this function to a dataset with some user substitutions.
-;; As you can see be low, all the substitution keys are keywords beginning with `=`.
-;; This is just a convention that helps distinguish their role from other k
+;; As you can see below, all the substitution keys are keywords beginning with `=`.
+;; This is just a convention that helps distinguish their role from other keys.
 
 ;; By default, this template is displayed by realizing it as  an actual Plotly.js
 ;; specification.     
@@ -121,7 +133,7 @@
                          :=color :species
                          :=mark-size 10}))
 
-;; We will use [Kindly](https://scicloj.github.io/kindly-noted/) to specify
+;; To inspect it, let use [Kindly](https://scicloj.github.io/kindly-noted/) to request
 ;; that this template should rather be pretty-printed as a data structure.
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -218,15 +230,15 @@ key for background color, which is a grey colour by default.")
   :layout {:title {:text "Bubble Chart Hover Text"}
            :showlegend false
            :height 600
-           :width 600}})
+           :width 600}}
+ ;; Adjust the height of the surrounding HTML element:
+ {:style {:height :auto}})
 
 ;; Sometimes, this raw way is all we need; but in common situations, Tableplot make things easier.
 
 ;; ## Concepts
 
 ;; ### Templates 💡
-;; For typical user needs, it is ok to skip this section.
-;; It is here for the curious ones who wish to have a slightly clearer picture of the internals.
 
 ;; (coming soon)
 

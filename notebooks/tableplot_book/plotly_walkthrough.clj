@@ -17,7 +17,7 @@
 ;; ## Setup
 ;; For this tutorial, we require:
 
-;; * The Tablecloth plotly API namepace
+;; * The Tableplot plotly API namepace
 
 ;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing
 
