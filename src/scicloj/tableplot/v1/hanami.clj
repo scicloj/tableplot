@@ -13,42 +13,32 @@
             [scicloj.tableplot.v1.cache :as cache]
             [scicloj.tableplot.v1.xform :as xform]))
 
-(dag/defn-with-deps submap->dataset [=base-dataset =layer-dataset =layer?]
+(dag/defn-with-deps submap->dataset ""
+  [=base-dataset =layer-dataset =layer?]
   (if =layer?
     =layer-dataset
     =base-dataset))
 
-(def submap->dataset-after-stat
-  (dag/fn-with-deps-keys
-   [:=dataset :=stat]
-   (fn [{:as submap
-         :keys [=dataset =stat]}]
-     (when-not (tc/dataset? =dataset)
-       (throw (ex-info "missing :=dataset"
-                       submap)))
-     (if =stat
-       (@=stat submap)
-       =dataset))))
-
-(dag/defn-with-deps submap->csv [=dataset-after-stat]
-  (util/dataset->csv =dataset-after-stat))
+(dag/defn-with-deps submap->csv ""
+  [=stat]
+  (util/dataset->csv =stat))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
-    (dag/fn-with-deps-keys
-     [colname-key dataset-key]
-     (fn [submap]
-       (if-let [colname (submap colname-key)]
-         (let [column (-> submap
-                          (get dataset-key)
-                          (get colname))]
-           (cond (tcc/typeof? column :numerical) :quantitative
-                 (tcc/typeof? column :datetime) :temporal
-                 :else :nominal))
-         hc/RMV)))))
+    (dag/fn-with-deps-keys ""
+                           [colname-key dataset-key]
+                           (fn [submap]
+                             (if-let [colname (submap colname-key)]
+                               (let [column (-> submap
+                                                (get dataset-key)
+                                                (get colname))]
+                                 (cond (tcc/typeof? column :numerical) :quantitative
+                                       (tcc/typeof? column :datetime) :temporal
+                                       :else :nominal))
+                               hc/RMV)))))
 
 (defn submap->field-type-after-stat [colname-key]
-  (let [dataset-key :=dataset-after-stat
+  (let [dataset-key :=stat
         colname-key-before-stat (-> colname-key
                                     name
                                     (str/replace #"-after-stat" "")
@@ -58,6 +48,7 @@
                                          (str "-type")
                                          keyword)]
     (dag/fn-with-deps-keys
+     ""
      [colname-key
       colname-key-before-stat
       colname-key-type-before-stat
@@ -76,7 +67,8 @@
                      :else :nominal)))
          hc/RMV)))))
 
-(dag/defn-with-deps submap->group [=color =color-type =size =size-type]
+(dag/defn-with-deps submap->group ""
+  [=color =color-type =size =size-type]
   (concat (when (= =color-type :nominal)
             [=color])
           (when (= =size-type :nominal)
@@ -107,12 +99,11 @@
    :DFMT {:type "csv"}
 
    ;; defaults for Tableplot's templates
-   :=stat hc/RMV
+   :=stat :=dataset
    :=base-dataset hc/RMV
    :=layer-dataset hc/RMV
    :=layer? hc/RMV
    :=dataset submap->dataset
-   :=dataset-after-stat submap->dataset-after-stat
    :=csv-data submap->csv
    :=data {:values :=csv-data
            :format {:type "csv"}}
@@ -135,7 +126,8 @@
    :=y-title hc/RMV
    :=x-bin hc/RMV
    :=y-bin hc/RMV
-   :=x2-encoding (dag/fn-with-deps [=x2-after-stat
+   :=x2-encoding (dag/fn-with-deps ""
+                                   [=x2-after-stat
                                     =x-type-after-stat]
                                    (if =x2-after-stat
                                      (-> xy-encoding
@@ -143,7 +135,8 @@
                                          (assoc :field =x2-after-stat
                                                 :type =x-type-after-stat))
                                      hc/RMV))
-   :=y2-encoding (dag/fn-with-deps [=y2-after-stat
+   :=y2-encoding (dag/fn-with-deps ""
+                                   [=y2-after-stat
                                     =y-type-after-stat]
                                    (if =y2-after-stat
                                      (-> xy-encoding
@@ -257,7 +250,8 @@
                                (assoc template
                                       :data (if (and (= (:=layer-dataset defaults)
                                                         (:=base-dataset defaults))
-                                                     (not (:=stat defaults)))
+                                                     (not= (:=stat defaults)
+                                                           :=dataset))
                                               hc/RMV
                                               :=data)
                                       ::ht/defaults (merge
@@ -283,7 +277,7 @@
 (def layer-bar (mark-based-layer "bar"))
 (def layer-area (mark-based-layer "area"))
 
-(dag/defn-with-deps smooth-stat
+(dag/defn-with-deps smooth-stat ""
   [=dataset =y =predictors =group]
   (when-not (=dataset =y)
     (throw (ex-info "missing =y column"
@@ -327,7 +321,7 @@
    (layer context
           {:mark mark-base
            :encoding :=encoding}
-          (merge {:=stat (delay smooth-stat)
+          (merge {:=stat smooth-stat
                   :=mark :line}
                  submap))))
 
@@ -342,7 +336,7 @@
                           submap)))))
 
 
-(dag/defn-with-deps histogram-stat
+(dag/defn-with-deps histogram-stat ""
   [=dataset =x =histogram-nbins]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
@@ -365,7 +359,7 @@
    (layer context
           {:mark mark-base
            :encoding :=encoding}
-          (merge {:=stat (delay histogram-stat)
+          (merge {:=stat histogram-stat
                   :=mark :bar
                   :=x-after-stat :left
                   :=x2-after-stat :right

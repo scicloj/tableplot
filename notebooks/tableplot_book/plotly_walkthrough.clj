@@ -17,7 +17,7 @@
 ;; ## Setup
 ;; For this tutorial, we require:
 
-;; * The Tablecloth plotly API namepace
+;; * The Tableplot plotly API namepace
 
 ;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing
 
@@ -338,12 +338,9 @@
 
 ;; ## Smoothing
 
-;; `layer-smooth` is a layer that applies some statistical
-;; processing to the dataset to model it as a smooth shape.
+;; `layer-smooth` is a layer that applies statistical regression methods
+;; to the dataset to model it as a smooth shape.
 ;; It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
-
-;; At the moment, it can only be used to model `:=y` by linear regression.
-;; Soon we will add more ways of modelling the data.
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -355,7 +352,7 @@
 
 ;; By default, the regression is computed with only one predictor variable,
 ;; which is `:=x`.
-;; But this can be overriden using the `:predictors` key.
+;; But this can be overriden using the `:=predictors` key.
 ;; We may compute a regression with more than one predictor.
 
 (-> datasets/iris
@@ -368,7 +365,10 @@
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-;; We can also provide the design matrix.
+;; We can also specify the predictor columns as expressions
+;; through the `:=design-matrix` key.
+;; Here, we use the design matrix functionality of
+;; [Metamorph.ml](https://github.com/scicloj/metamorph.ml).
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -397,7 +397,8 @@
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-;; We can also provide the regression model details as metamorph.ml options:
+;; One can also provide the regression model details through `:=model-options`
+;; and use any regression model and parameters registered by Metamorph.ml.
 
 (require 'scicloj.ml.tribuo)
 
@@ -568,6 +569,10 @@
 
 ;; ## Density
 
+;; (experimental)
+
+;; Density estimates are handled similarly to Histograms:
+
 (-> datasets/iris
     (plotly/layer-density {:=x :sepal-width}))
 
@@ -717,18 +722,21 @@
 ;; Layers (tableplot's intermediate data representation)
 
 (-> example-to-debug
-    (plotly/debug :=layers))
+    (plotly/debug :=layers)
+    kind/pprint)
 
 ;; Traces (part of the Plotly spec)
 
 (-> example-to-debug
-    (plotly/debug :=traces))
+    (plotly/debug :=traces)
+    kind/pprint)
 
 ;; Both
 
 (-> example-to-debug
     (plotly/debug {:layers :=layers
-                   :traces :=traces}))
+                   :traces :=traces})
+    kind/pprint)
 
 ;; ## Coming soon
 

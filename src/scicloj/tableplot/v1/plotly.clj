@@ -17,21 +17,17 @@
             [scicloj.tableplot.v1.cache :as cache]
             [scicloj.tableplot.v1.xform :as xform]))
 
-(def submap->dataset-after-stat
-  (dag/fn-with-deps-keys
-   [:=dataset :=stat]
-   (fn [{:as submap
-         :keys [=dataset =stat]}]
-     (when-not (tc/dataset? =dataset)
-       (throw (ex-info "missing :=dataset"
-                       submap)))
-     (if =stat
-       (@=stat submap)
-       =dataset))))
-
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
     (dag/fn-with-deps-keys
+     (str (format "Check the field type of the column specified by `%s` after `:=stat`."
+                  colname-key)
+          "
+
+- `:quantitative` - numerical columns
+- `:temporal` - date-time columns
+- `:nominal` - all other column types (e.g., Strings, keywords)
+")
      [colname-key dataset-key]
      (fn [submap]
        (if-let [colname (submap colname-key)]
@@ -44,7 +40,15 @@
          hc/RMV)))))
 
 (defn submap->field-type-after-stat [colname-key]
-  (let [dataset-key :=dataset-after-stat
+  (str (format "Check the field type of the column specified by `%s` after `:=stat`."
+               colname-key)
+       "
+
+- `:quantitative` - numerical columns
+- `:temporal` - date-time columns
+- `:nominal` - all other column types (e.g., Strings, keywords)
+")
+  (let [dataset-key :=stat
         colname-key-before-stat (-> colname-key
                                     name
                                     (str/replace #"-after-stat" "")
@@ -53,49 +57,33 @@
                                          name
                                          (str "-type")
                                          keyword)]
-    (dag/fn-with-deps-keys
-     [colname-key
-      colname-key-before-stat
-      colname-key-type-before-stat
-      dataset-key]
-     (fn [submap]
-       (if-let [colname (submap colname-key)]
-         (let [column (-> submap
-                          (get dataset-key)
-                          (get colname))
-               colname-before-stat (submap
-                                    colname-key-before-stat)]
-           (or (when (= colname colname-before-stat)
-                 (submap colname-key-type-before-stat))
-               (cond (tcc/typeof? column :numerical) :quantitative
-                     (tcc/typeof? column :datetime) :temporal
-                     :else :nominal)))
-         hc/RMV)))))
+    (dag/fn-with-deps-keys ""
+                           [colname-key
+                            colname-key-before-stat
+                            colname-key-type-before-stat
+                            dataset-key]
+                           (fn [submap]
+                             (if-let [colname (submap colname-key)]
+                               (let [column (-> submap
+                                                (get dataset-key)
+                                                (get colname))
+                                     colname-before-stat (submap
+                                                          colname-key-before-stat)]
+                                 (or (when (= colname colname-before-stat)
+                                       (submap colname-key-type-before-stat))
+                                     (cond (tcc/typeof? column :numerical) :quantitative
+                                           (tcc/typeof? column :datetime) :temporal
+                                           :else :nominal)))
+                               hc/RMV)))))
 
 
-(defn select-column [dataset column-selector]
-  (-> dataset
-      (tc/select-columns column-selector)
-      vals
-      first))
 
-
-(defn submap->data [column-selector-key]
-  (dag/fn-with-deps-keys
-   [column-selector-key :=dataset]
-   (fn [submap]
-     (if-let [column-selector (submap
-                               column-selector-key)]
-       (do (-> submap
-               (get :=dataset))
-           (or (-> submap
-                   (get :=dataset)
-                   (select-column column-selector)
-                   vec)
-               hc/RMV))))))
-
-
-(dag/defn-with-deps submap->group [=color =color-type =size =size-type]
+(dag/defn-with-deps submap->group
+  "Infer the relevant grouping for statistical layers such as `layer-smooth`.
+The `:=color` column affects the grouing if and only if `:=color-type` is `:nominal`.
+The `:=size` column affects the grouing if and only if `:=size-type` is `:nominal`.
+"
+  [=color =color-type =size =size-type]
   (concat (when (= =color-type :nominal)
             [=color])
           (when (= =size-type :nominal)
@@ -110,21 +98,24 @@
     :bar nil
     :segment :lines))
 
-(dag/defn-with-deps submap->mode [=mark]
+(dag/defn-with-deps submap->mode
+  "Determine the Plotly.js mode for a trace."
+  [=mark]
   (mark->mode =mark))
 
-(dag/defn-with-deps submap->type [=mark =coordinates]
+(dag/defn-with-deps submap->type
+  "Determine the Plotly.js type for a trace."
+  [=mark =coordinates]
   (str (case =mark
          :box "box"
          :bar "bar"
          ;; else
          "scatter")
        (case =coordinates
-         :polar "polar"
-         :geo "geo"
+         :2d nil
          :3d "3d"
-         ;; else
-         nil)))
+         :polar "polar"
+         :geo "geo")))
 
 
 (def colors-palette
@@ -144,13 +135,16 @@
   {:data :=traces
    :layout :=layout})
 
-(dag/defn-with-deps submap->marker-size-key [=mode =type]
+(dag/defn-with-deps submap->marker-size-key
+  "Determine which Plotly.js key should be used to specify the mark size.
+For lines, it is `:width`. Otherwise, it is `:size`."
+  [=mode =type]
   (if (or (= =mode :lines)
           (= =type :line)) :width
       :size))
 
 (def layer-base
-  {:dataset :=dataset-after-stat
+  {:dataset :=stat
    :mark :=mark
    :x :=x-after-stat
    :y :=y-after-stat
@@ -183,7 +177,9 @@
    :name :=name})
 
 
-(dag/defn-with-deps submap->traces [=layers]
+(dag/defn-with-deps submap->traces
+  "Create the Plotly.js traces from the Tableplot layers."
+  [=layers]
   (->>
    =layers
    (mapcat
@@ -262,6 +258,7 @@
 
 
 (dag/defn-with-deps submap->layout
+  "Create the layout part of the Plotly.js specification."
   [=width =height =margin =automargin =background =title
    =xaxis-gridcolor =yaxis-gridcolor
    =x-after-stat =y-after-stat
@@ -299,6 +296,8 @@
      :title =title}))
 
 (dag/defn-with-deps submap->design-matrix
+  "Determine a trivial design matrix specifiation from a set of `:=predictors` columns.
+The design matrix simply uses these columns without any additional transformation."
   [=predictors]
   (->> =predictors
        (mapv (fn [k]
@@ -307,80 +306,170 @@
                    (-> k name symbol))]))))
 
 (def standard-defaults
-  {:=stat hc/RMV
-   :=dataset hc/RMV
-   :=dataset-after-stat submap->dataset-after-stat
-   :=x :x
-   :=x-after-stat :=x
-   :=y :y
-   :=y-after-stat :=y
-   :=z hc/RMV
-   :=z-after-stat :=z
-   :=x0 hc/RMV
-   :=x0-after-stat :=x0
-   :=y0 hc/RMV
-   :=y0-after-stat :=y0
-   :=x1 hc/RMV
-   :=x1-after-stat :=x1
-   :=y1 hc/RMV
-   :=y1-after-stat :=y1
-   :=bar-width hc/RMV
-   :=color hc/RMV
-   :=size hc/RMV
-   :=x-type (submap->field-type :=x)
-   :=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)
-   :=y-type (submap->field-type :=y)
-   :=y-type-after-stat (submap->field-type-after-stat :=y-after-stat)
-   :=z-type (submap->field-type :=z)
-   :=z-type-after-stat (submap->field-type-after-stat :=z-after-stat)
-   :=r hc/RMV
-   :=theta hc/RMV
-   :=lat hc/RMV
-   :=lon hc/RMV
-   :=color-type (submap->field-type :=color)
-   :=size-type (submap->field-type :=size)
-   :=mark-color hc/RMV
-   :=mark-size hc/RMV
-   :=marker-size-key submap->marker-size-key
-   :=mark-fill hc/RMV
-   :=mark-opacity hc/RMV
-   :=text hc/RMV
-   :=textfont hc/RMV
-   :=mark :point
-   :=mode submap->mode
-   :=type submap->type
-   :=name hc/RMV
-   :=layers []
-   :=traces submap->traces
-   :=layout submap->layout
-   :=inferred-group submap->group
-   :=group :=inferred-group
-   :=predictors [:=x]
-   :=design-matrix submap->design-matrix
-   :=model-options {:model-type :fastmath/ols}
-   :=histogram-nbins 10
-   :=density-bandwidth hc/RMV
-   :=coordinates hc/RMV
-   :=height 400
-   :=width 500
-   :=margin {:t 25}
-   :=automargin false
-   :=x-title hc/RMV
-   :=y-title hc/RMV
-   :=title hc/RMV
-   :=background "rgb(235,235,235)"
-   :=xaxis-gridcolor "rgb(255,255,255)"
-   :=yaxis-gridcolor "rgb(255,255,255)"})
+  [[:=stat :=dataset
+    "The data resulting from a possible statistical transformation."]
+   [:=dataset hc/RMV
+    "The data to be plotted."]
+   [:=x :x
+    "The column for the x axis."]
+   [:=x-after-stat :=x
+    "The column for the x axis to be used after `:=stat`."]
+   [:=y :y
+    "The column for the y axis."]
+   [:=y-after-stat :=y
+    "The column for the y axis to be used after `:=stat`."]
+   [:=z hc/RMV
+    "The column for the z axis."]
+   [:=z-after-stat :=z
+    "The column for the z axis to be used after `:=stat`."]
+   [:=x0 hc/RMV
+    "The column for the first x axis value, in cases where pairs are needed, e.g. segment layers."]
+   [:=x0-after-stat :=x0
+    "The column for the first x axis value after `:=stat`, in cases where pairs are needed, e.g. segment layers."]
+   [:=y0 hc/RMV
+    "The column for the first y axis value, in cases where pairs are needed, e.g. segment layers."]
+   [:=y0-after-stat :=y0
+    "The column for the first y axis value after `:=stat`, in cases where pairs are needed, e.g. segment layers."]
+   [:=x1 hc/RMV
+    "The column for the second x axis value, in cases where pairs are needed, e.g. segment layers."]
+   [:=x1-after-stat :=x1
+    "The column for the second x axis value after `:=stat`, in cases where pairs are needed, e.g. segment layers."]
+   [:=y1 hc/RMV
+    "The column for the second y axis value, in cases where pairs are needed, e.g. segment layers."]
+   [:=y1-after-stat :=y1
+    "The column for the second y axis value after `:=stat`, in cases where pairs are needed, e.g. segment layers."]
+   [:=bar-width hc/RMV
+    "The column to determine the bar width in bar layers."]
+   [:=color hc/RMV
+    "The column to determine the color of marks."]
+   [:=size hc/RMV
+    "The column to determine the size of marks."]
+   [:=x-type (submap->field-type :=x)
+    "The field type of the column used to determine the x axis."]
+   [:=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)
+    "The field type of the column used to determine the x axis after `:=stat`."]
+   [:=y-type (submap->field-type :=y)
+    "The field type of the column used to determine the y axis."]
+   [:=y-type-after-stat (submap->field-type-after-stat :=y-after-stat)
+    "The field type of the column used to determine the y axis after `:=stat`."]
+   [:=z-type (submap->field-type :=z)
+    "The field type of the column used to determine the z axis."]
+   [:=z-type-after-stat (submap->field-type-after-stat :=z-after-stat)
+    "The field type of the column used to determine the z axis after `:=stat`."]
+   [:=r hc/RMV
+    "The column for the radius in polar coordinates."]
+   [:=theta hc/RMV
+    "The column for the angle in polar coordinates."]
+   [:=lat hc/RMV
+    "The column for the latitude in geo coordinates."]
+   [:=lon hc/RMV
+    "The column for the longitude in geo coordinates."]
+   [:=color-type (submap->field-type :=color)
+    "The field type of the column used to determine mark color."]
+   [:=size-type (submap->field-type :=size)
+    "The field type of the column used to determine mark size"]
+   [:=mark-color hc/RMV
+    "A fixed color specification for marks."]
+   [:=mark-size hc/RMV
+    "A fixed size specification for marks."]
+   [:=marker-size-key submap->marker-size-key
+    "What key does Plotly.js use to hold the marker size?"]
+   [:=mark-fill hc/RMV
+    "A fixed fill specification for marks."]
+   [:=mark-opacity hc/RMV
+    "A fixed opacity specification for marks."]
+   [:=text hc/RMV
+    "The column to determine the text of marks (relevant for text layer)."]
+   [:=textfont hc/RMV
+    "Text font specification as defined in Plotly.js. See [Text and oFnt Styling](https://plotly.com/javascript/font/)."]
+   [:=mark :point
+    "The mark used for a layer (a Tablepot concept)."]
+   [:=mode submap->mode
+    "The Plotly.js mode used in a trace."]
+   [:=type submap->type
+    "The Plotly.js type used in a trace."]
+   [:=name hc/RMV
+    "The layer name (which affects the Plotly.js traces names)."]
+   [:=layers []
+    "A vector of all lyaers in the plot (an inermediate Tableplot representation before converting to Plotly.js traces)."]
+   [:=traces submap->traces
+    "A vector of all Plotly.js traces in the plot."]
+   [:=layout submap->layout
+    "The layout part of the resulting Plotly.js specification."]
+   [:=inferred-group submap->group
+    "A list of columns to be used for grouping of statistical computations, inferred from other keys and data (e.g., `:=color`)."]
+   [:=group :=inferred-group
+    "A list of columns to be used for grouping of statisticsl computations, a possible user override of `:=inerred-group`."]
+   [:=predictors [:=x]
+    "The list of predictors to be used in regression (`layer-smooth`)."]
+   [:=design-matrix submap->design-matrix
+    "The design matrix definition to be used in regression (`layer-smooth`)."]
+   [:=model-options {:model-type :fastmath/ols}
+    "The optional specification of a model for regression (`layer-smooth`)."]
+   [:=histogram-nbins 10
+    "The number of bins for `layer-histogram`."]
+   [:=density-bandwidth hc/RMV
+    "The bandwidth of density estimation for `layer-density`."]
+   [:=coordinates :2d
+    "The coordinates to use: `:2d`/`:3d`/`:polar`/`:geo`."]
+   [:=height 400
+    "The plot's height."]
+   [:=width 500
+    "The plot's width."]
+   [:=margin {:t 25}
+    "Plotly.js margin specification. See [Setting Graph Size in Javaspcrit](https://plotly.com/javascript/setting-graph-size/)."]
+   [:=automargin false
+    "Should Plotly.js margins be automatically adjusted? See [Setting Graph Size in Javaspcrit](https://plotly.com/javascript/setting-graph-size/)."]
+   [:=x-title hc/RMV
+    "The title for x axis."]
+   [:=y-title hc/RMV
+    "The title for y axis."]
+   [:=title hc/RMV
+    "The plot title."]
+   [:=background "rgb(235,235,235)"
+    "The plot background color."]
+   [:=xaxis-gridcolor "rgb(255,255,255)"
+    "The color for the x axis grid lines."]
+   [:=yaxis-gridcolor "rgb(255,255,255)"
+    "The color for the y axis grid lines."]])
 
+(def standard-defaults-map
+  (->> standard-defaults
+       (map (comp vec (partial take 2)))
+       (into {})))
 
 (defn plotly-xform [template]
   (cache/with-clean-cache
     (-> template
         xform/xform
-        kind/plotly
+        (kind/plotly {:style {:height :auto}})
         (dissoc :kindly/f))))
 
 (defn base
+  "  The `base` function can be used to create the basis
+  template to which we can add layers.
+  It can be used to set up some substitution keys to be shared
+  by the various layers.
+
+  The return value is always a template which is set up
+  to be visualized as Plotly.js.
+  
+  In the full case of three arguments `(dataset template submap)`,
+  `dataset` is added to `template` as the value substituted for the 
+  `:=dataset` key, and the substitution map `submap` is added as well.
+
+  In the other cases, if the `template` is not passed missing,
+  it is replaced by a minimal base template to be carried along
+  the pipeline. If the `dataset` or `submap` parts are not passed,
+  they are simply not substituted into the template.
+
+  If the first argument is a dataset, it is converted to
+  a very basic template where it is substituted at the `:=dataset` key.
+
+  We typically use `base` with other layers added to it.
+  The base substitutions are shared between layers,
+  and the layers can override them and add substitutions of their own.
+  "  
   ;;
   ([dataset-or-template]
    (base dataset-or-template {}))
@@ -400,58 +489,110 @@
   ([dataset template submap]
    (-> template
        (update ::ht/defaults merge
-               standard-defaults
+               standard-defaults-map
                {:=dataset dataset})
        (base submap))))
 
 
-(defn plot [& template]
-  (->> template
-       (apply base)
-       plotly-xform))
-
+(defn plot
+  "The `plot` function realizes a template as a Plotly.js specification."
+  [template]
+  (plotly-xform template))
 
 (defn layer
-  ([context template submap]
-   (if (tc/dataset? context)
-     (layer (base context {})
-            template
+  "The `layer` function is typically not used on the user side.
+  It is a generic way to create more specific functions to add layers
+  such as `layer-point`.
+
+  If `dataset-or-template` is a dataset, it is converted to
+  a basic template where it is substituted at the
+  `:=dataset` key.
+
+  Otherwise, it is already template and can be processed further.
+  The `layer-template` template is added as an additional layer
+  to our template.
+  The `submap` substitution map is added as additional substitutions
+  to that layer.
+
+  The var `layer-base` is typicall used as the `layer-template`.
+  "
+  ([dataset-or-template layer-template submap]
+   (if (tc/dataset? dataset-or-template)
+     (layer (base dataset-or-template {})
+            layer-template
             submap)
-     ;; else - the context is already a template
-     (-> context
+     ;; else - the dataset-or-template is already a template
+     (-> dataset-or-template
          (update ::ht/defaults
                  (fn [defaults]
                    (-> defaults
                        (update :=layers
                                util/conjv
-                               (assoc template
+                               (assoc layer-template
                                       ::ht/defaults (merge
-                                                     standard-defaults
+                                                     standard-defaults-map
                                                      defaults
                                                      submap))))))))))
 
-(defn mark-based-layer [mark]
-  (fn f
-    ([context]
-     (f context {}))
-    ([context submap]
-     (layer context
-            layer-base
-            (merge {:=mark mark}
-                   submap)))))
+(defmacro def-mark-based-layer
+  "  This macro is typically not used on the user side.
+  It is used to generate more specific functions to add specific types of layers.
 
-(def layer-point (mark-based-layer :point))
-(def layer-line (mark-based-layer :line))
-(def layer-bar (mark-based-layer :bar))
-(def layer-boxplot (mark-based-layer :box))
-(def layer-segment (mark-based-layer :segment))
-(def layer-text (mark-based-layer :text))
+  It creates a function definition of two possible arities:
 
+  `[dataset-or-template]`
 
+  `[dataset-or-template submap]`
 
+  the returned function can be used to process a dataset or a template in a pipeline
+  by adding a layer of a specificed kind and possibly some substutution maps.
+  "
+  [fsymbol mark description]
+  (list 'defn fsymbol
+        (format
+         "Add a %s layer to the given `dataset-or-template`,
+         with possible additional substitutions if `submap` is provided."
+         (or description (name mark)))
+        (list '[dataset-or-template]
+              (list fsymbol 'dataset-or-template {}))
+        (list '[dataset-or-template submap]
+              (list `layer 'dataset-or-template
+                    `layer-base
+                    (list `merge {:=mark mark}
+                          'submap)))))
 
+(def-mark-based-layer layer-point
+  :point nil)
+
+(def-mark-based-layer layer-line
+  :line nil)
+
+(def-mark-based-layer layer-bar
+  :bar nil)
+
+(def-mark-based-layer layer-boxplot
+  :box
+  "[boxplot](https://en.wikipedia.org/wiki/Box_plot)")
+
+(def-mark-based-layer layer-segment
+  :segment nil)
+
+(def-mark-based-layer layer-text
+  :text nil)
 
 (dag/defn-with-deps smooth-stat
+  "Compute a dataset
+with the `:=y` column in `:=dataset` replaced with
+its value predicted by regression,
+and with the results ordered by the `:=x` column.
+
+The predictor columns are specified by `:=design-matrix`
+
+and the regression model is specified by `:=model-options`.
+
+If the grouping list of columns `:=group` is specified,
+then the regression is computed in groups.
+" 
   [=dataset =x =y =predictors =group =design-matrix =model-options]
   (when-not (=dataset =y)
     (throw (ex-info "missing =y column"
@@ -493,23 +634,40 @@
           (tc/order-by [=x])))))
 
 
-(defn mark-based-layer [mark]
-  (fn f
-    ([context]
-     (f context {}))
-    ([context submap]
-     (layer context
-            layer-base
-            (merge {:=mark mark}
-                   submap)))))
-
 (defn layer-smooth
+  "
+  Add a smoothed layer layer to the given `dataset-or-template`,
+  with possible additional substitutions if `submap` is provided.
+
+  Statistical [regression](https://en.wikipedia.org/wiki/Regression_analysis)
+  methods are applied to the dataset to model it as a smooth shape.
+  It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
+  
+  `smooth-stat` is used internally as `:=stat`.
+
+  By default, the regression is computed with only one predictor variable,
+  which is `:=x`.
+  This can be overriden using the `:=predictors` key, which allows
+  computing a regression with more than one predictor.
+
+  One can also specify the predictor columns as expressions
+  through the `:=design-matrix` key.
+  Here, we use the design matrix functionality of
+  [Metamorph.ml](https://github.com/scicloj/metamorph.ml).
+
+  One can also provide the regression model details through `:=model-options`
+  and use any regression model and parameters registered by Metamorph.ml.
+
+  The regressions computed are done on a group level, where the grouping
+  can be inferred as `:=inferred-group`
+  but can also be user-overridden through `:=group`.
+  "
   ([context]
    (layer-smooth context {}))
   ([context submap]
    (layer context
           layer-base
-          (merge {:=stat (delay smooth-stat)
+          (merge {:=stat smooth-stat
                   :=mark :line}
                  submap))))
 
@@ -522,6 +680,16 @@
                           submap)))))
 
 (dag/defn-with-deps histogram-stat
+  "Compute a dataset representing the [histogram](https://en.wikipedia.org/wiki/Histogram)
+of the `:=x` column in `:=dataset`.
+
+The histogram's binning and counting are computed
+using [Fastmath](https://github.com/generateme/fastmath).
+
+The number of bins is specified by `:histogram-nbins`.
+
+If the grouping list of columns `:=group` is specified,
+then the histogram is computed in groups."
   [=dataset =group =x =histogram-nbins]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
@@ -561,16 +729,29 @@
           summary-fn))))
 
 
-
-
-
 (defn layer-histogram
+  "Add a [histogram](https://en.wikipedia.org/wiki/Histogram)
+  layer to the given `dataset-or-template`,
+  with possible additional substitutions if `submap` is provided.
+  
+  `histogram-stat` is used internally as `:=stat`.
+  
+  The histogram's binning and counting are computed
+  using [Fastmath](https://github.com/generateme/fastmath).
+  
+  The `:=histogram-nbins` key controls the number of bins.
+
+  If a list of grouping columns `:=group` is specified,
+  e.g., when the plot is colored by a nominal type,
+  then the data is grouped by this column,
+  and overlapping histograms are generated.
+  "
   ([context]
    (layer-histogram context {}))
   ([context submap]
    (layer context
           layer-base
-          (merge {:=stat (delay histogram-stat)
+          (merge {:=stat histogram-stat
                   :=mark :bar
                   :=x-after-stat :middle
                   :=y-after-stat :count
@@ -583,6 +764,17 @@
 
 
 (dag/defn-with-deps density-stat
+  "Compute a dataset representing the approximated [density](https://en.wikipedia.org/wiki/Histogram)
+of the `:=x` column in `:=dataset`.
+
+The density is estimated by Gaussian [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation)
+using [Fastmath](https://github.com/generateme/fastmath).
+
+The `:=density-bandwidth` can controls the bandwidth.
+Otherwise, it is determined by a rule of thumb.
+
+If the grouping list of columns `:=group` is specified,
+then the density is estimated in groups." 
   [=dataset =group =x =density-bandwidth]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
@@ -627,12 +819,30 @@
 
 
 (defn layer-density
+  "
+  (experimental)
+  
+  Add an estimated density layer to the given `dataset-or-template`,
+  with possible additional substitutions if `submap` is provided.
+
+  `density-stat` is used internally as `:=stat`.
+  
+  The density is estimated by Gaussian [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation)
+  using [Fastmath](https://github.com/generateme/fastmath).
+
+  The `:=density-bandwidth` can controls the bandwidth.
+  Otherwise, it is determined by a rule of thumb.
+
+  If a list of grouping columns `:=group` is specified,
+  e.g., when the plot is colored by a nominal type,
+  then the data is grouped by this column,
+  and overlapping densities are generated."
   ([context]
    (layer-histogram context {}))
   ([context submap]
    (layer context
           layer-base
-          (merge {:=stat (delay density-stat)
+          (merge {:=stat density-stat
                   :=mark :line
                   :=mark-fill :tozeroy
                   :=x-after-stat :x
@@ -673,8 +883,26 @@
       :layout {:name "breadthfirst"
                :padding 5}})))
 
-(defn debug [template k]
-  (-> template
-      (assoc ::debug k)
-      plot
-      ::debug))
+(defn debug
+  "(experimental)
+
+  Given a `template` and a `result` structure involving substitution keys,
+  find out what value `result` would receive when realizing the template.
+
+  Given a `template`, a `layer-idx` integer, and a `result` structure involving substitution keys,
+  find out what value `result` would receive when realizing the `layer-idx`th layer in the template.
+  "
+  ([template result]
+   (-> template
+       (assoc ::debug result)
+       plot
+       ::debug))
+  ([template layer-idx result]
+   (-> template
+       (assoc ::debug :=layers)
+       (assoc-in [::ht/defaults :=layers layer-idx ::debug1]
+                 result)
+       plot
+       ::debug
+       (nth layer-idx)
+       ::debug1)))

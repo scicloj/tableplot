@@ -67,9 +67,11 @@
     (-> {:b :B
          :c :C
          ::ht/defaults {:B (fn-with-deps-keys
+                                 nil
                                  [:A]
                                  (fn [{:keys [A]}] (inc A)))
                         :C (fn-with-deps-keys
+                                 nil
                                  [:B]
                                  (fn [{:keys [B]}] (inc B)))}}
         (xform/xform :A 9)))
@@ -80,9 +82,11 @@
     (-> {:b :B
          :c :C
          ::ht/defaults {:B (fn-with-deps-keys
+                                 nil
                                  [:A]
                                  (fn [{:keys [A]}] (inc A)))
                         :C (fn-with-deps-keys
+                                 nil
                                  [:A :B]
                                  (fn [{:keys [A B]}] (+ A B)))}}
         (xform/xform :A 9)))
@@ -90,7 +94,7 @@
   => {:b 10 :c 19}
   ```
   "
-  [dep-ks f]
+  [doc dep-ks f]
   (vary-meta
    (fn [submap]
      (->> dep-ks
@@ -98,7 +102,9 @@
                  [k (cached-xform-k k submap)]))
           (into submap)
           f))
-   assoc ::dep-ks dep-ks))
+   assoc
+   ::dep-ks dep-ks
+   :doc doc))
 
 (defmacro fn-with-deps
   "Shorthand notation for fn-with-deps-impl.
@@ -107,28 +113,30 @@
 
   ```clj
   (macroexpand
-    '(fn-with-deps [A B] (+ A B)))
+    '(fn-with-deps nil [A B] (+ A B)))
 
   =>
   (scicloj.tableplot.v1.dag/fn-with-deps-keys
-   [:A :B]
-   (clojure.core/fn [{:keys [A B]}] (+ A B)))
+     scicloj.tableplot.v1.dag/doc
+     [:A :B]
+     (clojure.core/fn [{:keys [A B]}] (+ A B)))
 
   (cache/with-clean-cache
     (-> {:b :B
          :c :C
-         ::ht/defaults {:B (fn-with-deps [A] (inc A))
-                        :C (fn-with-deps [B] (inc B))}}
+         ::ht/defaults {:B (fn-with-deps nil [A] (inc A))
+                        :C (fn-with-deps nil [B] (inc B))}}
         (xform/xform :A 9)))
 
   => {:b 10 :c 11}
   ```
   "
-  [dep-symbols & forms]
-  `(fn-with-deps-keys
-    ~(mapv #(keyword (name %)) dep-symbols)
-    (fn [{:keys ~dep-symbols}]
-      ~@forms)))
+  ([doc dep-symbols & forms]
+   `(fn-with-deps-keys
+     ~doc
+     ~(mapv #(keyword (name %)) dep-symbols)
+     (fn [{:keys ~dep-symbols}]
+       ~@forms))))
 
 (defmacro defn-with-deps
   "Defining a function using fn-with-deps-impl.
@@ -137,14 +145,14 @@
 
   ```clj
   (macroexpand
-    '(defn-with-deps A+B [A B] (+ A B)))
+    '(defn-with-deps A+B nil [A B] (+ A B)))
 
   =>
   (def A+B
-    (scicloj.tableplot.v1.dag/fn-with-deps [A B] (+ A B)))
+    (scicloj.tableplot.v1.dag/fn-with-deps nil [A B] (+ A B)))
 
-  (defn-with-deps B->C [B] (inc B))
-  (defn-with-deps A->B [A] (inc A))
+  (defn-with-deps B->C nil [B] (inc B))
+  (defn-with-deps A->B nil [A] (inc A))
 
   (cache/with-clean-cache
     (-> {:b :B
@@ -156,7 +164,19 @@
   => {:b 10 :c 11}
   ```
   "
-  [fsymbol dep-symbols & forms]
+  [fsymbol doc dep-symbols & forms]
   `(def ~fsymbol
-     (fn-with-deps ~dep-symbols
-       ~@forms)))
+     (fn-with-deps ~doc
+                   ~dep-symbols
+                   ~@forms)))
+
+(defmacro defn-with-deps-
+  "Defining a private function using fn-with-deps-impl."
+  [fsymbol doc dep-symbols & forms]
+  (concat (list 'defn-with-deps
+                '^:private fsymbol
+                ;; (with-meta fsymbol {:private true})
+                doc dep-symbols)
+          forms))
+
+
