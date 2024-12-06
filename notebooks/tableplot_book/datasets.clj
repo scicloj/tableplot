@@ -1,4 +1,4 @@
-;; # Some datasets
+;; # Some datasets 
 
 ;; In this documentation, we will use a few datasets from [RDatasets](https://vincentarelbundock.github.io/Rdatasets/articles/data.html) and from the [Plotly datasets](https://plotly.github.io/datasets/).
 
@@ -19,35 +19,26 @@
                                  keyword))})
       (tc/set-dataset-name dataset-name)))
 
-;; A convenience function for showing a dataset in a compact way:
-
-(defn compact-view [dataset]
-  (-> dataset
-      (kind/table {:use-datatables true
-                   :datatables {:scrollY 150
-                                :searching false
-                                :info false}})))
-
 ;; ## Edgar Anderson's Iris Data
 
 (defonce iris
   (fetch-dataset "datasets/iris"))
 
-(compact-view iris)
+iris
 
 ;; ## Motor Trend Car Road Tests
 
 (defonce mtcars
   (fetch-dataset "datasets/mtcars"))
 
-(compact-view mtcars)
+mtcars
 
 ;; ## US economic time series
 
 (defonce economics-long
   (fetch-dataset "ggplot2/economics_long"))
 
-(compact-view economics-long)
+economics-long
 
 ;; ## Tips dataset
 
@@ -55,4 +46,4 @@
   (-> "https://raw.githubusercontent.com/plotly/datasets/master/tips.csv"
       (tc/dataset {:key-fn keyword})))
 
-(compact-view tips)
+tips
