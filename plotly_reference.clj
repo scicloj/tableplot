@@ -238,10 +238,6 @@ key for background color, which is a grey colour by default.")
 
 ;; ## Concepts
 
-;; ### Templates 💡
-
-;; (coming soon)
-
 ;; ### Plotly.js traces
 
 ;; Traces are a core concept in Plotly.js.
@@ -412,6 +408,16 @@ key for background color, which is a grey colour by default.")
       :=color-type :nominal
       :=mark-size 20}))
 
+;; ### Stat
+
+;; A stat is a statistical transformation that takes the substitution context
+;; and return a new dataset.
+;; Stats are used in a few of the layer functions, such as
+;; `layer-smooth`, `layer-histogram`, and `layer-density`.
+
+;; The user will typically not need to think about them direcrly, but they
+;; are a useful concept in extending Tableplot.
+
 ;; ## API functions
 
 (include-fnvar #'plotly/base)
@@ -552,7 +558,6 @@ key for background color, which is a grey colour by default.")
 (-> datasets/iris
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
-
 
 (include-fnvar #'plotly/layer-smooth)
 

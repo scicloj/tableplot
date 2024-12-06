@@ -20,7 +20,7 @@
 (def submap->dataset-after-stat
   (dag/fn-with-deps-keys
    "If the statistical transformation `:=stat` is specified,
-apply it to the whole context.
+apply it to the whole substitution context.
 Otherwise, keep the original `:=dataset`."
    [:=dataset :=stat]
    (fn [{:as submap
@@ -343,9 +343,9 @@ The design matrix simply uses these columns without any additional transformatio
                    (-> k name symbol))]))))
 
 (def standard-defaults
-  [[:=stat hc/RMV
-    "A user-defined or layer-specific statistical transformation.
-Received the whole context and returns a new dataset."]
+  [:=stat hc/RMV
+   "A user-defined or layer-specific statistical transformation.
+    The stat receives the whole substitution context and returns a new dataset."
    [:=dataset hc/RMV
     "The data to be plotted."]
    [:=dataset-after-stat submap->dataset-after-stat
