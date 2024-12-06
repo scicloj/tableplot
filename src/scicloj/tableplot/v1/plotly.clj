@@ -598,7 +598,7 @@ The design matrix simply uses these columns without any additional transformatio
   :text nil)
 
 (dag/defn-with-deps smooth-stat
-  "Given a substitution context, compute a dataset
+  "Compute a dataset
 with the `:=y` column in `:=dataset` replaced with
 its value predicted by regression,
 and with the results ordered by the `:=x` column.
