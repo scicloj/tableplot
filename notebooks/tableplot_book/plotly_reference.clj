@@ -73,7 +73,7 @@
       text))
 
 ^:kindly/hide-code
-(defn include-fn [f]
+(defn include-dag-fn [f]
   (format "%s\n\n **by default depends on**: %s"
           (-> f
               meta
@@ -86,7 +86,15 @@
                (str/join " "))))
 
 ^:kindly/hide-code
-(defn include-fnvar [fnvar]
+(defn include-dag-fn-as-section [fnsymbol f]
+  (-> (format "### `%s`\n%s"
+              (pr-str fnsymbol)
+              (include-dag-fn f))
+      kind/md
+      kindly/hide-code))
+
+^:kindly/hide-code
+(defn include-fnvar-as-section [fnvar]
   (-> (let [{:keys [name arglists doc]} (meta fnvar)]
         (str (format "### `%s`\n" name)
              (->> arglists
@@ -108,7 +116,7 @@
                 (some->> doc
                          (format "**role:** %s\n"))
                 (format "**default:** %s\n"
-                        (cond (fn? v) (include-fn v)
+                        (cond (fn? v) (include-dag-fn v)
                               (= v hc/RMV) "`NONE`"
                               (keyword? v) (include-key-or-symbol-name v)
                               :else (include-form v)))])))
@@ -458,7 +466,7 @@ are a useful concept in extending Tableplot.
 
 ## API functions
 ")
-(include-fnvar #'plotly/base)
+(include-fnvar-as-section #'plotly/base)
 
 (md "#### For example:")
 
@@ -471,7 +479,7 @@ are a useful concept in extending Tableplot.
                          :=mark-opacity 0.3})
     (plotly/layer-point {:=color :species}))
 
-(include-fnvar #'plotly/layer)
+(include-fnvar-as-section #'plotly/layer)
 
 (md "#### For example:
 We could write someting like:")
@@ -489,7 +497,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length}))
 
-(include-fnvar #'plotly/layer-point)
+(include-fnvar-as-section #'plotly/layer-point)
 
 (md "#### Example:")
 
@@ -501,7 +509,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=mark-size 20}))
 
-(include-fnvar #'plotly/layer-line)
+(include-fnvar-as-section #'plotly/layer-line)
 
 (md "#### Example:")
 
@@ -512,7 +520,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :value
       :=mark-color "purple"}))
 
-(include-fnvar #'plotly/layer-bar)
+(include-fnvar-as-section #'plotly/layer-bar)
 
 (md "#### Example:")
 
@@ -525,7 +533,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=bar-width :bar-width
       :=y :total-disp}))
 
-(include-fnvar #'plotly/layer-boxplot)
+(include-fnvar-as-section #'plotly/layer-boxplot)
 
 (md "#### Example:")
 
@@ -534,7 +542,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
      {:=x :cyl
       :=y :disp}))
 
-(include-fnvar #'plotly/layer-segment)
+(include-fnvar-as-section #'plotly/layer-segment)
 
 (md "#### Example:")
 
@@ -548,7 +556,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=mark-size 3
       :=color :species}))
 
-(include-fnvar #'plotly/layer-text)
+(include-fnvar-as-section #'plotly/layer-text)
 
 (md "#### Example:")
 
@@ -562,7 +570,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                   :color :purple}
       :=mark-size 20}))
 
-(include-fnvar #'plotly/layer-histogram)
+(include-fnvar-as-section #'plotly/layer-histogram)
 
 (md "#### Examples:")
 
@@ -578,7 +586,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                              :=color :species
                              :=mark-opacity 0.5}))
 
-(include-fnvar #'plotly/layer-density)
+(include-fnvar-as-section #'plotly/layer-density)
 
 (md "#### Examples:")
 
@@ -597,7 +605,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
 
-(include-fnvar #'plotly/layer-smooth)
+(include-fnvar-as-section #'plotly/layer-smooth)
 
 (md "#### Examples:")
 
@@ -683,7 +691,7 @@ since `:=color-type` is `:nominal`:")
     plotly/layer-point
     plotly/layer-smooth)
 
-(include-fnvar #'plotly/plot)
+(include-fnvar-as-section #'plotly/plot)
 
 (md "#### For example:")
 (-> datasets/iris
@@ -703,7 +711,7 @@ For example:
     plotly/plot
     (assoc-in [:layout :plot_bgcolor] "floralwhite"))
 
-(include-fnvar #'plotly/debug)
+(include-fnvar-as-section #'plotly/debug)
 
 (md "#### For example:")
 (-> datasets/iris
@@ -735,6 +743,14 @@ For example:
                          :=color :species})
     (plotly/debug 0 {:color :=color
                      :color-type :=color-type}))
+
+(md "
+## Stats
+")
+
+(include-dag-fn-as-section 'histogram-stat plotly/histogram-stat)
+(include-dag-fn-as-section 'density-stat plotly/density-stat)
+(include-dag-fn-as-section 'smooth-stat plotly/smooth-stat)
 
 (md "
 ## Substitution Keys 
