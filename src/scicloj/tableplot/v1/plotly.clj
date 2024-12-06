@@ -115,7 +115,11 @@ Otherwise, keep the original `:=dataset`."
 ;;                hc/RMV))))))
 
 
-(dag/defn-with-deps submap->group ""
+(dag/defn-with-deps submap->group
+  "Infer the relevant grouping for statistical layers such as `layer-smooth`.
+The `:=color` column affects the grouing if and only if `:=color-type` is `:nominal`.
+The `:=size` column affects the grouing if and only if `:=size-type` is `:nominal`.
+"
   [=color =color-type =size =size-type]
   (concat (when (= =color-type :nominal)
             [=color])
@@ -131,11 +135,13 @@ Otherwise, keep the original `:=dataset`."
     :bar nil
     :segment :lines))
 
-(dag/defn-with-deps submap->mode ""
+(dag/defn-with-deps submap->mode
+  "Determine the Plotly.js mode for a trace."
   [=mark]
   (mark->mode =mark))
 
-(dag/defn-with-deps submap->type ""
+(dag/defn-with-deps submap->type
+  "Determine the Plotly.js type for a trace."
   [=mark =coordinates]
   (str (case =mark
          :box "box"
@@ -166,7 +172,9 @@ Otherwise, keep the original `:=dataset`."
   {:data :=traces
    :layout :=layout})
 
-(dag/defn-with-deps submap->marker-size-key ""
+(dag/defn-with-deps submap->marker-size-key
+  "Determine which Plotly.js key should be used to specify the mark size.
+For lines, it is `:width`. Otherwise, it is `:size`."
   [=mode =type]
   (if (or (= =mode :lines)
           (= =type :line)) :width
@@ -206,7 +214,8 @@ Otherwise, keep the original `:=dataset`."
    :name :=name})
 
 
-(dag/defn-with-deps submap->traces ""
+(dag/defn-with-deps submap->traces
+  "Create the Plotly.js traces from the Tableplot layers."
   [=layers]
   (->>
    =layers
@@ -285,7 +294,8 @@ Otherwise, keep the original `:=dataset`."
    vec))
 
 
-(dag/defn-with-deps submap->layout ""
+(dag/defn-with-deps submap->layout
+  "Create the layout part of the Plotly.js specification."
   [=width =height =margin =automargin =background =title
    =xaxis-gridcolor =yaxis-gridcolor
    =x-after-stat =y-after-stat
@@ -322,7 +332,9 @@ Otherwise, keep the original `:=dataset`."
              :title final-y-title}
      :title =title}))
 
-(dag/defn-with-deps submap->design-matrix ""
+(dag/defn-with-deps submap->design-matrix
+  "Determine a trivial design matrix specifiation from a set of `:=predictors` columns.
+The design matrix simply uses these columns without any additional transformation."
   [=predictors]
   (->> =predictors
        (mapv (fn [k]
