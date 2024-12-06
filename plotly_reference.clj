@@ -411,7 +411,7 @@ key for background color, which is a grey colour by default.")
 ;; ### Stat
 
 ;; A stat is a statistical transformation that takes the substitution context
-;; and return a new dataset.
+;; and returns a new dataset.
 ;; Stats are used in a few of the layer functions, such as
 ;; `layer-smooth`, `layer-histogram`, and `layer-density`.
 
