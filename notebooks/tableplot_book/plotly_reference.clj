@@ -25,7 +25,9 @@
             [tableplot-book.datasets :as datasets]
             [clojure.string :as str]
             [aerial.hanami.common :as hc]
-            [scicloj.clay.v2.api :as clay]))
+            [scicloj.clay.v2.api :as clay]
+            [aerial.hanami.templates :as ht]
+            [clojure.walk :as walk]))
 
 ^:kindly/hide-code
 (defn include-form [form]
@@ -75,6 +77,12 @@
       text))
 
 
+(defn f->deps [f]
+  (->> f
+       meta
+       :scicloj.tableplot.v1.dag/dep-ks
+       (map include-key-or-symbol-name)
+       (str/join " ")))
 
 ^:kindly/hide-code
 (defn include-dag-fn [f]
@@ -83,11 +91,7 @@
               meta
               :doc
               enrich-text-with-links)
-          (->> f
-               meta
-               :scicloj.tableplot.v1.dag/dep-ks
-               (map include-key-or-symbol-name)
-               (str/join " "))))
+          (f->deps f)))
 
 
 ^:kindly/hide-code
@@ -705,7 +709,7 @@ since `:=color-type` is `:nominal`:")
     plotly/layer-point
     (plotly/layer-smooth {:=mark-color "red"}))
 
-(md "An easier way to achieve the same -- the color is only defined for the point layer:")
+(md "An simpler way to achieve this -- the color is only defined for the point layer:")
 
 (-> datasets/iris
     (plotly/base {:=title "dummy"
