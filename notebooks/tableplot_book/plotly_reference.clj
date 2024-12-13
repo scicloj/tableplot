@@ -178,16 +178,6 @@ that this template would rather be pretty-printed as a data structure.")
                          :=mark-size 10})
     kind/pprint)
 
-(md "We may also inspect it with [Portal](https://github.com/djblue/portal):")
-
-(-> datasets/iris
-    (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-length
-                         :=color :species
-                         :=mark-size 10})
-    plotly/plot
-    kind/portal)
-
 (md "
 For now, you are not supposed to make sense of this data representation.
 As a user, you usually do not need to think about it.
@@ -203,6 +193,15 @@ the `plot` function:
     plotly/plot
     kind/pprint)
 
+(md "We may also inspect it with [Portal](https://github.com/djblue/portal):")
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species
+                         :=mark-size 10})
+    plotly/plot
+    kind/portal)
 
 
 (md "
@@ -704,6 +703,15 @@ since `:=color-type` is `:nominal`:")
                   :=x :sepal-width
                   :=y :sepal-length})
     plotly/layer-point
+    (plotly/layer-smooth {:=mark-color "red"}))
+
+(md "An easier way to achieve the same -- the color is only defined for the point layer:")
+
+(-> datasets/iris
+    (plotly/base {:=title "dummy"
+                  :=x :sepal-width
+                  :=y :sepal-length})
+    (plotly/layer-point {:=color :species})
     plotly/layer-smooth)
 
 (include-fnvar-as-section #'plotly/plot)
