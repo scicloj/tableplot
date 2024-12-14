@@ -958,8 +958,7 @@ then the density is estimated in groups."
    {:data [{:z (if (instance? java.awt.image.BufferedImage image)
                  (img->tensor image)
                  image)
-            :type :image
-            :colorscale :Virdis}]
+            :type :image}]
     :layout :=layout
     ::ht/defaults (assoc standard-defaults-map
                          :=x-showgrid false
