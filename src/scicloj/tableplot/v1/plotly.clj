@@ -16,7 +16,10 @@
             [scicloj.tableplot.v1.util :as util]
             [scicloj.tableplot.v1.cache :as cache]
             [scicloj.tableplot.v1.xform :as xform]
-            [tech.v3.libs.buffered-image :as bufimg]))
+            [tech.v3.libs.buffered-image :as bufimg]
+            [tech.v3.tensor :as tensor]
+            [tech.v3.datatype :as dtype])
+  (:import java.awt.image.BufferedImage))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
@@ -918,6 +921,33 @@ then the density is estimated in groups."
        (nth layer-idx)
        ::debug1)))
 
+(defn img->tensor [^BufferedImage image]
+  (let [t (bufimg/as-ubyte-tensor image)
+        [width height channel] (dtype/shape t)
+        {:keys [gray a r g b]} (bufimg/image-channel-map image)]
+    (cond gray (tensor/compute-tensor [width height 3]
+                                      (fn [i j k]
+                                        (t i j 0))
+                                      :uint8)
+          a (tensor/compute-tensor [width height 4]
+                                   (fn [i j k]
+                                     (t i
+                                        j
+                                        (case k
+                                          0 r
+                                          1 g
+                                          2 b
+                                          3 a)))
+                                   :uint8)
+          :else (tensor/compute-tensor [width height 3]
+                                       (fn [i j k]
+                                         (t i
+                                            j
+                                            (case k
+                                              0 r
+                                              1 g
+                                              2 b)))
+                                       :uint8))))
 
 (defn imshow
   "Create an image plot from a given `image` -
@@ -926,7 +956,7 @@ then the density is estimated in groups."
   [image]
   (plotly-xform
    {:data [{:z (if (instance? java.awt.image.BufferedImage image)
-                 (bufimg/as-ubyte-tensor image)
+                 (img->tensor image)
                  image)
             :type :image
             :colorscale :Virdis}]
@@ -934,5 +964,6 @@ then the density is estimated in groups."
     ::ht/defaults (assoc standard-defaults-map
                          :=x-showgrid false
                          :=y-showgrid false)}))
+
 
 
