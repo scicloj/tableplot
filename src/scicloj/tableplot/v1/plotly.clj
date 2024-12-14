@@ -264,6 +264,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    =xaxis-gridcolor =yaxis-gridcolor
    =x-after-stat =y-after-stat
    =x-title =y-title
+   =x-showgrid =y-showgrid
    =layers]
   (let [final-x-title (or (->> =layers
                                (map :x-title)
@@ -291,9 +292,11 @@ For lines, it is `:width`. Otherwise, it is `:size`."
      :automargin =automargin
      :plot_bgcolor =background
      :xaxis {:gridcolor =xaxis-gridcolor
-             :title final-x-title}
+             :title final-x-title
+             :showgrid =x-showgrid}
      :yaxis {:gridcolor =yaxis-gridcolor
-             :title final-y-title}
+             :title final-y-title
+             :showgrid =y-showgrid}
      :title =title}))
 
 (dag/defn-with-deps submap->design-matrix
@@ -427,6 +430,10 @@ The design matrix simply uses these columns without any additional transformatio
     "The title for y axis."]
    [:=title hc/RMV
     "The plot title."]
+   [:=x-showgrid true
+    "Should we show the grid for the x axis?"]
+   [:=y-showgrid true
+    "Should we show the grid for the y axis?"]
    [:=background "rgb(235,235,235)"
     "The plot background color."]
    [:=xaxis-gridcolor "rgb(255,255,255)"
@@ -923,6 +930,9 @@ then the density is estimated in groups."
                  image)
             :type :image
             :colorscale :Virdis}]
-    :layout {:xaxis {:showgrid false}
-             :yaxis {:showgrid false}}}))
+    :layout :=layout
+    ::ht/defaults (assoc standard-defaults-map
+                         :=x-showgrid false
+                         :=y-showgrid false)}))
+
 
