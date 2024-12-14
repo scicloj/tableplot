@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. This change
 - refactored and made some functions private
 - added `imshow` function to show images
 - added some layout substitution keys
+- support String columns (PR #11, fixes #10) - thanks, @harold
 
 ## [1-beta-2] - 2024-12-06
 - updated docstrings
