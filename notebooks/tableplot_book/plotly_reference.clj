@@ -810,12 +810,13 @@ For example:
 (plotly/surface
  (for [i (range 100)]
    (for [j (range 100)]
-     (->> [(/ (- i 30) 20)
-           (/ (- j 60) 50)]
-          (map #(* % %))
-          (reduce +)
-          -
-          math/exp))))
+     (-> (tcc/- [i j]
+                [30 60])
+         (tcc// [20 50])
+         tcc/sq
+         tcc/sum
+         -
+         math/exp))))
 
 (md "
 ## Stats
