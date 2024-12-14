@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta-3] - unreleased
+- refactored and made some functions private
+
 ## [1-beta-2] - 2024-12-06
 - updated docstrings
 - refactored the plotly implementation and added detailed for reference generation

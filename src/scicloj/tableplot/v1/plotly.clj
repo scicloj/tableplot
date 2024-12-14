@@ -438,11 +438,14 @@ The design matrix simply uses these columns without any additional transformatio
        (map (comp vec (partial take 2)))
        (into {})))
 
-(defn plotly-xform [template]
+(defn- plotly [spec]
+  (kind/plotly spec {:style {:height :auto}}))
+
+(defn- plotly-xform [template]
   (cache/with-clean-cache
     (-> template
         xform/xform
-        (kind/plotly {:style {:height :auto}})
+        plotly
         (dissoc :kindly/f))))
 
 (defn base
