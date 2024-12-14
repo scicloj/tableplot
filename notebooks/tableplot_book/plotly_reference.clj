@@ -10,6 +10,8 @@
 
 ;; * The Tableplot plotly API namepace
 ;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing and column processing
+;; * [dtype-next](https://github.com/cnuernber/dtype-next)'s tensor namespace for tensor examples
+;; * dtype-next's buffered image namespace for image representation
 ;; * [Kindly](https://scicloj.github.io/kindly-noted/) (to specify how certain values should be visualized)
 ;; * the datasets defined in the [Datasets chapter](./tableplot_book.datasets.html)
 
@@ -19,15 +21,14 @@
   (:require [scicloj.tableplot.v1.plotly :as plotly]
             [tablecloth.api :as tc]
             [tablecloth.column.api :as tcc]
+            [tech.v3.tensor :as tensor]
             [scicloj.kindly.v4.kind :as kind]
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.tableplot.v1.dag :as dag]
             [tableplot-book.datasets :as datasets]
             [clojure.string :as str]
             [aerial.hanami.common :as hc]
-            [scicloj.clay.v2.api :as clay]
-            [aerial.hanami.templates :as ht]
-            [clojure.walk :as walk]))
+            [aerial.hanami.templates :as ht]))
 
 ^:kindly/hide-code
 (defn include-form [form]
@@ -770,6 +771,36 @@ For example:
                          :=color :species})
     (plotly/debug 0 {:color :=color
                      :color-type :=color-type}))
+
+(include-fnvar-as-section #'plotly/imshow)
+
+(md "#### For example:")
+
+(plotly/imshow
+ (for [i (range 10)]
+   (for [j (range 10)]
+     [(* 10 i) ; Red
+      (* 10 j) ; Green
+      (* 10 (+ i j)) ; Blue
+      ])))
+
+(plotly/imshow
+ (tensor/compute-tensor
+  [100 100 3]
+  (fn [i j k]
+    (case k
+      0 i ; Red
+      1 j ; Green
+      2 (+ i j) ; Blue
+      ))
+  :uint8))
+
+(defonce Crab-Nebula-image
+  (-> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Crab_Nebula.jpg/240px-Crab_Nebula.jpg"
+      (java.net.URL.)
+      (javax.imageio.ImageIO/read)))
+
+(plotly/imshow Crab-Nebula-image)
 
 (md "
 ## Stats
