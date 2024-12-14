@@ -216,13 +216,13 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                                       :nominal {:color (cache/cached-assignment (color group-key)
                                                                                 colors-palette
                                                                                 ::color)}
-                                      :quantitative {:color (-> group-dataset color vec)}))
+                                      :quantitative {:color (-> color group-dataset vec)}))
                                   (when size
                                     (case size-type
                                       :nominal {:size (cache/cached-assignment (size group-key)
                                                                                sizes-palette
                                                                                ::size)}
-                                      :quantitative {:size (-> group-dataset size vec)}))
+                                      :quantitative {:size (-> size group-dataset vec)}))
                                   marker-override)]
                       (merge trace-base
                              {:name (->> [(:name layer)
@@ -800,7 +800,7 @@ then the density is estimated in groups."
                                  {:group =group
                                   :missing-column-name g}))))))
   (let [summary-fn (fn [dataset]
-                     (let [xs (=x dataset)
+                     (let [xs (dataset =x)
                            k (if =density-bandwidth
                                (fastmath.kernel/kernel-density :gaussian xs =density-bandwidth)
                                (fastmath.kernel/kernel-density :gaussian xs))
