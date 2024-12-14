@@ -967,4 +967,11 @@ then the density is estimated in groups."
                          :=y-title "")}))
 
 
-
+(defn surface
+  "Show a given surface, represented as a matrix of `z` values, in 3d."
+  [surface]
+  (plotly-xform
+   {:data [{:z surface
+            :type :surface}]
+    :layout :=layout
+    ::ht/defaults standard-defaults-map}))

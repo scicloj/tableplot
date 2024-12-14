@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [1-beta-4] - unreleased
 - improved styling of `imshow`
+- added initial 3d surface support
 
 ## [1-beta-3] - 2024-12-14
 - refactored and made some functions private
