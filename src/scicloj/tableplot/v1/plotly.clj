@@ -15,7 +15,8 @@
             [clojure.string :as str]
             [scicloj.tableplot.v1.util :as util]
             [scicloj.tableplot.v1.cache :as cache]
-            [scicloj.tableplot.v1.xform :as xform]))
+            [scicloj.tableplot.v1.xform :as xform]
+            [tech.v3.libs.buffered-image :as bufimg]))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
@@ -912,11 +913,14 @@ then the density is estimated in groups."
 
 
 (defn imshow
-  "Create an image plot from a given `rgb-matrix` -
-  a two dimensional matrix of RGB triples."
-  [rgb-matrix]
+  "Create an image plot from a given `image` -
+  either a `java.awt.image.BufferedImage` object
+  or a two dimensional matrix of RGB triples."
+  [image]
   (plotly-xform
-   {:data [{:z rgb-matrix
+   {:data [{:z (if (instance? java.awt.image.BufferedImage image)
+                 (bufimg/as-ubyte-tensor image)
+                 image)
             :type :image
             :colorscale :Virdis}]
     :layout {:xaxis {:showgrid false}
