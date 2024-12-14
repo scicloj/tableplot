@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [1-beta-3] - unreleased
 - refactored and made some functions private
+- added `imshow` function to show images
 
 ## [1-beta-2] - 2024-12-06
 - updated docstrings

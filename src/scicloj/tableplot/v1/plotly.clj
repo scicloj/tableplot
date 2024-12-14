@@ -909,3 +909,16 @@ then the density is estimated in groups."
        ::debug
        (nth layer-idx)
        ::debug1)))
+
+
+(defn imshow
+  "Create an image plot from a given `rgb-matrix` -
+  a two dimensional matrix of RGB triples."
+  [rgb-matrix]
+  (plotly-xform
+   {:data [{:z rgb-matrix
+            :type :image
+            :colorscale :Virdis}]
+    :layout {:xaxis {:showgrid false}
+             :yaxis {:showgrid false}}}))
+
