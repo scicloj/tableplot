@@ -950,7 +950,7 @@ then the density is estimated in groups."
                                        :uint8))))
 
 (defn imshow
-  "Create an image plot from a given `image` -
+  "Show a given `image` -
   either a `java.awt.image.BufferedImage` object
   or a two dimensional matrix of RGB triples."
   [image]
