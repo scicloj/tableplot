@@ -775,6 +775,10 @@ For example:
 
 (include-fnvar-as-section #'plotly/imshow)
 
+(md 
+ "Imshow uses dtype-next's [BufferedImage support](https://cnuernber.github.io/dtype-next/buffered-image.html) to figure out the right order of color channels, etc.
+
+So, it can handle plain vectors of vectors, dtype next tensors, and actual Java BufferedImage objects.")
 (md "#### For example:")
 
 (plotly/imshow
