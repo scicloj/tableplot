@@ -15,7 +15,11 @@
             [clojure.string :as str]
             [scicloj.tableplot.v1.util :as util]
             [scicloj.tableplot.v1.cache :as cache]
-            [scicloj.tableplot.v1.xform :as xform]))
+            [scicloj.tableplot.v1.xform :as xform]
+            [tech.v3.libs.buffered-image :as bufimg]
+            [tech.v3.tensor :as tensor]
+            [tech.v3.datatype :as dtype])
+  (:import java.awt.image.BufferedImage))
 
 (defn submap->field-type [colname-key]
   (let [dataset-key :=dataset]
@@ -212,13 +216,13 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                                       :nominal {:color (cache/cached-assignment (color group-key)
                                                                                 colors-palette
                                                                                 ::color)}
-                                      :quantitative {:color (-> group-dataset color vec)}))
+                                      :quantitative {:color (-> color group-dataset vec)}))
                                   (when size
                                     (case size-type
                                       :nominal {:size (cache/cached-assignment (size group-key)
                                                                                sizes-palette
                                                                                ::size)}
-                                      :quantitative {:size (-> group-dataset size vec)}))
+                                      :quantitative {:size (-> size group-dataset vec)}))
                                   marker-override)]
                       (merge trace-base
                              {:name (->> [(:name layer)
@@ -263,6 +267,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    =xaxis-gridcolor =yaxis-gridcolor
    =x-after-stat =y-after-stat
    =x-title =y-title
+   =x-showgrid =y-showgrid
    =layers]
   (let [final-x-title (or (->> =layers
                                (map :x-title)
@@ -290,9 +295,11 @@ For lines, it is `:width`. Otherwise, it is `:size`."
      :automargin =automargin
      :plot_bgcolor =background
      :xaxis {:gridcolor =xaxis-gridcolor
-             :title final-x-title}
+             :title final-x-title
+             :showgrid =x-showgrid}
      :yaxis {:gridcolor =yaxis-gridcolor
-             :title final-y-title}
+             :title final-y-title
+             :showgrid =y-showgrid}
      :title =title}))
 
 (dag/defn-with-deps submap->design-matrix
@@ -426,6 +433,10 @@ The design matrix simply uses these columns without any additional transformatio
     "The title for y axis."]
    [:=title hc/RMV
     "The plot title."]
+   [:=x-showgrid true
+    "Should we show the grid for the x axis?"]
+   [:=y-showgrid true
+    "Should we show the grid for the y axis?"]
    [:=background "rgb(235,235,235)"
     "The plot background color."]
    [:=xaxis-gridcolor "rgb(255,255,255)"
@@ -789,7 +800,7 @@ then the density is estimated in groups."
                                  {:group =group
                                   :missing-column-name g}))))))
   (let [summary-fn (fn [dataset]
-                     (let [xs (=x dataset)
+                     (let [xs (dataset =x)
                            k (if =density-bandwidth
                                (fastmath.kernel/kernel-density :gaussian xs =density-bandwidth)
                                (fastmath.kernel/kernel-density :gaussian xs))
@@ -910,15 +921,49 @@ then the density is estimated in groups."
        (nth layer-idx)
        ::debug1)))
 
+(defn img->tensor [^BufferedImage image]
+  (let [t (bufimg/as-ubyte-tensor image)
+        [width height channel] (dtype/shape t)
+        {:keys [gray a r g b]} (bufimg/image-channel-map image)]
+    (cond gray (tensor/compute-tensor [width height 3]
+                                      (fn [i j k]
+                                        (t i j 0))
+                                      :uint8)
+          a (tensor/compute-tensor [width height 4]
+                                   (fn [i j k]
+                                     (t i
+                                        j
+                                        (case k
+                                          0 r
+                                          1 g
+                                          2 b
+                                          3 a)))
+                                   :uint8)
+          :else (tensor/compute-tensor [width height 3]
+                                       (fn [i j k]
+                                         (t i
+                                            j
+                                            (case k
+                                              0 r
+                                              1 g
+                                              2 b)))
+                                       :uint8))))
 
 (defn imshow
-  "Create an image plot from a given `rgb-matrix` -
-  a two dimensional matrix of RGB triples."
-  [rgb-matrix]
+  "Create an image plot from a given `image` -
+  either a `java.awt.image.BufferedImage` object
+  or a two dimensional matrix of RGB triples."
+  [image]
   (plotly-xform
-   {:data [{:z rgb-matrix
+   {:data [{:z (if (instance? java.awt.image.BufferedImage image)
+                 (img->tensor image)
+                 image)
             :type :image
             :colorscale :Virdis}]
-    :layout {:xaxis {:showgrid false}
-             :yaxis {:showgrid false}}}))
+    :layout :=layout
+    ::ht/defaults (assoc standard-defaults-map
+                         :=x-showgrid false
+                         :=y-showgrid false)}))
+
+
 
