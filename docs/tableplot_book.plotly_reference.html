@@ -1886,6 +1886,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 data-number="4.6.14" class="anchored" data-anchor-id="imshow"><span class="header-section-number">4.6.14</span> <code>imshow</code></h3>
 <p><code>[image]</code></p>
 <p>Show a given <code>image</code> - either a <code>java.awt.image.BufferedImage</code> object or a two dimensional matrix of RGB triples.</p>
+<p>Imshow uses dtype-next’s <a href="https://cnuernber.github.io/dtype-next/buffered-image.html">BufferedImage support</a> to figure out the right order of color channels, etc.</p>
+<p>So, it can handle plain vectors of vectors, dtype next tensors, and actual Java BufferedImage objects.</p>
 <section id="for-example-4" class="level4" data-number="4.6.14.1">
 <h4 data-number="4.6.14.1" class="anchored" data-anchor-id="for-example-4"><span class="header-section-number">4.6.14.1</span> For example:</h4>
 <div class="sourceClojure">
