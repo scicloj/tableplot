@@ -963,7 +963,9 @@ then the density is estimated in groups."
     :layout :=layout
     ::ht/defaults (assoc standard-defaults-map
                          :=x-showgrid false
-                         :=y-showgrid false)}))
+                         :=y-showgrid false
+                         :=x-title ""
+                         :=y-title "")}))
 
 
 
