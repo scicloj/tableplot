@@ -28,7 +28,8 @@
             [tableplot-book.datasets :as datasets]
             [clojure.string :as str]
             [aerial.hanami.common :as hc]
-            [aerial.hanami.templates :as ht]))
+            [aerial.hanami.templates :as ht]
+            [clojure.math :as math]))
 
 ^:kindly/hide-code
 (defn include-form [form]
@@ -801,6 +802,20 @@ For example:
       (javax.imageio.ImageIO/read)))
 
 (plotly/imshow Crab-Nebula-image)
+
+(include-fnvar-as-section #'plotly/surface)
+
+(md "#### For example:")
+
+(plotly/surface
+ (for [i (range 100)]
+   (for [j (range 100)]
+     (->> [(/ (- i 30) 20)
+           (/ (- j 60) 50)]
+          (map #(* % %))
+          (reduce +)
+          -
+          math/exp))))
 
 (md "
 ## Stats
