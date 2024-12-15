@@ -337,6 +337,61 @@ The design matrix simply uses these columns without any additional transformatio
                    'identity
                    (-> k name symbol))]))))
 
+
+(defn- dataset->splom-dimensions
+  [dataset colnames]
+  (->> colnames
+       (map (fn [colname]
+              {:lable colname
+               :values (-> colname
+                           dataset
+                           vec)}))))
+
+(dag/defn-with-deps submap->splom-traces
+  "Create the trace for a SPLOM plot."
+  [=dataset =colnames =color =color-type =splom-colnames]
+  (let []
+    (if (and =color
+             (= =color-type :nominal))
+      (let [class->color (-> =color
+                             =dataset
+                             distinct
+                             (interleave colors-palette)
+                             (->> (apply hash-map)))]
+        (-> =dataset
+            (tc/group-by =color {:result-type :as-map})
+            (->> (map (fn [[cls group-dataset]]
+                        {:type :splom
+                         :dimensions (dataset->splom-dimensions
+                                      group-dataset
+                                      =colnames)
+                         :marker {:color (class->color cls)}
+                         :name cls})))))
+      [{:type :splom
+        :dimensions (dataset->splom-dimensions
+                     =dataset
+                     =colnames)}])))
+
+
+(dag/defn-with-deps submap->splom-layout
+  "Create the layout for a SPLOM plot."
+  [=layout =colnames]
+  (let [axis {:showline false
+              :zeroline false
+              :gridcolor "#ffff"
+              :ticklen 4}]
+    (->> =colnames
+         count
+         range
+         (mapcat (fn [i]
+                   (let [suffix (when (pos? i)
+                                  (str (inc i)))]
+                     [[(keyword (str "xaxis" suffix)) axis]
+                      [(keyword (str "yaxis" suffix)) axis]])))
+         (into (merge =layout
+                      {:hovermode :closest
+                       :dragmode :select})))))
+
 (def standard-defaults
   [[:=stat :=dataset
     "The data resulting from a possible statistical transformation."]
@@ -475,7 +530,13 @@ The design matrix simply uses these columns without any additional transformatio
    [:=xaxis-gridcolor "rgb(255,255,255)"
     "The color for the x axis grid lines."]
    [:=yaxis-gridcolor "rgb(255,255,255)"
-    "The color for the y axis grid lines."]])
+    "The color for the y axis grid lines."]
+   [:=colnames hc/RMV
+    "Column names for a SPLOM plot."]
+   [:=splom-layout submap->splom-layout
+    "The layout for a SPLOM plot."]
+   [:=splom-traces submap->splom-traces
+    "The trace for a SPLOM plot."]])
 
 (def standard-defaults-map
   (->> standard-defaults
@@ -1012,3 +1073,34 @@ then the density is estimated in groups."
             :type :surface}]
     :layout :=layout
     ::ht/defaults standard-defaults-map}))
+
+(defn submap->field-type [colname-key]
+  (let [dataset-key :=dataset]
+    (dag/fn-with-deps-keys
+     (str (format "Check the field type of the column specified by `%s` after `:=stat`."
+                  colname-key)
+          "
+
+- `:quantitative` - numerical columns
+- `:temporal` - date-time columns
+- `:nominal` - all other column types (e.g., Strings, keywords)
+")
+     [colname-key dataset-key]
+     (fn [submap]
+       (if-let [colname (submap colname-key)]
+         (let [column (-> submap
+                          (get dataset-key)
+                          (get colname))]
+           (cond (tcc/typeof? column :numerical) :quantitative
+                 (tcc/typeof? column :datetime) :temporal
+                 :else :nominal))
+         hc/RMV)))))
+
+(defn splom
+  "Show a SPLOM (ScatterPLOt Matrix) of given dimensions of a dataset."
+  [dataset submap]
+  (-> dataset
+      (base submap)
+      (assoc :data :=splom-traces
+             :layout :=splom-layout)
+      plotly-xform))

@@ -2,8 +2,9 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [1-beta-5] - unreleased
-- added initial Violin plot support
-- improbed boxplot support
+- added initial [Violin plot](https://plotly.com/javascript/violin/) support
+- improved [boxplot](https://plotly.com/javascript/box-plots/) support
+- added [SPLOM](https://plotly.com/javascript/splom/) support
 
 ## [1-beta-4] - 2024-12-14
 - improved styling of `imshow`
