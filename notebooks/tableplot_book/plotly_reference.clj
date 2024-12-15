@@ -55,11 +55,12 @@
       (str/replace #"`" "")
       symbol
       ('#{base layer
-          layer-point layer-line layer-bar layer-boxplot layer-segment layer-text
+          layer-point layer-line layer-bar layer-boxplot layer-violin layer-segment layer-text
           layer-histogram layer-density layer-smooth
           plot
           debug
-          smooth-stat histogram-stat density-stat})))
+          smooth-stat histogram-stat density-stat
+          imshow surface splom})))
 
 ^:kindly/hide-code
 (defn enrich-text-with-links [text]
@@ -383,10 +384,11 @@ It is similar to the ggplot notion of 'geom'.
 
 Its possible values are:")
 ^:kindly/hide-code
-[:point :text :line :box :bar :segment]
+[:point :text :line :box :violin :bar :segment]
 
 (md "
-Here, `:box` means [boxplot](https://en.wikipedia.org/wiki/Box_plot).
+Here, `:box` means [boxplot](https://en.wikipedia.org/wiki/Box_plot),
+and `:violin` means [Violin plot](https://en.wikipedia.org/wiki/Violin_plot).
 
 ### Coordinates
 
@@ -561,6 +563,57 @@ Of course, this can also be expressed more succinctly using `layer-point`.
     (plotly/layer-boxplot
      {:=x :cyl
       :=y :disp}))
+
+(-> datasets/mtcars
+    (plotly/layer-boxplot
+     {:=x :cyl
+      :=y :disp
+      :=color :am
+      :=color-type :nominal}))
+
+(-> datasets/mtcars
+    (plotly/layer-boxplot
+     {:=x :cyl
+      :=y :disp
+      :=color :am
+      :=color-type :nominal
+      :=boxmode :group}))
+
+(include-fnvar-as-section #'plotly/layer-violin)
+
+(md "#### Example:")
+
+(-> datasets/mtcars
+    (plotly/layer-violin
+     {:=x :cyl
+      :=y :disp}))
+
+(-> datasets/mtcars
+    (plotly/layer-violin
+     {:=x :cyl
+      :=y :disp
+      :=box-visible true}))
+
+(-> datasets/mtcars
+    (plotly/layer-violin
+     {:=x :cyl
+      :=y :disp
+      :=meanline-visible true}))
+
+(-> datasets/mtcars
+    (plotly/layer-violin
+     {:=x :cyl
+      :=y :disp
+      :=color :am
+      :=color-type :nominal}))
+
+(-> datasets/mtcars
+    (plotly/layer-violin
+     {:=x :cyl
+      :=y :disp
+      :=color :am
+      :=color-type :nominal
+      :=violinmode :group}))
 
 (include-fnvar-as-section #'plotly/layer-segment)
 
