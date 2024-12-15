@@ -578,7 +578,7 @@ The design matrix simply uses these columns without any additional transformatio
   The base substitutions are shared between layers,
   and the layers can override them and add substitutions of their own.
 
-  **Main useful keys:**
+  🔑 **Main useful keys:**
 
   - the keys which are useful for `layer`
   - the keys that affect `:=layout`
@@ -629,7 +629,7 @@ The design matrix simply uses these columns without any additional transformatio
 
   The var `layer-base` is typicall used as the `layer-template`.
 
-  **Main useful keys:**
+  🔑 **Main useful keys:**
 
   - `:=mark`
   - The keys that are useful for the `layer-*` functions."
@@ -684,7 +684,7 @@ with possible additional substitutions if `submap` is provided.
 (def-mark-based-layer layer-point
   :point
   nil
-  "**Main useful keys:**
+  "🔑 **Main useful keys:**
   `:=dataset` `:=mark` `:=x` `:=y`
   `:=color` `:=size` `:=color-type` `:=size-type`
   `:=mark-color` `:=mark-size` `:=mark-opacity`")
@@ -692,7 +692,7 @@ with possible additional substitutions if `submap` is provided.
 (def-mark-based-layer layer-line
   :line
   nil
-  "**Main useful keys:**
+  "🔑 **Main useful keys:**
   `:=dataset` `:=x` `:=y`
   `:=color` `:=size` `:=color-type` `:=size-type`
   `:=mark-color` `:=mark-size` `:=mark-opacity`")
@@ -700,7 +700,7 @@ with possible additional substitutions if `submap` is provided.
 (def-mark-based-layer layer-bar
   :bar
   nil
-  "**Main useful keys:**
+  "🔑 **Main useful keys:**
   `:=bar-width`
   `:=dataset` `:=x` `:=y`
   `:=color` `:=size` `:=color-type` `:=size-type`
@@ -709,7 +709,7 @@ with possible additional substitutions if `submap` is provided.
 (def-mark-based-layer layer-boxplot
   :box
   "[boxplot](https://en.wikipedia.org/wiki/Box_plot)"
-  "**Main useful keys:**
+  "🔑 **Main useful keys:**
   `:=boxmode`
   `:=dataset` `:=x` `:=y`
   `:=color` `:=size` `:=color-type` `:=size-type`
@@ -718,7 +718,7 @@ with possible additional substitutions if `submap` is provided.
 (def-mark-based-layer layer-violin
   :violin
   "[Violin plot](https://en.wikipedia.org/wiki/Violin_plot)"
-  "**Main useful keys:**
+  "🔑 **Main useful keys:**
   `:=violinmode` `:=box-visible` `:=meanline-visible`
   `:=dataset` `:=x` `:=y`
   `:=color` `:=size` `:=color-type` `:=size-type`
@@ -727,7 +727,7 @@ with possible additional substitutions if `submap` is provided.
 (def-mark-based-layer layer-segment
   :segment
   nil
-  "**Main useful keys:**
+  "🔑 **Main useful keys:**
   `:=dataset` `:=x0` `:=y0` `:=x1` `:=y1` 
   `:=color` `:=size` `:=color-type` `:=size-type`
   `:=mark-color` `:=mark-size` `:=mark-opacity`")
@@ -735,7 +735,7 @@ with possible additional substitutions if `submap` is provided.
 (def-mark-based-layer layer-text
   :text
   nil
-  "**Main useful keys:**
+  "🔑 **Main useful keys:**
   `:=text` `:=textfont`
   `:=dataset` `:=x` `:=y`
   `:=color` `:=size` `:=color-type` `:=size-type`
@@ -907,7 +907,7 @@ then the histogram is computed in groups."
   then the data is grouped by this column,
   and overlapping histograms are generated.
 
-  **Main useful keys:**
+  🔑 **Main useful keys:**
   `:=histogram-nbins`
   `:=dataset` `:=x`
   `:=color` `:=color-type`
@@ -942,7 +942,7 @@ Otherwise, it is determined by a rule of thumb.
 If the grouping list of columns `:=group` is specified,
 then the density is estimated in groups.
 
-**Main useful keys:**
+🔑 **Main useful keys:**
 `:=density-bandwidth`
 `:=dataset` `:=x`
 `:=color` `:=color-type`
@@ -1010,7 +1010,7 @@ then the density is estimated in groups.
   then the data is grouped by this column,
   and overlapping densities are generated.
 
-  **Main useful keys:**
+  🔑 **Main useful keys:**
   `:=dataset` `:=x` `:=y`
   `:=predictors` `:=design-matrix` `:=model-options`
   `:=group`
@@ -1166,7 +1166,7 @@ then the density is estimated in groups.
 (defn splom
   "Show a SPLOM (ScatterPLOt Matrix) of given dimensions of a dataset.
 
-  **Main useful keys:**
+  🔑 **Main useful keys:**
   `:=dataset` `:=colnames`
   `:=color` `:=color-type`
   and the other keys that affect `:=layout`, especially `:=height` and `:=width`.
