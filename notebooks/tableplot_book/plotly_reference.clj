@@ -875,6 +875,27 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
          -
          math/exp))))
 
+(include-fnvar-as-section #'plotly/splom)
+
+(md "#### For example:")
+
+(-> datasets/iris
+    (plotly/splom {:=colnames [:sepal-width
+                               :sepal-length
+                               :petal-width
+                               :petal-length]
+                   :=height 600
+                   :=width 600}))
+
+(-> datasets/iris
+    (plotly/splom {:=colnames [:sepal-width
+                               :sepal-length
+                               :petal-width
+                               :petal-length]
+                   :=color :species
+                   :=height 600
+                   :=width 600}))
+
 (md "
 ## Stats
 ")
