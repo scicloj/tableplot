@@ -99,6 +99,7 @@ The `:=size` column affects the grouing if and only if `:=size-type` is `:nomina
     :text :text
     :line :lines
     :box nil
+    :violin nil
     :bar nil
     :segment :lines))
 
@@ -112,6 +113,7 @@ The `:=size` column affects the grouing if and only if `:=size-type` is `:nomina
   [=mark =coordinates]
   (str (case =mark
          :box "box"
+         :violin "violin"
          :bar "bar"
          ;; else
          "scatter")
@@ -171,13 +173,18 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    :size-type :=size-type
    :text :=text
    :inferred-group :=inferred-group
-   :group :=group :marker-override {:color :=mark-color
-                                    :=marker-size-key :=mark-size}
+   :group :=group
+   :marker-override {:color :=mark-color
+                     :=marker-size-key :=mark-size}
    :fill :=mark-fill
    :trace-base {:mode :=mode
                 :type :=type
                 :opacity :=mark-opacity
                 :textfont :=textfont}
+   :box-visible :=box-visible
+   :meanline-visible :=meanline-visible
+   :boxmode :=boxmode
+   :violinmode :=violinmode
    :name :=name})
 
 
@@ -202,7 +209,8 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                  marker-override
                  fill
                  inferred-group
-                 trace-base]}]
+                 trace-base
+                 box-visible meanline-visible]}]
       (let [group-kvs (if inferred-group
                         (-> dataset
                             (tc/group-by inferred-group {:result-type :as-map}))
@@ -237,6 +245,10 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                              {:lat (some-> lat group-dataset vec)
                               :lon (some-> lon group-dataset vec)}
                              {:text (some-> text group-dataset vec)}
+                             (when box-visible
+                               {:box {:visible true}})
+                             (when meanline-visible
+                               {:meanline {:visible true}})
                              {:z (some-> z group-dataset vec)}
                              {:width (some-> bar-width group-dataset vec)}
                              ;; else
@@ -268,6 +280,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    =x-after-stat =y-after-stat
    =x-title =y-title
    =x-showgrid =y-showgrid
+   =boxmode =violinmode
    =layers]
   (let [final-x-title (or (->> =layers
                                (map :x-title)
@@ -288,19 +301,31 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                                (map :y)
                                (cons =y-after-stat)
                                (remove nil?)
-                               last))]
-    {:width =width
-     :height =height
-     :margin =margin
-     :automargin =automargin
-     :plot_bgcolor =background
-     :xaxis {:gridcolor =xaxis-gridcolor
-             :title final-x-title
-             :showgrid =x-showgrid}
-     :yaxis {:gridcolor =yaxis-gridcolor
-             :title final-y-title
-             :showgrid =y-showgrid}
-     :title =title}))
+                               last))
+        final-boxmode (or =boxmode
+                          (->> =layers
+                               (map :boxmode)
+                               first))
+        final-violinmode (or =violinmode
+                             (->> =layers
+                                  (map :violinmode)
+                                  first))]
+    (merge {:width =width
+            :height =height
+            :margin =margin
+            :automargin =automargin
+            :plot_bgcolor =background
+            :xaxis {:gridcolor =xaxis-gridcolor
+                    :title final-x-title
+                    :showgrid =x-showgrid}
+            :yaxis {:gridcolor =yaxis-gridcolor
+                    :title final-y-title
+                    :showgrid =y-showgrid}
+            :title =title}
+           (when final-boxmode
+             {:boxmode final-boxmode})
+           (when final-violinmode
+             {:violinmode final-violinmode}))))
 
 (dag/defn-with-deps submap->design-matrix
   "Determine a trivial design matrix specifiation from a set of `:=predictors` columns.
@@ -417,6 +442,14 @@ The design matrix simply uses these columns without any additional transformatio
     "The number of bins for `layer-histogram`."]
    [:=density-bandwidth hc/RMV
     "The bandwidth of density estimation for `layer-density`."]
+   [:=box-visible hc/RMV
+    "Should the boxplot be visible in Violin plots? (boolean)"]
+   [:=meanline-visible hc/RMV
+    "Should the mean line be visible in Violin plots? (boolean)"]
+   [:=boxmode hc/RMV
+    "How to show a group of box plots? The default is `nil`, which means overlay. The alternative is `:group`."]
+   [:=violinmode hc/RMV
+    "How to show a group of violin plots? The default is `nil`, which means overlay. The alternative is `:group`."]
    [:=coordinates :2d
     "The coordinates to use: `:2d`/`:3d`/`:polar`/`:geo`."]
    [:=height 400
@@ -587,6 +620,10 @@ The design matrix simply uses these columns without any additional transformatio
 (def-mark-based-layer layer-boxplot
   :box
   "[boxplot](https://en.wikipedia.org/wiki/Box_plot)")
+
+(def-mark-based-layer layer-violin
+  :violin
+  "[Violin plot](https://en.wikipedia.org/wiki/Violin_plot)")
 
 (def-mark-based-layer layer-segment
   :segment nil)
