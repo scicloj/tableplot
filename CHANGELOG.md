@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. This change
 - added initial [Violin plot](https://plotly.com/javascript/violin/) support
 - improved [boxplot](https://plotly.com/javascript/box-plots/) support
 - added [SPLOM](https://plotly.com/javascript/splom/) support
+- added many details to the docstrings to reflect the main useful substitution keys for the various functions
 
 ## [1-beta-4] - 2024-12-14
 - improved styling of `imshow`

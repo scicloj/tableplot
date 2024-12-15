@@ -577,6 +577,11 @@ The design matrix simply uses these columns without any additional transformatio
   We typically use `base` with other layers added to it.
   The base substitutions are shared between layers,
   and the layers can override them and add substitutions of their own.
+
+  **Main useful keys:**
+
+  - the keys which are useful for `layer`
+  - the keys that affect `:=layout`
   "  
   ;;
   ([dataset-or-template]
@@ -623,7 +628,11 @@ The design matrix simply uses these columns without any additional transformatio
   to that layer.
 
   The var `layer-base` is typicall used as the `layer-template`.
-  "
+
+  **Main useful keys:**
+
+  - `:=mark`
+  - The keys that are useful for the `layer-*` functions."
   ([dataset-or-template layer-template submap]
    (if (tc/dataset? dataset-or-template)
      (layer (base dataset-or-template {})
@@ -655,12 +664,15 @@ The design matrix simply uses these columns without any additional transformatio
   the returned function can be used to process a dataset or a template in a pipeline
   by adding a layer of a specificed kind and possibly some substutution maps.
   "
-  [fsymbol mark description]
+  [fsymbol mark description suffix]
   (list 'defn fsymbol
         (format
          "Add a %s layer to the given `dataset-or-template`,
-         with possible additional substitutions if `submap` is provided."
-         (or description (name mark)))
+with possible additional substitutions if `submap` is provided.
+
+%s"
+         (or description (name mark))
+         suffix)
         (list '[dataset-or-template]
               (list fsymbol 'dataset-or-template {}))
         (list '[dataset-or-template submap]
@@ -670,27 +682,64 @@ The design matrix simply uses these columns without any additional transformatio
                           'submap)))))
 
 (def-mark-based-layer layer-point
-  :point nil)
+  :point
+  nil
+  "**Main useful keys:**
+  `:=dataset` `:=mark` `:=x` `:=y`
+  `:=color` `:=size` `:=color-type` `:=size-type`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`")
 
 (def-mark-based-layer layer-line
-  :line nil)
+  :line
+  nil
+  "**Main useful keys:**
+  `:=dataset` `:=x` `:=y`
+  `:=color` `:=size` `:=color-type` `:=size-type`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`")
 
 (def-mark-based-layer layer-bar
-  :bar nil)
+  :bar
+  nil
+  "**Main useful keys:**
+  `:=bar-width`
+  `:=dataset` `:=x` `:=y`
+  `:=color` `:=size` `:=color-type` `:=size-type`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`")
 
 (def-mark-based-layer layer-boxplot
   :box
-  "[boxplot](https://en.wikipedia.org/wiki/Box_plot)")
+  "[boxplot](https://en.wikipedia.org/wiki/Box_plot)"
+  "**Main useful keys:**
+  `:=boxmode`
+  `:=dataset` `:=x` `:=y`
+  `:=color` `:=size` `:=color-type` `:=size-type`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`")
 
 (def-mark-based-layer layer-violin
   :violin
-  "[Violin plot](https://en.wikipedia.org/wiki/Violin_plot)")
+  "[Violin plot](https://en.wikipedia.org/wiki/Violin_plot)"
+  "**Main useful keys:**
+  `:=violinmode` `:=box-visible` `:=meanline-visible`
+  `:=dataset` `:=x` `:=y`
+  `:=color` `:=size` `:=color-type` `:=size-type`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`")
 
 (def-mark-based-layer layer-segment
-  :segment nil)
+  :segment
+  nil
+  "**Main useful keys:**
+  `:=dataset` `:=x0` `:=y0` `:=x1` `:=y1` 
+  `:=color` `:=size` `:=color-type` `:=size-type`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`")
 
 (def-mark-based-layer layer-text
-  :text nil)
+  :text
+  nil
+  "**Main useful keys:**
+  `:=text` `:=textfont`
+  `:=dataset` `:=x` `:=y`
+  `:=color` `:=size` `:=color-type` `:=size-type`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`")
 
 (dag/defn-with-deps smooth-stat
   "Compute a dataset
@@ -857,7 +906,12 @@ then the histogram is computed in groups."
   e.g., when the plot is colored by a nominal type,
   then the data is grouped by this column,
   and overlapping histograms are generated.
-  "
+
+  **Main useful keys:**
+  `:=histogram-nbins`
+  `:=dataset` `:=x`
+  `:=color` `:=color-type`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`"
   ([context]
    (layer-histogram context {}))
   ([context submap]
@@ -886,7 +940,13 @@ The `:=density-bandwidth` can controls the bandwidth.
 Otherwise, it is determined by a rule of thumb.
 
 If the grouping list of columns `:=group` is specified,
-then the density is estimated in groups." 
+then the density is estimated in groups.
+
+**Main useful keys:**
+`:=density-bandwidth`
+`:=dataset` `:=x`
+`:=color` `:=color-type`
+`:=mark-color` `:=mark-size` `:=mark-opacity`" 
   [=dataset =group =x =density-bandwidth]
   (when-not (=dataset =x)
     (throw (ex-info "missing =x column"
@@ -948,7 +1008,14 @@ then the density is estimated in groups."
   If a list of grouping columns `:=group` is specified,
   e.g., when the plot is colored by a nominal type,
   then the data is grouped by this column,
-  and overlapping densities are generated."
+  and overlapping densities are generated.
+
+  **Main useful keys:**
+  `:=dataset` `:=x` `:=y`
+  `:=predictors` `:=design-matrix` `:=model-options`
+  `:=group`
+  `:=mark-color` `:=mark-size` `:=mark-opacity`
+  "
   ([context]
    (layer-histogram context {}))
   ([context submap]
@@ -1097,7 +1164,13 @@ then the density is estimated in groups."
          hc/RMV)))))
 
 (defn splom
-  "Show a SPLOM (ScatterPLOt Matrix) of given dimensions of a dataset."
+  "Show a SPLOM (ScatterPLOt Matrix) of given dimensions of a dataset.
+
+  **Main useful keys:**
+  `:=dataset` `:=colnames`
+  `:=color` `:=color-type`
+  and the other keys that affect `:=layout`, especially `:=height` and `:=width`.
+  "
   [dataset submap]
   (-> dataset
       (base submap)
