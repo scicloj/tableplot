@@ -4,7 +4,7 @@
 ;; For diverse examples, see the
 ;; [Plotly API Walkthrough](./tableplot_book.plotly_walkthrough.html).
 
-;; ## Setup
+;; ## Setup 🔨
 
 ;; In this tutorial, we use:
 
@@ -144,7 +144,7 @@
 
 (md
  
- "## Overview
+ "## Overview 🐦
 The Tableplot Plotly API allows the user to write functional pipelines
 that create and process *templates* of plots, that can eventually be realized
 as [Plotly.js](https://plotly.com/javascript/) specifications.
@@ -219,7 +219,7 @@ In the remainder of this chapter, we will offer a detailed reference to the API
 functions, the way layers are defined, the substitution keys, and the relationships
 among them.
 
-## Debugging
+## Debugging 🐛
 
 Throughout this notebook, we will sometimes use the `debug` function that
 allows one to look into the value of a given substitution key in a given
@@ -237,7 +237,7 @@ we kept it grey, which is its default.")
     (plotly/debug :=background))
 
 (md "
-## Raw Plotly specifications
+## Raw Plotly specifications ✏
 
 Before beginning the exploration of Tableplot's Plotly API, let us remember we may
 also use the raw format supported by Plotly.js.
@@ -292,7 +292,7 @@ Here is how we represent that in Clojure:
 (md "
 Sometimes, this raw way is all we need; but in common situations, Tableplot makes things easier.
 
-## Concepts
+## Concepts 💡
 
 ### Plotly.js traces
 
@@ -485,12 +485,12 @@ Stats such as `smooth-stat`, `histogram-stat`, and `density-stat` are used in a 
 The user will typically not need to think about them, but they
 are a useful concept in extending Tableplot.
 
-## API functions
+## API functions ⚙
 ")
 
 (include-fnvar-as-section #'plotly/base)
 
-(md "#### For example:")
+(md "#### For example")
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -503,7 +503,7 @@ are a useful concept in extending Tableplot.
 
 (include-fnvar-as-section #'plotly/layer)
 
-(md "#### For example:
+(md "#### For example
 We could write someting like:")
 
 (-> datasets/iris
@@ -521,7 +521,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (include-fnvar-as-section #'plotly/layer-point)
 
-(md "#### Example:")
+(md "#### For example")
 
 (-> datasets/mtcars
     (plotly/layer-point
@@ -533,7 +533,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (include-fnvar-as-section #'plotly/layer-line)
 
-(md "#### Example:")
+(md "#### For example")
 
 (-> datasets/economics-long
     (tc/select-rows #(-> % :variable (= "unemploy")))
@@ -544,7 +544,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (include-fnvar-as-section #'plotly/layer-bar)
 
-(md "#### Example:")
+(md "#### For example")
 
 (-> datasets/mtcars
     (tc/group-by [:cyl])
@@ -557,7 +557,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (include-fnvar-as-section #'plotly/layer-boxplot)
 
-(md "#### Example:")
+(md "#### For example")
 
 (-> datasets/mtcars
     (plotly/layer-boxplot
@@ -581,7 +581,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (include-fnvar-as-section #'plotly/layer-violin)
 
-(md "#### Example:")
+(md "#### For example")
 
 (-> datasets/mtcars
     (plotly/layer-violin
@@ -617,7 +617,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (include-fnvar-as-section #'plotly/layer-segment)
 
-(md "#### Example:")
+(md "#### For example")
 
 (-> datasets/iris
     (plotly/layer-segment
@@ -631,7 +631,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (include-fnvar-as-section #'plotly/layer-text)
 
-(md "#### Example:")
+(md "#### For example")
 
 (-> datasets/mtcars
     (plotly/layer-text
@@ -775,7 +775,7 @@ since `:=color-type` is `:nominal`:")
 
 (include-fnvar-as-section #'plotly/plot)
 
-(md "#### For example:")
+(md "#### For example")
 (-> datasets/iris
     tc/head
     (plotly/layer-point {:=x :sepal-width
@@ -795,7 +795,7 @@ For example:
 
 (include-fnvar-as-section #'plotly/debug)
 
-(md "#### For example:")
+(md "#### For example")
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
@@ -832,7 +832,7 @@ For example:
  "Imshow uses dtype-next's [BufferedImage support](https://cnuernber.github.io/dtype-next/buffered-image.html) to figure out the right order of color channels, etc.
 
 So, it can handle plain vectors of vectors, dtype next tensors, and actual Java BufferedImage objects.")
-(md "#### For example:")
+(md "#### For example")
 
 (plotly/imshow
  (for [i (range 10)]
@@ -862,7 +862,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 
 (include-fnvar-as-section #'plotly/surface)
 
-(md "#### For example:")
+(md "#### For example")
 
 (plotly/surface
  (for [i (range 100)]
@@ -877,7 +877,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 
 (include-fnvar-as-section #'plotly/splom)
 
-(md "#### For example:")
+(md "#### For example")
 
 (-> datasets/iris
     (plotly/splom {:=colnames [:sepal-width
@@ -897,7 +897,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=width 600}))
 
 (md "
-## Stats
+## Stats 🖩
 ")
 
 (include-dag-fn-as-section 'histogram-stat plotly/histogram-stat)
@@ -905,7 +905,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 (include-dag-fn-as-section 'smooth-stat plotly/smooth-stat)
 
 (md "
-## Substitution Keys 
+## Substitution Keys 🔑
 ")
 
 ^:kindly/hide-code
