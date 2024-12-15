@@ -15,7 +15,7 @@
             [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'org.scicloj/tableplot)
-(def version "1-beta4")
+(def version "1-beta5")
 
 (def snapshot (str version "-SNAPSHOT"))
 (def class-dir "target/classes")
