@@ -68,10 +68,6 @@ Each of these APIs builds upon the strengths of its target platform and partiall
 
 (md "
 
-## Near term plan (Nov 2024):
-- Stabilize both the APIs as Beta stage.
-- Keep developing mainly the Plotly.js-based API.
-
 ## Goals
 
 - Have a functional grammar for common plotting tasks (but not all tasks).
