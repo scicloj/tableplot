@@ -761,7 +761,7 @@ with possible additional substitutions if `submap` is provided.
   nil
   "🔑 **Main useful keys:**
   `:=dataset` `:=x` `:=y` `:=z`
-  `:=zmin` `:=zmax` `:colorscale`")
+  `:=zmin` `:=zmax` `:=colorscale`")
 
 (dag/defn-with-deps smooth-stat
   "Compute a dataset
