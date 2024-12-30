@@ -833,59 +833,6 @@ since `:=color-type` is `:nominal`:")
     tc/dataset
     (plotly/layer-heatmap {:=colorscale :Greys}))
 
-(include-fnvar-as-section #'plotly/plot)
-
-(md "#### For example")
-(-> datasets/iris
-    tc/head
-    (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-length})
-    plotly/plot
-    kind/pprint)
-
-(md "
-This can be useful for editing the plot as a raw Plotly.js specification.
-For example:
-")
-(-> datasets/iris
-    (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-length})
-    plotly/plot
-    (assoc-in [:layout :plot_bgcolor] "floralwhite"))
-
-(include-fnvar-as-section #'plotly/debug)
-
-(md "#### For example")
-(-> datasets/iris
-    (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-length
-                         :=color :species}))
-
-(md "Let us verify that `:=background` is deterimined to be grey.")
-
-(-> datasets/iris
-    (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-length
-                         :=color :species})
-    (plotly/debug :=background))
-
-(md "Here, let us verify `:=color-type` for the 0th layer is deterimined to be `:nominal`.")
-
-(-> datasets/iris
-    (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-length
-                         :=color :species})
-    (plotly/debug 0 :=color-type))
-
-(md "Here, let us check both `:=color` and `:=color-type` for the 0th layer.")
-
-(-> datasets/iris
-    (plotly/layer-point {:=x :sepal-width
-                         :=y :sepal-length
-                         :=color :species})
-    (plotly/debug 0 {:color :=color
-                     :color-type :=color-type}))
-
 (include-fnvar-as-section #'plotly/imshow)
 
 (md 
@@ -955,6 +902,59 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=color :species
                    :=height 600
                    :=width 600}))
+
+(include-fnvar-as-section #'plotly/plot)
+
+(md "#### For example")
+(-> datasets/iris
+    tc/head
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length})
+    plotly/plot
+    kind/pprint)
+
+(md "
+This can be useful for editing the plot as a raw Plotly.js specification.
+For example:
+")
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length})
+    plotly/plot
+    (assoc-in [:layout :plot_bgcolor] "floralwhite"))
+
+(include-fnvar-as-section #'plotly/debug)
+
+(md "#### For example")
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species}))
+
+(md "Let us verify that `:=background` is deterimined to be grey.")
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species})
+    (plotly/debug :=background))
+
+(md "Here, let us verify `:=color-type` for the 0th layer is deterimined to be `:nominal`.")
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species})
+    (plotly/debug 0 :=color-type))
+
+(md "Here, let us check both `:=color` and `:=color-type` for the 0th layer.")
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species})
+    (plotly/debug 0 {:color :=color
+                     :color-type :=color-type}))
 
 (md "
 ## Stats 🖩
