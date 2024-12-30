@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file. This change
 - added `layer-correlation`
 - added `layer-surface`
 - [annotations](https://plotly.com/javascript/text-and-annotations/) support
-- updated docstringse
+- updated docstrings
 - defined `:=z` to be `:z` by default, for convenience and compatibility with `:=x`, `:=y`
 - bugfix: avoiding the assumption that column names are keywords (#10) - thanks, @harold
 
