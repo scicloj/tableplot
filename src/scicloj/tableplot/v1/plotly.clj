@@ -862,6 +862,43 @@ then the regression is computed in groups.
                           data
                           submap)))))
 
+(dag/defn-with-deps correlation-stat
+  "Compute a dataset representing the [correlations](https://en.wikipedia.org/wiki/Histogram)
+of the columns in `:=dataset`."
+  [=dataset]
+  (prn =dataset)
+  (let [names (tc/column-names =dataset)]
+    (tc/dataset {:row names
+                 :col names
+                 :corr (-> =dataset
+                           tc/columns
+                           fastmath.stats/correlation-matrix)})))
+
+
+(defn layer-correlation
+  "Add a correlation heatmap
+  layer to the given `dataset-or-template`,
+  with possible additional substitutions if `submap` is provided.
+
+  🔑 **Main useful keys:**
+  `:=dataset`"
+  ([context]
+   (layer-correlation context {}))
+  ([context submap]
+   (layer context
+          layer-base
+          (merge {:=stat correlation-stat
+                  :=mark :heatmap
+                  :=x-after-stat :col
+                  :=y-after-stat :row
+                  :=z-after-stat :corr
+                  :=x-title ""
+                  :=y-title ""
+                  :=zmin -1
+                  :=zmax 1}
+                 submap))))
+
+
 (dag/defn-with-deps histogram-stat
   "Compute a dataset representing the [histogram](https://en.wikipedia.org/wiki/Histogram)
 of the `:=x` column in `:=dataset`.
