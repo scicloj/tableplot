@@ -190,8 +190,8 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    :name :=name
    :zmin :=zmin
    :zmax :=zmax
-   :colorscale :=colorscale})
-
+   :colorscale :=colorscale
+   :annotations :=annotations})
 
 (dag/defn-with-deps submap->traces
   "Create the Plotly.js traces from the Tableplot layers."
@@ -290,6 +290,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    =x-title =y-title
    =x-showgrid =y-showgrid
    =boxmode =violinmode
+   =annotations
    =layers]
   (let [final-x-title (or (->> =layers
                                (map :x-title)
@@ -318,7 +319,11 @@ For lines, it is `:width`. Otherwise, it is `:size`."
         final-violinmode (or =violinmode
                              (->> =layers
                                   (map :violinmode)
-                                  first))]
+                                  first))
+        final-annotations (->> =layers
+                               (map :annotations)
+                               (apply concat =annotations)
+                               seq)]
     (merge {:width =width
             :height =height
             :margin =margin
@@ -331,6 +336,8 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                     :title final-y-title
                     :showgrid =y-showgrid}
             :title =title}
+           (when final-annotations
+             {:annotations final-annotations})
            (when final-boxmode
              {:boxmode final-boxmode})
            (when final-violinmode
@@ -551,7 +558,9 @@ The design matrix simply uses these columns without any additional transformatio
    [:=zmax hc/RMV
     "Maximal z range value for heatmap."]
    [:=colorscale hc/RMV
-    "[Color scale](https://plotly.com/javascript/colorscales/) for heatmaps."]])
+    "[Color scale](https://plotly.com/javascript/colorscales/) for heatmap."]
+   [:=annotations hc/RMV
+    "Plot [annotations](https://plotly.com/javascript/text-and-annotations/)."]])
 
 (def standard-defaults-map
   (->> standard-defaults
@@ -866,7 +875,6 @@ then the regression is computed in groups.
   "Compute a dataset representing the [correlations](https://en.wikipedia.org/wiki/Histogram)
 of the columns in `:=dataset`."
   [=dataset]
-  (prn =dataset)
   (let [names (tc/column-names =dataset)]
     (tc/dataset {:row names
                  :col names

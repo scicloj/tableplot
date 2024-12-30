@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. This change
 ## [1-beta-6] - unreleased
 - added `layer-heatmap`
 - added `layer-correlation`
+- [annotations](https://plotly.com/javascript/text-and-annotations/) support
 - updated docstringse
 - defined `:=z` to be `:z` by default, for convenience and compatibility with `:=x`, `:=y`
 
