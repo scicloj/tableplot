@@ -417,13 +417,14 @@ supported by Plotly.js.
 Mode is derived from mark as follows:
 ")
 ^:kindly/hide-code
-(-> {:mark [:point :text :line :box :bar :segment]}
+(-> {:mark [:point :text :line :box :bar :segment :heatmap :surface]}
     tc/dataset
     (tc/map-columns :mode [:mark] plotly/mark->mode))
 
 (md "
 Type is defined as the concatenation of a mark-based string:
-(`\"box\"` or `\"bar\"` if that is the mark, and `\"scatter\"` otherwise)
+(`\"box\"`,`\"violin\"`,`\"bar\"`,`\"heatmap\"`,`\"surface\"` if that is the mark,
+and `\"scatter\"` otherwise)
 with a coordinates-based string
 (`\"3d\"`, `\"polar\"`, or `\"geo\"` if we have such coordinates, `nil` otherwise).
 
