@@ -833,6 +833,35 @@ since `:=color-type` is `:nominal`:")
     tc/dataset
     (plotly/layer-heatmap {:=colorscale :Greys}))
 
+(include-fnvar-as-section #'plotly/layer-correlation)
+
+(md "#### For example")
+
+;; Correlations of a few columns:
+
+(let [n 99]
+  (-> {:u (repeatedly n rand)
+       :v (repeatedly n rand)
+       :w (repeatedly n rand)}
+      tc/dataset
+      (tc/add-columns {:x #(tcc/+ (:u %) (:v %))
+                       :y #(tcc/- (:w %) (tcc/+ (:u %) (:v %)))})
+      plotly/layer-correlation))
+
+;; Correlations of a few columns with a different
+;; [color scale](https://plotly.com/javascript/colorscales/)
+;; and `zmin`-`zmax` range that is mapped into colors:
+
+(let [n 99]
+  (-> {:u (repeatedly n rand)
+       :v (repeatedly n rand)
+       :w (repeatedly n rand)}
+      tc/dataset
+      (tc/add-columns {:x #(tcc/+ (:u %) (:v %))})
+      (plotly/layer-correlation {:=zmin 0
+                                 :=zmax 1
+                                 :=colorscale :hot})))
+
 (include-fnvar-as-section #'plotly/imshow)
 
 (md 
