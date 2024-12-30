@@ -912,6 +912,64 @@ since `:=color-type` is `:nominal`:")
                                  :=zmax 1
                                  :=colorscale :hot})))
 
+(include-fnvar-as-section #'plotly/layer-surface)
+
+(md "#### For example")
+
+(-> {:z (for [i (range 100)]
+          (for [j (range 100)]
+            (-> (tcc/- [i j]
+                       [30 60])
+                (tcc// [20 50])
+                tcc/sq
+                tcc/sum
+                -
+                math/exp)))}
+    tc/dataset
+    plotly/layer-surface)
+
+;; Combining a 3d scatterplot with a surface:
+
+(let [xy->z (fn [x y]
+              (-> [y x]
+                  tcc/sq
+                  tcc/sum
+                  -
+                  math/exp))
+      n 30]
+  (-> {:x (repeatedly n rand)
+       :y (repeatedly n rand)}
+      tc/dataset
+      (tc/map-columns :z
+                      [:x :y]
+                      (fn [x y]
+                        (+ (xy->z x y)
+                           (* 0.1 (rand)))))
+      (plotly/layer-point {:=coordinates :3d})
+      (plotly/layer-surface {:=dataset (let [xs (range 0 1 0.1)
+                                             ys (range 0 1 0.1)]
+                                         (tc/dataset
+                                          {:x xs
+                                           :y ys
+                                           :z (for [y ys]
+                                                (for [x xs]
+                                                  (xy->z x y)))}))
+                             :=mark-opacity 0.5})))
+
+(-> {:x (range -9 9)
+     :y (range -9 9)
+     :z (for [y (range -9 9)]
+          (for [x (range -9 9)]
+            ))}
+    tc/dataset
+    plotly/layer-surface)
+
+
+
+
+
+
+
 (include-fnvar-as-section #'plotly/surface)
 
 (md "#### For example")
