@@ -55,11 +55,11 @@
       (str/replace #"`" "")
       symbol
       ('#{base layer
-          layer-point layer-line layer-bar layer-boxplot layer-violin layer-segment layer-text
-          layer-histogram layer-density layer-smooth
+          layer-point layer-line layer-bar layer-boxplot layer-violin layer-segment layer-text layer-heatmap layer-surface
+          layer-histogram layer-density layer-smooth layer-correlation
           plot
           debug
-          smooth-stat histogram-stat density-stat
+          smooth-stat histogram-stat density-stat correlatoion-stat
           imshow surface splom})))
 
 ^:kindly/hide-code
@@ -912,7 +912,20 @@ since `:=color-type` is `:nominal`:")
                                  :=zmax 1
                                  :=colorscale :hot})))
 
+(include-fnvar-as-section #'plotly/surface)
 
+(md "#### For example")
+
+(plotly/surface
+ (for [i (range 100)]
+   (for [j (range 100)]
+     (-> (tcc/- [i j]
+                [30 60])
+         (tcc// [20 50])
+         tcc/sq
+         tcc/sum
+         -
+         math/exp))))
 
 (include-fnvar-as-section #'plotly/imshow)
 
@@ -947,21 +960,6 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
       (javax.imageio.ImageIO/read)))
 
 (plotly/imshow Crab-Nebula-image)
-
-(include-fnvar-as-section #'plotly/surface)
-
-(md "#### For example")
-
-(plotly/surface
- (for [i (range 100)]
-   (for [j (range 100)]
-     (-> (tcc/- [i j]
-                [30 60])
-         (tcc// [20 50])
-         tcc/sq
-         tcc/sum
-         -
-         math/exp))))
 
 (include-fnvar-as-section #'plotly/splom)
 
@@ -1044,6 +1042,7 @@ For example:
 (include-dag-fn-as-section 'histogram-stat plotly/histogram-stat)
 (include-dag-fn-as-section 'density-stat plotly/density-stat)
 (include-dag-fn-as-section 'smooth-stat plotly/smooth-stat)
+(include-dag-fn-as-section 'correlation-stat plotly/correlation-stat)
 
 (md "
 ## Substitution Keys 🔑
