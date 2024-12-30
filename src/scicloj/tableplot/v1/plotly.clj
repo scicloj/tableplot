@@ -102,7 +102,8 @@ The `:=size` column affects the grouing if and only if `:=size-type` is `:nomina
     :violin nil
     :bar nil
     :segment :lines
-    :heatmap nil))
+    :heatmap nil
+    :surface nil))
 
 (dag/defn-with-deps submap->mode
   "Determine the Plotly.js mode for a trace."
@@ -117,6 +118,7 @@ The `:=size` column affects the grouing if and only if `:=size-type` is `:nomina
          :violin "violin"
          :bar "bar"
          :heatmap "heatmap"
+         :surface "surface"
          ;; else
          "scatter")
        (case =coordinates
@@ -771,6 +773,12 @@ with possible additional substitutions if `submap` is provided.
   "🔑 **Main useful keys:**
   `:=dataset` `:=x` `:=y` `:=z`
   `:=zmin` `:=zmax` `:=colorscale`")
+
+(def-mark-based-layer layer-surface
+  :surface
+  nil
+  "🔑 **Main useful keys:**
+  `:=dataset` `:=z`")
 
 (dag/defn-with-deps smooth-stat
   "Compute a dataset
