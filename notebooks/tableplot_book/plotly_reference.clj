@@ -531,7 +531,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=mark-size 20}))
 
-;; Using the fact that `:=x` and `:=y` default to `:x` and `:y`:`
+;; Using the fact that `:=x` and `:=y` default to `:x` and `:y`:
 
 (-> {:x (range 29)
      :y (reductions + (repeatedly 29 rand))}
@@ -785,6 +785,8 @@ since `:=color-type` is `:nominal`:")
 (md "#### For example")
 
 ;; Numerical `x,y` axes:
+
+;; (Note we are using the fact that `:=x`,`:=y`,`:=z` default to `:x`,`:y`,`:z`.)
 
 (-> {:x (range 100)
      :y (range 200)
