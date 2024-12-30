@@ -773,6 +773,66 @@ since `:=color-type` is `:nominal`:")
     (plotly/layer-point {:=color :species})
     plotly/layer-smooth)
 
+(include-fnvar-as-section #'plotly/layer-heatmap)
+
+(md "#### For example")
+
+;; Numerical `x,y` axes:
+
+(-> {:x (range 100)
+     :y (range 200)
+     :z (for [i (range 200)]
+          (for [j (range 100)]
+            (+ (* (math/sin (/ i 5)) i)
+               (* (math/sin (/ j 5)) j))))}
+    tc/dataset
+    plotly/layer-heatmap)
+
+;; Mixed Categorical and numerical `x,y` axes:
+
+(-> {:x [:A :B]
+     :y (range 3)
+     :z (for [i (range 3)]
+          (for [j (range 2)]
+            (+ i j)))}
+    tc/dataset
+    plotly/layer-heatmap)
+
+;; Controling the `z` range:
+
+(-> {:x [:A :B]
+     :y (range 3)
+     :z (for [i (range 3)]
+          (for [j (range 2)]
+            (+ i j)))}
+    tc/dataset
+    (plotly/layer-heatmap
+     {:=zmin 0
+      :=zmax 5}))
+
+;; Referring to data elements by name:
+
+(-> {:site [:A :B]
+     :time (range 3)
+     :temperature (for [i (range 3)]
+                    (for [j (range 2)]
+                      (+ i j)))}
+    tc/dataset
+    (plotly/layer-heatmap {:=x :site
+                           :=y :time
+                           :=z :temperature}))
+
+;; Customizing [color scales](https://plotly.com/javascript/colorscales/):
+
+(-> {:x (range 100)
+     :y (range 200)
+     :z (for [i (range 200)]
+          (for [j (range 100)]
+            (+ (* (math/sin (/ i 5)) i)
+               (* (math/sin (/ j 5)) j))))}
+    tc/dataset
+    (plotly/layer-heatmap {:=colorscale :Greys}))
+
 (include-fnvar-as-section #'plotly/plot)
 
 (md "#### For example")
