@@ -531,12 +531,29 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=mark-size 20}))
 
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=mark-size 20}))
+
 ;; Using the fact that `:=x` and `:=y` default to `:x` and `:y`:
 
 (-> {:x (range 29)
      :y (reductions + (repeatedly 29 rand))}
     tc/dataset
     plotly/layer-point)
+
+;; String columns, varying size and color:
+(-> {"x" [1 2 3 4]
+     "y" [1 4 9 16]
+     "z" [:A :B :A :B]
+     "w" [:C :C :D :D]}
+    tc/dataset
+    (plotly/layer-point {:=x "x"
+                         :=y "y"
+                         :=color "z"
+                         :=size "w"}))
 
 (include-fnvar-as-section #'plotly/layer-line)
 
@@ -831,6 +848,7 @@ since `:=color-type` is `:nominal`:")
                            :=y :time
                            :=z :temperature}))
 
+
 ;; Customizing [color scales](https://plotly.com/javascript/colorscales/):
 
 (-> {:x (range 100)
@@ -857,6 +875,7 @@ since `:=color-type` is `:nominal`:")
                        :y #(tcc/- (:w %) (tcc/+ (:u %) (:v %)))})
       plotly/layer-correlation))
 
+
 ;; Correlations of a few columns with a different
 ;; [color scale](https://plotly.com/javascript/colorscales/)
 ;; and `zmin`-`zmax` range that is mapped into colors:
@@ -870,6 +889,29 @@ since `:=color-type` is `:nominal`:")
       (plotly/layer-correlation {:=zmin 0
                                  :=zmax 1
                                  :=colorscale :hot})))
+
+;; Correlations of many columns:
+
+;; Let us visualize the correlations of an
+;; [autoregressive random process](https://en.wikipedia.org/wiki/Autoregressive_model)
+;; at different time shifts.
+
+(let [autoregression (->> (repeatedly 1000 rand)
+                          (reductions (fn [x noise]
+                                        (+ (* 0.8 x)
+                                           (* 0.2 noise)))))
+      shifts-dataset (->> (for [shift (range 50)]
+                            [(str "shift" shift)
+                             (drop shift autoregression)])
+                          (apply concat)
+                          (apply array-map)
+                          tc/dataset)]
+  (-> shifts-dataset
+      (plotly/layer-correlation {:=zmin 0
+                                 :=zmax 1
+                                 :=colorscale :hot})))
+
+
 
 (include-fnvar-as-section #'plotly/imshow)
 
