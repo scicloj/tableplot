@@ -531,6 +531,13 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=mark-size 20}))
 
+;; Using the fact that `:=x` and `:=y` default to `:x` and `:y`:`
+
+(-> {:x (range 29)
+     :y (reductions + (repeatedly 29 rand))}
+    tc/dataset
+    plotly/layer-point)
+
 (include-fnvar-as-section #'plotly/layer-line)
 
 (md "#### For example")
