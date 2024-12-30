@@ -956,18 +956,6 @@ since `:=color-type` is `:nominal`:")
                                                   (xy->z x y)))}))
                              :=mark-opacity 0.5})))
 
-(-> {:x (range -9 9)
-     :y (range -9 9)
-     :z (for [y (range -9 9)]
-          (for [x (range -9 9)]
-            ))}
-    tc/dataset
-    plotly/layer-surface)
-
-
-
-
-
 
 
 (include-fnvar-as-section #'plotly/surface)
