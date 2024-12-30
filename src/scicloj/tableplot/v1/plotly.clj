@@ -227,13 +227,13 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                     (let [marker (merge
                                   (when color
                                     (case color-type
-                                      :nominal {:color (cache/cached-assignment (color group-key)
+                                      :nominal {:color (cache/cached-assignment (get group-key color)
                                                                                 colors-palette
                                                                                 ::color)}
                                       :quantitative {:color (-> color group-dataset vec)}))
                                   (when size
                                     (case size-type
-                                      :nominal {:size (cache/cached-assignment (size group-key)
+                                      :nominal {:size (cache/cached-assignment (get group-key size)
                                                                                sizes-palette
                                                                                ::size)}
                                       :quantitative {:size (-> size group-dataset vec)}))

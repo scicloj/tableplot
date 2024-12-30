@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. This change
 - [annotations](https://plotly.com/javascript/text-and-annotations/) support
 - updated docstringse
 - defined `:=z` to be `:z` by default, for convenience and compatibility with `:=x`, `:=y`
+- bugfix: avoiding the assumption that column names are keywords (#10) - thanks, @harold
 
 ## [1-beta-5] - 2024-12-16
 - added initial [Violin plot](https://plotly.com/javascript/violin/) support
