@@ -883,6 +883,22 @@ of the columns in `:=dataset`."
                            fastmath.stats/correlation-matrix)})))
 
 
+(dag/defn-with-deps submap->correlation-annotations
+  "Crate the annotations for a correlation heatmap layer."
+  [=stat]
+  (let [{:keys [row col corr]} =stat
+        nrow (count row)
+        ncol (count col)
+        font-size (int (/ 100 (max nrow ncol)))]
+    (for [i (range nrow) 
+          j (range ncol)]
+      {:x (col j)
+       :y (row i)
+       :text (format "%.02f" ((corr i) j))
+       :showarrow false
+       :font {:size font-size
+              :color "white"}})))
+
 (defn layer-correlation
   "Add a correlation heatmap
   layer to the given `dataset-or-template`,
@@ -905,7 +921,8 @@ of the columns in `:=dataset`."
                   :=x-title ""
                   :=y-title ""
                   :=zmin -1
-                  :=zmax 1}
+                  :=zmax 1
+                  :=annotations submap->correlation-annotations}
                  submap))))
 
 
