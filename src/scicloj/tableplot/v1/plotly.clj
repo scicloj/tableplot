@@ -405,7 +405,7 @@ The design matrix simply uses these columns without any additional transformatio
     "The column for the y axis."]
    [:=y-after-stat :=y
     "The column for the y axis to be used after `:=stat`."]
-   [:=z hc/RMV
+   [:=z :z
     "The column for the z axis."]
    [:=z-after-stat :=z
     "The column for the z axis to be used after `:=stat`."]
