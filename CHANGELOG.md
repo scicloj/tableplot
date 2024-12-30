@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta-6] - unreleased
+- docstring update
+
 ## [1-beta-5] - 2024-12-16
 - added initial [Violin plot](https://plotly.com/javascript/violin/) support
 - improved [boxplot](https://plotly.com/javascript/box-plots/) support

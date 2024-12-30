@@ -476,7 +476,7 @@ The design matrix simply uses these columns without any additional transformatio
    [:=type submap->type
     "The Plotly.js type used in a trace."]
    [:=name hc/RMV
-    "The layer name (which affects the Plotly.js traces names)."]
+    "The layer name (which affects the Plotly.js traces names and appears in the legend)."]
    [:=layers []
     "A vector of all lyaers in the plot (an inermediate Tableplot representation before converting to Plotly.js traces)."]
    [:=traces submap->traces
