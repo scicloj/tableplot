@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. This change
 ## [1-beta-6] - unreleased
 - updated docstringse
 - defined `:=z` to be `:z` by default, for convenience and compatibility with `:=x`, `:=y`
+- added `layer-heatmap`
 
 ## [1-beta-5] - 2024-12-16
 - added initial [Violin plot](https://plotly.com/javascript/violin/) support

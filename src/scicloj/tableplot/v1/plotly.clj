@@ -101,7 +101,8 @@ The `:=size` column affects the grouing if and only if `:=size-type` is `:nomina
     :box nil
     :violin nil
     :bar nil
-    :segment :lines))
+    :segment :lines
+    :heatmap nil))
 
 (dag/defn-with-deps submap->mode
   "Determine the Plotly.js mode for a trace."
@@ -115,6 +116,7 @@ The `:=size` column affects the grouing if and only if `:=size-type` is `:nomina
          :box "box"
          :violin "violin"
          :bar "bar"
+         :heatmap "heatmap"
          ;; else
          "scatter")
        (case =coordinates
@@ -185,7 +187,9 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    :meanline-visible :=meanline-visible
    :boxmode :=boxmode
    :violinmode :=violinmode
-   :name :=name})
+   :name :=name
+   :zmin :=zmin
+   :zmax :=zmax})
 
 
 (dag/defn-with-deps submap->traces
@@ -210,7 +214,8 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                  fill
                  inferred-group
                  trace-base
-                 box-visible meanline-visible]}]
+                 box-visible meanline-visible
+                 zmin zmax]}]
       (let [group-kvs (if inferred-group
                         (-> dataset
                             (tc/group-by inferred-group {:result-type :as-map}))
@@ -250,6 +255,8 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                              (when meanline-visible
                                {:meanline {:visible true}})
                              {:z (some-> z group-dataset vec)}
+                             (when zmin {:zmin zmin})
+                             (when zmax {:zmax zmax})
                              {:width (some-> bar-width group-dataset vec)}
                              ;; else
                              (if (= mark :segment)
@@ -536,7 +543,11 @@ The design matrix simply uses these columns without any additional transformatio
    [:=splom-layout submap->splom-layout
     "The layout for a SPLOM plot."]
    [:=splom-traces submap->splom-traces
-    "The trace for a SPLOM plot."]])
+    "The trace for a SPLOM plot."]
+   [:=zmin hc/RMV
+    "Minimal z range value for heatmap."]
+   [:=zmax hc/RMV
+    "Maximal z range value for heatmap."]])
 
 (def standard-defaults-map
   (->> standard-defaults
@@ -740,6 +751,13 @@ with possible additional substitutions if `submap` is provided.
   `:=dataset` `:=x` `:=y`
   `:=color` `:=size` `:=color-type` `:=size-type`
   `:=mark-color` `:=mark-size` `:=mark-opacity`")
+
+(def-mark-based-layer layer-heatmap
+  :heatmap
+  nil
+  "🔑 **Main useful keys:**
+  `:=dataset` `:=x` `:=y` `:=z`
+  `:=zmin` `:=zmax`")
 
 (dag/defn-with-deps smooth-stat
   "Compute a dataset
@@ -1130,7 +1148,6 @@ then the density is estimated in groups.
                          :=y-showgrid false
                          :=x-title ""
                          :=y-title "")}))
-
 
 (defn surface
   "Show a given surface, represented as a matrix of `z` values, in 3d."
