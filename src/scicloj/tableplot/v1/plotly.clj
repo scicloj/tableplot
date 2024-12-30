@@ -880,8 +880,10 @@ of the columns in `:=dataset`."
   layer to the given `dataset-or-template`,
   with possible additional substitutions if `submap` is provided.
 
+  See also: `layer-heatmap`.
+
   🔑 **Main useful keys:**
-  `:=dataset`"
+  `:=dataset` `:=zmin` `:=zmax` `:=colorscale`"
   ([context]
    (layer-correlation context {}))
   ([context submap]
