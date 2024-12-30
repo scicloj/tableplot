@@ -189,7 +189,8 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    :violinmode :=violinmode
    :name :=name
    :zmin :=zmin
-   :zmax :=zmax})
+   :zmax :=zmax
+   :colorscale :=colorscale})
 
 
 (dag/defn-with-deps submap->traces
@@ -215,7 +216,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                  inferred-group
                  trace-base
                  box-visible meanline-visible
-                 zmin zmax]}]
+                 zmin zmax colorscale]}]
       (let [group-kvs (if inferred-group
                         (-> dataset
                             (tc/group-by inferred-group {:result-type :as-map}))
@@ -257,6 +258,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                              {:z (some-> z group-dataset vec)}
                              (when zmin {:zmin zmin})
                              (when zmax {:zmax zmax})
+                             (when colorscale {:colorscale colorscale})
                              {:width (some-> bar-width group-dataset vec)}
                              ;; else
                              (if (= mark :segment)
@@ -547,7 +549,9 @@ The design matrix simply uses these columns without any additional transformatio
    [:=zmin hc/RMV
     "Minimal z range value for heatmap."]
    [:=zmax hc/RMV
-    "Maximal z range value for heatmap."]])
+    "Maximal z range value for heatmap."]
+   [:=colorscale hc/RMV
+    "[Color scale](https://plotly.com/javascript/colorscales/) for heatmaps."]])
 
 (def standard-defaults-map
   (->> standard-defaults
@@ -757,7 +761,7 @@ with possible additional substitutions if `submap` is provided.
   nil
   "🔑 **Main useful keys:**
   `:=dataset` `:=x` `:=y` `:=z`
-  `:=zmin` `:=zmax`")
+  `:=zmin` `:=zmax` `:colorscale`")
 
 (dag/defn-with-deps smooth-stat
   "Compute a dataset
