@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [1-beta-6] - unreleased
+## [1-beta6] - 2024-12-31
 - added `layer-heatmap`
 - added `layer-correlation`
 - added `layer-surface`
@@ -10,23 +10,23 @@ All notable changes to this project will be documented in this file. This change
 - defined `:=z` to be `:z` by default, for convenience and compatibility with `:=x`, `:=y`
 - bugfix: avoiding the assumption that column names are keywords (#10) - thanks, @harold
 
-## [1-beta-5] - 2024-12-16
+## [1-beta5] - 2024-12-16
 - added initial [Violin plot](https://plotly.com/javascript/violin/) support
 - improved [boxplot](https://plotly.com/javascript/box-plots/) support
 - added [SPLOM](https://plotly.com/javascript/splom/) support
 - added many details to the docstrings to reflect the main useful substitution keys for the various functions
 
-## [1-beta-4] - 2024-12-14
+## [1-beta4] - 2024-12-14
 - improved styling of `imshow`
 - added initial 3d `surface` support
 
-## [1-beta-3] - 2024-12-14
+## [1-beta3] - 2024-12-14
 - refactored and made some functions private
 - added `imshow` function to show images
 - added some layout substitution keys
 - support String columns (PR #11, fixes #10) - thanks, @harold
 
-## [1-beta-2] - 2024-12-06
+## [1-beta2] - 2024-12-06
 - updated docstrings
 - refactored the plotly implementation and added detailed for reference generation
 - renamed some fn arguments for clarity
@@ -36,10 +36,10 @@ All notable changes to this project will be documented in this file. This change
 - simpilified the internal workflow of applying statistical transformations
 - styling: set the wrapping div height to be "auto"
 
-## [1-beta-1.1] - 2024-12-01 
+## [1-beta1.1] - 2024-12-01 
 - improved handling of edges in density layers
 
-## [1-beta-1] - 2024-12-01
+## [1-beta1] - 2024-12-01
 - replaced the ad-hoc `WrappedValue` daratype with the Clojure `delay` idiom 
 (used to avoid the recursive transformations of certain functions)
 - plotly: corrected bar width for histograms
