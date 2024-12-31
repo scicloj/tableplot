@@ -6,13 +6,7 @@
 
 ;; Here, we provide a walkthrough of that API.
 
-;; Soon, we will provide more in-depth explanations in additional chapters.
-
-;; ## Known issues
-
-;; - Plot legends are missing in some cases.
-
-;; - Breaking changes are expected.
+;; See also the more detailed [reference](tableplot_book.plotly_reference).📖
 
 ;; ## Setup
 ;; For this tutorial, we require:
