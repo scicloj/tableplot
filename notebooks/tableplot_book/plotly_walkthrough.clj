@@ -6,7 +6,7 @@
 
 ;; Here, we provide a walkthrough of that API.
 
-;; See also the more detailed [reference](tableplot_book.plotly_reference).📖
+;; See also the more detailed [reference](tableplot_book.plotly_reference.html) 📖.
 
 ;; ## Setup
 ;; For this tutorial, we require:
