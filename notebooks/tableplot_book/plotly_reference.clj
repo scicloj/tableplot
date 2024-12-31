@@ -524,6 +524,16 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (md "#### For example")
 
+;; Customizing mark size:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=mark-size 20}))
+
+;; Coloring by `:cyl` (considered `:quantitative` as it is a numerical column).
+
 (-> datasets/mtcars
     (plotly/layer-point
      {:=x :mpg
@@ -532,10 +542,14 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=mark-size 20}))
 
+;; Coloring by `:cyl`, and marking it as `:nominal`:
+
 (-> datasets/mtcars
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
+      :=color :cyl
+      :=color-type :nominal
       :=mark-size 20}))
 
 ;; Using the fact that `:=x` and `:=y` default to `:x` and `:y`:
@@ -555,6 +569,24 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                          :=y "y"
                          :=color "z"
                          :=size "w"}))
+
+
+;; Using 3d coordinates:
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=z :petal-length
+                         :=color :petal-width
+                         :=coordinates :3d}))
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=z :petal-length
+                         :=color :species
+                         :=coordinates :3d}))
+
 
 (include-fnvar-as-section #'plotly/layer-line)
 
