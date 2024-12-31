@@ -400,9 +400,129 @@ We currently support the following:")
 ^:kindly/hide-code
 [:2d :3d :polar :geo]
 
-(md "
-Here, 2d and 3d mean Eucledian coordinates of the corresponding dimensions,
+(md "Here, 2d and 3d mean Eucledian coordinates of the corresponding dimensions,
 and `:geo` means latitude and longitude.
+
+For example:
+
+")
+
+;; #### geo
+
+;; Inspired by Plotly's tutorial for [Scatter Plots on Maps in JavaScript](https://plotly.com/javascript/scatter-plots-on-maps/):
+
+(-> {:lat [45.5, 43.4, 49.13, 51.1, 53.34, 45.24,
+           44.64, 48.25, 49.89, 50.45]
+     :lon [-73.57, -79.24, -123.06, -114.1, -113.28,
+           -75.43, -63.57, -123.21, -97.13, -104.6]
+     :text ["Montreal", "Toronto", "Vancouver", "Calgary", "Edmonton",
+            "Ottawa", "Halifax", "Victoria", "Winnepeg", "Regina"],}
+    tc/dataset
+    (plotly/base {:=coordinates :geo
+                  :=lat :lat
+                  :=lon :lon})
+    (plotly/layer-point {:=mark-opacity 0.8
+                         :=mark-color ["#bebada", "#fdb462", "#fb8072", "#d9d9d9", "#bc80bd",
+                                       "#b3de69", "#8dd3c7", "#80b1d3", "#fccde5", "#ffffb3"]
+                         :=mark-size 20
+                         :=name "Canadian cities"})
+    (plotly/layer-text {:=text :text
+                        :=textfont {:size 7
+                                    :color :purple}})
+    plotly/plot
+    (assoc-in [:layout :geo]
+              {:scope "north america"
+               :resolution 10
+               :lonaxis {:range [-130 -55]}
+               :lataxis {:range [40 60]}
+               :countrywidth 1.5
+               :showland true
+               :showlakes true
+               :showrivers true}))
+
+
+
+;; #### 3d
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=z :petal-length
+                         :=color :petal-width
+                         :=coordinates :3d}))
+
+(-> datasets/iris
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=z :petal-length
+                         :=color :species
+                         :=coordinates :3d}))
+
+;; #### polar
+
+;; Monthly rain amounts - polar bar-chart
+
+(def rain-data
+  (tc/dataset
+   {:month [:Jan :Feb :Mar :Apr
+            :May :Jun :Jul :Aug
+            :Sep :Oct :Nov :Dec]
+    :rain (repeatedly #(rand-int 200))}))
+
+(-> rain-data
+    (plotly/layer-bar
+     {:=r :rain
+      :=theta :month
+      :=coordinates :polar
+      :=mark-size 20
+      :=mark-opacity 0.6}))
+
+;; Controlling the polar layout
+;; (by manipulating the raw Plotly.js spec):
+
+(-> rain-data
+    (plotly/base
+     {})
+    (plotly/layer-bar
+     {:=r :rain
+      :=theta :month
+      :=coordinates :polar
+      :=mark-size 20
+      :=mark-opacity 0.6})
+    plotly/plot
+    (assoc-in [:layout :polar]
+              {:angularaxis {:tickfont {:size 16}
+                             :rotation 90
+                             :direction "counterclockwise"}
+               :sector [0 180]}))
+
+;; A polar random walk - polar line-chart
+
+(let [n 50]
+  (-> {:r (->> (repeatedly n #(- (rand) 0.5))
+               (reductions +))
+       :theta (->> (repeatedly n #(* 10 (rand)))
+                   (reductions +)
+                   (map #(rem % 360)))
+       :color (range n)}
+      tc/dataset
+      (plotly/layer-point
+       {:=r :r
+        :=theta :theta
+        :=coordinates :polar
+        :=mark-size 10
+        :=mark-opacity 0.6})
+      (plotly/layer-line
+       {:=r :r
+        :=theta :theta
+        :=coordinates :polar
+        :=mark-size 3
+        :=mark-opacity 0.6})))
+
+
+
+
+(md "
 
 ### Plotly.js mode and type  
 
