@@ -2,7 +2,7 @@
 
 ;; Tableplot offers a Clojure API for creating [Plotly.js](https://plotly.com/javascript/) plots through layered pipelines.
 
-;; The API not uses [Hanami templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations) but is completely separate from the classical Hanami templates and parameters.
+;; The API uses [Hanami templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations) but is completely separate from the classical Hanami templates and parameters.
 
 ;; Here, we provide a walkthrough of that API.
 
