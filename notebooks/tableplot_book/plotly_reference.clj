@@ -704,6 +704,15 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :disp
       :=size :cyl}))
 
+;; Determining mark size by `:cyl`, and marking it as `:nominal`:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=size :cyl
+      :=size-type :nominal}))
+
 ;; Determining mark symbol by `:cyl`:
 
 (-> datasets/mtcars
