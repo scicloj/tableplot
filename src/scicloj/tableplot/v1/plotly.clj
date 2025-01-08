@@ -86,12 +86,15 @@
   "Infer the relevant grouping for statistical layers such as `layer-smooth`.
 The `:=color` column affects the grouing if and only if `:=color-type` is `:nominal`.
 The `:=size` column affects the grouing if and only if `:=size-type` is `:nominal`.
+The `:=symbol` column affects the grouping.
 "
-  [=color =color-type =size =size-type]
+  [=color =color-type =size =size-type =symbol]
   (concat (when (= =color-type :nominal)
             [=color])
           (when (= =size-type :nominal)
-            [=size])))
+            [=size])
+          (when =symbol
+            [=symbol])))
 
 (defn mark->mode [mark]
   (case mark
@@ -141,6 +144,10 @@ The `:=size` column affects the grouing if and only if `:=size-type` is `:nomina
        (take 8)
        (mapv int)))
 
+(def symbols-palette
+  [:circle :diamond :x :square
+   :circle-open :diamond-open :x-open :square-open])
+
 (def view-base
   {:data :=traces
    :layout :=layout})
@@ -175,11 +182,13 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    :color-type :=color-type
    :size :=size
    :size-type :=size-type
+   :symbol :=symbol
    :text :=text
    :inferred-group :=inferred-group
    :group :=group
    :marker-override {:color :=mark-color
-                     :=marker-size-key :=mark-size}
+                     :=marker-size-key :=mark-size
+                     :symbol :=mark-symbol}
    :fill :=mark-fill
    :trace-base {:mode :=mode
                 :type :=type
@@ -212,6 +221,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                  coordinates
                  color color-type
                  size size-type
+                 symbol
                  text
                  marker-override
                  fill
@@ -239,6 +249,10 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                                                                                sizes-palette
                                                                                ::size)}
                                       :quantitative {:size (-> size group-dataset vec)}))
+                                  (when symbol
+                                    {:symbol (cache/cached-assignment (get group-key symbol)
+                                                                      symbols-palette
+                                                                      ::symbol)})
                                   marker-override)]
                       (merge trace-base
                              {:name (->> [(:name layer)
@@ -449,6 +463,8 @@ The design matrix simply uses these columns without any additional transformatio
     "The column to determine the color of marks."]
    [:=size hc/RMV
     "The column to determine the size of marks."]
+   [:=symbol hc/RMV
+    "The column to determine the [symbol](https://plotly.com/javascript/reference/#box-marker-symbol) of marks."]
    [:=x-type (submap->field-type :=x)
     "The field type of the column used to determine the x axis."]
    [:=x-type-after-stat (submap->field-type-after-stat :=x-after-stat)
@@ -479,6 +495,8 @@ The design matrix simply uses these columns without any additional transformatio
     "A fixed size specification for marks."]
    [:=marker-size-key submap->marker-size-key
     "What key does Plotly.js use to hold the marker size?"]
+   [:=mark-symbol hc/RMV
+    "A fixed [symbol](https://plotly.com/javascript/reference/#box-marker-symbol) specification for marks"]
    [:=mark-fill hc/RMV
     "A fixed fill specification for marks."]
    [:=mark-opacity hc/RMV
@@ -712,8 +730,8 @@ with possible additional substitutions if `submap` is provided.
   nil
   "🔑 **Main useful keys:**
   `:=dataset` `:=mark` `:=x` `:=y`
-  `:=color` `:=size` `:=color-type` `:=size-type`
-  `:=mark-color` `:=mark-size` `:=mark-opacity`")
+  `:=color` `:=size` `:=symbol` `:=color-type` `:=size-type`
+  `:=mark-color` `:=mark-size` `:=mark-symbol` `:=mark-opacity`")
 
 (def-mark-based-layer layer-line
   :line
@@ -1270,3 +1288,6 @@ then the density is estimated in groups.
       (assoc :data :=splom-traces
              :layout :=splom-layout)
       plotly-xform))
+
+
+
