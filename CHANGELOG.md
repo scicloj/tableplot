@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [1-beta7] - unreleased
+## [1-beta7] - 2025-01-09
 - added support for `:=symbol` and `:=mark-symbol` (controlling mark symbols)
 
 ## [1-beta6] - 2024-12-31
