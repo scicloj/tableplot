@@ -1242,6 +1242,24 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=height 600
                    :=width 600}))
 
+(-> datasets/iris
+    (plotly/splom {:=colnames [:sepal-width
+                               :sepal-length
+                               :petal-width
+                               :petal-length]
+                   :=symbol :species
+                   :=height 600
+                   :=width 600}))
+
+(-> datasets/iris
+    (plotly/splom {:=colnames [:sepal-width
+                               :sepal-length
+                               :petal-width
+                               :petal-length]
+                   :=symbol :species
+                   :=height 600
+                   :=width 600}))
+
 (include-fnvar-as-section #'plotly/plot)
 
 (md "#### For example")
