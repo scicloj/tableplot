@@ -652,6 +652,30 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :disp
       :=mark-size 20}))
 
+;; Customizing mark symbol:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=mark-symbol :diamond}))
+
+;; Customizing mark color:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=mark-color "darkred"}))
+
+;; Customizing mark opacity:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=mark-opacity 0.5}))
+
 ;; Coloring by `:cyl` (considered `:quantitative` as it is a numerical column).
 
 (-> datasets/mtcars
@@ -672,6 +696,24 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=mark-size 20}))
 
+;; Determining mark size by `:cyl`:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=size :cyl}))
+
+;; Determining mark symbol by `:cyl`:
+
+(-> datasets/mtcars
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=symbol :cyl
+      :=mark-size 20
+      :=mark-color "darkred"}))
+
 ;; Using the fact that `:=x` and `:=y` default to `:x` and `:y`:
 
 (-> {:x (range 29)
@@ -690,6 +732,17 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                          :=color "z"
                          :=size "w"}))
 
+;; String columns, varying symbol and color:
+(-> {"x" [1 2 3 4]
+     "y" [1 4 9 16]
+     "z" [:A :B :A :B]
+     "w" [:C :C :D :D]}
+    tc/dataset
+    (plotly/layer-point {:=x "x"
+                         :=y "y"
+                         :=color "z"
+                         :=symbol "w"
+                         :=mark-size 20}))
 
 ;; Using 3d coordinates:
 
