@@ -381,10 +381,12 @@ The design matrix simply uses these columns without any additional transformatio
 
 (dag/defn-with-deps submap->splom-traces
   "Create the trace for a SPLOM plot."
-  [=dataset =colnames =color =color-type =splom-colnames]
+  [=dataset =colnames =color =color-type =symbol =splom-colnames]
   (let []
-    (if (and =color
-             (= =color-type :nominal))
+    (cond
+      ;; varying color
+      (and =color
+           (= =color-type :nominal))
       (let [class->color (-> =color
                              =dataset
                              distinct
@@ -399,6 +401,24 @@ The design matrix simply uses these columns without any additional transformatio
                                       =colnames)
                          :marker {:color (class->color cls)}
                          :name cls})))))
+      ;; varying symbol
+      =symbol
+      (let [class->symbol (-> =symbol
+                              =dataset
+                              distinct
+                              (interleave symbols-palette)
+                              (->> (apply hash-map)))]
+        (-> =dataset
+            (tc/group-by =symbol {:result-type :as-map})
+            (->> (map (fn [[cls group-dataset]]
+                        {:type :splom
+                         :dimensions (dataset->splom-dimensions
+                                      group-dataset
+                                      =colnames)
+                         :marker {:symbol (class->symbol cls)}
+                         :name cls})))))
+      ;; else
+      :else
       [{:type :splom
         :dimensions (dataset->splom-dimensions
                      =dataset
@@ -1279,7 +1299,7 @@ then the density is estimated in groups.
 
   🔑 **Main useful keys:**
   `:=dataset` `:=colnames`
-  `:=color` `:=color-type`
+  `:=color` `:=color-type` `:=symbol`
   and the other keys that affect `:=layout`, especially `:=height` and `:=width`.
   "
   [dataset submap]
