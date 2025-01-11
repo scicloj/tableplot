@@ -915,6 +915,11 @@ We are exploring various rules of thumbs to determine it automatically.
 (-> datasets/iris
     (plotly/layer-histogram2d {:=x :sepal-width
                                :=y :sepal-length
+                               :=colorscale :Portland}))
+
+(-> datasets/iris
+    (plotly/layer-histogram2d {:=x :sepal-width
+                               :=y :sepal-length
                                :=histogram-nbins 100}))
 
 (let [n 10000]
