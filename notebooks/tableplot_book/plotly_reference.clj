@@ -56,7 +56,7 @@
       symbol
       ('#{base layer
           layer-point layer-line layer-bar layer-boxplot layer-violin layer-segment layer-text layer-heatmap layer-surface
-          layer-histogram layer-density layer-smooth layer-correlation
+          layer-histogram layer-histogram2d layer-density layer-smooth layer-correlation
           plot
           debug
           smooth-stat histogram-stat density-stat correlatoion-stat
@@ -898,6 +898,34 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                              :=color :species
                              :=mark-opacity 0.5}))
 
+
+(include-fnvar-as-section #'plotly/layer-histogram2d)
+
+(md "(experimental)")
+
+(md "#### Examples:
+Currently, the number of bins is determined by `:histogram-nbins`.
+We are exploring various rules of thumbs to determine it automatically.
+")
+
+(-> datasets/iris
+    (plotly/layer-histogram2d {:=x :sepal-width
+                               :=y :sepal-length}))
+
+(-> datasets/iris
+    (plotly/layer-histogram2d {:=x :sepal-width
+                               :=y :sepal-length
+                               :=histogram-nbins 100}))
+
+(let [n 10000]
+  (-> {:x (repeatedly n rand)}
+      tc/dataset
+      (tc/add-column :y #(tcc/* (repeatedly n rand)
+                                (:x %)
+                                (:x %)))
+      (plotly/layer-histogram2d {:=histogram-nbins 250})))
+
+
 (include-fnvar-as-section #'plotly/layer-density)
 
 (md "#### Examples:")
@@ -1319,5 +1347,4 @@ For example:
 
 ^:kindly/hide-code
 (include-all-keys)
-
 
