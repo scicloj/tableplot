@@ -6,8 +6,9 @@
             [tablecloth.column.api :as tcc]
             [tech.v3.dataset :as ds]
             [tech.v3.dataset.modelling :as dsmod]
-            [fastmath.stats]
-            [fastmath.kernel]
+            [fastmath.stats :as stats]
+            [fastmath.grid :as grid]
+            [fastmath.kernel :as kernel]
             [scicloj.metamorph.ml :as ml]
             [scicloj.metamorph.ml.regression]
             [scicloj.metamorph.ml.design-matrix :as design-matrix]
@@ -18,7 +19,8 @@
             [scicloj.tableplot.v1.xform :as xform]
             [tech.v3.libs.buffered-image :as bufimg]
             [tech.v3.tensor :as tensor]
-            [tech.v3.datatype :as dtype])
+            [tech.v3.datatype :as dtype]
+            [clojure.math :as math])
   (:import java.awt.image.BufferedImage))
 
 (defn submap->field-type [colname-key]
@@ -1060,6 +1062,71 @@ then the histogram is computed in groups."
                  submap))))
 
 
+(defn compute-histogram-2d [dataset x-colname y-colname nbins]
+  (let [xs (dataset x-colname)
+        ys (dataset y-colname)
+        x-min (tcc/reduce-min xs)
+        x-max (tcc/reduce-max xs)
+        x-gap (double (- x-max x-min))
+        y-min (tcc/reduce-min ys)
+        y-max (tcc/reduce-max ys)
+        y-gap (double (- y-max y-min))
+        normalized-xs (-> xs (tcc/- x-min) (tcc// x-gap))
+        normalized-ys (-> ys (tcc/- y-min) (tcc// y-gap))
+        ;; nbins (max (stats/estimate-bins normalized-xs)
+        ;;            (stats/estimate-bins normalized-ys))
+        size (/ (math/sqrt nbins))
+        grid (grid/grid :square size)]
+    (-> {:normalized-x normalized-xs
+         :normalized-y normalized-ys}
+        tc/dataset
+        tc/rows
+        (->> (map (partial grid/coords->mid grid)))
+        frequencies
+        (->> (map (fn [[[mid-normalized-x mid-normalized-y] freq]]
+                    {:mid-normalized-x mid-normalized-x
+                     :mid-normalized-y mid-normalized-y
+                     :count freq})))
+        tc/dataset
+        (tc/add-column x-colname
+                       #(tcc/* x-gap
+                               (tcc/+ x-min
+                                      (:mid-normalized-x %))))
+        (tc/add-column y-colname
+                       #(tcc/* y-gap
+                               (tcc/+ y-min
+                                      (:mid-normalized-y %))))
+        (tc/select-columns [x-colname y-colname :count]))))
+
+
+(dag/defn-with-deps histogram2d-stat
+  "Compute a dataset representing a 2d histogram
+of columns `:=x` `:=y` in `:=dataset`."
+  [=dataset =x =y =histogram-nbins]
+  (compute-histogram-2d =dataset =x =y =histogram-nbins))
+
+
+(defn layer-histogram2d
+  "Given columns `=x`,`=y`,
+  add a corresponding 2d histogram heatmap 
+  layer to the given `dataset-or-template`,
+  with possible additional substitutions if `submap` is provided.
+
+  See also: `layer-heatmap`.
+
+  🔑 **Main useful keys:**
+  `:=dataset` `:=x` `:=y` `:=histogram-nbins` `:=colorscale`"
+  ([context]
+   (layer-histogram2d context {}))
+  ([context submap]
+   (layer context
+          layer-base
+          (merge {:=stat histogram2d-stat
+                  :=mark :heatmap
+                  :=z-after-stat :count}
+                 submap))))
+
+
 
 (dag/defn-with-deps density-stat
   "Compute a dataset representing the approximated [density](https://en.wikipedia.org/wiki/Histogram)
@@ -1092,8 +1159,8 @@ then the density is estimated in groups.
   (let [summary-fn (fn [dataset]
                      (let [xs (dataset =x)
                            k (if =density-bandwidth
-                               (fastmath.kernel/kernel-density :gaussian xs =density-bandwidth)
-                               (fastmath.kernel/kernel-density :gaussian xs))
+                               (kernel/kernel-density :gaussian xs =density-bandwidth)
+                               (kernel/kernel-density :gaussian xs))
                            min-x (tcc/reduce-min xs)
                            max-x (tcc/reduce-max xs)
                            range-width (- max-x min-x)]

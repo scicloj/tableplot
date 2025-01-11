@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta8] - 2025-01-12
+- added `layer-histogram2d` (experimental)
+
 ## [1-beta7] - 2025-01-09
 - added support for `:=symbol` and `:=mark-symbol` (controlling mark symbols)
 
