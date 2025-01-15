@@ -369,7 +369,7 @@ The design matrix simply uses these columns without any additional transformatio
        (mapv (fn [k]
                [k (list
                    'identity
-                   (-> k name symbol))]))))
+                   k)]))))
 
 
 (defn- dataset->splom-dimensions
