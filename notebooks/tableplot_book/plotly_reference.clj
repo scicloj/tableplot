@@ -983,9 +983,9 @@ We are exploring various rules of thumbs to determine it automatically.
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
                          :=name "Actual"})
-    (plotly/layer-smooth {:=design-matrix [[:sepal-width '(identity sepal-width)]
-                                           [:sepal-width-2 '(* sepal-width
-                                                               sepal-width)]]
+    (plotly/layer-smooth {:=design-matrix [[:sepal-width '(identity :sepal-width)]
+                                           [:sepal-width-2 '(* :sepal-width
+                                                               :sepal-width)]]
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
