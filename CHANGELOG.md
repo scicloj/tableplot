@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta9.1] - 2025-01-22
+- redeploying the previous version that seems to be a broken JAR
+
 ## [1-beta9] - 2025-01-16
 - updated deps (metamorph.ml, tempfiles)
 - adapted to changes in metamorph.ml design-matrix api
