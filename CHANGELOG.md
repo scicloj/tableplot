@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [1-beta10] - unreleased
 - added dependency: std.lang
+- transpile API - WIP
 
 ## [1-beta9.1] - 2025-01-22
 - redeployed the previous version that seems to be a broken JAR
