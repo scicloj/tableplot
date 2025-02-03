@@ -17,32 +17,51 @@
             [tablecloth.api :as tc]
             [tableplot-book.datasets :as datasets]))
 
+(transpile/hiccup
+ (-> datasets/iris
+     (tc/select-columns [:sepal-width :sepal-length])
+     tc/rows)
+ {:body [:p "An echarts example with some nice background"]
+  :script ['(var myChart
+                 (echarts.init document.currentScript.parentElement))
+           (list 'myChart.setOption
+                 {:tooltip {}
+                  :xAxis {}
+                  :yAxis {}
+                  :series [{:type "scatter"
+                            :data 'data}]})]
+  :deps [:echarts]
+  :style {:background "floralwhite"}})
+
 (transpile/echarts
- {:tooltip {}
-  :xAxis {}
-  :yAxis {}
-  :series [{:type "scatter"
-            :data (-> datasets/iris
-                      (tc/select-columns [:sepal-width :sepal-length])
-                      tc/rows)}]})
+ {:form {:tooltip {}
+         :xAxis {}
+         :yAxis {}
+         :series [{:type "scatter"
+                   :data (-> datasets/iris
+                             (tc/select-columns [:sepal-width :sepal-length])
+                             tc/rows)}]}
+  :style {:background "floralwhite"}})
 
 (-> datasets/iris
     (tc/select-columns [:sepal-width :sepal-length])
     tc/rows
     (transpile/echarts
-     {:tooltip {}
-      :xAxis {}
-      :yAxis {}
-      :series [{:type "scatter"
-                :data 'data}]}))
+     {:form {:tooltip {}
+             :xAxis {}
+             :yAxis {}
+             :series [{:type "scatter"
+                       :data 'data}]}
+      :style {:background "floralwhite"}}))
 
 (transpile/echarts
  {'iris (-> datasets/iris
             (tc/select-columns [:sepal-width :sepal-length])
             tc/rows)}
- {:tooltip {}
-  :xAxis {}
-  :yAxis {}
-  :series [{:type "scatter"
-            :data 'iris}]})
+ {:form {:tooltip {}
+         :xAxis {}
+         :yAxis {}
+         :series [{:type "scatter"
+                   :data 'iris}]}
+  :style {:background "floralwhite"}})
 
