@@ -38,9 +38,37 @@
  (transpile/js '(var x 9)
                '(return (+ x 11))))
 
+
+;; An adaptation of a Plotly.js example - 
+;; [Animations in Javascript](https://plotly.com/javascript/animations/):
+
+(kind/hiccup
+ [:div
+  [:button {:onclick (transpile/js '(randomize))}
+   "Randomize!"]
+  [:div {:style {:height "auto"}}
+   [:script
+    (transpile/js
+     '(var el document.currentScript.parentElement)
+     '(Plotly.newPlot el
+                      [{:x [1 2 3]
+                        :y [0 0.5 1]
+                        :line {:simplify false}}])
+     '(defn randomize []
+        (Plotly.animate el
+                        {:data [{:y [(Math.random)
+                                     (Math.random)
+                                     (Math.random)]}]
+                         :traces [0]
+                         :layout {}}
+                        {:transition {:duration 500
+                                      :easing "cut-in-out"}
+                         :frame {:duration 500}})))]]]
+ {:html/deps [:plotly]})
+
 (book-utils/include-fnvar-as-section #'transpile/div-with-script)
 
-;; #### Example
+;; #### Examples
 
 ;; Let us create an Apache Echarts plot.
 
