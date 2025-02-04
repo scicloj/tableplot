@@ -499,7 +499,7 @@ are a useful concept in extending Tableplot.
 ## API functions ⚙
 ")
 
-(book-util/include-fnvar-as-section #'plotly/base)
+(book-utils/include-fnvar-as-section #'plotly/base)
 
 (book-utils/md "#### For example")
 
@@ -512,7 +512,7 @@ are a useful concept in extending Tableplot.
                          :=mark-opacity 0.3})
     (plotly/layer-point {:=color :species}))
 
-(book-util/include-fnvar-as-section #'plotly/layer)
+(book-utils/include-fnvar-as-section #'plotly/layer)
 
 (book-utils/md "#### For example
 We could write someting like:")
@@ -530,7 +530,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-point)
+(book-utils/include-fnvar-as-section #'plotly/layer-point)
 
 (book-utils/md "#### For example")
 
@@ -660,7 +660,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                          :=coordinates :3d}))
 
 
-(book-util/include-fnvar-as-section #'plotly/layer-line)
+(book-utils/include-fnvar-as-section #'plotly/layer-line)
 
 (book-utils/md "#### For example")
 
@@ -671,7 +671,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :value
       :=mark-color "purple"}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-bar)
+(book-utils/include-fnvar-as-section #'plotly/layer-bar)
 
 (book-utils/md "#### For example")
 
@@ -684,7 +684,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=bar-width :bar-width
       :=y :total-disp}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-boxplot)
+(book-utils/include-fnvar-as-section #'plotly/layer-boxplot)
 
 (book-utils/md "#### For example")
 
@@ -708,7 +708,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=boxmode :group}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-violin)
+(book-utils/include-fnvar-as-section #'plotly/layer-violin)
 
 (book-utils/md "#### For example")
 
@@ -744,7 +744,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=violinmode :group}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-segment)
+(book-utils/include-fnvar-as-section #'plotly/layer-segment)
 
 (book-utils/md "#### For example")
 
@@ -758,7 +758,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=mark-size 3
       :=color :species}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-text)
+(book-utils/include-fnvar-as-section #'plotly/layer-text)
 
 (book-utils/md "#### For example")
 
@@ -772,7 +772,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                   :color :purple}
       :=mark-size 20}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-histogram)
+(book-utils/include-fnvar-as-section #'plotly/layer-histogram)
 
 (book-utils/md "#### Examples:")
 
@@ -789,7 +789,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                              :=mark-opacity 0.5}))
 
 
-(book-util/include-fnvar-as-section #'plotly/layer-histogram2d)
+(book-utils/include-fnvar-as-section #'plotly/layer-histogram2d)
 
 (book-utils/md "(experimental)")
 
@@ -821,7 +821,7 @@ We are exploring various rules of thumbs to determine it automatically.
       (plotly/layer-histogram2d {:=histogram-nbins 250})))
 
 
-(book-util/include-fnvar-as-section #'plotly/layer-density)
+(book-utils/include-fnvar-as-section #'plotly/layer-density)
 
 (book-utils/md "#### Examples:")
 
@@ -840,7 +840,7 @@ We are exploring various rules of thumbs to determine it automatically.
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-smooth)
+(book-utils/include-fnvar-as-section #'plotly/layer-smooth)
 
 (book-utils/md "#### Examples:")
 
@@ -935,7 +935,7 @@ since `:=color-type` is `:nominal`:")
     (plotly/layer-point {:=color :species})
     plotly/layer-smooth)
 
-(book-util/include-fnvar-as-section #'plotly/layer-heatmap)
+(book-utils/include-fnvar-as-section #'plotly/layer-heatmap)
 
 (book-utils/md "#### For example")
 
@@ -998,7 +998,7 @@ since `:=color-type` is `:nominal`:")
     tc/dataset
     (plotly/layer-heatmap {:=colorscale :Greys}))
 
-(book-util/include-fnvar-as-section #'plotly/layer-correlation)
+(book-utils/include-fnvar-as-section #'plotly/layer-correlation)
 
 (book-utils/md "#### For example")
 
@@ -1049,7 +1049,7 @@ since `:=color-type` is `:nominal`:")
                                  :=zmax 1
                                  :=colorscale :hot})))
 
-(book-util/include-fnvar-as-section #'plotly/layer-surface)
+(book-utils/include-fnvar-as-section #'plotly/layer-surface)
 
 (book-utils/md "#### For example")
 
@@ -1095,7 +1095,7 @@ since `:=color-type` is `:nominal`:")
 
 
 
-(book-util/include-fnvar-as-section #'plotly/surface)
+(book-utils/include-fnvar-as-section #'plotly/surface)
 
 (book-utils/md "#### For example")
 
@@ -1110,7 +1110,7 @@ since `:=color-type` is `:nominal`:")
          -
          math/exp))))
 
-(book-util/include-fnvar-as-section #'plotly/imshow)
+(book-utils/include-fnvar-as-section #'plotly/imshow)
 
 (book-utils/md 
  "Imshow uses dtype-next's [BufferedImage support](https://cnuernber.github.io/dtype-next/buffered-image.html) to figure out the right order of color channels, etc.
@@ -1144,7 +1144,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 
 (plotly/imshow Crab-Nebula-image)
 
-(book-util/include-fnvar-as-section #'plotly/splom)
+(book-utils/include-fnvar-as-section #'plotly/splom)
 
 (book-utils/md "#### For example")
 
@@ -1174,7 +1174,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=height 600
                    :=width 600}))
 
-(book-util/include-fnvar-as-section #'plotly/plot)
+(book-utils/include-fnvar-as-section #'plotly/plot)
 
 (book-utils/md "#### For example")
 (-> datasets/iris
@@ -1194,7 +1194,7 @@ For example:
     plotly/plot
     (assoc-in [:layout :plot_bgcolor] "floralwhite"))
 
-(book-util/include-fnvar-as-section #'plotly/debug)
+(book-utils/include-fnvar-as-section #'plotly/debug)
 
 (book-utils/md "#### For example")
 (-> datasets/iris
@@ -1231,10 +1231,10 @@ For example:
 ## Stats 🖩
 ")
 
-(book-util/include-dag-fn-as-section 'histogram-stat plotly/histogram-stat)
-(book-util/include-dag-fn-as-section 'density-stat plotly/density-stat)
-(book-util/include-dag-fn-as-section 'smooth-stat plotly/smooth-stat)
-(book-util/include-dag-fn-as-section 'correlation-stat plotly/correlation-stat)
+(book-utils/include-dag-fn-as-section 'histogram-stat plotly/histogram-stat)
+(book-utils/include-dag-fn-as-section 'density-stat plotly/density-stat)
+(book-utils/include-dag-fn-as-section 'smooth-stat plotly/smooth-stat)
+(book-utils/include-dag-fn-as-section 'correlation-stat plotly/correlation-stat)
 
 (book-utils/md "
 ## Substitution Keys 🔑
@@ -1245,13 +1245,13 @@ For example:
      (map
       (fn [[k v doc]]
         (kind/md
-         [(format "### %s" (book-util/include-key-or-symbol-name k))
+         [(format "### %s" (book-utils/include-key-or-symbol-name k))
           (some->> doc
                    (format "**role:** %s\n"))
           (format "**default:** %s\n"
-                  (cond (fn? v) (book-util/include-dag-fn v)
+                  (cond (fn? v) (book-utils/include-dag-fn v)
                         (= v hc/RMV) "`NONE`"
-                        (keyword? v) (book-util/include-key-or-symbol-name v)
-                        :else (book-util/include-form v)))])))
+                        (keyword? v) (book-utils/include-key-or-symbol-name v)
+                        :else (book-utils/include-form v)))])))
      kind/fragment)
 
