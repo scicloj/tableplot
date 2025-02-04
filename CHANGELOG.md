@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta10] - 2025-02-04
+- added dependency: std.lang
+- added the `transpile` API - experimental
+
 ## [1-beta9.1] - 2025-01-22
 - redeployed the previous version that seems to be a broken JAR
 
