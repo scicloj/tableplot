@@ -11,10 +11,6 @@
 ;; for using this practice in combination with various JS libraries.
 ;; *It is considered experimental at this stage.*
 
-;; The `std.lang` transpiler itself is already stable.
-;; We are working on creating relevant documentation and tutorials
-;; to clarify its usage.
-
 ;; ## Setup 🔨
 
 ;; In this tutorial, we use:
@@ -32,7 +28,7 @@
             [clojure.string :as str]
             [scicloj.kindly.v4.kind :as kind]))
 
-;; ## Functions 
+;; ## Functions ⚙
 
 (book-utils/include-fnvar-as-section #'transpile/js)
 
@@ -116,8 +112,9 @@ clickable-example
     second
     kind/code)
 
+(book-utils/include-fnvar-as-section #'transpile/echarts)
 
-
+;; #### Examples
 
 (transpile/echarts
  ;; data
@@ -130,8 +127,6 @@ clickable-example
   :yAxis {}
   :series [{:type "scatter"
             :data 'data}]})
-
-
 
 (-> datasets/mtcars
     (tc/select-columns [:wt :mpg :cyl :gear])
@@ -158,6 +153,10 @@ clickable-example
                                   :data 'data}]}))
 
 
+(book-utils/include-fnvar-as-section #'transpile/plotly)
+
+;; #### Examples
+
 (transpile/plotly
  ;; data
  {:x [1 2 3 4]
@@ -178,6 +177,9 @@ clickable-example
            :mode "markers"
            :type "scatter"}]})
 
+(book-utils/include-fnvar-as-section #'transpile/vega-embed)
+
+;; #### Example
 
 (transpile/vega-embed
  ;; data
@@ -191,6 +193,9 @@ clickable-example
   :encoding {:x {:field "x" :type "quantitative"}
              :y {:field "y" :type "quantitative"}}})
 
+(book-utils/include-fnvar-as-section #'transpile/highcharts)
+
+;; #### Example
 
 (transpile/highcharts
  ;; data
@@ -203,14 +208,17 @@ clickable-example
   :chart {:type "scatter"}
   :series [{:data 'data}]})
 
+(book-utils/include-fnvar-as-section #'transpile/leaflet)
+
+;; #### Example
 
 (transpile/leaflet
  ;; data with symbol bindings
  {'center [-37.84 144.95]
   'zoom 11
   'provider "OpenStreetMap.Mapnik"
-  'marker [-37.8 144.8]
-  'popup "Here we are.<br> Exactly here."}
+  'marker [-37.9 144.8]
+  'popup "<i style='color:purple'>Have you been here?</i>"}
  ;; form
  '(fn [m]
     (m.setView center zoom)
@@ -222,8 +230,7 @@ clickable-example
         (. (bindPopup popup))
         (. (openPopup)))))
 
-
-;; ## Danymic vars
+;; ## Danymic vars 🎧
 
 (book-utils/include-fnvar-as-section #'transpile/*base-kindly-options*)
 
