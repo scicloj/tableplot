@@ -194,28 +194,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#div-with-script" id="toc-div-with-script" class="nav-link" data-scroll-target="#div-with-script"><span class="header-section-number">6.2.2</span> <code>div-with-script</code></a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example"><span class="header-section-number">6.2.2.1</span> Example</a></li>
+  <li><a href="#examples-1" id="toc-examples-1" class="nav-link" data-scroll-target="#examples-1"><span class="header-section-number">6.2.2.1</span> Examples</a></li>
   <li><a href="#a-closer-look" id="toc-a-closer-look" class="nav-link" data-scroll-target="#a-closer-look"><span class="header-section-number">6.2.2.2</span> A closer look</a></li>
   </ul></li>
   <li><a href="#echarts" id="toc-echarts" class="nav-link" data-scroll-target="#echarts"><span class="header-section-number">6.2.3</span> <code>echarts</code></a>
   <ul class="collapse">
-  <li><a href="#examples-1" id="toc-examples-1" class="nav-link" data-scroll-target="#examples-1"><span class="header-section-number">6.2.3.1</span> Examples</a></li>
+  <li><a href="#examples-2" id="toc-examples-2" class="nav-link" data-scroll-target="#examples-2"><span class="header-section-number">6.2.3.1</span> Examples</a></li>
   </ul></li>
   <li><a href="#plotly" id="toc-plotly" class="nav-link" data-scroll-target="#plotly"><span class="header-section-number">6.2.4</span> <code>plotly</code></a>
   <ul class="collapse">
-  <li><a href="#examples-2" id="toc-examples-2" class="nav-link" data-scroll-target="#examples-2"><span class="header-section-number">6.2.4.1</span> Examples</a></li>
+  <li><a href="#examples-3" id="toc-examples-3" class="nav-link" data-scroll-target="#examples-3"><span class="header-section-number">6.2.4.1</span> Examples</a></li>
   </ul></li>
   <li><a href="#vega-embed" id="toc-vega-embed" class="nav-link" data-scroll-target="#vega-embed"><span class="header-section-number">6.2.5</span> <code>vega-embed</code></a>
   <ul class="collapse">
-  <li><a href="#example-1" id="toc-example-1" class="nav-link" data-scroll-target="#example-1"><span class="header-section-number">6.2.5.1</span> Example</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example"><span class="header-section-number">6.2.5.1</span> Example</a></li>
   </ul></li>
   <li><a href="#highcharts" id="toc-highcharts" class="nav-link" data-scroll-target="#highcharts"><span class="header-section-number">6.2.6</span> <code>highcharts</code></a>
   <ul class="collapse">
-  <li><a href="#example-2" id="toc-example-2" class="nav-link" data-scroll-target="#example-2"><span class="header-section-number">6.2.6.1</span> Example</a></li>
+  <li><a href="#example-1" id="toc-example-1" class="nav-link" data-scroll-target="#example-1"><span class="header-section-number">6.2.6.1</span> Example</a></li>
   </ul></li>
   <li><a href="#leaflet" id="toc-leaflet" class="nav-link" data-scroll-target="#leaflet"><span class="header-section-number">6.2.7</span> <code>leaflet</code></a>
   <ul class="collapse">
-  <li><a href="#example-3" id="toc-example-3" class="nav-link" data-scroll-target="#example-3"><span class="header-section-number">6.2.7.1</span> Example</a></li>
+  <li><a href="#example-2" id="toc-example-2" class="nav-link" data-scroll-target="#example-2"><span class="header-section-number">6.2.7.1</span> Example</a></li>
   </ul></li>
   </ul></li>
   <li><a href="#danymic-vars" id="toc-danymic-vars" class="nav-link" data-scroll-target="#danymic-vars"><span class="header-section-number">6.3</span> Danymic vars 🎧</a>
@@ -259,8 +259,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 <script src="tableplot_book.transpile_reference_files/md-default0.js" type="text/javascript"></script>
 <script src="tableplot_book.transpile_reference_files/md-default1.js" type="text/javascript"></script>
-<script src="tableplot_book.transpile_reference_files/echarts2.js" type="text/javascript"></script>
-<script src="tableplot_book.transpile_reference_files/plotly3.js" type="text/javascript"></script>
+<script src="tableplot_book.transpile_reference_files/plotly2.js" type="text/javascript"></script>
+<script src="tableplot_book.transpile_reference_files/echarts3.js" type="text/javascript"></script>
 <script src="tableplot_book.transpile_reference_files/vega4.js" type="text/javascript"></script>
 <script src="tableplot_book.transpile_reference_files/vega5.js" type="text/javascript"></script>
 <script src="tableplot_book.transpile_reference_files/vega6.js" type="text/javascript"></script>
@@ -307,6 +307,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="kw">=</span> <span class="dv">9</span><span class="co">;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>return x <span class="kw">+</span> <span class="dv">11</span><span class="co">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>An adaptation of a Plotly.js example - <a href="https://plotly.com/javascript/animations/">Animations in Javascript</a>:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:button</span> {<span class="at">:onclick</span> (transpile/js '(randomize))}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>   <span class="st">"Randomize!"</span>]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span> {<span class="at">:style</span> {<span class="at">:height</span> <span class="st">"auto"</span>}}</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:script</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    (transpile/js</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>     '(var plotly-animaton-element document.currentScript.parentElement)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>     '(Plotly.newPlot plotly-animaton-element</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                      [{<span class="at">:x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>]</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:y</span> [<span class="dv">0</span> <span class="fl">0.5</span> <span class="dv">1</span>]</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:line</span> {<span class="at">:simplify</span> <span class="va">false</span>}}])</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>     '(<span class="bu">defn</span><span class="fu"> randomize </span>[]</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        (Plotly.animate plotly-animaton-element</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                        {<span class="at">:data</span> [{<span class="at">:y</span> [(Math.random)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>                                     (Math.random)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                                     (Math.random)]}]</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>                         <span class="at">:traces</span> [<span class="dv">0</span>]</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>                         <span class="at">:layout</span> {}}</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>                        {<span class="at">:transition</span> {<span class="at">:duration</span> <span class="dv">500</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:easing</span> <span class="st">"cut-in-out"</span>}</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>                         <span class="at">:frame</span> {<span class="at">:duration</span> <span class="dv">500</span>}})))]]]</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a> {<span class="at">:html/deps</span> [<span class="at">:plotly</span>]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div><button onclick="randomize();">Randomize!</button><div style="height:auto;"><script>let plotly_animaton_element = document.currentScript.parentElement;
+Plotly.newPlot(
+  plotly_animaton_element,
+  [{"x":[1,2,3],"y":[0,0.5,1],"line":{"simplify":false}}]
+);
+function randomize(){
+  Plotly.animate(plotly_animaton_element,{
+    "data":[{"y":[Math.random(),Math.random(),Math.random()]}],
+    "traces":[0],
+    "layout":{}
+  },{
+    "transition":{"duration":500,"easing":"cut-in-out"},
+    "frame":{"duration":500}
+  });
+}</script></div></div>
 </section>
 </section>
 <section id="div-with-script" class="level3" data-number="6.2.2">
@@ -321,29 +362,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</li>
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> defined by deep-merging <a href="#kindly-options"><code>kindly-options</code></a> into <a href="#*base-kindly-options*"><code>*base-kindly-options*</code></a>.</p>
-<section id="example" class="level4" data-number="6.2.2.1">
-<h4 data-number="6.2.2.1" class="anchored" data-anchor-id="example"><span class="header-section-number">6.2.2.1</span> Example</h4>
+<section id="examples-1" class="level4" data-number="6.2.2.1">
+<h4 data-number="6.2.2.1" class="anchored" data-anchor-id="examples-1"><span class="header-section-number">6.2.2.1</span> Examples</h4>
 <p>Let us create an Apache Echarts plot.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(transpile/div-with-script</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> [[<span class="dv">1</span> <span class="dv">2</span>]</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span> <span class="dv">4</span>]</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span> <span class="dv">9</span>]</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span> <span class="dv">16</span>]]</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a> <span class="co">;; script</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a> ['(var myChart</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        (echarts.init</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>         document.currentScript.parentElement))</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">list</span> <span class="at">'myChart.setOption</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        {<span class="at">:xAxis</span> {}</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">:yAxis</span> {}</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">:series</span> [{<span class="at">:type</span> <span class="st">"scatter"</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                   <span class="at">:data</span> <span class="at">'data</span>}]})]</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a> <span class="co">;; Kindly options (merged with default)</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a> {<span class="at">:html/deps</span> [<span class="at">:echarts</span>]</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">:style</span> {<span class="at">:height</span> <span class="st">"300px"</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">:background</span> <span class="st">"floralwhite"</span>}})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(transpile/div-with-script</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a> [[<span class="dv">1</span> <span class="dv">2</span>]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span> <span class="dv">4</span>]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span> <span class="dv">9</span>]</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span> <span class="dv">16</span>]]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a> <span class="co">;; script</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a> ['(var myChart</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        (echarts.init</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>         document.currentScript.parentElement))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">list</span> <span class="at">'myChart.setOption</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        {<span class="at">:xAxis</span> {}</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">:yAxis</span> {}</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">:series</span> [{<span class="at">:type</span> <span class="st">"scatter"</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                   <span class="at">:data</span> <span class="at">'data</span>}]})]</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a> <span class="co">;; Kindly options (merged with default)</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a> {<span class="at">:html/deps</span> [<span class="at">:echarts</span>]</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">:style</span> {<span class="at">:height</span> <span class="st">"300px"</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">:background</span> <span class="st">"floralwhite"</span>}})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="background:floralwhite;height:300px;"><script>(function () {
 let data = [[1,2],[2,4],[3,9],[4,16]];
@@ -359,39 +400,39 @@ myChart.setOption({
 <h4 data-number="6.2.2.2" class="anchored" data-anchor-id="a-closer-look"><span class="header-section-number">6.2.2.2</span> A closer look</h4>
 <p>Let us create a Plotly.js plot with some custom event handling. We will explore the resulting structure a little bit.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> clickable-example</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (transpile/div-with-script</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>   <span class="co">;; data (with symbol bindings)</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>   {<span class="at">'x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>]</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">'y</span> [<span class="dv">3</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">16</span>]}</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>   <span class="co">;; script</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>   ['(var el document.currentScript.parentElement)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    '(Plotly.newPlot el</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                     {<span class="at">:data</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                      [{<span class="at">:x</span> x</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:y</span> y</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:mode</span> <span class="st">"markers"</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:type</span> <span class="st">"scatter"</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:marker</span> {<span class="at">:size</span> <span class="dv">20</span>}}]</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                      <span class="at">:layout</span> {<span class="at">:title</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"Would you please click the points?"</span>}})</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    '(. el</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        (on <span class="st">"plotly_click"</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">fn</span> []</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>              (alert <span class="st">"Thanks for clicking."</span>))))]</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>   <span class="co">;; Kindly options</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:html/deps</span> [<span class="at">:plotly</span>]}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> clickable-example</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (transpile/div-with-script</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>   <span class="co">;; data (with symbol bindings)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>   {<span class="at">'x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">'y</span> [<span class="dv">3</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">16</span>]}</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>   <span class="co">;; script</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>   ['(var plotly-animaton-element document.currentScript.parentElement)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    '(Plotly.newPlot plotly-animaton-element</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                     {<span class="at">:data</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                      [{<span class="at">:x</span> x</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:y</span> y</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:mode</span> <span class="st">"markers"</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:type</span> <span class="st">"scatter"</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:marker</span> {<span class="at">:size</span> <span class="dv">20</span>}}]</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                      <span class="at">:layout</span> {<span class="at">:title</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"Would you please click the points?"</span>}})</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    '(. plotly-animaton-element</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        (on <span class="st">"plotly_click"</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">fn</span> []</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>              (alert <span class="st">"Thanks for clicking."</span>))))]</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>   <span class="co">;; Kindly options</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:html/deps</span> [<span class="at">:plotly</span>]}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>First, let us see it visualized:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>clickable-example</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>clickable-example</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:auto;"><script>(function () {
 let data = {"x":[1,2,3,4],"y":[3,4,9,16]};
 let x = data['x'];
 let y = data['y'];
-let el = document.currentScript.parentElement;
-Plotly.newPlot(el,{
+let plotly_animaton_element = document.currentScript.parentElement;
+Plotly.newPlot(plotly_animaton_element,{
   "data":[
     {
     "x":x,
@@ -403,57 +444,57 @@ Plotly.newPlot(el,{
   ],
   "layout":{"title":"Would you please click the points?"}
 });
-el.on("plotly_click",function (){
+plotly_animaton_element.on("plotly_click",function (){
   alert("Thanks for clicking.");
 });
 })();</script></div>
 <p>Now, let us check the metadata:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">meta</span> clickable-example)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">meta</span> clickable-example)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>#<span class="at">:kindly</span>{<span class="at">:kind</span> <span class="at">:kind/hiccup</span>,</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">:options</span> {<span class="at">:style</span> {<span class="at">:height</span> <span class="at">:auto</span>}, <span class="at">:html/deps</span> [<span class="at">:plotly</span>]}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>#<span class="at">:kindly</span>{<span class="at">:kind</span> <span class="at">:kind/hiccup</span>,</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">:options</span> {<span class="at">:style</span> {<span class="at">:height</span> <span class="at">:auto</span>}, <span class="at">:html/deps</span> [<span class="at">:plotly</span>]}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now, let us pretty-print it to see the Hiccup structure.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(kind/pprint</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> clickable-example)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(kind/pprint</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> clickable-example)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>[<span class="at">:div</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:script</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"(function () {</span><span class="sc">\n</span><span class="st">let data = {</span><span class="sc">\"</span><span class="st">x</span><span class="sc">\"</span><span class="st">:[1,2,3,4],</span><span class="sc">\"</span><span class="st">y</span><span class="sc">\"</span><span class="st">:[3,4,9,16]};</span><span class="sc">\n</span><span class="st">let x = data['x'];</span><span class="sc">\n</span><span class="st">let y = data['y'];</span><span class="sc">\n</span><span class="st">let el = document.currentScript.parentElement;</span><span class="sc">\n</span><span class="st">Plotly.newPlot(el,{</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">data</span><span class="sc">\"</span><span class="st">:[</span><span class="sc">\n</span><span class="st">    {</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">x</span><span class="sc">\"</span><span class="st">:x,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">y</span><span class="sc">\"</span><span class="st">:y,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">mode</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">markers</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">type</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">scatter</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">marker</span><span class="sc">\"</span><span class="st">:{</span><span class="sc">\"</span><span class="st">size</span><span class="sc">\"</span><span class="st">:20}</span><span class="sc">\n</span><span class="st">  }</span><span class="sc">\n</span><span class="st">  ],</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">layout</span><span class="sc">\"</span><span class="st">:{</span><span class="sc">\"</span><span class="st">title</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">Would you please click the points?</span><span class="sc">\"</span><span class="st">}</span><span class="sc">\n</span><span class="st">});</span><span class="sc">\n</span><span class="st">el.on(</span><span class="sc">\"</span><span class="st">plotly_click</span><span class="sc">\"</span><span class="st">,function (){</span><span class="sc">\n</span><span class="st">  alert(</span><span class="sc">\"</span><span class="st">Thanks for clicking.</span><span class="sc">\"</span><span class="st">);</span><span class="sc">\n</span><span class="st">});</span><span class="sc">\n</span><span class="st">})();"</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>[<span class="at">:div</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:script</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"(function () {</span><span class="sc">\n</span><span class="st">let data = {</span><span class="sc">\"</span><span class="st">x</span><span class="sc">\"</span><span class="st">:[1,2,3,4],</span><span class="sc">\"</span><span class="st">y</span><span class="sc">\"</span><span class="st">:[3,4,9,16]};</span><span class="sc">\n</span><span class="st">let x = data['x'];</span><span class="sc">\n</span><span class="st">let y = data['y'];</span><span class="sc">\n</span><span class="st">let plotly_animaton_element = document.currentScript.parentElement;</span><span class="sc">\n</span><span class="st">Plotly.newPlot(plotly_animaton_element,{</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">data</span><span class="sc">\"</span><span class="st">:[</span><span class="sc">\n</span><span class="st">    {</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">x</span><span class="sc">\"</span><span class="st">:x,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">y</span><span class="sc">\"</span><span class="st">:y,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">mode</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">markers</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">type</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">scatter</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">marker</span><span class="sc">\"</span><span class="st">:{</span><span class="sc">\"</span><span class="st">size</span><span class="sc">\"</span><span class="st">:20}</span><span class="sc">\n</span><span class="st">  }</span><span class="sc">\n</span><span class="st">  ],</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">layout</span><span class="sc">\"</span><span class="st">:{</span><span class="sc">\"</span><span class="st">title</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">Would you please click the points?</span><span class="sc">\"</span><span class="st">}</span><span class="sc">\n</span><span class="st">});</span><span class="sc">\n</span><span class="st">plotly_animaton_element.on(</span><span class="sc">\"</span><span class="st">plotly_click</span><span class="sc">\"</span><span class="st">,function (){</span><span class="sc">\n</span><span class="st">  alert(</span><span class="sc">\"</span><span class="st">Thanks for clicking.</span><span class="sc">\"</span><span class="st">);</span><span class="sc">\n</span><span class="st">});</span><span class="sc">\n</span><span class="st">})();"</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let us focus on the code of the script:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> clickable-example</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">second</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">second</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    kind/code)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> clickable-example</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">second</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">second</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    kind/code)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(function () {</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> data <span class="kw">=</span> {<span class="st">"x"</span>:[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>],<span class="st">"y"</span>:[<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">9</span>,<span class="dv">16</span>]}<span class="co">;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="kw">=</span> data[<span class="at">'x'</span>]<span class="co">;</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> y <span class="kw">=</span> data[<span class="at">'y'</span>]<span class="co">;</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> el <span class="kw">=</span> document.currentScript.parentElement<span class="co">;</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>Plotly.newPlot(el,{</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data"</span>:[</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"x"</span><span class="at">:x</span>,</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"y"</span><span class="at">:y</span>,</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mode"</span>:<span class="st">"markers"</span>,</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"type"</span>:<span class="st">"scatter"</span>,</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"marker"</span>:{<span class="st">"size"</span><span class="at">:20</span>}</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  ],</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">"layout"</span>:{<span class="st">"title"</span>:<span class="st">"Would you please click the points?"</span>}</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>})<span class="co">;</span></span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>el.on(<span class="st">"plotly_click"</span>,function (){</span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  alert(<span class="st">"Thanks for clicking."</span>)<span class="co">;</span></span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>})<span class="co">;</span></span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>})()<span class="co">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(function () {</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> data <span class="kw">=</span> {<span class="st">"x"</span>:[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>],<span class="st">"y"</span>:[<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">9</span>,<span class="dv">16</span>]}<span class="co">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="kw">=</span> data[<span class="at">'x'</span>]<span class="co">;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> y <span class="kw">=</span> data[<span class="at">'y'</span>]<span class="co">;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> plotly_animaton_element <span class="kw">=</span> document.currentScript.parentElement<span class="co">;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>Plotly.newPlot(plotly_animaton_element,{</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data"</span>:[</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"x"</span><span class="at">:x</span>,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"y"</span><span class="at">:y</span>,</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mode"</span>:<span class="st">"markers"</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"type"</span>:<span class="st">"scatter"</span>,</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"marker"</span>:{<span class="st">"size"</span><span class="at">:20</span>}</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">"layout"</span>:{<span class="st">"title"</span>:<span class="st">"Would you please click the points?"</span>}</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>})<span class="co">;</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>plotly_animaton_element.on(<span class="st">"plotly_click"</span>,function (){</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  alert(<span class="st">"Thanks for clicking."</span>)<span class="co">;</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>})<span class="co">;</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>})()<span class="co">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
@@ -471,20 +512,20 @@ el.on("plotly_click",function (){
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="examples-1" class="level4" data-number="6.2.3.1">
-<h4 data-number="6.2.3.1" class="anchored" data-anchor-id="examples-1"><span class="header-section-number">6.2.3.1</span> Examples</h4>
+<section id="examples-2" class="level4" data-number="6.2.3.1">
+<h4 data-number="6.2.3.1" class="anchored" data-anchor-id="examples-2"><span class="header-section-number">6.2.3.1</span> Examples</h4>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(transpile/echarts</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a> [[<span class="dv">1</span> <span class="dv">2</span>]</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span> <span class="dv">4</span>]</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span> <span class="dv">9</span>]</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span> <span class="dv">16</span>]]</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a> {<span class="at">:xAxis</span> {}</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">:yAxis</span> {}</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">:series</span> [{<span class="at">:type</span> <span class="st">"scatter"</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">:data</span> <span class="at">'data</span>}]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(transpile/echarts</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a> [[<span class="dv">1</span> <span class="dv">2</span>]</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span> <span class="dv">4</span>]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span> <span class="dv">9</span>]</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span> <span class="dv">16</span>]]</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a> {<span class="at">:xAxis</span> {}</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">:yAxis</span> {}</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">:series</span> [{<span class="at">:type</span> <span class="st">"scatter"</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">:data</span> <span class="at">'data</span>}]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:400px;"><script>(function () {
 let data = [[1,2],[2,4],[3,9],[4,16]];
@@ -496,29 +537,29 @@ chart.setOption({
 });
 })();</script></div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> datasets/mtcars</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    (tc/select-columns [<span class="at">:wt</span> <span class="at">:mpg</span> <span class="at">:cyl</span> <span class="at">:gear</span>])</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    tc/rows</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    (transpile/echarts {<span class="at">:xAxis</span> {<span class="at">:name</span> <span class="st">"weight"</span>}</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:yAxis</span> {<span class="at">:name</span> <span class="st">"miles per gallon"</span>}</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:visualMap</span> [{<span class="at">:dimension</span> <span class="dv">2</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:categories</span> [<span class="st">"4"</span> <span class="st">"6"</span> <span class="st">"8"</span>]</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:inRange</span> {<span class="at">:color</span> [<span class="st">"#51689b"</span>, <span class="st">"#ce5c5c"</span>, <span class="st">"#fbc357"</span>]}</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:name</span> <span class="st">"cylinders"</span>}]</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:tooltip</span> {<span class="at">:formatter</span> '(<span class="kw">fn</span> [obj]</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>                                                (return</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>                                                 (<span class="kw">+</span> </span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">"&lt;p&gt;weight:"</span> (. obj value [<span class="dv">0</span>]) <span class="st">"&lt;/p&gt;"</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">"&lt;p&gt;miles per fallon:"</span> (. obj value [<span class="dv">1</span>]) <span class="st">"&lt;/p&gt;"</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">"&lt;p&gt;cylinders:"</span> (. obj value [<span class="dv">2</span>]) <span class="st">"&lt;/p&gt;"</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">"&lt;p&gt;gears:"</span> (. obj value [<span class="dv">3</span>]) <span class="st">"&lt;/p&gt;"</span>)))}</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:series</span> [{<span class="at">:type</span> <span class="st">"scatter"</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">:symbolSize</span> '(<span class="kw">fn</span> [value]</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>                                                 (<span class="kw">-&gt;</span> value</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>                                                     (. [<span class="dv">3</span>])</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>                                                     (<span class="kw">*</span> <span class="dv">5</span>)</span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>                                                     return))</span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">:data</span> <span class="at">'data</span>}]}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> datasets/mtcars</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    (tc/select-columns [<span class="at">:wt</span> <span class="at">:mpg</span> <span class="at">:cyl</span> <span class="at">:gear</span>])</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    tc/rows</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    (transpile/echarts {<span class="at">:xAxis</span> {<span class="at">:name</span> <span class="st">"weight"</span>}</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:yAxis</span> {<span class="at">:name</span> <span class="st">"miles per gallon"</span>}</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:visualMap</span> [{<span class="at">:dimension</span> <span class="dv">2</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:categories</span> [<span class="st">"4"</span> <span class="st">"6"</span> <span class="st">"8"</span>]</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:inRange</span> {<span class="at">:color</span> [<span class="st">"#51689b"</span>, <span class="st">"#ce5c5c"</span>, <span class="st">"#fbc357"</span>]}</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:name</span> <span class="st">"cylinders"</span>}]</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:tooltip</span> {<span class="at">:formatter</span> '(<span class="kw">fn</span> [obj]</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>                                                (return</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>                                                 (<span class="kw">+</span> </span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">"&lt;p&gt;weight:"</span> (. obj value [<span class="dv">0</span>]) <span class="st">"&lt;/p&gt;"</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">"&lt;p&gt;miles per fallon:"</span> (. obj value [<span class="dv">1</span>]) <span class="st">"&lt;/p&gt;"</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">"&lt;p&gt;cylinders:"</span> (. obj value [<span class="dv">2</span>]) <span class="st">"&lt;/p&gt;"</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">"&lt;p&gt;gears:"</span> (. obj value [<span class="dv">3</span>]) <span class="st">"&lt;/p&gt;"</span>)))}</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:series</span> [{<span class="at">:type</span> <span class="st">"scatter"</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">:symbolSize</span> '(<span class="kw">fn</span> [value]</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>                                                 (<span class="kw">-&gt;</span> value</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>                                                     (. [<span class="dv">3</span>])</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>                                                     (<span class="kw">*</span> <span class="dv">5</span>)</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>                                                     return))</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">:data</span> <span class="at">'data</span>}]}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:400px;"><script>(function () {
 let data = [[2.62,21.0,6,4],[2.875,21.0,6,4],[2.32,22.8,4,4],[3.215,21.4,6,3],[3.44,18.7,8,3],[3.46,18.1,6,3],[3.57,14.3,8,3],[3.19,24.4,4,4],[3.15,22.8,4,4],[3.44,19.2,6,4],[3.44,17.8,6,4],[4.07,16.4,8,3],[3.73,17.3,8,3],[3.78,15.2,8,3],[5.25,10.4,8,3],[5.424,10.4,8,3],[5.345,14.7,8,3],[2.2,32.4,4,4],[1.615,30.4,4,4],[1.835,33.9,4,4],[2.465,21.5,4,3],[3.52,15.5,8,3],[3.435,15.2,8,3],[3.84,13.3,8,3],[3.845,19.2,8,3],[1.935,27.3,4,4],[2.14,26.0,4,5],[1.513,30.4,4,5],[3.17,15.8,8,5],[2.77,19.7,6,5],[3.57,15.0,8,5],[2.78,21.4,4,4]];
@@ -566,18 +607,18 @@ chart.setOption({
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="examples-2" class="level4" data-number="6.2.4.1">
-<h4 data-number="6.2.4.1" class="anchored" data-anchor-id="examples-2"><span class="header-section-number">6.2.4.1</span> Examples</h4>
+<section id="examples-3" class="level4" data-number="6.2.4.1">
+<h4 data-number="6.2.4.1" class="anchored" data-anchor-id="examples-3"><span class="header-section-number">6.2.4.1</span> Examples</h4>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(transpile/plotly</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">:x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>]</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:y</span> [<span class="dv">3</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">16</span>]}</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a> {<span class="at">:data</span> ['{<span class="at">:x</span> data.x</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">:y</span> data.y</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">:mode</span> <span class="st">"markers"</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">:type</span> <span class="st">"scatter"</span>}]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(transpile/plotly</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">:x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>]</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:y</span> [<span class="dv">3</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">16</span>]}</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a> {<span class="at">:data</span> ['{<span class="at">:x</span> data.x</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">:y</span> data.y</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">:mode</span> <span class="st">"markers"</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">:type</span> <span class="st">"scatter"</span>}]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:auto;"><script>(function () {
 let data = {"x":[1,2,3,4],"y":[3,4,9,16]};
@@ -589,15 +630,15 @@ Plotly.newPlot(
 );
 })();</script></div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(transpile/plotly</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data with symbol bindings</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">'x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>]</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">'y</span> [<span class="dv">3</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">16</span>]}</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a> {<span class="at">:data</span> ['{<span class="at">:x</span> x</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">:y</span> y</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">:mode</span> <span class="st">"markers"</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">:type</span> <span class="st">"scatter"</span>}]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(transpile/plotly</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data with symbol bindings</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">'x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>]</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">'y</span> [<span class="dv">3</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">16</span>]}</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a> {<span class="at">:data</span> ['{<span class="at">:x</span> x</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">:y</span> y</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">:mode</span> <span class="st">"markers"</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">:type</span> <span class="st">"scatter"</span>}]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:auto;"><script>(function () {
 let data = {"x":[1,2,3,4],"y":[3,4,9,16]};
@@ -626,20 +667,20 @@ Plotly.newPlot(
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="example-1" class="level4" data-number="6.2.5.1">
-<h4 data-number="6.2.5.1" class="anchored" data-anchor-id="example-1"><span class="header-section-number">6.2.5.1</span> Example</h4>
+<section id="example" class="level4" data-number="6.2.5.1">
+<h4 data-number="6.2.5.1" class="anchored" data-anchor-id="example"><span class="header-section-number">6.2.5.1</span> Example</h4>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(transpile/vega-embed</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a> [{<span class="at">:x</span> <span class="dv">1</span> <span class="at">:y</span> <span class="dv">1</span>}</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:x</span> <span class="dv">2</span> <span class="at">:y</span> <span class="dv">4</span>}</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:x</span> <span class="dv">3</span> <span class="at">:y</span> <span class="dv">9</span>}</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:x</span> <span class="dv">4</span> <span class="at">:y</span> <span class="dv">16</span>}]</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a> {<span class="at">:data</span> {<span class="at">:values</span> <span class="at">'data</span>}</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">:mark</span> <span class="st">"point"</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">:encoding</span> {<span class="at">:x</span> {<span class="at">:field</span> <span class="st">"x"</span> <span class="at">:type</span> <span class="st">"quantitative"</span>}</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">:y</span> {<span class="at">:field</span> <span class="st">"y"</span> <span class="at">:type</span> <span class="st">"quantitative"</span>}}})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(transpile/vega-embed</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a> [{<span class="at">:x</span> <span class="dv">1</span> <span class="at">:y</span> <span class="dv">1</span>}</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:x</span> <span class="dv">2</span> <span class="at">:y</span> <span class="dv">4</span>}</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:x</span> <span class="dv">3</span> <span class="at">:y</span> <span class="dv">9</span>}</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:x</span> <span class="dv">4</span> <span class="at">:y</span> <span class="dv">16</span>}]</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a> {<span class="at">:data</span> {<span class="at">:values</span> <span class="at">'data</span>}</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">:mark</span> <span class="st">"point"</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">:encoding</span> {<span class="at">:x</span> {<span class="at">:field</span> <span class="st">"x"</span> <span class="at">:type</span> <span class="st">"quantitative"</span>}</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">:y</span> {<span class="at">:field</span> <span class="st">"y"</span> <span class="at">:type</span> <span class="st">"quantitative"</span>}}})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:auto;"><script>(function () {
 let data = [{"x":1,"y":1},{"x":2,"y":4},{"x":3,"y":9},{"x":4,"y":16}];
@@ -668,19 +709,19 @@ vegaEmbed(document.currentScript.parentElement,{
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="example-2" class="level4" data-number="6.2.6.1">
-<h4 data-number="6.2.6.1" class="anchored" data-anchor-id="example-2"><span class="header-section-number">6.2.6.1</span> Example</h4>
+<section id="example-1" class="level4" data-number="6.2.6.1">
+<h4 data-number="6.2.6.1" class="anchored" data-anchor-id="example-1"><span class="header-section-number">6.2.6.1</span> Example</h4>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(transpile/highcharts</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a> [[<span class="dv">1</span> <span class="dv">2</span>]</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span> <span class="dv">4</span>]</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span> <span class="dv">9</span>]</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span> <span class="dv">16</span>]]</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a> {<span class="at">:title</span> {<span class="at">:text</span> <span class="st">"a scatterplot"</span>}</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">:chart</span> {<span class="at">:type</span> <span class="st">"scatter"</span>}</span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">:series</span> [{<span class="at">:data</span> <span class="at">'data</span>}]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(transpile/highcharts</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a> [[<span class="dv">1</span> <span class="dv">2</span>]</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span> <span class="dv">4</span>]</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span> <span class="dv">9</span>]</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span> <span class="dv">16</span>]]</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a> {<span class="at">:title</span> {<span class="at">:text</span> <span class="st">"a scatterplot"</span>}</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">:chart</span> {<span class="at">:type</span> <span class="st">"scatter"</span>}</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">:series</span> [{<span class="at">:data</span> <span class="at">'data</span>}]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:auto;"><script>(function () {
 let data = [[1,2],[2,4],[3,9],[4,16]];
@@ -706,26 +747,26 @@ Highcharts.chart(document.currentScript.parentElement,{
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="example-3" class="level4" data-number="6.2.7.1">
-<h4 data-number="6.2.7.1" class="anchored" data-anchor-id="example-3"><span class="header-section-number">6.2.7.1</span> Example</h4>
+<section id="example-2" class="level4" data-number="6.2.7.1">
+<h4 data-number="6.2.7.1" class="anchored" data-anchor-id="example-2"><span class="header-section-number">6.2.7.1</span> Example</h4>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(transpile/leaflet</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data with symbol bindings</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">'center</span> [-<span class="fl">37.84</span> <span class="fl">144.95</span>]</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">'zoom</span> <span class="dv">11</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">'provider</span> <span class="st">"OpenStreetMap.Mapnik"</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">'marker</span> [-<span class="fl">37.9</span> <span class="fl">144.8</span>]</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">'popup</span> <span class="st">"&lt;i style='color:purple'&gt;Have you been here?&lt;/i&gt;"</span>}</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a> '(<span class="kw">fn</span> [m]</span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    (m.setView center zoom)</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">-&gt;</span> (L.tileLayer.provider provider)</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>        (. (addTo m)))</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">-&gt;</span> marker</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>        L.marker</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>        (. (addTo m))</span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>        (. (bindPopup popup))</span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>        (. (openPopup)))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(transpile/leaflet</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data with symbol bindings</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">'center</span> [-<span class="fl">37.84</span> <span class="fl">144.95</span>]</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">'zoom</span> <span class="dv">11</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">'provider</span> <span class="st">"OpenStreetMap.Mapnik"</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">'marker</span> [-<span class="fl">37.9</span> <span class="fl">144.8</span>]</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">'popup</span> <span class="st">"&lt;i style='color:purple'&gt;Have you been here?&lt;/i&gt;"</span>}</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a> <span class="co">;; form</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a> '(<span class="kw">fn</span> [m]</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    (m.setView center zoom)</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">-&gt;</span> (L.tileLayer.provider provider)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>        (. (addTo m)))</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">-&gt;</span> marker</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        L.marker</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        (. (addTo m))</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        (. (bindPopup popup))</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>        (. (openPopup)))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="height:400px;"><script>(function () {
 let data = {"center":[-37.84,144.95],"zoom":11,"provider":"OpenStreetMap.Mapnik","marker":[-37.9,144.8],"popup":"<i style='color:purple'>Have you been here?<\/i>"};
@@ -751,10 +792,10 @@ f(m);
 <h3 data-number="6.3.1" class="anchored" data-anchor-id="base-kindly-options"><span class="header-section-number">6.3.1</span> <code>*base-kindly-options*</code></h3>
 <p>Base <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> for structures generated by <a href="#div-with-script"><code>div-with-script</code></a>.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>transpile/*base-kindly-options*</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>transpile/*base-kindly-options*</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:style</span> {<span class="at">:height</span> <span class="at">:auto</span>}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:style</span> {<span class="at">:height</span> <span class="at">:auto</span>}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/scicloj/tableplot/blob/main/notebooks/tableplot_book/transpile_reference.clj">notebooks/tableplot_book/transpile_reference.clj</a></small></small></pre></div>
