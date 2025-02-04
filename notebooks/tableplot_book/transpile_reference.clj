@@ -49,13 +49,12 @@
   [:div {:style {:height "auto"}}
    [:script
     (transpile/js
-     '(var el document.currentScript.parentElement)
-     '(Plotly.newPlot el
+     '(Plotly.newPlot document.currentScript.parentElement
                       [{:x [1 2 3]
                         :y [0 0.5 1]
                         :line {:simplify false}}])
      '(defn randomize []
-        (Plotly.animate el
+        (Plotly.animate document.currentScript.parentElement
                         {:data [{:y [(Math.random)
                                      (Math.random)
                                      (Math.random)]}]
