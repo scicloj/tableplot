@@ -1,5 +1,20 @@
 ;; # Transpile API reference 📖
 
+;; Sometimes, data visualization in the browser requires not only
+;; plain JSON structures but also some Javascript code.
+
+;; One way to generate such code from Clojure is through
+;; [std.lang](https://clojureverse.org/t/std-lang-a-universal-template-transpiler/),
+;; a universal transpiler from Clojure to many languages.
+
+;; The `tanspile` API of Tableplot provides convenience functions
+;; for achieving this in typical data visualization contexts.
+;; It is considered experimental at this stage.
+
+;; The `std.lang` transpiler itself is already stable.
+;; We are working on creating relevant documentation and tutorials
+;; to clarify its usage.
+
 ;; This chapter is a detailed refernce of Tableplot's Transpile API.
 
 ;; ## Setup 🔨
@@ -10,42 +25,66 @@
 ;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing and column processing
 ;; * the datasets defined in the [Datasets chapter](./tableplot_book.datasets.html)
 
-;; We require a few aditional namespaces which are used internally to generate this reference.
-
 (ns tableplot-book.transpile-reference
   (:require [scicloj.tableplot.v1.transpile :as transpile]
             [tablecloth.api :as tc]
-            [tableplot-book.datasets :as datasets]
-            [scicloj.kindly.v4.kind :as kind]
-            [scicloj.kindly.v4.api :as kindly]))
+            [tableplot-book.datasets :as datasets]))
 
-(-> [[1 2]
-     [2 4]
-     [3 9]
-     [4 16]]
-    ;; Pass the data to be handled by a custom script:
-    (transpile/div-with-script ['(var myChart
-                                      (echarts.init
-                                       document.currentScript.parentElement))
-                                (list 'myChart.setOption
-                                      {:xAxis {}
-                                       :yAxis {}
-                                       :series [{:type "scatter"
-                                                 :data 'data}]})])
-    ;; Use metadata to specify Kindly options:
-    (vary-meta 
-     assoc-in [:kindly/options :html/deps] [:echarts]))
+(transpile/div-with-script
+ ;; data (with symbol bindings)
+ {'x [1 2 3 4]
+  'y [3 4 9 16]}
+ ;; script
+ ['(var el document.currentScript.parentElement)
+  '(Plotly.newPlot el
+                   {:data
+                    [{:x x
+                      :y y
+                      :mode "markers"
+                      :type "scatter"
+                      :marker {:size 20}}]
+                    :layout {:title
+                             "Would you please click the points?"}})
+  '(. el
+      (on "plotly_click"
+          (fn []
+            (alert "Thanks for clicking."))))]
+ ;; Kindly options
+ {:html/deps [:plotly]})
 
 
-(-> [[1 2]
-     [2 4]
-     [3 9]
-     [4 16]]
-    (transpile/echarts {:xAxis {}
-                        :yAxis {}
-                        :series [{:type "scatter"
-                                  :data 'data}]}))
+(transpile/div-with-script
+ ;; data
+ [[1 2]
+  [2 4]
+  [3 9]
+  [4 16]]
+ ;; script
+ ['(var myChart
+        (echarts.init
+         document.currentScript.parentElement))
+  (list 'myChart.setOption
+        {:xAxis {}
+         :yAxis {}
+         :series [{:type "scatter"
+                   :data 'data}]})]
+ ;; Kindly options (merged with default)
+ {:html/deps [:echarts]
+  :style {:height "300px"
+          :background "floralwhite"}})
 
+
+(transpile/echarts
+ ;; data
+ [[1 2]
+  [2 4]
+  [3 9]
+  [4 16]]
+ ;; form
+ {:xAxis {}
+  :yAxis {}
+  :series [{:type "scatter"
+            :data 'data}]})
 
 
 
@@ -74,53 +113,69 @@
                                   :data 'data}]}))
 
 
+(transpile/plotly
+ ;; data
+ {:x [1 2 3 4]
+  :y [3 4 9 16]}
+ ;; form
+ {:data ['{:x data.x
+           :y data.y
+           :mode "markers"
+           :type "scatter"}]})
 
-(-> {:x [1 2 3 4]
-     :y [3 4 9 16]}
-    (transpile/plotly {:data ['{:x data.x
-                                :y data.y
-                                :mode "markers"
-                                :type "scatter"}]}))
-
-(-> {'x [1 2 3 4]
-     'y [3 4 9 16]}
-    (transpile/plotly {:data ['{:x x
-                                :y y
-                                :mode "markers"
-                                :type "scatter"}]}))
-
-
-(-> [{:x 1 :y 1}
-     {:x 2 :y 4}
-     {:x 3 :y 9}
-     {:x 4 :y 16}]
-    (transpile/vega-embed {:data {:values 'data}
-                           :mark "point"
-                           :encoding {:x {:field "x" :type "quantitative"}
-                                      :y {:field "y" :type "quantitative"}}}))
-
-(-> [[1 2]
-     [2 4]
-     [3 9]
-     [4 16]]
-    (transpile/highcharts {:chart {:type "scatter"}
-                           :series [{:data 'data}]}))
+(transpile/plotly
+ ;; data with symbol bindings
+ {'x [1 2 3 4]
+  'y [3 4 9 16]}
+ ;; form
+ {:data ['{:x x
+           :y y
+           :mode "markers"
+           :type "scatter"}]})
 
 
-(-> {'center [-37.84 144.95]
-     'zoom 11
-     'provider "OpenStreetMap.Mapnik"
-     'marker [-37.8 144.8]
-     'popup "Here we are.<br> Exactly here."}
-    (transpile/leaflet '(fn [m]
-                          (m.setView center zoom)
-                          (-> (L.tileLayer.provider provider)
-                              (. (addTo m)))
-                          (-> marker
-                              L.marker
-                              (. (addTo m))
-                              (. (bindPopup popup))
-                              (. (openPopup))))))
+(transpile/vega-embed
+ ;; data
+ [{:x 1 :y 1}
+  {:x 2 :y 4}
+  {:x 3 :y 9}
+  {:x 4 :y 16}]
+ ;; form
+ {:data {:values 'data}
+  :mark "point"
+  :encoding {:x {:field "x" :type "quantitative"}
+             :y {:field "y" :type "quantitative"}}})
+
+
+(transpile/highcharts
+ ;; data
+ [[1 2]
+  [2 4]
+  [3 9]
+  [4 16]]
+ ;; form
+ {:title {:text "a scatterplot"}
+  :chart {:type "scatter"}
+  :series [{:data 'data}]})
+
+
+(transpile/leaflet
+ ;; data with symbol bindings
+ {'center [-37.84 144.95]
+  'zoom 11
+  'provider "OpenStreetMap.Mapnik"
+  'marker [-37.8 144.8]
+  'popup "Here we are.<br> Exactly here."}
+ ;; form
+ '(fn [m]
+    (m.setView center zoom)
+    (-> (L.tileLayer.provider provider)
+        (. (addTo m)))
+    (-> marker
+        L.marker
+        (. (addTo m))
+        (. (bindPopup popup))
+        (. (openPopup)))))
 
 
 

@@ -29,8 +29,7 @@
        (str/join "\n")
        (format "(function () {\n%s\n})();")))
 
-(def base-style {:height "400px"
-                 :width "100%"})
+(def base-style {:height :auto})
 
 (defn div-with-script
   "Create a general transpiled data visualization.
@@ -46,13 +45,8 @@
   converted to JSON.
   - If `data` is a map that has some keys of symbol type, then
   corresponding Javascript variables named by these symbols
-  are bound to the corresponding values converted to JSON.
-
-  If only one argument is provided, then it is considered the
-  `form`, with no data binding."
-  ([script]
-   (hiccup nil script))
-  ([data script]
+  are bound to the corresponding values converted to JSON."
+  ([data script kindly-options]
    (kind/hiccup
     [:div
      [:script
@@ -67,71 +61,68 @@
                         (js-entry-assignment k 'data k))))
                (remove nil?)))
         [(js-transpile script)]))]]
-    {:style base-style})))
+    (kindly/deep-merge {:style base-style}
+                       kindly-options))))
 
 
 (defn echarts
   ([form]
    (echarts nil form))
   ([data form]
-   (-> data
-       (div-with-script
-        ['(var chart
-               (echarts.init document.currentScript.parentElement))
-         (list 'chart.setOption form)])
-       (vary-meta 
-        assoc-in [:kindly/options :html/deps] [:echarts]))))
+   (div-with-script
+    data
+    ['(var chart
+           (echarts.init document.currentScript.parentElement))
+     (list 'chart.setOption form)]
+    {:style {:height "400px"}
+     :html/deps [:echarts]})))
 
 
 (defn plotly
   ([form]
    (plotly nil form))
   ([data form]
-   (-> data
-       (div-with-script
-        [(list 'Plotly.newPlot
-               'document.currentScript.parentElement
-               (:data form)
-               (:layout form)
-               (:config form))])
-       (vary-meta 
-        assoc-in [:kindly/options :html/deps] [:plotly]))))
+   (div-with-script
+    data
+    [(list 'Plotly.newPlot
+           'document.currentScript.parentElement
+           (:data form)
+           (:layout form)
+           (:config form))]
+    {:html/deps [:plotly]})))
 
 (defn vega-embed
   ([form]
    (vega-embed nil form))
   ([data form]
-   (-> data
-       (div-with-script
-        [(list 'vegaEmbed
-               'document.currentScript.parentElement
-               form)])
-       (vary-meta 
-        assoc-in [:kindly/options :html/deps] [:vega]))))
+   (div-with-script
+    data
+    [(list 'vegaEmbed
+           'document.currentScript.parentElement
+           form)]
+    {:html/deps [:vega]})))
 
 (defn highcharts
   ([form]
    (highcharts nil form))
   ([data form]
-   (-> data
-       (div-with-script
-        [(list 'Highcharts.chart
-               'document.currentScript.parentElement
-               form)])
-       (vary-meta 
-        assoc-in [:kindly/options :html/deps] [:highcharts]))))
+   (div-with-script
+    data
+    [(list 'Highcharts.chart
+           'document.currentScript.parentElement
+           form)]
+    {:html/deps [:highcharts]})))
 
 
 (defn leaflet
   ([form]
    (leaflet nil form))
   ([data form]
-   (-> data
-       (div-with-script
-        [(list 'var 'f form)
-         '(var m (L.map document.currentScript.parentElement))
-         '(f m)])
-       (vary-meta 
-        assoc-in [:kindly/options :html/deps] [:leaflet]))))
+   (div-with-script
+    data
+    [(list 'var 'f form)
+     '(var m (L.map document.currentScript.parentElement))
+     '(f m)]
+    {:html/deps [:leaflet]})))
 
 
