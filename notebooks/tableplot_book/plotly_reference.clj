@@ -26,124 +26,14 @@
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.tableplot.v1.dag :as dag]
             [tableplot-book.datasets :as datasets]
+            [tableplot-book.book-utils :as book-utils]
             [clojure.string :as str]
             [aerial.hanami.common :as hc]
             [aerial.hanami.templates :as ht]
             [clojure.math :as math]))
 
-^:kindly/hide-code
-(defn include-form [form]
-  (format "`%s`" (pr-str form)))
 
-^:kindly/hide-code
-(defn include-key-or-symbol-name [s]
-  (format "[`%s`](#%s)"
-          s
-          (-> s (str/replace #"^\:\=" ""))))
-
-^:kindly/hide-code
-(def symbol-or-key-pattern
-  #"`[a-z|\-|\:|\=]+`")
-
-^:kindly/hide-code
-(def subkey-pattern
-  #"`\:\=[a-z|\-]+`")
-
-^:kindly/hide-code
-(defn known-symbol? [s]
-  (-> s
-      (str/replace #"`" "")
-      symbol
-      ('#{base layer
-          layer-point layer-line layer-bar layer-boxplot layer-violin layer-segment layer-text layer-heatmap layer-surface
-          layer-histogram layer-histogram2d layer-density layer-smooth layer-correlation
-          plot
-          debug
-          smooth-stat histogram-stat density-stat correlatoion-stat
-          imshow surface splom})))
-
-^:kindly/hide-code
-(defn enrich-text-with-links [text]
-  (or (some->> text
-               (re-seq symbol-or-key-pattern)
-               distinct
-               (reduce (fn [current-text s]
-                         (if (or (re-matches subkey-pattern s)
-                                 (known-symbol? s))
-                           (str/replace current-text
-                                        s
-                                        (-> s
-                                            (str/replace #"[`]" "")
-                                            include-key-or-symbol-name))
-                           current-text))
-                       text))
-      text))
-
-
-(defn f->deps [f]
-  (->> f
-       meta
-       :scicloj.tableplot.v1.dag/dep-ks
-       (map include-key-or-symbol-name)
-       (str/join " ")))
-
-^:kindly/hide-code
-(defn include-dag-fn [f]
-  (format "%s\n\n **by default depends on**: %s"
-          (-> f
-              meta
-              :doc
-              enrich-text-with-links)
-          (f->deps f)))
-
-
-^:kindly/hide-code
-(defn include-dag-fn-as-section [fnsymbol f]
-  (-> (format "### `%s`\n%s"
-              (pr-str fnsymbol)
-              (include-dag-fn f))
-      kind/md
-      kindly/hide-code))
-
-^:kindly/hide-code
-(defn include-fnvar-as-section [fnvar]
-  (-> (let [{:keys [name arglists doc]} (meta fnvar)]
-        (str (format "### `%s`\n" name)
-             (->> arglists
-                  (map (fn [l]
-                         (->> l
-                              pr-str
-                              (format "`%s`\n\n"))))
-                  (str/join ""))
-             (enrich-text-with-links doc)))
-      kind/md
-      kindly/hide-code))
-
-^:kindly/hide-code
-(defn include-all-keys []
-  (->> plotly/standard-defaults
-       (map (fn [[k v doc]]
-              (kind/md
-               [(format "### %s" (include-key-or-symbol-name k))
-                (some->> doc
-                         (format "**role:** %s\n"))
-                (format "**default:** %s\n"
-                        (cond (fn? v) (include-dag-fn v)
-                              (= v hc/RMV) "`NONE`"
-                              (keyword? v) (include-key-or-symbol-name v)
-                              :else (include-form v)))])))
-       kind/fragment))
-
-^:kindly/hide-code
-(defn md [& strings]
-  (->> strings
-       (str/join " ")
-       enrich-text-with-links
-       kind/md
-       kindly/hide-code))
-
-(md
- 
+(book-utils/md
  "## Overview 🐦
 The Tableplot Plotly API allows the user to write functional pipelines
 that create and process *templates* of plots, that can eventually be realized
@@ -176,7 +66,7 @@ will display by realizing it and using it as a Plotly.js specification.
                          :=color :species
                          :=mark-size 10}))
 
-(md "To inspect it, let us use [Kindly](https://scicloj.github.io/kindly-noted/) to request
+(book-utils/md "To inspect it, let us use [Kindly](https://scicloj.github.io/kindly-noted/) to request
 that this template would rather be pretty-printed as a data structure.")
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -185,7 +75,7 @@ that this template would rather be pretty-printed as a data structure.")
                          :=mark-size 10})
     kind/pprint)
 
-(md "
+(book-utils/md "
 For now, you are not supposed to make sense of this data representation.
 As a user, you usually do not need to think about it.
 
@@ -200,7 +90,7 @@ the `plot` function:
     plotly/plot
     kind/pprint)
 
-(md "We may also inspect it with [Portal](https://github.com/djblue/portal):")
+(book-utils/md "We may also inspect it with [Portal](https://github.com/djblue/portal):")
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -211,7 +101,7 @@ the `plot` function:
     kind/portal)
 
 
-(md "
+(book-utils/md "
 This is useful for debugging, and also when one wishes to edit the Plotly.js
 spec directly.
 
@@ -236,7 +126,7 @@ we kept it grey, which is its default.")
                          :=mark-size 10})
     (plotly/debug :=background))
 
-(md "
+(book-utils/md "
 ## Raw Plotly specifications ✏
 
 Before beginning the exploration of Tableplot's Plotly API, let us remember we may
@@ -289,7 +179,7 @@ Here is how we represent that in Clojure:
            :height 600
            :width 600}})
 
-(md "
+(book-utils/md "
 Sometimes, this raw way is all we need; but in common situations, Tableplot makes things easier.
 
 ## Concepts 💡
@@ -316,7 +206,7 @@ For example, here is a raw Plotly.js spec with two traces.
           :marker {:size 50
                    :color "grey"}}]})
 
-(md "
+(book-utils/md "
 In Tableplot, we often do not need to think about traces, as they are drawn for us.
 But it is helpful to know about them if we wish to understand the specs generated by Tableplot.
 
@@ -341,7 +231,7 @@ For example:")
                          :=mark-size 20})
     (plotly/layer-text {:=text :species}))
 
-(md "
+(book-utils/md "
 This plot has **two layers**: one for points, and one for text (which is visible on hover).
 
 Let us see that using `debug`:
@@ -356,7 +246,7 @@ Let us see that using `debug`:
     (plotly/debug :=layers)
     kind/pprint)
 
-(md "
+(book-utils/md "
 You see, a layer is an intermediate data representation of Tableplot
 that takes care of the details necessary to generate traces.
 
@@ -375,7 +265,7 @@ Let us see that using `debug`:
     (plotly/debug :=traces)
     kind/pprint)
 
-(md "
+(book-utils/md "
 ### Mark
 
 Mark is a Tableplot notion that is used to distinguish different types of layers,
@@ -386,7 +276,7 @@ Its possible values are:")
 ^:kindly/hide-code
 [:point :text :line :box :violin :bar :segment]
 
-(md "
+(book-utils/md "
 Here, `:box` means [boxplot](https://en.wikipedia.org/wiki/Box_plot),
 and `:violin` means [Violin plot](https://en.wikipedia.org/wiki/Violin_plot).
 
@@ -400,7 +290,7 @@ We currently support the following:")
 ^:kindly/hide-code
 [:2d :3d :polar :geo]
 
-(md "Here, 2d and 3d mean Eucledian coordinates of the corresponding dimensions,
+(book-utils/md "Here, 2d and 3d mean Eucledian coordinates of the corresponding dimensions,
 and `:geo` means latitude and longitude.
 
 For example:
@@ -522,7 +412,7 @@ For example:
 
 
 
-(md "
+(book-utils/md "
 
 ### Plotly.js mode and type  
 
@@ -541,7 +431,7 @@ Mode is derived from mark as follows:
     tc/dataset
     (tc/map-columns :mode [:mark] plotly/mark->mode))
 
-(md "
+(book-utils/md "
 Type is defined as the concatenation of a mark-based string:
 (`\"box\"`,`\"violin\"`,`\"bar\"`,`\"heatmap\"`,`\"surface\"` if that is the mark,
 and `\"scatter\"` otherwise)
@@ -574,7 +464,7 @@ Colorin gby a nominal column:
       :=color :species
       :=mark-size 20}))
 
-(md "
+(book-utils/md "
 Coloring by a Quantitative column:
 ")
 (-> datasets/mtcars
@@ -584,7 +474,7 @@ Coloring by a Quantitative column:
       :=color :cyl
       :=mark-size 20}))
 
-(md "
+(book-utils/md "
 Overriding a quantitative column to be considered nominal by the `:=color-type` key:
 ")
 (-> datasets/mtcars
@@ -595,7 +485,7 @@ Overriding a quantitative column to be considered nominal by the `:=color-type` 
       :=color-type :nominal
       :=mark-size 20}))
 
-(md "
+(book-utils/md "
 ### Stat
 
 A stat is a statistical transformation that takes the substitution context
@@ -609,9 +499,9 @@ are a useful concept in extending Tableplot.
 ## API functions ⚙
 ")
 
-(include-fnvar-as-section #'plotly/base)
+(book-util/include-fnvar-as-section #'plotly/base)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -622,9 +512,9 @@ are a useful concept in extending Tableplot.
                          :=mark-opacity 0.3})
     (plotly/layer-point {:=color :species}))
 
-(include-fnvar-as-section #'plotly/layer)
+(book-util/include-fnvar-as-section #'plotly/layer)
 
-(md "#### For example
+(book-utils/md "#### For example
 We could write someting like:")
 
 (-> datasets/iris
@@ -633,16 +523,16 @@ We could write someting like:")
                    :=x :sepal-width
                    :=y :sepal-length}))
 
-(md "
+(book-utils/md "
 Of course, this can also be expressed more succinctly using `layer-point`.
 ")
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length}))
 
-(include-fnvar-as-section #'plotly/layer-point)
+(book-util/include-fnvar-as-section #'plotly/layer-point)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 ;; Customizing mark size:
 
@@ -770,9 +660,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                          :=coordinates :3d}))
 
 
-(include-fnvar-as-section #'plotly/layer-line)
+(book-util/include-fnvar-as-section #'plotly/layer-line)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> datasets/economics-long
     (tc/select-rows #(-> % :variable (= "unemploy")))
@@ -781,9 +671,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :value
       :=mark-color "purple"}))
 
-(include-fnvar-as-section #'plotly/layer-bar)
+(book-util/include-fnvar-as-section #'plotly/layer-bar)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> datasets/mtcars
     (tc/group-by [:cyl])
@@ -794,9 +684,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=bar-width :bar-width
       :=y :total-disp}))
 
-(include-fnvar-as-section #'plotly/layer-boxplot)
+(book-util/include-fnvar-as-section #'plotly/layer-boxplot)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> datasets/mtcars
     (plotly/layer-boxplot
@@ -818,9 +708,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=boxmode :group}))
 
-(include-fnvar-as-section #'plotly/layer-violin)
+(book-util/include-fnvar-as-section #'plotly/layer-violin)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> datasets/mtcars
     (plotly/layer-violin
@@ -854,9 +744,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color-type :nominal
       :=violinmode :group}))
 
-(include-fnvar-as-section #'plotly/layer-segment)
+(book-util/include-fnvar-as-section #'plotly/layer-segment)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> datasets/iris
     (plotly/layer-segment
@@ -868,9 +758,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=mark-size 3
       :=color :species}))
 
-(include-fnvar-as-section #'plotly/layer-text)
+(book-util/include-fnvar-as-section #'plotly/layer-text)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> datasets/mtcars
     (plotly/layer-text
@@ -882,9 +772,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                   :color :purple}
       :=mark-size 20}))
 
-(include-fnvar-as-section #'plotly/layer-histogram)
+(book-util/include-fnvar-as-section #'plotly/layer-histogram)
 
-(md "#### Examples:")
+(book-utils/md "#### Examples:")
 
 (-> datasets/iris
     (plotly/layer-histogram {:=x :sepal-width}))
@@ -899,11 +789,11 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                              :=mark-opacity 0.5}))
 
 
-(include-fnvar-as-section #'plotly/layer-histogram2d)
+(book-util/include-fnvar-as-section #'plotly/layer-histogram2d)
 
-(md "(experimental)")
+(book-utils/md "(experimental)")
 
-(md "#### Examples:
+(book-utils/md "#### Examples:
 Currently, the number of bins is determined by `:histogram-nbins`.
 We are exploring various rules of thumbs to determine it automatically.
 ")
@@ -931,9 +821,9 @@ We are exploring various rules of thumbs to determine it automatically.
       (plotly/layer-histogram2d {:=histogram-nbins 250})))
 
 
-(include-fnvar-as-section #'plotly/layer-density)
+(book-util/include-fnvar-as-section #'plotly/layer-density)
 
-(md "#### Examples:")
+(book-utils/md "#### Examples:")
 
 (-> datasets/iris
     (plotly/layer-density {:=x :sepal-width}))
@@ -950,11 +840,11 @@ We are exploring various rules of thumbs to determine it automatically.
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
 
-(include-fnvar-as-section #'plotly/layer-smooth)
+(book-util/include-fnvar-as-section #'plotly/layer-smooth)
 
-(md "#### Examples:")
+(book-utils/md "#### Examples:")
 
-(md "Simple linear regression of `:=y` by `:=x`:")
+(book-utils/md "Simple linear regression of `:=y` by `:=x`:")
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -964,7 +854,7 @@ We are exploring various rules of thumbs to determine it automatically.
     (plotly/layer-smooth {:=mark-color "orange"
                           :=name "Predicted"}))
 
-(md "Multiple linear regression of `:=y` by `:=predictors`:")
+(book-utils/md "Multiple linear regression of `:=y` by `:=predictors`:")
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -976,7 +866,7 @@ We are exploring various rules of thumbs to determine it automatically.
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-(md "Polynomial regression of `:=y` by `:=design-matrix`:")
+(book-utils/md "Polynomial regression of `:=y` by `:=design-matrix`:")
 
 (-> datasets/iris
     (plotly/base {:=x :sepal-width
@@ -989,7 +879,7 @@ We are exploring various rules of thumbs to determine it automatically.
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-(md "Custom regression defined by `:=model-options`:")
+(book-utils/md "Custom regression defined by `:=model-options`:")
 
 (require 'scicloj.ml.tribuo)
 
@@ -1014,7 +904,7 @@ We are exploring various rules of thumbs to determine it automatically.
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-(md "Grouped regression where `:=inferred-group` is influenced by `:color`
+(book-utils/md "Grouped regression where `:=inferred-group` is influenced by `:color`
 since `:=color-type` is `:nominal`:")
 
 (-> datasets/iris
@@ -1025,7 +915,7 @@ since `:=color-type` is `:nominal`:")
     plotly/layer-point
     plotly/layer-smooth)
 
-(md "Regression where grouping is avoiding using through `:=group`:")
+(book-utils/md "Regression where grouping is avoiding using through `:=group`:")
 
 (-> datasets/iris
     (plotly/base {:=title "dummy"
@@ -1036,7 +926,7 @@ since `:=color-type` is `:nominal`:")
     plotly/layer-point
     (plotly/layer-smooth {:=mark-color "red"}))
 
-(md "An simpler way to achieve this -- the color is only defined for the point layer:")
+(book-utils/md "An simpler way to achieve this -- the color is only defined for the point layer:")
 
 (-> datasets/iris
     (plotly/base {:=title "dummy"
@@ -1045,9 +935,9 @@ since `:=color-type` is `:nominal`:")
     (plotly/layer-point {:=color :species})
     plotly/layer-smooth)
 
-(include-fnvar-as-section #'plotly/layer-heatmap)
+(book-util/include-fnvar-as-section #'plotly/layer-heatmap)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 ;; Numerical `x,y` axes:
 
@@ -1108,9 +998,9 @@ since `:=color-type` is `:nominal`:")
     tc/dataset
     (plotly/layer-heatmap {:=colorscale :Greys}))
 
-(include-fnvar-as-section #'plotly/layer-correlation)
+(book-util/include-fnvar-as-section #'plotly/layer-correlation)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 ;; Correlations of a few columns:
 
@@ -1159,9 +1049,9 @@ since `:=color-type` is `:nominal`:")
                                  :=zmax 1
                                  :=colorscale :hot})))
 
-(include-fnvar-as-section #'plotly/layer-surface)
+(book-util/include-fnvar-as-section #'plotly/layer-surface)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> {:z (for [i (range 100)]
           (for [j (range 100)]
@@ -1205,9 +1095,9 @@ since `:=color-type` is `:nominal`:")
 
 
 
-(include-fnvar-as-section #'plotly/surface)
+(book-util/include-fnvar-as-section #'plotly/surface)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (plotly/surface
  (for [i (range 100)]
@@ -1220,13 +1110,13 @@ since `:=color-type` is `:nominal`:")
          -
          math/exp))))
 
-(include-fnvar-as-section #'plotly/imshow)
+(book-util/include-fnvar-as-section #'plotly/imshow)
 
-(md 
+(book-utils/md 
  "Imshow uses dtype-next's [BufferedImage support](https://cnuernber.github.io/dtype-next/buffered-image.html) to figure out the right order of color channels, etc.
 
 So, it can handle plain vectors of vectors, dtype next tensors, and actual Java BufferedImage objects.")
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (plotly/imshow
  (for [i (range 10)]
@@ -1254,9 +1144,9 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 
 (plotly/imshow Crab-Nebula-image)
 
-(include-fnvar-as-section #'plotly/splom)
+(book-util/include-fnvar-as-section #'plotly/splom)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 
 (-> datasets/iris
     (plotly/splom {:=colnames [:sepal-width
@@ -1284,9 +1174,9 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=height 600
                    :=width 600}))
 
-(include-fnvar-as-section #'plotly/plot)
+(book-util/include-fnvar-as-section #'plotly/plot)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 (-> datasets/iris
     tc/head
     (plotly/layer-point {:=x :sepal-width
@@ -1294,7 +1184,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
     plotly/plot
     kind/pprint)
 
-(md "
+(book-utils/md "
 This can be useful for editing the plot as a raw Plotly.js specification.
 For example:
 ")
@@ -1304,15 +1194,15 @@ For example:
     plotly/plot
     (assoc-in [:layout :plot_bgcolor] "floralwhite"))
 
-(include-fnvar-as-section #'plotly/debug)
+(book-util/include-fnvar-as-section #'plotly/debug)
 
-(md "#### For example")
+(book-utils/md "#### For example")
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species}))
 
-(md "Let us verify that `:=background` is deterimined to be grey.")
+(book-utils/md "Let us verify that `:=background` is deterimined to be grey.")
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -1320,7 +1210,7 @@ For example:
                          :=color :species})
     (plotly/debug :=background))
 
-(md "Here, let us verify `:=color-type` for the 0th layer is deterimined to be `:nominal`.")
+(book-utils/md "Here, let us verify `:=color-type` for the 0th layer is deterimined to be `:nominal`.")
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -1328,7 +1218,7 @@ For example:
                          :=color :species})
     (plotly/debug 0 :=color-type))
 
-(md "Here, let us check both `:=color` and `:=color-type` for the 0th layer.")
+(book-utils/md "Here, let us check both `:=color` and `:=color-type` for the 0th layer.")
 
 (-> datasets/iris
     (plotly/layer-point {:=x :sepal-width
@@ -1337,19 +1227,31 @@ For example:
     (plotly/debug 0 {:color :=color
                      :color-type :=color-type}))
 
-(md "
+(book-utils/md "
 ## Stats 🖩
 ")
 
-(include-dag-fn-as-section 'histogram-stat plotly/histogram-stat)
-(include-dag-fn-as-section 'density-stat plotly/density-stat)
-(include-dag-fn-as-section 'smooth-stat plotly/smooth-stat)
-(include-dag-fn-as-section 'correlation-stat plotly/correlation-stat)
+(book-util/include-dag-fn-as-section 'histogram-stat plotly/histogram-stat)
+(book-util/include-dag-fn-as-section 'density-stat plotly/density-stat)
+(book-util/include-dag-fn-as-section 'smooth-stat plotly/smooth-stat)
+(book-util/include-dag-fn-as-section 'correlation-stat plotly/correlation-stat)
 
-(md "
+(book-utils/md "
 ## Substitution Keys 🔑
 ")
 
 ^:kindly/hide-code
-(include-all-keys)
+(->> plotly/standard-defaults
+     (map
+      (fn [[k v doc]]
+        (kind/md
+         [(format "### %s" (book-util/include-key-or-symbol-name k))
+          (some->> doc
+                   (format "**role:** %s\n"))
+          (format "**default:** %s\n"
+                  (cond (fn? v) (book-util/include-dag-fn v)
+                        (= v hc/RMV) "`NONE`"
+                        (keyword? v) (book-util/include-key-or-symbol-name v)
+                        :else (book-util/include-form v)))])))
+     kind/fragment)
 
