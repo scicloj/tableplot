@@ -4,7 +4,6 @@
             [charred.api :as charred]
             [clojure.string :as str]
             [tablecloth.api :as tc]
-            [tableplot-book.datasets :as datasets]
             [scicloj.kindly.v4.api :as kindly]))
 
 (defn js

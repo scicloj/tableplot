@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta10.1] - 2025-02-05
+- fixed broken require
+
 ## [1-beta10] - 2025-02-04
 - added dependency: std.lang
 - added the [`transpile`](https://scicloj.github.io/tableplot/tableplot_book.transpile_reference) API - experimental
