@@ -1,4 +1,4 @@
-;; # Transpile API reference 📖
+;; # Transpile API reference 📖 - experimental 🧪
 
 ;; Sometimes, data visualization in the browser requires not only
 ;; plain JSON structures but also some Javascript code.
@@ -7,15 +7,13 @@
 ;; [std.lang](https://clojureverse.org/t/std-lang-a-universal-template-transpiler/),
 ;; a universal transpiler from Clojure to many languages.
 
-;; The `tanspile` API of Tableplot provides convenience functions
-;; for achieving this in typical data visualization contexts.
-;; It is considered experimental at this stage.
+;; The `tanspile` API of Tableplot provides functions
+;; for using this practice in combination with various JS libraries.
+;; *It is considered experimental at this stage.*
 
 ;; The `std.lang` transpiler itself is already stable.
 ;; We are working on creating relevant documentation and tutorials
 ;; to clarify its usage.
-
-;; This chapter is a detailed refernce of Tableplot's Transpile API.
 
 ;; ## Setup 🔨
 
@@ -24,11 +22,31 @@
 ;; * The Tableplot `transpile` API namepace
 ;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing and column processing
 ;; * the datasets defined in the [Datasets chapter](./tableplot_book.datasets.html)
+;; * [Kindly](https://scicloj.github.io/kindly-noted/kindly) to annotate the kind of way certain values should be displayed
 
 (ns tableplot-book.transpile-reference
   (:require [scicloj.tableplot.v1.transpile :as transpile]
             [tablecloth.api :as tc]
-            [tableplot-book.datasets :as datasets]))
+            [tableplot-book.datasets :as datasets]
+            [tableplot-book.book-utils :as book-utils]
+            [clojure.string :as str]
+            [scicloj.kindly.v4.kind :as kind]))
+
+;; ## Functions 
+
+(book-utils/include-fnvar-as-section #'transpile/js)
+
+;; ### Examples
+
+(kind/code
+ (transpile/js '(var x 9)
+               '(return (+ x 11))))
+
+(book-utils/include-fnvar-as-section #'transpile/div-with-script)
+
+;; ### Examples
+
+;; Let us create a Plotly.js plot with some custom event handling.
 
 (transpile/div-with-script
  ;; data (with symbol bindings)
@@ -52,26 +70,52 @@
  ;; Kindly options
  {:html/deps [:plotly]})
 
+;; Let us create an Apache Echarts plot.
+;; We will explore the resulting structure a little bit.
 
-(transpile/div-with-script
- ;; data
- [[1 2]
-  [2 4]
-  [3 9]
-  [4 16]]
- ;; script
- ['(var myChart
-        (echarts.init
-         document.currentScript.parentElement))
-  (list 'myChart.setOption
-        {:xAxis {}
-         :yAxis {}
-         :series [{:type "scatter"
-                   :data 'data}]})]
- ;; Kindly options (merged with default)
- {:html/deps [:echarts]
-  :style {:height "300px"
-          :background "floralwhite"}})
+(def echarts-example
+  (transpile/div-with-script
+   ;; data
+   [[1 2]
+    [2 4]
+    [3 9]
+    [4 16]]
+   ;; script
+   ['(var myChart
+          (echarts.init
+           document.currentScript.parentElement))
+    (list 'myChart.setOption
+          {:xAxis {}
+           :yAxis {}
+           :series [{:type "scatter"
+                     :data 'data}]})]
+   ;; Kindly options (merged with default)
+   {:html/deps [:echarts]
+    :style {:height "300px"
+            :background "floralwhite"}}))
+
+
+;; First, let us see it visualized:
+
+echarts-example
+
+;; Now, let us check the metadata:
+
+(meta echarts-example)
+
+;; Now, let us pretty-print it to see the Hiccup structure.
+
+(kind/pprint
+ echarts-example)
+
+;; Let us focus on the code of the script:
+
+(-> echarts-example
+    second
+    second
+    kind/code)
+
+
 
 
 (transpile/echarts
@@ -178,7 +222,11 @@
         (. (openPopup)))))
 
 
+;; ## Danymic vars
 
+(book-utils/include-fnvar-as-section #'transpile/*base-kindly-options*)
+
+transpile/*base-kindly-options*
 
 
 
