@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [1-beta10] - 2025-02-04
 - added dependency: std.lang
-- added the `transpile` API - experimental
+- added the [`transpile`](https://scicloj.github.io/tableplot/tableplot_book.transpile_reference) API - experimental
 
 ## [1-beta9.1] - 2025-01-22
 - redeployed the previous version that seems to be a broken JAR
