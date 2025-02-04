@@ -7,7 +7,7 @@
 ;; [std.lang](https://clojureverse.org/t/std-lang-a-universal-template-transpiler/),
 ;; a universal transpiler from Clojure to many languages.
 
-;; The `tanspile` API of Tableplot provides functions
+;; The `transpile` API of Tableplot provides functions
 ;; for using this practice in combination with various JS libraries.
 ;; *It is considered experimental at this stage.*
 
