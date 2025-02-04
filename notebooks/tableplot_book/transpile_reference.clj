@@ -49,12 +49,13 @@
   [:div {:style {:height "auto"}}
    [:script
     (transpile/js
-     '(Plotly.newPlot document.currentScript.parentElement
+     '(var plotly-animaton-element document.currentScript.parentElement)
+     '(Plotly.newPlot plotly-animaton-element
                       [{:x [1 2 3]
                         :y [0 0.5 1]
                         :line {:simplify false}}])
      '(defn randomize []
-        (Plotly.animate document.currentScript.parentElement
+        (Plotly.animate plotly-animaton-element
                         {:data [{:y [(Math.random)
                                      (Math.random)
                                      (Math.random)]}]
@@ -102,8 +103,8 @@
    {'x [1 2 3 4]
     'y [3 4 9 16]}
    ;; script
-   ['(var el document.currentScript.parentElement)
-    '(Plotly.newPlot el
+   ['(var plotly-animaton-element document.currentScript.parentElement)
+    '(Plotly.newPlot plotly-animaton-element
                      {:data
                       [{:x x
                         :y y
@@ -112,7 +113,7 @@
                         :marker {:size 20}}]
                       :layout {:title
                                "Would you please click the points?"}})
-    '(. el
+    '(. plotly-animaton-element
         (on "plotly_click"
             (fn []
               (alert "Thanks for clicking."))))]
