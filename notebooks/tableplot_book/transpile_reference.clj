@@ -36,7 +36,7 @@
 
 (book-utils/include-fnvar-as-section #'transpile/js)
 
-;; ### Examples
+;; #### Examples
 
 (kind/code
  (transpile/js '(var x 9)
@@ -44,73 +44,74 @@
 
 (book-utils/include-fnvar-as-section #'transpile/div-with-script)
 
-;; ### Examples
-
-;; Let us create a Plotly.js plot with some custom event handling.
-
-(transpile/div-with-script
- ;; data (with symbol bindings)
- {'x [1 2 3 4]
-  'y [3 4 9 16]}
- ;; script
- ['(var el document.currentScript.parentElement)
-  '(Plotly.newPlot el
-                   {:data
-                    [{:x x
-                      :y y
-                      :mode "markers"
-                      :type "scatter"
-                      :marker {:size 20}}]
-                    :layout {:title
-                             "Would you please click the points?"}})
-  '(. el
-      (on "plotly_click"
-          (fn []
-            (alert "Thanks for clicking."))))]
- ;; Kindly options
- {:html/deps [:plotly]})
+;; #### Example
 
 ;; Let us create an Apache Echarts plot.
+
+(transpile/div-with-script
+ ;; data
+ [[1 2]
+  [2 4]
+  [3 9]
+  [4 16]]
+ ;; script
+ ['(var myChart
+        (echarts.init
+         document.currentScript.parentElement))
+  (list 'myChart.setOption
+        {:xAxis {}
+         :yAxis {}
+         :series [{:type "scatter"
+                   :data 'data}]})]
+ ;; Kindly options (merged with default)
+ {:html/deps [:echarts]
+  :style {:height "300px"
+          :background "floralwhite"}})
+
+;; #### A closer look
+
+;; Let us create a Plotly.js plot with some custom event handling.
 ;; We will explore the resulting structure a little bit.
 
-(def echarts-example
+(def clickable-example
   (transpile/div-with-script
-   ;; data
-   [[1 2]
-    [2 4]
-    [3 9]
-    [4 16]]
+   ;; data (with symbol bindings)
+   {'x [1 2 3 4]
+    'y [3 4 9 16]}
    ;; script
-   ['(var myChart
-          (echarts.init
-           document.currentScript.parentElement))
-    (list 'myChart.setOption
-          {:xAxis {}
-           :yAxis {}
-           :series [{:type "scatter"
-                     :data 'data}]})]
-   ;; Kindly options (merged with default)
-   {:html/deps [:echarts]
-    :style {:height "300px"
-            :background "floralwhite"}}))
-
+   ['(var el document.currentScript.parentElement)
+    '(Plotly.newPlot el
+                     {:data
+                      [{:x x
+                        :y y
+                        :mode "markers"
+                        :type "scatter"
+                        :marker {:size 20}}]
+                      :layout {:title
+                               "Would you please click the points?"}})
+    '(. el
+        (on "plotly_click"
+            (fn []
+              (alert "Thanks for clicking."))))]
+   ;; Kindly options
+   {:html/deps [:plotly]}))
 
 ;; First, let us see it visualized:
 
-echarts-example
+clickable-example
 
 ;; Now, let us check the metadata:
 
-(meta echarts-example)
+(meta clickable-example)
 
 ;; Now, let us pretty-print it to see the Hiccup structure.
 
 (kind/pprint
- echarts-example)
+ clickable-example)
 
 ;; Let us focus on the code of the script:
 
-(-> echarts-example
+(-> clickable-example
     second
     second
     kind/code)
