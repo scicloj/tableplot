@@ -77,6 +77,25 @@
 
 
 (defn echarts
+  "Given a data structure `data` and a form `form`,
+  create a corresponding [Apache Echarts](https://echarts.apache.org/en/index.html)
+  data visualization using `div-with-script`.
+
+  The script will include the following:
+
+  - A Javscript variable called `data` is bound to the `data` value
+  converted to JSON.
+  - If `data` is a map that has some keys of symbol type, then
+  corresponding Javascript variables named by these symbols
+  are bound to the corresponding values converted to JSON.
+  - The `form` transpiled to Javascript.
+  - Additional code to visualize it.
+
+  The resulting structure is marked by the [Kindly](https://scicloj.github.io/kindly-noted/kindly)
+  standard as `kind/hiccup` with [Kindly options](https://scicloj.github.io/kindly-noted/kindly.html#passing-options)
+  necessart to make the plot work.
+
+  If no `data` value is passed, it is considered `nil`."
   ([form]
    (echarts nil form))
   ([data form]
@@ -90,6 +109,25 @@
 
 
 (defn plotly
+  "Given a data structure `data` and a form `form`,
+  reate a corrseponding [Plotly.js](https://plotly.com/javascript/)
+  data visualization using `div-with-script`.
+
+  The script will include the following:
+
+  - A Javscript variable called `data` is bound to the `data` value
+  converted to JSON.
+  - If `data` is a map that has some keys of symbol type, then
+  corresponding Javascript variables named by these symbols
+  are bound to the corresponding values converted to JSON.
+  - The `form` transpiled to Javascript.
+  - Additional code to visualize it.
+
+  The resulting structure is marked by the [Kindly](https://scicloj.github.io/kindly-noted/kindly)
+  standard as `kind/hiccup` with [Kindly options](https://scicloj.github.io/kindly-noted/kindly.html#passing-options)
+  necessart to make the plot work.
+
+  If no `data` value is passed, it is considered `nil`."
   ([form]
    (plotly nil form))
   ([data form]
@@ -103,6 +141,25 @@
     {:html/deps [:plotly]})))
 
 (defn vega-embed
+  "Given a data structure `data` and a form `form`,
+  create a corresponding [Vega-Embed](https://github.com/vega/vega-embed)
+  data visualization using `div-with-script`.
+
+  The script will include the following:
+
+  - A Javscript variable called `data` is bound to the `data` value
+  converted to JSON.
+  - If `data` is a map that has some keys of symbol type, then
+  corresponding Javascript variables named by these symbols
+  are bound to the corresponding values converted to JSON.
+  - The `form` transpiled to Javascript.
+  - Additional code to visualize it.
+
+  The resulting structure is marked by the [Kindly](https://scicloj.github.io/kindly-noted/kindly)
+  standard as `kind/hiccup` with [Kindly options](https://scicloj.github.io/kindly-noted/kindly.html#passing-options)
+  necessart to make the plot work.
+
+  If no `data` value is passed, it is considered `nil`."
   ([form]
    (vega-embed nil form))
   ([data form]
@@ -114,6 +171,25 @@
     {:html/deps [:vega]})))
 
 (defn highcharts
+  "Given a data structure `data` and a form `form`,
+  create a corresponding [Highcharts](https://www.highcharts.com/)
+  data visualization using `div-with-script`.
+
+  The script will include the following:
+
+  - A Javscript variable called `data` is bound to the `data` value
+  converted to JSON.
+  - If `data` is a map that has some keys of symbol type, then
+  corresponding Javascript variables named by these symbols
+  are bound to the corresponding values converted to JSON.
+  - The `form` transpiled to Javascript.
+  - Additional code to visualize it.
+
+  The resulting structure is marked by the [Kindly](https://scicloj.github.io/kindly-noted/kindly)
+  standard as `kind/hiccup` with [Kindly options](https://scicloj.github.io/kindly-noted/kindly.html#passing-options)
+  necessart to make the plot work.
+
+  If no `data` value is passed, it is considered `nil`."
   ([form]
    (highcharts nil form))
   ([data form]
@@ -126,6 +202,26 @@
 
 
 (defn leaflet
+  "Given a data structure `data` and a form `form`,
+  create a corresponding [Leaflet](https://leafletjs.com/)
+  data visualization using `div-with-script`.
+
+  The script will include the following:
+
+  - A Javscript variable called `data` is bound to the `data` value
+  converted to JSON.
+  - If `data` is a map that has some keys of symbol type, then
+  corresponding Javascript variables named by these symbols
+  are bound to the corresponding values converted to JSON.
+  - The `form` transpiled to Javascript, and is assumed
+  to define a function to process a Leaflet map.
+  - Additional code to visualize it.
+
+  The resulting structure is marked by the [Kindly](https://scicloj.github.io/kindly-noted/kindly)
+  standard as `kind/hiccup` with [Kindly options](https://scicloj.github.io/kindly-noted/kindly.html#passing-options)
+  necessart to make the plot work.
+
+  If no `data` value is passed, it is considered `nil`."
   ([form]
    (leaflet nil form))
   ([data form]
@@ -134,8 +230,6 @@
     [(list 'var 'f form)
      '(var m (L.map document.currentScript.parentElement))
      '(f m)]
-    {:html/deps [:leaflet]})))
+    {:html/deps [:leaflet]
+     :style {:height "400px"}})))
 
-
-
-(ns-publics 'scicloj.tableplot.v1.transpile)
