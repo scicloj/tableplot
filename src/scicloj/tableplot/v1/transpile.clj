@@ -2,7 +2,10 @@
   (:require [scicloj.kindly.v4.kind :as kind]
             [std.lang :as l]
             [charred.api :as charred]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [tablecloth.api :as tc]
+            [tableplot-book.datasets :as datasets]
+            [scicloj.kindly.v4.api :as kindly]))
 
 (defn- js-transpile
   "Transpile the given Clojure `forms` to Javascript code."
@@ -15,6 +18,12 @@
           symbol
           (charred/write-json-str data)))
 
+(defn- js-entry-assignment [symbol0 symbol1 symbol2]
+  (format "let %s = %s['%s'];"
+          symbol0
+          symbol1
+          symbol2))
+
 (defn- js-closure [js-statements]
   (->> js-statements
        (str/join "\n")
@@ -23,40 +32,29 @@
 (def base-style {:height "400px"
                  :width "100%"})
 
-(defn hiccup
+(defn div-with-script
   "Create a general transpiled data visualization.
 
-  Given a data structure `data` and a `spec` map with keys
-  `body`, `script`, `style`, and `deps`,
-  crate a correspondinh Hiccup structure for a data visualization.
+  Given a data structure `data` and a form `script`,
+  create a correspondinh Hiccup structure for a data visualization.
 
-  The structure will be a `:div` with the following inside:
-  - the `style` (merged over `base-style`)
-  - the body
-  - a Javascript `:script` part
+  The structure will be a `:div` with a `:script` part.
 
-  Also, add the relevant metadata of the `deps` as Kindly options
-  metadata, to make sure these deps are available when rendering the hiccup.
-  
   The `:script` is created from `script` with some possible
-  variable bindings preceeding it.
-  The preceeding variable bindings result from `data`:
-  - A Javscript variable `data` is bound to the `data` converted to JSON,
-  and thus can be referred to from the Echarts specification.
+  variable bindings preceeding it:
+  - A Javscript variable `data` is bound to the `data` value
+  converted to JSON.
   - If `data` is a map that has some keys of symbol type, then
   corresponding Javascript variables named by these symbols
   are bound to the corresponding values converted to JSON.
 
   If only one argument is provided, then it is considered the
   `form`, with no data binding."
-  ([spec]
-   (hiccup nil spec))
-  ([data {:as spec
-          :keys [style body script deps]}]
+  ([script]
+   (hiccup nil script))
+  ([data script]
    (kind/hiccup
     [:div
-     {:style (merge base-style style)}
-     body
      [:script
       (js-closure
        (concat
@@ -66,32 +64,74 @@
           (->> data
                (map (fn [[k v]]
                       (when (symbol? k)
-                        (js-assignment k v))))
+                        (js-entry-assignment k 'data k))))
                (remove nil?)))
         [(js-transpile script)]))]]
-    {:html/deps deps})))
+    {:style base-style})))
+
 
 (defn echarts
-  "Create an Echarts data visualization.
+  ([form]
+   (echarts nil form))
+  ([data form]
+   (-> data
+       (div-with-script
+        ['(var chart
+               (echarts.init document.currentScript.parentElement))
+         (list 'chart.setOption form)])
+       (vary-meta 
+        assoc-in [:kindly/options :html/deps] [:echarts]))))
 
-  Given a data structure `data` and a `spec` map with keys
-  `form`, `body`, `script`, `style`, and `deps`, create
-  a hiccup structure using `hiccup` with the 
-  the given `data` and the spec resulting by
-  merging the given `spec` over the following defaults:
-  - `:script` - a script for applying an Echarts
-  visualization specified in `form`.
-  - `:deps` - `[:echarts]`."
-  ([spec]
-   (echarts nil spec))
-  ([data {:as spec
-          :keys [form]}]
-   (hiccup data
-           (merge {:script ['(var myChart
-                                  (echarts.init document.currentScript.parentElement))
-                            (list 'myChart.setOption form)]
-                   :deps [:echarts]}
-                  spec))))
 
+(defn plotly
+  ([form]
+   (plotly nil form))
+  ([data form]
+   (-> data
+       (div-with-script
+        [(list 'Plotly.newPlot
+               'document.currentScript.parentElement
+               (:data form)
+               (:layout form)
+               (:config form))])
+       (vary-meta 
+        assoc-in [:kindly/options :html/deps] [:plotly]))))
+
+(defn vega-embed
+  ([form]
+   (vega-embed nil form))
+  ([data form]
+   (-> data
+       (div-with-script
+        [(list 'vegaEmbed
+               'document.currentScript.parentElement
+               form)])
+       (vary-meta 
+        assoc-in [:kindly/options :html/deps] [:vega]))))
+
+(defn highcharts
+  ([form]
+   (highcharts nil form))
+  ([data form]
+   (-> data
+       (div-with-script
+        [(list 'Highcharts.chart
+               'document.currentScript.parentElement
+               form)])
+       (vary-meta 
+        assoc-in [:kindly/options :html/deps] [:highcharts]))))
+
+
+(defn leaflet
+  ([form]
+   (leaflet nil form))
+  ([data form]
+   (-> data
+       (div-with-script
+        [(list 'var 'f form)
+         '(var m (L.map document.currentScript.parentElement))
+         '(f m)])
+       (vary-meta 
+        assoc-in [:kindly/options :html/deps] [:leaflet]))))
 
 
