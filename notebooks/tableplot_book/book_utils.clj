@@ -12,7 +12,7 @@
           (-> s (str/replace #"^\:\=" ""))))
 
 (def symbol-or-key-pattern
-  #"`[a-z|\-|\:|\=]+`")
+  #"`[a-z|\*|\-|\:|\=]+`")
 
 (def subkey-pattern
   #"`\:\=[a-z|\-]+`")
@@ -31,7 +31,10 @@
             smooth-stat histogram-stat density-stat correlatoion-stat
             imshow surface splom}))
     "tableplot-book.transpile-reference"
-    ((ns-publics 'scicloj.tableplot.v1.transpile) s)
+    (-> s
+        (str/replace #"`" "")
+        symbol
+        ((ns-publics 'scicloj.tableplot.v1.transpile) s))
     ;; else
     nil))
 
