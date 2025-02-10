@@ -26,11 +26,13 @@
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.tableplot.v1.dag :as dag]
             [tableplot-book.datasets :as datasets]
-            [scicloj.tableplot.v1.book-utils :as book-utils]
             [clojure.string :as str]
             [aerial.hanami.common :as hc]
             [aerial.hanami.templates :as ht]
             [clojure.math :as math]))
+
+^:kindly/hide-code
+(require '[scicloj.tableplot.v1.book-utils :as book-utils])
 
 
 (book-utils/md
