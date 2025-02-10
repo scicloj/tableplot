@@ -24,7 +24,7 @@
   (:require [scicloj.tableplot.v1.transpile :as transpile]
             [tablecloth.api :as tc]
             [tableplot-book.datasets :as datasets]
-            [tableplot-book.book-utils :as book-utils]
+            [scicloj.tableplot.v1.book-utils :as book-utils]
             [clojure.string :as str]
             [scicloj.kindly.v4.kind :as kind]))
 

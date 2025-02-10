@@ -26,7 +26,7 @@
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.tableplot.v1.dag :as dag]
             [tableplot-book.datasets :as datasets]
-            [tableplot-book.book-utils :as book-utils]
+            [scicloj.tableplot.v1.book-utils :as book-utils]
             [clojure.string :as str]
             [aerial.hanami.common :as hc]
             [aerial.hanami.templates :as ht]
