@@ -58,7 +58,7 @@ Tableplot currently supports three APIs:
 
 - `scicloj.tableplot.v1.transpile` (experimental) generates specs for various data visualization libraries that may include some Javascript code.
 
-Each of the `plotly` and `hnami` APIs builds upon the strengths of its target platform and partially uses its naming and concepts. Thus, the two APIs are not completely compatible. The Plotly-based API is expected to grow a little further in terms of its flexibility and the kinds of idioms it can express. ")
+Each of the `plotly` and `hanami` APIs builds upon the strengths of its target platform and partially uses its naming and concepts. Thus, the two APIs are not completely compatible. The Plotly-based API is expected to grow a little further in terms of its flexibility and the kinds of idioms it can express. ")
 
 (md "
 
