@@ -7,14 +7,14 @@
             [scicloj.kindly.v4.kind :as kind]
             [clojure.string :as str]
             [scicloj.tableplot.v1.plotly :as plotly]
-            [tableplot-book.datasets :as datasets]
-            [tablecloth.api :as tc]))
+            [tablecloth.api :as tc]
+            [scicloj.metamorph.ml.rdatasets :as rdatasets]))
 
 ^:kindly/hide-code
 (def md
   (comp kindly/hide-code kind/md))
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (plotly/base {:=x :date
                   :=y :value})
