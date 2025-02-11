@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>6&nbsp; Transpile API reference 📖 - experimental 🧪 – Tableplot</title>
+<title>5&nbsp; Transpile API reference 📖 - experimental 🧪 – Tableplot</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -114,7 +114,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./tableplot_book.transpile_reference.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./tableplot_book.transpile_reference.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -147,32 +147,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./tableplot_book.datasets.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Some datasets 📎</span></span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
   <a href="./tableplot_book.plotly_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Plotly walkthrough 👣</span></span></a>
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Plotly walkthrough 👣</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./tableplot_book.plotly_reference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Plotly API reference 📖</span></span></a>
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Plotly API reference 📖</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./tableplot_book.hanami_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Hanami walkthrough 👣</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Hanami walkthrough 👣</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./tableplot_book.transpile_reference.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></span></a>
   </div>
 </li>
     </ul>
@@ -185,42 +179,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup"><span class="header-section-number">6.1</span> Setup 🔨</a></li>
-  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions"><span class="header-section-number">6.2</span> Functions ⚙</a>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup"><span class="header-section-number">5.1</span> Setup 🔨</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions"><span class="header-section-number">5.2</span> Functions ⚙</a>
   <ul>
-  <li><a href="#js" id="toc-js" class="nav-link" data-scroll-target="#js"><span class="header-section-number">6.2.1</span> <code>js</code></a>
+  <li><a href="#js" id="toc-js" class="nav-link" data-scroll-target="#js"><span class="header-section-number">5.2.1</span> <code>js</code></a>
   <ul class="collapse">
-  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples"><span class="header-section-number">6.2.1.1</span> Examples</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples"><span class="header-section-number">5.2.1.1</span> Examples</a></li>
   </ul></li>
-  <li><a href="#div-with-script" id="toc-div-with-script" class="nav-link" data-scroll-target="#div-with-script"><span class="header-section-number">6.2.2</span> <code>div-with-script</code></a>
+  <li><a href="#div-with-script" id="toc-div-with-script" class="nav-link" data-scroll-target="#div-with-script"><span class="header-section-number">5.2.2</span> <code>div-with-script</code></a>
   <ul class="collapse">
-  <li><a href="#examples-1" id="toc-examples-1" class="nav-link" data-scroll-target="#examples-1"><span class="header-section-number">6.2.2.1</span> Examples</a></li>
-  <li><a href="#a-closer-look" id="toc-a-closer-look" class="nav-link" data-scroll-target="#a-closer-look"><span class="header-section-number">6.2.2.2</span> A closer look</a></li>
+  <li><a href="#examples-1" id="toc-examples-1" class="nav-link" data-scroll-target="#examples-1"><span class="header-section-number">5.2.2.1</span> Examples</a></li>
+  <li><a href="#a-closer-look" id="toc-a-closer-look" class="nav-link" data-scroll-target="#a-closer-look"><span class="header-section-number">5.2.2.2</span> A closer look</a></li>
   </ul></li>
-  <li><a href="#echarts" id="toc-echarts" class="nav-link" data-scroll-target="#echarts"><span class="header-section-number">6.2.3</span> <code>echarts</code></a>
+  <li><a href="#echarts" id="toc-echarts" class="nav-link" data-scroll-target="#echarts"><span class="header-section-number">5.2.3</span> <code>echarts</code></a>
   <ul class="collapse">
-  <li><a href="#examples-2" id="toc-examples-2" class="nav-link" data-scroll-target="#examples-2"><span class="header-section-number">6.2.3.1</span> Examples</a></li>
+  <li><a href="#examples-2" id="toc-examples-2" class="nav-link" data-scroll-target="#examples-2"><span class="header-section-number">5.2.3.1</span> Examples</a></li>
   </ul></li>
-  <li><a href="#plotly" id="toc-plotly" class="nav-link" data-scroll-target="#plotly"><span class="header-section-number">6.2.4</span> <code>plotly</code></a>
+  <li><a href="#plotly" id="toc-plotly" class="nav-link" data-scroll-target="#plotly"><span class="header-section-number">5.2.4</span> <code>plotly</code></a>
   <ul class="collapse">
-  <li><a href="#examples-3" id="toc-examples-3" class="nav-link" data-scroll-target="#examples-3"><span class="header-section-number">6.2.4.1</span> Examples</a></li>
+  <li><a href="#examples-3" id="toc-examples-3" class="nav-link" data-scroll-target="#examples-3"><span class="header-section-number">5.2.4.1</span> Examples</a></li>
   </ul></li>
-  <li><a href="#vega-embed" id="toc-vega-embed" class="nav-link" data-scroll-target="#vega-embed"><span class="header-section-number">6.2.5</span> <code>vega-embed</code></a>
+  <li><a href="#vega-embed" id="toc-vega-embed" class="nav-link" data-scroll-target="#vega-embed"><span class="header-section-number">5.2.5</span> <code>vega-embed</code></a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example"><span class="header-section-number">6.2.5.1</span> Example</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example"><span class="header-section-number">5.2.5.1</span> Example</a></li>
   </ul></li>
-  <li><a href="#highcharts" id="toc-highcharts" class="nav-link" data-scroll-target="#highcharts"><span class="header-section-number">6.2.6</span> <code>highcharts</code></a>
+  <li><a href="#highcharts" id="toc-highcharts" class="nav-link" data-scroll-target="#highcharts"><span class="header-section-number">5.2.6</span> <code>highcharts</code></a>
   <ul class="collapse">
-  <li><a href="#example-1" id="toc-example-1" class="nav-link" data-scroll-target="#example-1"><span class="header-section-number">6.2.6.1</span> Example</a></li>
+  <li><a href="#example-1" id="toc-example-1" class="nav-link" data-scroll-target="#example-1"><span class="header-section-number">5.2.6.1</span> Example</a></li>
   </ul></li>
-  <li><a href="#leaflet" id="toc-leaflet" class="nav-link" data-scroll-target="#leaflet"><span class="header-section-number">6.2.7</span> <code>leaflet</code></a>
+  <li><a href="#leaflet" id="toc-leaflet" class="nav-link" data-scroll-target="#leaflet"><span class="header-section-number">5.2.7</span> <code>leaflet</code></a>
   <ul class="collapse">
-  <li><a href="#example-2" id="toc-example-2" class="nav-link" data-scroll-target="#example-2"><span class="header-section-number">6.2.7.1</span> Example</a></li>
+  <li><a href="#example-2" id="toc-example-2" class="nav-link" data-scroll-target="#example-2"><span class="header-section-number">5.2.7.1</span> Example</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#danymic-vars" id="toc-danymic-vars" class="nav-link" data-scroll-target="#danymic-vars"><span class="header-section-number">6.3</span> Danymic vars 🎧</a>
+  <li><a href="#danymic-vars" id="toc-danymic-vars" class="nav-link" data-scroll-target="#danymic-vars"><span class="header-section-number">5.3</span> Danymic vars 🎧</a>
   <ul>
-  <li><a href="#base-kindly-options" id="toc-base-kindly-options" class="nav-link" data-scroll-target="#base-kindly-options"><span class="header-section-number">6.3.1</span> <code>*base-kindly-options*</code></a></li>
+  <li><a href="#base-kindly-options" id="toc-base-kindly-options" class="nav-link" data-scroll-target="#base-kindly-options"><span class="header-section-number">5.3.1</span> <code>*base-kindly-options*</code></a></li>
   </ul></li>
   </ul>
 </nav>
@@ -230,7 +224,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></h1>
+<h1 class="title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></h1>
 </div>
 
 
@@ -271,8 +265,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Sometimes, data visualization in the browser requires not only plain JSON structures but also some Javascript code.</p>
 <p>One way to generate such code from Clojure is through <a href="https://clojureverse.org/t/std-lang-a-universal-template-transpiler/">std.lang</a>, a universal transpiler from Clojure to many languages.</p>
 <p>The <code>transpile</code> API of Tableplot provides functions for using this practice in combination with various JS libraries. <em>It is considered experimental at this stage.</em></p>
-<section id="setup" class="level2" data-number="6.1">
-<h2 data-number="6.1" class="anchored" data-anchor-id="setup"><span class="header-section-number">6.1</span> Setup 🔨</h2>
+<section id="setup" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="setup"><span class="header-section-number">5.1</span> Setup 🔨</h2>
 <p>In this tutorial, we use:</p>
 <ul>
 <li>The Tableplot <code>transpile</code> API namepace</li>
@@ -284,20 +278,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> tableplot-book.transpile-reference</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [scicloj.tableplot.v1.transpile <span class="at">:as</span> transpile]</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>            [tablecloth.api <span class="at">:as</span> tc]</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            [tableplot-book.datasets <span class="at">:as</span> datasets]</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            [tableplot-book.book-utils <span class="at">:as</span> book-utils]</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            [clojure.string <span class="at">:as</span> <span class="kw">str</span>]</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            [scicloj.kindly.v4.kind <span class="at">:as</span> kind]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            [scicloj.metamorph.ml.rdatasets <span class="at">:as</span> rdatasets]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            [clojure.string <span class="at">:as</span> <span class="kw">str</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            [scicloj.kindly.v4.kind <span class="at">:as</span> kind]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="functions" class="level2" data-number="6.2">
-<h2 data-number="6.2" class="anchored" data-anchor-id="functions"><span class="header-section-number">6.2</span> Functions ⚙</h2>
-<section id="js" class="level3" data-number="6.2.1">
-<h3 data-number="6.2.1" class="anchored" data-anchor-id="js"><span class="header-section-number">6.2.1</span> <code>js</code></h3>
+<section id="functions" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="functions"><span class="header-section-number">5.2</span> Functions ⚙</h2>
+<section id="js" class="level3" data-number="5.2.1">
+<h3 data-number="5.2.1" class="anchored" data-anchor-id="js"><span class="header-section-number">5.2.1</span> <code>js</code></h3>
 <p><code>[&amp; forms]</code></p>
 <p>Transpile the given Clojure <a href="#forms"><code>forms</code></a> to Javascript code using <a href="https://clojureverse.org/t/std-lang-a-universal-template-transpiler/">Std.lang</a>.</p>
-<section id="examples" class="level4" data-number="6.2.1.1">
-<h4 data-number="6.2.1.1" class="anchored" data-anchor-id="examples"><span class="header-section-number">6.2.1.1</span> Examples</h4>
+<section id="examples" class="level4" data-number="5.2.1.1">
+<h4 data-number="5.2.1.1" class="anchored" data-anchor-id="examples"><span class="header-section-number">5.2.1.1</span> Examples</h4>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(kind/code</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a> (transpile/js '(var x <span class="dv">9</span>)</span>
@@ -350,8 +343,8 @@ function randomize(){
 }</script></div></div>
 </section>
 </section>
-<section id="div-with-script" class="level3" data-number="6.2.2">
-<h3 data-number="6.2.2" class="anchored" data-anchor-id="div-with-script"><span class="header-section-number">6.2.2</span> <code>div-with-script</code></h3>
+<section id="div-with-script" class="level3" data-number="5.2.2">
+<h3 data-number="5.2.2" class="anchored" data-anchor-id="div-with-script"><span class="header-section-number">5.2.2</span> <code>div-with-script</code></h3>
 <p><code>[data script kindly-options]</code></p>
 <p>Create a general transpiled data visualization.</p>
 <p>Given a data structure <a href="#data"><code>data</code></a>, a form <a href="#script"><code>script</code></a>, and a map <a href="#kindly-options"><code>kindly-options</code></a> create a corresponding <a href="https://github.com/weavejester/hiccup">Hiccup</a> structure.</p>
@@ -362,8 +355,8 @@ function randomize(){
 <li>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</li>
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> defined by deep-merging <a href="#kindly-options"><code>kindly-options</code></a> into <a href="#*base-kindly-options*"><code>*base-kindly-options*</code></a>.</p>
-<section id="examples-1" class="level4" data-number="6.2.2.1">
-<h4 data-number="6.2.2.1" class="anchored" data-anchor-id="examples-1"><span class="header-section-number">6.2.2.1</span> Examples</h4>
+<section id="examples-1" class="level4" data-number="5.2.2.1">
+<h4 data-number="5.2.2.1" class="anchored" data-anchor-id="examples-1"><span class="header-section-number">5.2.2.1</span> Examples</h4>
 <p>Let us create an Apache Echarts plot.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(transpile/div-with-script</span>
@@ -396,8 +389,8 @@ myChart.setOption({
 });
 })();</script></div>
 </section>
-<section id="a-closer-look" class="level4" data-number="6.2.2.2">
-<h4 data-number="6.2.2.2" class="anchored" data-anchor-id="a-closer-look"><span class="header-section-number">6.2.2.2</span> A closer look</h4>
+<section id="a-closer-look" class="level4" data-number="5.2.2.2">
+<h4 data-number="5.2.2.2" class="anchored" data-anchor-id="a-closer-look"><span class="header-section-number">5.2.2.2</span> A closer look</h4>
 <p>Let us create a Plotly.js plot with some custom event handling. We will explore the resulting structure a little bit.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> clickable-example</span></span>
@@ -498,8 +491,8 @@ plotly_animaton_element.on("plotly_click",function (){
 </div>
 </section>
 </section>
-<section id="echarts" class="level3" data-number="6.2.3">
-<h3 data-number="6.2.3" class="anchored" data-anchor-id="echarts"><span class="header-section-number">6.2.3</span> <code>echarts</code></h3>
+<section id="echarts" class="level3" data-number="5.2.3">
+<h3 data-number="5.2.3" class="anchored" data-anchor-id="echarts"><span class="header-section-number">5.2.3</span> <code>echarts</code></h3>
 <p><code>[form]</code></p>
 <p><code>[data form]</code></p>
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, create a corresponding <a href="https://echarts.apache.org/en/index.html">Apache Echarts</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
@@ -512,8 +505,8 @@ plotly_animaton_element.on("plotly_click",function (){
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="examples-2" class="level4" data-number="6.2.3.1">
-<h4 data-number="6.2.3.1" class="anchored" data-anchor-id="examples-2"><span class="header-section-number">6.2.3.1</span> Examples</h4>
+<section id="examples-2" class="level4" data-number="5.2.3.1">
+<h4 data-number="5.2.3.1" class="anchored" data-anchor-id="examples-2"><span class="header-section-number">5.2.3.1</span> Examples</h4>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(transpile/echarts</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
@@ -537,7 +530,7 @@ chart.setOption({
 });
 })();</script></div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> datasets/mtcars</span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> (rdatasets/datasets-mtcars)</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    (tc/select-columns [<span class="at">:wt</span> <span class="at">:mpg</span> <span class="at">:cyl</span> <span class="at">:gear</span>])</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    tc/rows</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    (transpile/echarts {<span class="at">:xAxis</span> {<span class="at">:name</span> <span class="st">"weight"</span>}</span>
@@ -593,8 +586,8 @@ chart.setOption({
 })();</script></div>
 </section>
 </section>
-<section id="plotly" class="level3" data-number="6.2.4">
-<h3 data-number="6.2.4" class="anchored" data-anchor-id="plotly"><span class="header-section-number">6.2.4</span> <code>plotly</code></h3>
+<section id="plotly" class="level3" data-number="5.2.4">
+<h3 data-number="5.2.4" class="anchored" data-anchor-id="plotly"><span class="header-section-number">5.2.4</span> <code>plotly</code></h3>
 <p><code>[form]</code></p>
 <p><code>[data form]</code></p>
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, reate a corrseponding <a href="https://plotly.com/javascript/">Plotly.js</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
@@ -607,8 +600,8 @@ chart.setOption({
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="examples-3" class="level4" data-number="6.2.4.1">
-<h4 data-number="6.2.4.1" class="anchored" data-anchor-id="examples-3"><span class="header-section-number">6.2.4.1</span> Examples</h4>
+<section id="examples-3" class="level4" data-number="5.2.4.1">
+<h4 data-number="5.2.4.1" class="anchored" data-anchor-id="examples-3"><span class="header-section-number">5.2.4.1</span> Examples</h4>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(transpile/plotly</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
@@ -653,8 +646,8 @@ Plotly.newPlot(
 })();</script></div>
 </section>
 </section>
-<section id="vega-embed" class="level3" data-number="6.2.5">
-<h3 data-number="6.2.5" class="anchored" data-anchor-id="vega-embed"><span class="header-section-number">6.2.5</span> <code>vega-embed</code></h3>
+<section id="vega-embed" class="level3" data-number="5.2.5">
+<h3 data-number="5.2.5" class="anchored" data-anchor-id="vega-embed"><span class="header-section-number">5.2.5</span> <code>vega-embed</code></h3>
 <p><code>[form]</code></p>
 <p><code>[data form]</code></p>
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, create a corresponding <a href="https://github.com/vega/vega-embed">Vega-Embed</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
@@ -667,8 +660,8 @@ Plotly.newPlot(
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="example" class="level4" data-number="6.2.5.1">
-<h4 data-number="6.2.5.1" class="anchored" data-anchor-id="example"><span class="header-section-number">6.2.5.1</span> Example</h4>
+<section id="example" class="level4" data-number="5.2.5.1">
+<h4 data-number="5.2.5.1" class="anchored" data-anchor-id="example"><span class="header-section-number">5.2.5.1</span> Example</h4>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(transpile/vega-embed</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
@@ -695,8 +688,8 @@ vegaEmbed(document.currentScript.parentElement,{
 })();</script></div>
 </section>
 </section>
-<section id="highcharts" class="level3" data-number="6.2.6">
-<h3 data-number="6.2.6" class="anchored" data-anchor-id="highcharts"><span class="header-section-number">6.2.6</span> <code>highcharts</code></h3>
+<section id="highcharts" class="level3" data-number="5.2.6">
+<h3 data-number="5.2.6" class="anchored" data-anchor-id="highcharts"><span class="header-section-number">5.2.6</span> <code>highcharts</code></h3>
 <p><code>[form]</code></p>
 <p><code>[data form]</code></p>
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, create a corresponding <a href="https://www.highcharts.com/">Highcharts</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
@@ -709,8 +702,8 @@ vegaEmbed(document.currentScript.parentElement,{
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="example-1" class="level4" data-number="6.2.6.1">
-<h4 data-number="6.2.6.1" class="anchored" data-anchor-id="example-1"><span class="header-section-number">6.2.6.1</span> Example</h4>
+<section id="example-1" class="level4" data-number="5.2.6.1">
+<h4 data-number="5.2.6.1" class="anchored" data-anchor-id="example-1"><span class="header-section-number">5.2.6.1</span> Example</h4>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(transpile/highcharts</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data</span></span>
@@ -733,8 +726,8 @@ Highcharts.chart(document.currentScript.parentElement,{
 })();</script></div>
 </section>
 </section>
-<section id="leaflet" class="level3" data-number="6.2.7">
-<h3 data-number="6.2.7" class="anchored" data-anchor-id="leaflet"><span class="header-section-number">6.2.7</span> <code>leaflet</code></h3>
+<section id="leaflet" class="level3" data-number="5.2.7">
+<h3 data-number="5.2.7" class="anchored" data-anchor-id="leaflet"><span class="header-section-number">5.2.7</span> <code>leaflet</code></h3>
 <p><code>[form]</code></p>
 <p><code>[data form]</code></p>
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, create a corresponding <a href="https://leafletjs.com/">Leaflet</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
@@ -747,8 +740,8 @@ Highcharts.chart(document.currentScript.parentElement,{
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
-<section id="example-2" class="level4" data-number="6.2.7.1">
-<h4 data-number="6.2.7.1" class="anchored" data-anchor-id="example-2"><span class="header-section-number">6.2.7.1</span> Example</h4>
+<section id="example-2" class="level4" data-number="5.2.7.1">
+<h4 data-number="5.2.7.1" class="anchored" data-anchor-id="example-2"><span class="header-section-number">5.2.7.1</span> Example</h4>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(transpile/leaflet</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> <span class="co">;; data with symbol bindings</span></span>
@@ -786,10 +779,10 @@ f(m);
 </section>
 </section>
 </section>
-<section id="danymic-vars" class="level2" data-number="6.3">
-<h2 data-number="6.3" class="anchored" data-anchor-id="danymic-vars"><span class="header-section-number">6.3</span> Danymic vars 🎧</h2>
-<section id="base-kindly-options" class="level3" data-number="6.3.1">
-<h3 data-number="6.3.1" class="anchored" data-anchor-id="base-kindly-options"><span class="header-section-number">6.3.1</span> <code>*base-kindly-options*</code></h3>
+<section id="danymic-vars" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="danymic-vars"><span class="header-section-number">5.3</span> Danymic vars 🎧</h2>
+<section id="base-kindly-options" class="level3" data-number="5.3.1">
+<h3 data-number="5.3.1" class="anchored" data-anchor-id="base-kindly-options"><span class="header-section-number">5.3.1</span> <code>*base-kindly-options*</code></h3>
 <p>Base <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> for structures generated by <a href="#div-with-script"><code>div-with-script</code></a>.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>transpile/*base-kindly-options*</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1228,7 +1221,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
       <a href="./tableplot_book.hanami_walkthrough.html" class="pagination-link" aria-label="Hanami walkthrough 👣">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Hanami walkthrough 👣</span></span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Hanami walkthrough 👣</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

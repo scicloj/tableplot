@@ -1,4 +1,4 @@
-rownames,date,variable,value,value01,relative-time,year,month,yearmonth
+rownames,date,variable,value,value-01,relative-time,year,month,yearmonth
 2297,1967-07-01,unemploy,2944.0,0.020446830346569828,Past,1967,7,23611
 2298,1967-08-01,unemploy,2945.0,0.020525775637483226,Past,1967,8,23612
 2299,1967-09-01,unemploy,2958.0,0.021552064419357385,Past,1967,9,23613
