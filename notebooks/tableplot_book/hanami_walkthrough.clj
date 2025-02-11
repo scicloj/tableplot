@@ -37,7 +37,7 @@
             [scicloj.kindly.v4.kind :as kind]
             [clojure.string :as str]
             [scicloj.kindly.v4.api :as kindly]
-            [tableplot-book.datasets :as datasets]))
+            [scicloj.metamorph.ml.rdatasets :as rdatasets]))
 
 ;; ## Basic usage
 
@@ -45,7 +45,7 @@
 ;; We pass a Tablecloth dataset to a Tableplot function
 ;; with a Tableplot template.
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot hanami/point-chart
                  {:=x :sepal-width
                   :=y :sepal-length
@@ -68,7 +68,7 @@
 
 ;; (Here is how we can express the same plot with the layered grammar:)
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/layer-point
      {:=x :sepal-width
       :=y :sepal-length
@@ -78,7 +78,7 @@
 ;; The value returned by a `hanami/plot` function
 ;; is a [Vega-Lite](https://vega.github.io/vega-lite/) spec:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot hanami/point-chart
                  {:=x :sepal-width
                   :=y :sepal-length
@@ -93,7 +93,7 @@
 ;; The resulting plot is displayed correctly,
 ;; as it is annotated by Kindly as a Vega-lite plot:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot hanami/point-chart
                  {:=x :sepal-width
                   :=y :sepal-length
@@ -106,14 +106,14 @@
 ;; We can also use Hanami's original templates (`ht/chart`)
 ;; and substitution keys (`:X`, `:Y`, `:MSIZE`).
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot ht/point-chart
                  {:X :sepal-width
                   :Y :sepal-length
                   :MSIZE 200
                   :COLOR "species"}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot ht/point-chart
                  {:X :sepal-width
                   :Y :sepal-length
@@ -127,14 +127,14 @@
 ;; Here, for example, `x` and `y` are `:quantitative`, and `color` is `:nominal`
 ;; (and is thus coloured with distinct colours rather than a gradient).
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot hanami/point-chart
                  {:=x :sepal-width
                   :=y :sepal-length
                   :=color :species
                   :=mark-size 200}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot hanami/point-chart
                 {:=x :sepal-width
                  :=y :sepal-length
@@ -145,32 +145,32 @@
 ;; On the other hand, in the following example,
 ;; `color` is `:quantitative`:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (hanami/plot hanami/point-chart
-                {:=x :mpg
-                 :=y :disp
-                 :=color :cyl
-                 :=mark-size 200}))
+                 {:=x :mpg
+                  :=y :disp
+                  :=color :cyl
+                  :=mark-size 200}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (hanami/plot hanami/point-chart
-                {:=x :mpg
-                 :=y :disp
-                 :=color :cyl
-                 :=mark-size 200})
+                 {:=x :mpg
+                  :=y :disp
+                  :=color :cyl
+                  :=mark-size 200})
     kind/pprint)
 
 ;; This can be overridden to define `color` as `:noninal`:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (hanami/plot hanami/point-chart
-                {:=x :mpg
-                 :=y :disp
-                 :=color :cyl
-                 :=color-type :nominal
-                 :=mark-size 200}))
+                 {:=x :mpg
+                  :=y :disp
+                  :=color :cyl
+                  :=color-type :nominal
+                  :=mark-size 200}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (hanami/plot hanami/point-chart
                  {:=x :mpg
                   :=y :disp
@@ -183,7 +183,7 @@
 
 ;; A Tableplot boxplot:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (hanami/plot hanami/boxplot-chart
                  {:=x :cyl
                   :=x-type :nominal
@@ -191,7 +191,7 @@
 
 ;; An original Hanami boxplot:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (hanami/plot ht/boxplot-chart
                  {:X :cyl
                   :XTYPE :nominal
@@ -199,7 +199,7 @@
 
 ;; Plotting segments with Tableplot:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot hanami/rule-chart
                  {:=x :sepal-width
                   :=y :sepal-length
@@ -211,7 +211,7 @@
 
 ;; Plotting segments with original Hanami:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/plot ht/rule-chart
                 {:X :sepal-width
                  :Y :sepal-length
@@ -225,7 +225,7 @@
 
 ;; Let us plot a time series:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/plot hanami/line-chart
                 {:=x :date
@@ -235,12 +235,12 @@
 ;; You see, the `:date` field was correctly inferred to be
 ;; of the `:temporal` kind.
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/plot hanami/line-chart
-                {:=x :date
-                 :=y :value
-                 :=mark-color "purple"})
+                 {:=x :date
+                  :=y :value
+                  :=mark-color "purple"})
     kind/pprint)
 
 ;; ## Delayed transformation
@@ -248,32 +248,32 @@
 ;; Instead of the `hanami/plot` function, it is possible to used
 ;; `hanami/base`:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base hanami/line-chart
-                {:=x :date
-                 :=y :value
-                 :=mark-color "purple"}))
+                 {:=x :date
+                  :=y :value
+                  :=mark-color "purple"}))
 
 ;; The result is displayed the same way, but the internal representation
 ;; delays the Hanami transformation of templates.
 
 ;; Let us compare the two:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/plot hanami/line-chart
-                {:=x :date
-                 :=y :value
-                 :=mark-color "purple"})
+                 {:=x :date
+                  :=y :value
+                  :=mark-color "purple"})
     kind/pprint)
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base hanami/line-chart
-                {:=x :date
-                 :=y :value
-                 :=mark-color "purple"})
+                 {:=x :date
+                  :=y :value
+                  :=mark-color "purple"})
     kind/pprint)
 
 ;; The structure returned by `hanami/base` is a Hanami template
@@ -289,39 +289,39 @@
 ;; A base plot does not need to have a specified chart.
 ;; Instead, we may add layers:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base {:=x :date
-                 :=y :value
-                 :=mark-color "purple"})
+                  :=y :value
+                  :=mark-color "purple"})
     hanami/layer-line)
 
 ;; The substitution keys can also be specified on the layer level:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base {:=x :date
-                 :=y :value})
+                  :=y :value})
     (hanami/layer-line {:=mark-color "purple"}))
 
 ;; This allows us to create, e.g., aesthetic differences between layers:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base {:=x :date
-                 :=y :value})
+                  :=y :value})
     (hanami/layer-point {:=mark-color "green"
-                        :=mark-size 200
-                        :=mark-opacity 0.1})
+                         :=mark-size 200
+                         :=mark-opacity 0.1})
     (hanami/layer-line {:=mark-color "purple"}))
 
 ;; We can also skip the base and have everything in the layer:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/layer-line {:=x :date
-                       :=y :value
-                       :=mark-color "purple"}))
+                        :=y :value
+                        :=mark-color "purple"}))
 
 ;; ## Updating data
 
@@ -331,14 +331,14 @@
 ;; This functionality is inspired by [ggbuilder](https://github.com/mjskay/ggbuilder)
 ;; and [metamorph](https://github.com/scicloj/metamorph).
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base {:=x :date
-                 :=y :value})
+                  :=y :value})
     (hanami/layer-line {:=mark-color "purple"})
     (hanami/update-data tc/random 5)
     (hanami/layer-point {:=mark-color "green"
-                        :=mark-size 200}))
+                         :=mark-size 200}))
 
 ;; You see, we have lots of data for the lines,
 ;; but only five random points.
@@ -349,14 +349,14 @@
 ;; to apply the Hanami transform and realize the
 ;; `Vega-Lite` spec.
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base {:=x :date
-                 :=y :value})
+                  :=y :value})
     (hanami/layer-line {:=mark-color "purple"})
     (hanami/update-data tc/random 5)
     (hanami/layer-point {:=mark-color "green"
-                        :=mark-size 200})
+                         :=mark-size 200})
     hanami/plot
     kind/pprint)
 
@@ -364,14 +364,14 @@
 ;; it allows us to keep editing it as a Vega-Lite spec.
 ;; For example, let us change the backgound colour this way:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base {:=x :date
-                 :=y :value})
+                  :=y :value})
     (hanami/layer-line {:=mark-color "purple"})
     (hanami/update-data tc/random 5)
     (hanami/layer-point {:=mark-color "green"
-                        :=mark-size 200})
+                         :=mark-size 200})
     hanami/plot
     (assoc :background "lightgrey"))
 
@@ -379,7 +379,7 @@
 ;; See [Scale](https://vega.github.io/vega-lite/docs/scale.html)
 ;; in the Vega-Lite documentation.
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base {:=x :date
                  :=y :value})
@@ -399,7 +399,7 @@
 ;; At the moment, it can only be used to model `:=y` by linear regression.
 ;; Soon we will add more ways of modelling the data.
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/base {:=title "dummy"
                  :=mark-color "green"
                  :=x :sepal-width
@@ -412,7 +412,7 @@
 ;; But this can be overriden using the `:predictors` key.
 ;; We may compute a regression with more than one predictor.
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/base {:=x :sepal-width
                  :=y :sepal-length})
     hanami/layer-point
@@ -427,7 +427,7 @@
 ;; For example, here we recieve three regression lines,
 ;; each for every species.
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/base {:=title "dummy"
                  :=color :species
                  :=x :sepal-width
@@ -441,7 +441,7 @@
 ;; But we may override this using the `:group` key.
 ;; For example, let us avoid grouping:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/base {:=title "dummy"
                  :=mark-color "green"
                  :=color :species
@@ -461,10 +461,10 @@
 ;; Let us add those months to our dataset,
 ;; and mark them as `Future` (considering the original data as `Past`):
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (tc/add-column :relative-time "Past")
-    (tc/concat (tc/dataset {:date (-> datasets/economics-long
+    (tc/concat (tc/dataset {:date (-> (rdatasets/ggplot2-economics_long)
                                       :date
                                       last
                                       (datetime/plus-temporal-amount (range 96) :days))
@@ -473,10 +473,10 @@
 
 ;; Let us represent our dates as numbers, so that we can use them in linear regression:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (tc/add-column :relative-time "Past")
-    (tc/concat (tc/dataset {:date (-> datasets/economics-long
+    (tc/concat (tc/dataset {:date (-> (rdatasets/ggplot2-economics_long)
                                       :date
                                       last
                                       (datetime/plus-temporal-amount (range 96) :months))
@@ -492,10 +492,10 @@
 ;; We use the numerical field `:yearmonth` as the regression predictor,
 ;; but for plotting, we still use the `:temporal` field `:date`.
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (tc/add-column :relative-time "Past")
-    (tc/concat (tc/dataset {:date (-> datasets/economics-long
+    (tc/concat (tc/dataset {:date (-> (rdatasets/ggplot2-economics_long)
                                       :date
                                       last
                                       (datetime/plus-temporal-amount (range 96) :months))
@@ -522,9 +522,9 @@
 ;; Histograms can also be represented as layers
 ;; with statistical processing:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/layer-histogram {:=x :sepal-width}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (hanami/layer-histogram {:=x :sepal-width
                             :=histogram-nbins 30}))

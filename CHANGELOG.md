@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta10.2] - 2025-02-11
+- updated metamorph.ml version
+- moved book-utils into the library code base
+
 ## [1-beta10.1] - 2025-02-05
 - fixed broken require
 

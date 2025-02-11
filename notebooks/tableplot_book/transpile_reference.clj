@@ -23,10 +23,13 @@
 (ns tableplot-book.transpile-reference
   (:require [scicloj.tableplot.v1.transpile :as transpile]
             [tablecloth.api :as tc]
-            [tableplot-book.datasets :as datasets]
-            [tableplot-book.book-utils :as book-utils]
+            [scicloj.metamorph.ml.rdatasets :as rdatasets]
             [clojure.string :as str]
             [scicloj.kindly.v4.kind :as kind]))
+
+^:kindly/hide-code
+(require '[scicloj.tableplot.v1.book-utils :as book-utils])
+
 
 ;; ## Functions ⚙
 
@@ -156,7 +159,7 @@ clickable-example
   :series [{:type "scatter"
             :data 'data}]})
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (tc/select-columns [:wt :mpg :cyl :gear])
     tc/rows
     (transpile/echarts {:xAxis {:name "weight"}

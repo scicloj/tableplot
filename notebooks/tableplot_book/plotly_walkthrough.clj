@@ -32,8 +32,9 @@
             [scicloj.kindly.v4.kind :as kind]
             [clojure.string :as str]
             [scicloj.kindly.v4.api :as kindly]
-            [tableplot-book.datasets :as datasets]
+            [scicloj.metamorph.ml.rdatasets :as rdatasets]
             [aerial.hanami.templates :as ht]))
+
 
 ;; ## Basic usage
 
@@ -46,7 +47,7 @@
 ;; For example, let us plot a scatterplot (a layer of points)
 ;; of 10 random items from the Iris dataset.
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (tc/random 10 {:seed 1})
     (plotly/layer-point
      {:=x :sepal-width
@@ -67,7 +68,7 @@
 ;; structure of the previous plot.
 
 (def example1
-  (-> datasets/iris
+  (-> (rdatasets/datasets-iris)
       (tc/random 10 {:seed 1})
       (plotly/layer-point
        {:=x :sepal-width
@@ -127,7 +128,7 @@
 ;; In the following example, the coloring is by a quantitative
 ;; column, so a color gradient is used:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -136,7 +137,7 @@
 
 ;; We can override the inferred types and thus affect the generated plot:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -148,14 +149,14 @@
 
 ;; ### Boxplot
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-boxplot
      {:=x :cyl
       :=y :disp}))
 
 ;; ### Area chart
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (tc/group-by [:cyl])
     (tc/aggregate {:total-disp #(-> % :disp tcc/sum)})
     (tc/order-by [:cyl])
@@ -166,14 +167,14 @@
 
 ;; ### Bar chart
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (tc/group-by [:cyl])
     (tc/aggregate {:total-disp #(-> % :disp tcc/sum)})
     (plotly/layer-bar
      {:=x :cyl
       :=y :total-disp}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (tc/group-by [:cyl])
     (tc/aggregate {:total-disp #(-> % :disp tcc/sum)})
     (tc/add-column :bar-width 0.5)
@@ -184,14 +185,14 @@
 
 ;; ### Text
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-text
      {:=x :mpg
       :=y :disp
       :=text :cyl
       :=mark-size 20}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-text
      {:=x :mpg
       :=y :disp
@@ -203,7 +204,7 @@
 
 ;; ### Segment plot
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-segment
      {:=x0 :sepal-width
       :=y0 :sepal-length
@@ -248,7 +249,7 @@
 ;; Date and time fields are handle appropriately.
 ;; Let us, for example, draw the time series of unemployment counts.
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (plotly/layer-line
      {:=x :date
@@ -259,7 +260,7 @@
 
 ;; We can draw more than one layer:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (plotly/layer-point {:=x :date
                          :=y :value
@@ -273,7 +274,7 @@
 ;; We can also use the `base` function for the common parameters
 ;; across layers:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (plotly/base {:=x :date
                   :=y :value})
@@ -285,7 +286,7 @@
 
 ;; Layers can be named:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (plotly/base {:=x :date
                   :=y :value})
@@ -309,7 +310,7 @@
 ;; then sample 5 data rows,
 ;; and draw them as points:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (plotly/base {:=x :date
                   :=y :value})
@@ -336,7 +337,7 @@
 ;; to the dataset to model it as a smooth shape.
 ;; It is inspired by ggplot's [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -349,7 +350,7 @@
 ;; But this can be overriden using the `:=predictors` key.
 ;; We may compute a regression with more than one predictor.
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -364,7 +365,7 @@
 ;; Here, we use the design matrix functionality of
 ;; [Metamorph.ml](https://github.com/scicloj/metamorph.ml).
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -377,7 +378,7 @@
 
 ;; Inspired by Sami Kallinen's [Heart of Clojure talk](https://2024.heartofclojure.eu/talks/sailing-with-scicloj-a-bayesian-adventure/):
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -408,7 +409,7 @@
                         :type "org.tribuo.regression.rtree.impurity.MeanSquaredError"}]
    :tribuo-trainer-name "cart"})
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -422,7 +423,11 @@
 ;; [ML Regressoin in Python](https://plotly.com/python/ml-regression/)
 ;; example.
 
-(-> datasets/tips
+(defonce tips
+  (-> "https://raw.githubusercontent.com/plotly/datasets/master/tips.csv"
+      (tc/dataset {:key-fn keyword})))
+
+(-> tips
     (tc/split :holdout {:seed 1})
     (plotly/base {:=x :total_bill
                   :=y :tip})
@@ -443,7 +448,7 @@
 ;; For example, here we recieve three regression lines,
 ;; each for every species.
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=title "dummy"
                   :=color :species
                   :=x :sepal-width
@@ -457,7 +462,7 @@
 ;; But we may override this using the `:group` key.
 ;; For example, let us avoid grouping:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=title "dummy"
                   :=color :species
                   :=group []
@@ -469,7 +474,7 @@
 ;; Alternatively, we may assign the `:=color` only to the points layer
 ;; without affecting the smoothing layer.
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=title "dummy"
                   :=x :sepal-width
                   :=y :sepal-length})
@@ -487,10 +492,10 @@
 ;; Let us add those months to our dataset,
 ;; and mark them as `Future` (considering the original data as `Past`):
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (tc/add-column :relative-time "Past")
-    (tc/concat (tc/dataset {:date (-> datasets/economics-long
+    (tc/concat (tc/dataset {:date (-> (rdatasets/ggplot2-economics_long)
                                       :date
                                       last
                                       (datetime/plus-temporal-amount (range 96) :days))
@@ -499,10 +504,10 @@
 
 ;; Let us represent our dates as numbers, so that we can use them in linear regression:
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (tc/add-column :relative-time "Past")
-    (tc/concat (tc/dataset {:date (-> datasets/economics-long
+    (tc/concat (tc/dataset {:date (-> (rdatasets/ggplot2-economics_long)
                                       :date
                                       last
                                       (datetime/plus-temporal-amount (range 96) :months))
@@ -518,10 +523,10 @@
 ;; We use the numerical field `:yearmonth` as the regression predictor,
 ;; but for plotting, we still use the `:temporal` field `:date`.
 
-(-> datasets/economics-long
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (tc/add-column :relative-time "Past")
-    (tc/concat (tc/dataset {:date (-> datasets/economics-long
+    (tc/concat (tc/dataset {:date (-> (rdatasets/ggplot2-economics_long)
                                       :date
                                       last
                                       (datetime/plus-temporal-amount (range 96) :months))
@@ -549,14 +554,14 @@
 ;; Histograms can also be represented as layers
 ;; with statistical processing:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width
                              :=color :species
                              :=mark-opacity 0.5}))
@@ -567,18 +572,18 @@
 
 ;; Density estimates are handled similarly to Histograms:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=density-bandwidth 0.05}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=density-bandwidth 1}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
 
@@ -620,7 +625,7 @@
 
 ;; ### 3d
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=z :petal-length
@@ -628,7 +633,7 @@
                          :=coordinates :3d}))
 
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=z :petal-length
@@ -702,7 +707,7 @@
 ;; ### Viewing the computational dag of substitution keys:
 
 (def example-to-debug
-  (-> datasets/iris
+  (-> (rdatasets/datasets-iris)
       (tc/random 10 {:seed 1})
       (plotly/layer-point {:=x :sepal-width
                            :=y :sepal-length

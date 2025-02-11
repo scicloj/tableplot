@@ -1,6 +1,6 @@
 {:deps {scicloj/tablecloth {:mvn/version "7.029.2"}
         aerial.hanami/aerial.hanami {:mvn/version "0.20.1"}
-        org.scicloj/metamorph.ml {:mvn/version "0.12"}
+        org.scicloj/metamorph.ml {:mvn/version "1.1.1"}
         generateme/fastmath {:mvn/version "3.0.0-alpha3"}
         org.scicloj/kindly {:mvn/version "4-beta14"}
         org.scicloj/tempfiles {:mvn/version "1-beta1"}

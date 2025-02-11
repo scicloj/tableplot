@@ -25,12 +25,14 @@
             [scicloj.kindly.v4.kind :as kind]
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.tableplot.v1.dag :as dag]
-            [tableplot-book.datasets :as datasets]
-            [tableplot-book.book-utils :as book-utils]
+            [scicloj.metamorph.ml.rdatasets :as rdatasets]
             [clojure.string :as str]
             [aerial.hanami.common :as hc]
             [aerial.hanami.templates :as ht]
             [clojure.math :as math]))
+
+^:kindly/hide-code
+(require '[scicloj.tableplot.v1.book-utils :as book-utils])
 
 
 (book-utils/md
@@ -60,7 +62,7 @@ standared so that tools supporting Kindly (such as [Clay](https://scicloj.github
 will display by realizing it and using it as a Plotly.js specification.     
 ")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species
@@ -68,7 +70,7 @@ will display by realizing it and using it as a Plotly.js specification.
 
 (book-utils/md "To inspect it, let us use [Kindly](https://scicloj.github.io/kindly-noted/) to request
 that this template would rather be pretty-printed as a data structure.")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species
@@ -82,7 +84,7 @@ As a user, you usually do not need to think about it.
 If you wish to see the actual Plotly.js specification, you can use
 the `plot` function:
 ")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species
@@ -92,7 +94,7 @@ the `plot` function:
 
 (book-utils/md "We may also inspect it with [Portal](https://github.com/djblue/portal):")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species
@@ -119,7 +121,7 @@ For example, here we learn about the `:=background`
 key for background color. In this example,
 we kept it grey, which is its default.")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species
@@ -223,7 +225,7 @@ but they are a slightly higher-level concept, that makes it easier to bind our d
 Layers are themselves templates, so they can have their own substitutions.
 
 For example:")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (tc/random 10 {:seed 1})
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
@@ -236,7 +238,7 @@ This plot has **two layers**: one for points, and one for text (which is visible
 
 Let us see that using `debug`:
 ")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (tc/random 10 {:seed 1})
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
@@ -255,7 +257,7 @@ by species, it is realized as three traces.
 
 Let us see that using `debug`:
 ")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (tc/random 10 {:seed 1})
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
@@ -334,14 +336,14 @@ For example:
 
 ;; #### 3d
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=z :petal-length
                          :=color :petal-width
                          :=coordinates :3d}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=z :petal-length
@@ -457,7 +459,7 @@ when it is quantitative but more distinct colors when it is nominal.
 
 Colorin gby a nominal column:
 ")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point
      {:=x :sepal-width
       :=y :sepal-length
@@ -467,7 +469,7 @@ Colorin gby a nominal column:
 (book-utils/md "
 Coloring by a Quantitative column:
 ")
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -477,7 +479,7 @@ Coloring by a Quantitative column:
 (book-utils/md "
 Overriding a quantitative column to be considered nominal by the `:=color-type` key:
 ")
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -503,7 +505,7 @@ are a useful concept in extending Tableplot.
 
 (book-utils/md "#### For example")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length
                   :=mark-size 10})
@@ -517,7 +519,7 @@ are a useful concept in extending Tableplot.
 (book-utils/md "#### For example
 We could write someting like:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer plotly/layer-base
                   {:=mark :point
                    :=x :sepal-width
@@ -526,7 +528,7 @@ We could write someting like:")
 (book-utils/md "
 Of course, this can also be expressed more succinctly using `layer-point`.
 ")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length}))
 
@@ -536,7 +538,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Customizing mark size:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -544,7 +546,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Customizing mark symbol:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -552,7 +554,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Customizing mark color:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -560,7 +562,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Customizing mark opacity:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -568,7 +570,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Coloring by `:cyl` (considered `:quantitative` as it is a numerical column).
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -578,7 +580,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Coloring by `:cyl`, and marking it as `:nominal`:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -588,7 +590,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Determining mark size by `:cyl`:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -596,7 +598,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Determining mark size by `:cyl`, and marking it as `:nominal`:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -605,7 +607,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Determining mark symbol by `:cyl`:
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
       :=y :disp
@@ -645,14 +647,14 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 ;; Using 3d coordinates:
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=z :petal-length
                          :=color :petal-width
                          :=coordinates :3d}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=z :petal-length
@@ -664,7 +666,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (book-utils/md "#### For example")
 
-(-> datasets/economics-long
+
+
+(-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (plotly/layer-line
      {:=x :date
@@ -675,7 +679,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (book-utils/md "#### For example")
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (tc/group-by [:cyl])
     (tc/aggregate {:total-disp #(-> % :disp tcc/sum)})
     (tc/add-column :bar-width 0.5)
@@ -688,19 +692,19 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (book-utils/md "#### For example")
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-boxplot
      {:=x :cyl
       :=y :disp}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-boxplot
      {:=x :cyl
       :=y :disp
       :=color :am
       :=color-type :nominal}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-boxplot
      {:=x :cyl
       :=y :disp
@@ -712,31 +716,31 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (book-utils/md "#### For example")
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
      {:=x :cyl
       :=y :disp}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
      {:=x :cyl
       :=y :disp
       :=box-visible true}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
      {:=x :cyl
       :=y :disp
       :=meanline-visible true}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
      {:=x :cyl
       :=y :disp
       :=color :am
       :=color-type :nominal}))
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
      {:=x :cyl
       :=y :disp
@@ -748,7 +752,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (book-utils/md "#### For example")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-segment
      {:=x0 :sepal-width
       :=y0 :sepal-length
@@ -762,7 +766,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (book-utils/md "#### For example")
 
-(-> datasets/mtcars
+(-> (rdatasets/datasets-mtcars)
     (plotly/layer-text
      {:=x :mpg
       :=y :disp
@@ -776,14 +780,14 @@ Of course, this can also be expressed more succinctly using `layer-point`.
 
 (book-utils/md "#### Examples:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width
                              :=color :species
                              :=mark-opacity 0.5}))
@@ -798,16 +802,16 @@ Currently, the number of bins is determined by `:histogram-nbins`.
 We are exploring various rules of thumbs to determine it automatically.
 ")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram2d {:=x :sepal-width
                                :=y :sepal-length}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram2d {:=x :sepal-width
                                :=y :sepal-length
                                :=colorscale :Portland}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-histogram2d {:=x :sepal-width
                                :=y :sepal-length
                                :=histogram-nbins 100}))
@@ -825,18 +829,18 @@ We are exploring various rules of thumbs to determine it automatically.
 
 (book-utils/md "#### Examples:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=density-bandwidth 0.05}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=density-bandwidth 1}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
 
@@ -846,7 +850,7 @@ We are exploring various rules of thumbs to determine it automatically.
 
 (book-utils/md "Simple linear regression of `:=y` by `:=x`:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -856,7 +860,7 @@ We are exploring various rules of thumbs to determine it automatically.
 
 (book-utils/md "Multiple linear regression of `:=y` by `:=predictors`:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -868,7 +872,7 @@ We are exploring various rules of thumbs to determine it automatically.
 
 (book-utils/md "Polynomial regression of `:=y` by `:=design-matrix`:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -895,7 +899,7 @@ We are exploring various rules of thumbs to determine it automatically.
                         :type "org.tribuo.regression.rtree.impurity.MeanSquaredError"}]
    :tribuo-trainer-name "cart"})
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
                   :=y :sepal-length})
     (plotly/layer-point {:=mark-color "green"
@@ -907,7 +911,7 @@ We are exploring various rules of thumbs to determine it automatically.
 (book-utils/md "Grouped regression where `:=inferred-group` is influenced by `:color`
 since `:=color-type` is `:nominal`:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=title "dummy"
                   :=color :species
                   :=x :sepal-width
@@ -917,7 +921,7 @@ since `:=color-type` is `:nominal`:")
 
 (book-utils/md "Regression where grouping is avoiding using through `:=group`:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=title "dummy"
                   :=color :species
                   :=group []
@@ -928,7 +932,7 @@ since `:=color-type` is `:nominal`:")
 
 (book-utils/md "An simpler way to achieve this -- the color is only defined for the point layer:")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/base {:=title "dummy"
                   :=x :sepal-width
                   :=y :sepal-length})
@@ -1148,7 +1152,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 
 (book-utils/md "#### For example")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/splom {:=colnames [:sepal-width
                                :sepal-length
                                :petal-width
@@ -1156,7 +1160,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=height 600
                    :=width 600}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/splom {:=colnames [:sepal-width
                                :sepal-length
                                :petal-width
@@ -1165,7 +1169,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=height 600
                    :=width 600}))
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/splom {:=colnames [:sepal-width
                                :sepal-length
                                :petal-width
@@ -1177,7 +1181,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 (book-utils/include-fnvar-as-section #'plotly/plot)
 
 (book-utils/md "#### For example")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     tc/head
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length})
@@ -1188,7 +1192,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 This can be useful for editing the plot as a raw Plotly.js specification.
 For example:
 ")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length})
     plotly/plot
@@ -1197,14 +1201,14 @@ For example:
 (book-utils/include-fnvar-as-section #'plotly/debug)
 
 (book-utils/md "#### For example")
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species}))
 
 (book-utils/md "Let us verify that `:=background` is deterimined to be grey.")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species})
@@ -1212,7 +1216,7 @@ For example:
 
 (book-utils/md "Here, let us verify `:=color-type` for the 0th layer is deterimined to be `:nominal`.")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species})
@@ -1220,7 +1224,7 @@ For example:
 
 (book-utils/md "Here, let us check both `:=color` and `:=color-type` for the 0th layer.")
 
-(-> datasets/iris
+(-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
                          :=color :species})

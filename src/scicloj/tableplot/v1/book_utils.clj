@@ -1,4 +1,4 @@
-(ns tableplot-book.book-utils
+(ns scicloj.tableplot.v1.book-utils
   (:require [clojure.string :as str]
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]))
