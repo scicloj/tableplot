@@ -11,4 +11,3 @@
              :base-target-path "docs"
              :book {:title "Tableplot"}
              :clean-up-target-dir true})
-

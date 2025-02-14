@@ -575,7 +575,6 @@ Of course, this can also be expressed more succinctly using `layer-point`.
      {:=x :mpg
       :=y :disp
       :=color :cyl
-      :=color-type :nominal
       :=mark-size 20}))
 
 ;; Coloring by `:cyl`, and marking it as `:nominal`:
