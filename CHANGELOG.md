@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [1-beta11] - unreleased
+## [1-beta11] - 2025-02-19
 - added `:=size-range` support
 - added `:=colorscale` support for scatterplots
 
