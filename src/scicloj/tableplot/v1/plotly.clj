@@ -184,13 +184,15 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    :color-type :=color-type
    :size :=size
    :size-type :=size-type
+   :size-range :=size-range
    :symbol :=symbol
    :text :=text
    :inferred-group :=inferred-group
    :group :=group
    :marker-override {:color :=mark-color
                      :=marker-size-key :=mark-size
-                     :symbol :=mark-symbol}
+                     :symbol :=mark-symbol
+                     :colorscale :=colorscale}
    :fill :=mark-fill
    :trace-base {:mode :=mode
                 :type :=type
@@ -205,6 +207,16 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    :zmax :=zmax
    :colorscale :=colorscale
    :annotations :=annotations})
+
+(defn- rerange [values [left right]]
+  (let [minv (tcc/reduce-min values)
+        maxv (tcc/reduce-max values)
+        ratio (/ (- right left)
+                 (- maxv minv))]
+    (-> values
+        (tcc/- minv)
+        (tcc/* ratio)
+        (tcc/+ left))))
 
 (dag/defn-with-deps submap->traces
   "Create the Plotly.js traces from the Tableplot layers."
@@ -222,7 +234,7 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                  lat lon
                  coordinates
                  color color-type
-                 size size-type
+                 size size-type size-range
                  symbol
                  text
                  marker-override
@@ -250,7 +262,12 @@ For lines, it is `:width`. Otherwise, it is `:size`."
                                       :nominal {:size (cache/cached-assignment (get group-key size)
                                                                                sizes-palette
                                                                                ::size)}
-                                      :quantitative {:size (-> size group-dataset vec)}))
+                                      :quantitative {:size (if size-range
+                                                             (-> size
+                                                                 group-dataset
+                                                                 (cond-> size-range
+                                                                   (rerange size-range))
+                                                                 vec))}))
                                   (when symbol
                                     {:symbol (cache/cached-assignment (get group-key symbol)
                                                                       symbols-palette
@@ -485,6 +502,8 @@ The design matrix simply uses these columns without any additional transformatio
     "The column to determine the color of marks."]
    [:=size hc/RMV
     "The column to determine the size of marks."]
+   [:=size-range [10 30]
+    "The desired range of values for the marker sizes when sizing by a quantitative variable."]
    [:=symbol hc/RMV
     "The column to determine the [symbol](https://plotly.com/javascript/reference/#box-marker-symbol) of marks."]
    [:=x-type (submap->field-type :=x)
@@ -600,7 +619,7 @@ The design matrix simply uses these columns without any additional transformatio
    [:=zmax hc/RMV
     "Maximal z range value for heatmap."]
    [:=colorscale hc/RMV
-    "[Color scale](https://plotly.com/javascript/colorscales/) for heatmap."]
+    "[Color scale](https://plotly.com/javascript/colorscales/) for heatmap and scatterplots."]
    [:=annotations hc/RMV
     "Plot [annotations](https://plotly.com/javascript/text-and-annotations/)."]])
 
@@ -752,7 +771,7 @@ with possible additional substitutions if `submap` is provided.
   nil
   "🔑 **Main useful keys:**
   `:=dataset` `:=mark` `:=x` `:=y`
-  `:=color` `:=size` `:=symbol` `:=color-type` `:=size-type`
+  `:=color` `:=size` `:=size-range` `:=symbol` `:=color-type` `:=size-type`
   `:=mark-color` `:=mark-size` `:=mark-symbol` `:=mark-opacity`")
 
 (def-mark-based-layer layer-line
@@ -760,7 +779,7 @@ with possible additional substitutions if `submap` is provided.
   nil
   "🔑 **Main useful keys:**
   `:=dataset` `:=x` `:=y`
-  `:=color` `:=size` `:=color-type` `:=size-type`
+  `:=color` `:=size` `:=siz-range` `:=color-type` `:=size-type`
   `:=mark-color` `:=mark-size` `:=mark-opacity`")
 
 (def-mark-based-layer layer-bar

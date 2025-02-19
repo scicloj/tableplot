@@ -476,6 +476,8 @@ Coloring by a Quantitative column:
       :=color :cyl
       :=mark-size 20}))
 
+
+
 (book-utils/md "
 Overriding a quantitative column to be considered nominal by the `:=color-type` key:
 ")
@@ -577,6 +579,18 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color :cyl
       :=mark-size 20}))
 
+(book-utils/md "
+Coloring by `:cyl` and overriding `:=colorscale`:
+")
+
+(-> (rdatasets/datasets-mtcars)
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=color :cyl
+      :=colorscale :Greens
+      :=mark-size 20}))
+
 ;; Coloring by `:cyl`, and marking it as `:nominal`:
 
 (-> (rdatasets/datasets-mtcars)
@@ -595,7 +609,16 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :disp
       :=size :cyl}))
 
-;; Determining mark size by `:cyl`, and marking it as `:nominal`:
+(book-utils/md "Determining mark size by `:cyl` and specifying the `:=size-range`:")
+(-> (rdatasets/datasets-mtcars)
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=size :cyl
+      :=size-range [5 15]}))
+
+(book-utils/md
+ "Determining mark size by `:cyl`, and marking `:=size-type` as `:nominal`: ")
 
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
@@ -660,12 +683,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                          :=color :species
                          :=coordinates :3d}))
 
-
 (book-utils/include-fnvar-as-section #'plotly/layer-line)
 
 (book-utils/md "#### For example")
-
-
 
 (-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
