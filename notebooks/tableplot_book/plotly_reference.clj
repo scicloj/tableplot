@@ -476,17 +476,7 @@ Coloring by a Quantitative column:
       :=color :cyl
       :=mark-size 20}))
 
-(book-utils/md "
-Coloring by a Quantitative column and overriding `:=colorscale`:
-")
 
-(-> (rdatasets/datasets-mtcars)
-    (plotly/layer-point
-     {:=x :mpg
-      :=y :disp
-      :=color :cyl
-      :=colorscale :Greens
-      :=mark-size 20}))
 
 (book-utils/md "
 Overriding a quantitative column to be considered nominal by the `:=color-type` key:
@@ -589,6 +579,18 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=color :cyl
       :=mark-size 20}))
 
+(book-utils/md "
+Coloring by `:cyl` and overriding `:=colorscale`:
+")
+
+(-> (rdatasets/datasets-mtcars)
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=color :cyl
+      :=colorscale :Greens
+      :=mark-size 20}))
+
 ;; Coloring by `:cyl`, and marking it as `:nominal`:
 
 (-> (rdatasets/datasets-mtcars)
@@ -607,7 +609,7 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :disp
       :=size :cyl}))
 
-(book-utils/md"Determining mark size by `:cyl` and specifying the `:=size-range`:")
+(book-utils/md "Determining mark size by `:cyl` and specifying the `:=size-range`:")
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
      {:=x :mpg
