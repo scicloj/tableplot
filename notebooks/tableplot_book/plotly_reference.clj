@@ -595,7 +595,16 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :disp
       :=size :cyl}))
 
-;; Determining mark size by `:cyl`, and marking it as `:nominal`:
+(book-utils/md"Determining mark size by `:cyl` and specifying the `:=size-range`:")
+(-> (rdatasets/datasets-mtcars)
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=size :cyl
+      :=size-range [5 15]}))
+
+(book-utils/md
+ "Determining mark size by `:cyl`, and marking `:=size-type` as `:nominal`: ")
 
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
