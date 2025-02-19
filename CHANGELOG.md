@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [1-beta11] - 2025-02-19
 - added `:=size-range` support
+  - (with a slight breaking change with respect to default mark sizes)
 - added `:=colorscale` support for scatterplots
 
 ## [1-beta10.2] - 2025-02-11
