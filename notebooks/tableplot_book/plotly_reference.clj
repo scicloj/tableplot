@@ -477,6 +477,18 @@ Coloring by a Quantitative column:
       :=mark-size 20}))
 
 (book-utils/md "
+Coloring by a Quantitative column and overriding `:=colorscale`:
+")
+
+(-> (rdatasets/datasets-mtcars)
+    (plotly/layer-point
+     {:=x :mpg
+      :=y :disp
+      :=color :cyl
+      :=colorscale :Greens
+      :=mark-size 20}))
+
+(book-utils/md "
 Overriding a quantitative column to be considered nominal by the `:=color-type` key:
 ")
 (-> (rdatasets/datasets-mtcars)
@@ -669,12 +681,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
                          :=color :species
                          :=coordinates :3d}))
 
-
 (book-utils/include-fnvar-as-section #'plotly/layer-line)
 
 (book-utils/md "#### For example")
-
-
 
 (-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
