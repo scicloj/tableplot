@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [1-beta11] - unreleased
 - added `:=size-range` support
+- added `:=colorscale` support for scatterplots
 
 ## [1-beta10.2] - 2025-02-11
 - updated metamorph.ml version

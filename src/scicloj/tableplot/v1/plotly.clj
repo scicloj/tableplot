@@ -191,7 +191,8 @@ For lines, it is `:width`. Otherwise, it is `:size`."
    :group :=group
    :marker-override {:color :=mark-color
                      :=marker-size-key :=mark-size
-                     :symbol :=mark-symbol}
+                     :symbol :=mark-symbol
+                     :colorscale :=colorscale}
    :fill :=mark-fill
    :trace-base {:mode :=mode
                 :type :=type
@@ -618,7 +619,7 @@ The design matrix simply uses these columns without any additional transformatio
    [:=zmax hc/RMV
     "Maximal z range value for heatmap."]
    [:=colorscale hc/RMV
-    "[Color scale](https://plotly.com/javascript/colorscales/) for heatmap."]
+    "[Color scale](https://plotly.com/javascript/colorscales/) for heatmap and scatterplots."]
    [:=annotations hc/RMV
     "Plot [annotations](https://plotly.com/javascript/text-and-annotations/)."]])
 
