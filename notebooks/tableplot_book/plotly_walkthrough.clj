@@ -6,12 +6,14 @@
 
 ;; Here, we provide a walkthrough of that API.
 
-;; See also the more detailed [reference](tableplot_book.plotly_reference.html) 📖.
+;; See also the more detailed [Tableplot Plotly reference](tableplot_book.plotly_reference.html) 📖.
+;; You might find the official [Plotly.js reference](https://plotly.com/javascript/) helpful. (Tip: rotate narrow devices.)
+;; There are additional examples in [Intro to data visualization with Tableplot](https://scicloj.github.io/noj/noj_book.tableplot_datavis_intro.html) in the [Noj book](https://scicloj.github.io/noj).
 
 ;; ## Setup
 ;; For this tutorial, we require:
 
-;; * The Tableplot plotly API namepace
+;; * The Tableplot plotly API namespace
 
 ;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing
 
@@ -19,9 +21,11 @@
 
 ;; * the [print namespace](https://techascent.github.io/tech.ml.dataset/tech.v3.dataset.print.html) of [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) for customized dataset printing
 
-;; * [Kindly](https://scicloj.github.io/kindly-noted/) (to specify how certaiun values should be visualized)
+;; * [Kindly](https://scicloj.github.io/kindly-noted/) (to specify how certain values should be visualized)
 
 ;; * the datasets defined in the [Datasets chapter](./tableplot_book.datasets.html)
+
+;; * a few other namespaces used in particular examples.
 
 (ns tableplot-book.plotly-walkthrough
   (:require [scicloj.tableplot.v1.plotly :as plotly]
@@ -30,11 +34,14 @@
             [tech.v3.datatype.datetime :as datetime]
             [tech.v3.dataset.print :as print]
             [scicloj.kindly.v4.kind :as kind]
-            [clojure.string :as str]
             [scicloj.kindly.v4.api :as kindly]
-            [scicloj.metamorph.ml.rdatasets :as rdatasets]
-            [aerial.hanami.templates :as ht]))
-
+            [scicloj.metamorph.ml.rdatasets :as rdatasets]))
+^:kindly/hide-code
+(comment
+  ;; These were in the `require` but aren't used below:
+  [aerial.hanami.templates :as ht]
+  [clojure.string :as str]
+)
 
 ;; ## Basic usage
 
@@ -56,9 +63,32 @@
       :=mark-size 20
       :=mark-opacity 0.6}))
 
-;; ## Templates and parameters
 
-;; (💡 You do neet need to understand these details for basic usage.)
+;; ## Processing overview
+
+;; For basic use of Tableplot with a tool such as Clay, it's not necessary to
+;; understand the process leading to display of a plot. Knowing more
+;; might be helpful for debugging and advanced customizations, though.
+;; This section and the following ones provide more information about the
+;; process:
+
+;; 1. The parameter map passed to a function such as `plotly/layer-point` 
+;; will typically contain Plotly-specific [Hanami substitution
+;; keys](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations).
+;; 2. The values of those keys are automatically be combined with default values
+;; calculated for other Plotly-specific keys.
+;; 3. The preceding step results in an EDN map that specifies a Plotly.js plot.
+;; 4. The EDN-format plot specification is automatically transformed into a [Plotly
+;; JSON](https://plotly.com/chart-studio-help/json-chart-schema)
+;; specification.
+;; 5. The JSON specification is automatically used to display the plot.
+
+;; The reason Clay knows what to do with the maps at each step is
+;; because previous steps add appropriate [Kindly](https://scicloj.github.io/kindly-noted/) 
+;; meta annotations to the maps.
+
+
+;; ## Templates and parameters
 
 ;; Technically, the parameter maps contain [Hanami substitution keys](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations),
 ;; which means they are processed by a [simple set of rules](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#basic-transformation-rules),
@@ -82,17 +112,23 @@
 ;; This template has all the necessary knowledge, including the substitution
 ;; keys, to turn into a plot. This happens when your visual tool (e.g., Clay)
 ;; displays the plot. The tool knows what to do thanks to the Kindly metadata
-;; and a special function attached to the plot.
+;; and a special function attached to the plot.  For example, the metadata
+;; lets Clay know that the template should be transformed into a
+;; specification with template keys and values replaced with what Plotly.js
+;; needs.
 
 (meta example1)
 
 (:kindly/f example1)
 
-;; ## Realizing the plot
+;; ## Realizing the plot and further customization
 
-;; If you wish to see the resulting plot specification before displaying it
-;; as a plot, you can use the `plot` function. In this case,
-;; it generates a Plotly.js plot:
+;; If you wish to see the resulting EDN plot specification before displaying it
+;; as a plot, you can use the `plot` function.  You can also use this
+;; specification for customizations that might not be supported by the
+;; Plotly Hanami keys mentioned above.
+
+;; In this case, it generates a Plotly.js plot:
 
 (-> example1
     plotly/plot
@@ -105,18 +141,30 @@
     plotly/plot
     meta)
 
-;; This can be useful if you wish to process the Actual Plotly.js spec
-;; rather than use the Tableplot Plotly API. Let us change the background colour,
-;; for example:
+;; You can manipulate the resulting the Plotly EDN specification with
+;; arbitrary Clojure functions. In Clay, by default this will then cause
+;; the modified EDN to be used to generate a plot.
+
+;; As a simple illustration, let us change the background colour this way.  
+;; We can use `assoc-in` to modify the value of `:plot_bgcolor` nested near
+;; the end of the `example1` map displayed above.
+;; (One could also do this using the `:=background` Hanami key.)
 
 (-> example1
     plotly/plot
     (assoc-in [:layout :plot_bgcolor] "#eeeedd"))
 
-;; For another example, let us use a logarithmic scale for the y axis:
+;; Manipulating the Plotly EDN allows customizations that might not yet be supported by the
+;; Tableplot Plotly API. The next example compresses distances in the `y` direction,
+;; using a [capability of
+;; Plotly.js](https://plotly.com/javascript/reference/layout/xaxis/#layout-xaxis-scaleanchor)
+;; that isn't directly supported using Tableplot's Hanami keys.
+
 (-> example1
     plotly/plot
-    (assoc-in [:layout :yaxis :type] "log"))
+    (assoc-in [:layout :yaxis :scaleanchor] :x)
+    (assoc-in [:layout :yaxis :scaleratio] 0.25))
+
 
 ;; ## Field type inference
 
