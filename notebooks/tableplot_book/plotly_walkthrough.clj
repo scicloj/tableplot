@@ -73,9 +73,9 @@
 ;; process:
 
 ;; 1. The parameter map passed to a function such as `plotly/layer-point` 
-;; will typically contain Plotly-specific [Hanami substitution
+;; typically contain Plotly-specific [Hanami substitution
 ;; keys](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations).
-;; 2. The values of those keys are automatically be combined with default values
+;; 2. The values of those keys are automatically combined with default values
 ;; calculated for other Plotly-specific keys.
 ;; 3. The preceding step results in an EDN map that specifies a Plotly.js plot.
 ;; 4. The EDN-format plot specification is automatically transformed into a [Plotly
@@ -83,7 +83,8 @@
 ;; specification.
 ;; 5. The JSON specification is automatically used to display the plot.
 
-;; The reason Clay knows what to do with the maps at each step is
+;; The reason Kindly-compatible tools like Clay
+;; know what to do with the maps at each step is
 ;; because previous steps add appropriate [Kindly](https://scicloj.github.io/kindly-noted/) 
 ;; meta annotations to the maps.
 
@@ -112,7 +113,7 @@
 ;; This template has all the necessary knowledge, including the substitution
 ;; keys, to turn into a plot. This happens when your visual tool (e.g., Clay)
 ;; displays the plot. The tool knows what to do thanks to the Kindly metadata
-;; and a special function attached to the plot.  For example, the metadata
+;; and a special function attached to the plot. For example, the metadata
 ;; lets Clay know that the template should be transformed into a
 ;; specification with template keys and values replaced with what Plotly.js
 ;; needs.
@@ -141,8 +142,9 @@
     plotly/plot
     meta)
 
-;; You can manipulate the resulting the Plotly EDN specification with
-;; arbitrary Clojure functions. In Clay, by default this will then cause
+;; You can manipulate the resulting Plotly EDN specification with
+;; arbitrary Clojure functions. In Kindly-compatible tools like Clay,
+;; by default this will then cause
 ;; the modified EDN to be used to generate a plot.
 
 ;; As a simple illustration, let us change the background colour this way.  
