@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta12] - unreleased
+- fixed plots splom labels
+
 ## [1-beta11] - 2025-02-19
 - added `:=size-range` support
   - (with a slight breaking change with respect to default mark sizes)

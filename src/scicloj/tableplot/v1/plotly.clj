@@ -393,7 +393,7 @@ The design matrix simply uses these columns without any additional transformatio
   [dataset colnames]
   (->> colnames
        (map (fn [colname]
-              {:lable colname
+              {:label colname
                :values (-> colname
                            dataset
                            vec)}))))
