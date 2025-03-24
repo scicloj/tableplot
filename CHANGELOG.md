@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [1-beta12] - 2025-03-24
-- fixed plots splom labels
+- fixed splom plots labels
 
 ## [1-beta11] - 2025-02-19
 - added `:=size-range` support
