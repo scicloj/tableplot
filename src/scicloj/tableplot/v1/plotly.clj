@@ -643,6 +643,8 @@ The design matrix simply uses these columns without any additional transformatio
   template to which we can add layers.
   It can be used to set up some substitution keys to be shared
   by the various layers.
+  It can also be used to set up some general substitution keys,
+  which affect the layout rather than any specific layer.
 
   The return value is always a template which is set up
   to be visualized as Plotly.js.

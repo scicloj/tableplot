@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [unreleased]
+- minor docstring update
+
 ## [1-beta12] - 2025-03-24
 - fixed splom plots labels
 
