@@ -505,7 +505,23 @@ are a useful concept in extending Tableplot.
 
 (book-utils/include-fnvar-as-section #'plotly/base)
 
-(book-utils/md "#### For example")
+(book-utils/md "#### For example
+
+Setting layout options:
+")
+
+(-> (rdatasets/datasets-iris)
+    (plotly/base {:=background "floralwhite"
+                  :=height 300
+                  :=width 400})
+    (plotly/layer-point {:=x :sepal-width
+                         :=y :sepal-length
+                         :=color :species
+                         :=mark-size 10
+                         :=mark-opacity 0.6}))
+
+(book-utils/md "
+Setting properties which are shared between layers.")
 
 (-> (rdatasets/datasets-iris)
     (plotly/base {:=x :sepal-width
