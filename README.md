@@ -15,7 +15,8 @@ of [Hanami](https://github.com/jsa-aerial/hanami).
 
 Tableplot works with any tool that supports 
 the [Kindly](https://scicloj.github.io/kindly-noted/) data visualization standard,
-such as [Clay](https://scicloj.github.io/clay/).
+such as [Clay](https://scicloj.github.io/clay/)
+and [Clojupyter](https://github.com/clojupyter/clojupyter).
 
 📖 [Documentation](https://scicloj.github.io/tableplot/) 
 
