@@ -567,7 +567,7 @@ The design matrix simply uses these columns without any additional transformatio
     "The list of predictors to be used in regression (`layer-smooth`)."]
    [:=design-matrix submap->design-matrix
     "The design matrix definition to be used in regression (`layer-smooth`)."]
-   [:=model-options {:model-type :fastmath/ols}
+   [:=model-options {:model-type :metamorph.ml/ols}
     "The optional specification of a model for regression (`layer-smooth`)."]
    [:=histogram-nbins 10
     "The number of bins for `layer-histogram`."]
