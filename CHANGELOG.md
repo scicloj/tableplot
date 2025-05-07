@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [unreleased]
+## [1-beta13 - 2025-05-08]
 - minor docstring update
 - updated deps
 - changed smoothing statistic to require `scicloj.metamorph.ml.regression` only when needed
