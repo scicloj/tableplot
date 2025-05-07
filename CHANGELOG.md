@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. This change
 - minor docstring update
 - updated deps
 - changed smoothing statistic to require `scicloj.metamorph.ml.regression` only when needed
+- changed the default smoothing model to `{:model-type :metamorph.ml/ols}` rather than `{:model-type :fastmath/ols}` ([temoporarily avoiding memory problems](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/heavy.20work.20in.20linear.20regression/near/516766934))
 
 ## [1-beta12] - 2025-03-24
 - fixed splom plots labels
