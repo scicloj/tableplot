@@ -9,7 +9,6 @@
             [fastmath.stats :as stats]
             [fastmath.grid :as grid]
             [fastmath.kernel :as kernel]
-            [fastmath.ml.regression :as fmreg]
             [scicloj.metamorph.ml :as ml]
             [scicloj.metamorph.ml.design-matrix :as design-matrix]
             [scicloj.tableplot.v1.dag :as dag]
