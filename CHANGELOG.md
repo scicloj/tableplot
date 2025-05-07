@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [unreleased]
 - minor docstring update
+- updated deps
 
 ## [1-beta12] - 2025-03-24
 - fixed splom plots labels

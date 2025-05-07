@@ -1,10 +1,10 @@
 {:deps {scicloj/tablecloth {:mvn/version "7.029.2"}
         aerial.hanami/aerial.hanami {:mvn/version "0.20.1"}
-        org.scicloj/metamorph.ml {:mvn/version "1.1.1"}
+        org.scicloj/metamorph.ml {:mvn/version "1.2"}
         generateme/fastmath {:mvn/version "3.0.0-alpha3"}
-        org.scicloj/kindly {:mvn/version "4-beta14"}
+        org.scicloj/kindly {:mvn/version "4-beta16"}
         org.scicloj/tempfiles {:mvn/version "1-beta1"}
-        xyz.zcaudate/std.lang {:mvn/version "4.0.4"}}
+        xyz.zcaudate/std.lang {:mvn/version "4.0.10"}}
  :aliases
  {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.6"}
                  slipset/deps-deploy {:mvn/version "0.2.1"}}
