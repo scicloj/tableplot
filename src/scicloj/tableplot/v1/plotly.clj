@@ -10,7 +10,6 @@
             [fastmath.grid :as grid]
             [fastmath.kernel :as kernel]
             [scicloj.metamorph.ml :as ml]
-            [scicloj.metamorph.ml.regression]
             [scicloj.metamorph.ml.design-matrix :as design-matrix]
             [scicloj.tableplot.v1.dag :as dag]
             [clojure.string :as str]
@@ -871,6 +870,8 @@ then the regression is computed in groups.
                                  {:group =group
                                   :missing-column-name g}))))))
   (let [predictions-fn (fn [ds]
+                         (when =model-options
+                           (require '[scicloj.metamorph.ml.regression]))
                          (let [model (-> ds
                                          (tc/drop-missing [=y])
                                          (design-matrix/create-design-matrix [=y]
