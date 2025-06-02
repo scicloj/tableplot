@@ -1401,4 +1401,42 @@ then the density is estimated in groups.
       plotly-xform))
 
 
+(defn grid-layout
+  ([plots]
+   (grid-layout plots (-> plots count math/sqrt math/ceil)))
+  ([plots nrow]
+   (let [axis {:showline false
+               :zeroline false
+               :gridcolor "#ffff"
+               :ticklen 4}
+         n (count plots)
+         nrow (if (> nrow n) n nrow)
+         ncol (-> (/ n nrow) math/ceil)
+         step-row (/ 1.0 nrow)
+         step-col (/ 1.0 ncol)]
+     (into {}
+           (concat
+            (map #(vector (keyword (str "xaxis" %)) (conj axis {:domain (vector (* step-row (dec %)) (* step-row %))}))
+                 (range 1 (inc nrow)))
+            (map #(vector (keyword (str "yaxis" %)) (conj axis {:domain (vector (* step-col (dec %)) (* step-col %))}))
+                 (range 1 (inc ncol))))))))
+
+(defn grid-traces
+  ([plots]
+   (grid-traces plots (-> plots count math/sqrt math/ceil)))
+  ([plots nrow]
+   (let [n (count plots)
+         nrow (if (> nrow n) n nrow)
+         ncol (-> (/ n nrow) math/ceil)]
+     (mapcat (fn [plot-layers xaxis yaxis] (map (fn [layer] (conj layer {:xaxis (str "x" xaxis)
+                                                                         :yaxis (str "y" yaxis)})) plot-layers))
+                  (->> plots (map plotly/plot) (map :data))
+          (mapcat #(repeat ncol %) (range 1 (inc nrow)))
+               (cycle (range 1 (inc ncol)))))))
+
+(defn grid [plots nrow]
+  (kind/plotly
+   {:data (grid-traces plots nrow)
+    :layout (grid-layout plots nrow)}))
+
 
