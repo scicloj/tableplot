@@ -1240,7 +1240,7 @@ then the density is estimated in groups.
   `:=mark-color` `:=mark-size` `:=mark-opacity`
   "
   ([context]
-   (layer-histogram context {}))
+   (layer-density context {}))
   ([context submap]
    (layer context
           layer-base

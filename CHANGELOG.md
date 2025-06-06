@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## 1-beta14
+- bugfix: `layer-density` with no specified substitution map should use a density, not a histogram (fixes #41)
+
 ## [1-beta13 - 2025-05-08]
 - minor docstring update
 - updated deps
