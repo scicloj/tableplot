@@ -1221,6 +1221,16 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=height 600
                    :=width 600}))
 
+;; By default, all columns participate in a SPLOM:
+
+(-> (rdatasets/datasets-iris)
+    (tc/select-columns [:sepal-width
+                        :sepal-length
+                        :petal-width
+                        :petal-length])
+    (plotly/splom {:=height 600
+                   :=width 600}))
+
 (book-utils/include-fnvar-as-section #'plotly/plot)
 
 (book-utils/md "#### For example")
