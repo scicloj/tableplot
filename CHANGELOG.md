@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## 1-beta14
 - bugfix: `layer-density` with no specified substitution map should use a density, not a histogram (fixes #41)
+- defined the default of `=colnames` to be all columns of the dataset (fixes #39)
 
 ## [1-beta13 - 2025-05-08]
 - minor docstring update

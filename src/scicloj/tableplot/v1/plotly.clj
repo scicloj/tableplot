@@ -462,6 +462,12 @@ The design matrix simply uses these columns without any additional transformatio
                       {:hovermode :closest
                        :dragmode :select})))))
 
+(dag/defn-with-deps submap->colnames
+  "Extract all column names of the dataset."
+  [=dataset]
+  (when =dataset
+    (tc/column-names =dataset)))
+
 (def standard-defaults
   [[:=stat :=dataset
     "The data resulting from a possible statistical transformation."]
@@ -607,8 +613,8 @@ The design matrix simply uses these columns without any additional transformatio
     "The color for the x axis grid lines."]
    [:=yaxis-gridcolor "rgb(255,255,255)"
     "The color for the y axis grid lines."]
-   [:=colnames hc/RMV
-    "Column names for a SPLOM plot."]
+   [:=colnames submap->colnames
+    "Column names for a SPLOM plot. The default is all columns of the dataset."]
    [:=splom-layout submap->splom-layout
     "The layout for a SPLOM plot."]
    [:=splom-traces submap->splom-traces
