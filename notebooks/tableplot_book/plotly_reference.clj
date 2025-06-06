@@ -879,6 +879,14 @@ We are exploring various rules of thumbs to determine it automatically.
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
 
+
+;; Witn no substitution keys, we can rely on
+;; the default for `:=x` being the `:x` column:
+
+(-> {:x (repeatedly 9999 rand)}
+    tc/dataset
+    plotly/layer-density)
+
 (book-utils/include-fnvar-as-section #'plotly/layer-smooth)
 
 (book-utils/md "#### Examples:")
