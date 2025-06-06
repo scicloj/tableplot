@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## 1-beta14
+## [1-beta14 - 2025-06-06]
 - bugfix: `layer-density` with no specified substitution map should use a density, not a histogram (fixes #41)
 - defined the default of `=colnames` to be all columns of the dataset (fixes #39)
 
