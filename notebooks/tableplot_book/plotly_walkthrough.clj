@@ -10,6 +10,8 @@
 ;; You might find the official [Plotly.js reference](https://plotly.com/javascript/) helpful. (Tip: rotate narrow devices.)
 ;; There are additional examples in [Intro to data visualization with Tableplot](https://scicloj.github.io/noj/noj_book.tableplot_datavis_intro.html) in the [Noj book](https://scicloj.github.io/noj).
 
+;; 💡 **Note**: For a comprehensive reference of all available functions, substitution keys, and advanced features, see the [Plotly reference](tableplot_book.plotly_reference.html). This walkthrough focuses on common use cases and getting started quickly.
+
 ;; ## Setup
 ;; For this tutorial, we require:
 
@@ -40,8 +42,7 @@
 (comment
   ;; These were in the `require` but aren't used below:
   [aerial.hanami.templates :as ht]
-  [clojure.string :as str]
-)
+  [clojure.string :as str])
 
 ;; ## Basic usage
 
@@ -62,7 +63,6 @@
       :=color :species
       :=mark-size 20
       :=mark-opacity 0.6}))
-
 
 ;; ## Processing overview
 
@@ -87,7 +87,6 @@
 ;; know what to do with the maps at each step is
 ;; because previous steps add appropriate [Kindly](https://scicloj.github.io/kindly-noted/) 
 ;; meta annotations to the maps.
-
 
 ;; ## Templates and parameters
 
@@ -167,7 +166,6 @@
     (assoc-in [:layout :yaxis :scaleanchor] :x)
     (assoc-in [:layout :yaxis :scaleratio] 0.25))
 
-
 ;; ## Field type inference
 
 ;; Tableplot infers the type of relevant fields from the data.
@@ -203,6 +201,21 @@
     (plotly/layer-boxplot
      {:=x :cyl
       :=y :disp}))
+
+;; ### Violin plot
+
+(-> (rdatasets/datasets-mtcars)
+    (plotly/layer-violin
+     {:=x :cyl
+      :=y :disp}))
+
+;; Violin plot with box inside:
+
+(-> (rdatasets/datasets-mtcars)
+    (plotly/layer-violin
+     {:=x :cyl
+      :=y :disp
+      :=box-visible true}))
 
 ;; ### Area chart
 
@@ -251,6 +264,18 @@
                   :size 16
                   :color :purple}
       :=mark-size 20}))
+
+;; ### Heatmap
+
+;; Heatmaps are useful for visualizing 2D data or correlation matrices:
+
+(-> {:x (range 5)
+     :y (range 5)
+     :z (for [i (range 5)]
+          (for [j (range 5)]
+            (+ i j)))}
+    tc/dataset
+    (plotly/layer-heatmap {:=colorscale :Viridis}))
 
 ;; ### Segment plot
 
@@ -306,6 +331,17 @@
       :=y :value
       :=mark-color "purple"}))
 
+;; ## Multivariate visualization with SPLOM
+
+;; A Scatter Plot Matrix (SPLOM) is useful for exploring relationships
+;; between multiple variables at once:
+
+(-> (rdatasets/datasets-iris)
+    (plotly/splom {:=colnames [:sepal-width :sepal-length :petal-width :petal-length]
+                   :=color :species
+                   :=height 600
+                   :=width 600}))
+
 ;; ## Multiple layers
 
 ;; We can draw more than one layer:
@@ -332,7 +368,6 @@
                          :=mark-size 20
                          :=mark-opacity 0.5})
     (plotly/layer-line {:=mark-color "purple"}))
-
 
 ;; Layers can be named:
 
@@ -468,7 +503,6 @@
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
 
-
 ;; An example inspired by Plotly's
 ;; [ML Regressoin in Python](https://plotly.com/python/ml-regression/)
 ;; example.
@@ -488,7 +522,6 @@
     (plotly/layer-smooth {:=model-options regression-tree-options
                           :=name "prediction"
                           :=mark-color "purple"}))
-
 
 ;; ## Grouping
 
@@ -616,6 +649,15 @@
                              :=color :species
                              :=mark-opacity 0.5}))
 
+;; ### 2D Histograms
+
+;; For bivariate data, we can create 2D histograms:
+
+(-> (rdatasets/datasets-iris)
+    (plotly/layer-histogram2d {:=x :sepal-width
+                               :=y :sepal-length
+                               :=histogram-nbins 15}))
+
 ;; ## Density
 
 ;; (experimental)
@@ -649,7 +691,7 @@
      :lon [-73.57, -79.24, -123.06, -114.1, -113.28,
            -75.43, -63.57, -123.21, -97.13, -104.6]
      :text ["Montreal", "Toronto", "Vancouver", "Calgary", "Edmonton",
-            "Ottawa", "Halifax", "Victoria", "Winnepeg", "Regina"],}
+            "Ottawa", "Halifax", "Victoria", "Winnepeg", "Regina"]}
     tc/dataset
     (plotly/base {:=coordinates :geo
                   :=lat :lat
@@ -682,7 +724,6 @@
                          :=color :petal-width
                          :=coordinates :3d}))
 
-
 (-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
@@ -690,20 +731,29 @@
                          :=color :species
                          :=coordinates :3d}))
 
+;; ### Surface plots
+
+;; Surface plots are useful for visualizing 3D functions:
+
+(-> {:z (for [i (range 20)]
+          (for [j (range 20)]
+            (Math/sin (/ (* i j) 10))))}
+    tc/dataset
+    (plotly/layer-surface {:=colorscale :Viridis}))
 
 ;; ### polar
 
 ;; Monthly rain amounts - polar bar-chart
 
 (def rain-data
-(tc/dataset
- {:month [:Jan :Feb :Mar :Apr
-          :May :Jun :Jul :Aug
-          :Sep :Oct :Nov :Dec]
-  :rain (repeatedly #(rand-int 200))}))
+  (tc/dataset
+   {:month [:Jan :Feb :Mar :Apr
+            :May :Jun :Jul :Aug
+            :Sep :Oct :Nov :Dec]
+    :rain (repeatedly #(rand-int 200))}))
 
 (-> rain-data
-(plotly/layer-bar
+    (plotly/layer-bar
      {:=r :rain
       :=theta :month
       :=coordinates :polar
@@ -754,6 +804,9 @@
 
 ;; ## Debugging (WIP)
 
+;; Tableplot provides several debugging utilities to help understand
+;; how plots are constructed internally.
+
 ;; ### Viewing the computational dag of substitution keys:
 
 (def example-to-debug
@@ -785,6 +838,22 @@
 (-> example-to-debug
     (plotly/debug {:layers :=layers
                    :traces :=traces})
+    kind/pprint)
+
+;; ### Quick inspection of key values
+
+;; You can quickly inspect the value of any substitution key:
+
+(-> example-to-debug
+    (plotly/debug :=background))
+
+;; ### Viewing the final Plotly.js specification
+
+;; Use the `plot` function to see the final JSON specification
+;; that gets sent to Plotly.js:
+
+(-> example-to-debug
+    plotly/plot
     kind/pprint)
 
 ;; ## Coming soon
