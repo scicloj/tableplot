@@ -462,6 +462,42 @@ The design matrix simply uses these columns without any additional transformatio
                       {:hovermode :closest
                        :dragmode :select})))))
 
+
+(dag/defn-with-deps submap->grid-nrows
+  [=inner-plots]
+  (-> =inner-plots count math/sqrt math/ceil))
+
+(dag/defn-with-deps submap->grid-layout ;; define
+  ([=inner-plots =grid-nrows] ;; grid-nrows; be default derived from grid-nplots
+   (let [axis {:showline false
+               :zeroline false
+               :gridcolor "#ffff"
+               :ticklen 4}
+         n (count =inner-plots)
+         nrow (if (> grid-nrows n) n grid-nrows)
+         ncol (-> (/ n nrow) math/ceil)
+         step-row (/ 1.0 nrow)
+         step-col (/ 1.0 ncol)]
+     (into {}
+           (concat
+            (map #(vector (keyword (str "xaxis" %)) (conj axis {:domain (vector (* step-row (dec %)) (* step-row %))}))
+                 (range 1 (inc nrow)))
+            (map #(vector (keyword (str "yaxis" %)) (conj axis {:domain (vector (* step-col (dec %)) (* step-col %))}))
+                 (range 1 (inc ncol)))))))) ;; no gaps between plots
+
+(dag/defn-with-deps grid-traces-no-xform
+  ([=inner-plots =grid-nrows]
+   (let [n (count =inner-plots)
+         nrow (if (> =grid-nrows n) n nrow)
+         ncol (-> (/ n nrow) math/ceil)]
+     (mapcat (fn [plot-layers xaxis yaxis]
+               (map (fn [layer] (conj layer {:xaxis (str "x" xaxis)
+                                             :yaxis (str "y" yaxis)}))
+                    plot-layers))
+             (->> =inner-plots (map :data))
+             (mapcat #(repeat ncol %) (range 1 (inc nrow)))
+             (cycle (range 1 (inc ncol)))))))
+
 (def standard-defaults
   [[:=stat :=dataset
     "The data resulting from a possible statistical transformation."]
@@ -609,6 +645,14 @@ The design matrix simply uses these columns without any additional transformatio
     "The color for the y axis grid lines."]
    [:=colnames hc/RMV
     "Column names for a SPLOM plot."]
+   [:=inner-plots hc/RMV
+    "List of plots (used in a grid)"]
+   [:=grid-nrows submap->grid-nrows
+    "The number of rows in a plot grid."]
+   [:=grid-layout submap->grid-layout
+    "The layout of a plot grid."]
+   [:=grid-traces grid-traces-no-xform
+    "The trace of a plot grid."]
    [:=splom-layout submap->splom-layout
     "The layout for a SPLOM plot."]
    [:=splom-traces submap->splom-traces
@@ -1387,7 +1431,6 @@ then the density is estimated in groups.
 
 (defn splom
   "Show a SPLOM (ScatterPLOt Matrix) of given dimensions of a dataset.
-
   🔑 **Main useful keys:**
   `:=dataset` `:=colnames`
   `:=color` `:=color-type` `:=symbol`
@@ -1400,43 +1443,11 @@ then the density is estimated in groups.
              :layout :=splom-layout)
       plotly-xform))
 
-
-(defn grid-layout
-  ([plots]
-   (grid-layout plots (-> plots count math/sqrt math/ceil)))
-  ([plots nrow]
-   (let [axis {:showline false
-               :zeroline false
-               :gridcolor "#ffff"
-               :ticklen 4}
-         n (count plots)
-         nrow (if (> nrow n) n nrow)
-         ncol (-> (/ n nrow) math/ceil)
-         step-row (/ 1.0 nrow)
-         step-col (/ 1.0 ncol)]
-     (into {}
-           (concat
-            (map #(vector (keyword (str "xaxis" %)) (conj axis {:domain (vector (* step-row (dec %)) (* step-row %))}))
-                 (range 1 (inc nrow)))
-            (map #(vector (keyword (str "yaxis" %)) (conj axis {:domain (vector (* step-col (dec %)) (* step-col %))}))
-                 (range 1 (inc ncol))))))))
-
-(defn grid-traces
-  ([plots]
-   (grid-traces plots (-> plots count math/sqrt math/ceil)))
-  ([plots nrow]
-   (let [n (count plots)
-         nrow (if (> nrow n) n nrow)
-         ncol (-> (/ n nrow) math/ceil)]
-     (mapcat (fn [plot-layers xaxis yaxis] (map (fn [layer] (conj layer {:xaxis (str "x" xaxis)
-                                                                         :yaxis (str "y" yaxis)})) plot-layers))
-                  (->> plots (map plotly/plot) (map :data))
-          (mapcat #(repeat ncol %) (range 1 (inc nrow)))
-               (cycle (range 1 (inc ncol)))))))
-
-(defn grid [plots nrow]
-  (kind/plotly
-   {:data (grid-traces plots nrow)
-    :layout (grid-layout plots nrow)}))
-
-
+(defn grid
+  "Arrange a list of plots into a grid."
+  [plots]
+  (plotly-xform
+     {:data :=grid-traces-no-xform
+      :layout :=grid-layout
+      ::ht/defaults (assoc standard-defaults-man
+                           :inner-plots plots)}))
