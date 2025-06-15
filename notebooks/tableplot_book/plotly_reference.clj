@@ -879,6 +879,14 @@ We are exploring various rules of thumbs to determine it automatically.
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
 
+
+;; Witn no substitution keys, we can rely on
+;; the default for `:=x` being the `:x` column:
+
+(-> {:x (repeatedly 9999 rand)}
+    tc/dataset
+    plotly/layer-density)
+
 (book-utils/include-fnvar-as-section #'plotly/layer-smooth)
 
 (book-utils/md "#### Examples:")
@@ -1211,6 +1219,16 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                                :petal-length]
                    :=symbol :species
                    :=height 600
+                   :=width 600}))
+
+;; By default, all columns participate in a SPLOM:
+
+(-> (rdatasets/datasets-iris)
+    (tc/select-columns [:sepal-width
+                        :sepal-length
+                        :petal-width
+                        :petal-length])
+    (plotly/splom {:=height 600
                    :=width 600}))
 
 (book-utils/include-fnvar-as-section #'plotly/plot)

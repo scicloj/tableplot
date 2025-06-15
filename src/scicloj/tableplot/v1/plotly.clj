@@ -462,7 +462,6 @@ The design matrix simply uses these columns without any additional transformatio
                       {:hovermode :closest
                        :dragmode :select})))))
 
-
 (dag/defn-with-deps submap->grid-nrows
   [=inner-plots]
   (-> =inner-plots count math/sqrt math/ceil))
@@ -497,6 +496,12 @@ The design matrix simply uses these columns without any additional transformatio
              (->> =inner-plots (map :data))
              (mapcat #(repeat ncol %) (range 1 (inc nrow)))
              (cycle (range 1 (inc ncol)))))))
+
+(dag/defn-with-deps submap->colnames
+  "Extract all column names of the dataset."
+  [=dataset]
+  (when =dataset
+    (tc/column-names =dataset)))
 
 (def standard-defaults
   [[:=stat :=dataset
@@ -653,6 +658,8 @@ The design matrix simply uses these columns without any additional transformatio
     "The layout of a plot grid."]
    [:=grid-traces grid-traces-no-xform
     "The trace of a plot grid."]
+   [:=colnames submap->colnames
+    "Column names for a SPLOM plot. The default is all columns of the dataset."]
    [:=splom-layout submap->splom-layout
     "The layout for a SPLOM plot."]
    [:=splom-traces submap->splom-traces
@@ -1284,7 +1291,7 @@ then the density is estimated in groups.
   `:=mark-color` `:=mark-size` `:=mark-opacity`
   "
   ([context]
-   (layer-histogram context {}))
+   (layer-density context {}))
   ([context submap]
    (layer context
           layer-base
