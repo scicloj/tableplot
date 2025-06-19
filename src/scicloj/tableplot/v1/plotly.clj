@@ -744,6 +744,7 @@ The design matrix simply uses these columns without any additional transformatio
        (base submap))))
 
 
+
 (defn plot
   "The `plot` function realizes a template as a Plotly.js specification."
   [template]
@@ -1453,12 +1454,10 @@ then the density is estimated in groups.
 (defn grid
   "Arrange a list of plots into a grid."
   [plots]
-  (-> view-base
-      (assoc ::ht/defaults
-             (merge standard-defaults-map
-                    {:=traces submap->grid-traces
-                     :=layout submap->grid-layout
-                     :=inner-plots plots}))
-      plotly-xform))
+  (base view-base
+        (merge standard-defaults-map
+               {:=traces submap->grid-traces
+                :=layout submap->grid-layout
+                :=inner-plots plots})))
 
 
