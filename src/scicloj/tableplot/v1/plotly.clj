@@ -658,10 +658,6 @@ The design matrix simply uses these columns without any additional transformatio
     "List of plots (used in a grid)"]
    [:=grid-nrows submap->grid-nrows
     "The number of rows in a plot grid."]
-   [:=grid-layout submap->grid-layout
-    "The layout of a plot grid."]
-   [:=grid-traces submap->grid-traces
-    "The trace of a plot grid."]
    [:=colnames submap->colnames
     "Column names for a SPLOM plot. The default is all columns of the dataset."]
    [:=splom-layout submap->splom-layout
@@ -1457,10 +1453,12 @@ then the density is estimated in groups.
 (defn grid
   "Arrange a list of plots into a grid."
   [plots]
-  (-> {:data :=grid-traces
-       :layout :=grid-layout
-       ::ht/defaults (merge standard-defaults-map
-                            {:=inner-plots plots})}
+  (-> view-base
+      (assoc ::ht/defaults
+             (merge standard-defaults-map
+                    {:=traces submap->grid-traces
+                     :=layout submap->grid-layout
+                     :=inner-plots plots}))
       plotly-xform))
 
 
