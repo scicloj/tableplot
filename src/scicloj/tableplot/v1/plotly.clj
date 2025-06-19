@@ -463,7 +463,7 @@ The design matrix simply uses these columns without any additional transformatio
                        :dragmode :select})))))
 
 (dag/defn-with-deps submap->grid-nrows
-  nil
+  "Compute the number of rows for a grid given its inner plots."
   [=inner-plots]
   (-> =inner-plots count math/sqrt math/ceil))
 
@@ -487,7 +487,7 @@ The design matrix simply uses these columns without any additional transformatio
            (map #(vector (keyword (str "yaxis" %)) (conj axis {:domain (vector (* step-col (dec %)) (* step-col %))}))
                 (range 1 (inc ncol))))))) ;; no gaps between plots
 
-(dag/defn-with-deps grid-traces-no-xform
+(dag/defn-with-deps submap->grid-traces
   nil
   [=inner-plots =grid-nrows]
   (let [n (count =inner-plots)
@@ -660,7 +660,7 @@ The design matrix simply uses these columns without any additional transformatio
     "The number of rows in a plot grid."]
    [:=grid-layout submap->grid-layout
     "The layout of a plot grid."]
-   [:=grid-traces grid-traces-no-xform
+   [:=grid-traces submap->grid-traces
     "The trace of a plot grid."]
    [:=colnames submap->colnames
     "Column names for a SPLOM plot. The default is all columns of the dataset."]
@@ -1457,8 +1457,10 @@ then the density is estimated in groups.
 (defn grid
   "Arrange a list of plots into a grid."
   [plots]
-  (plotly-xform
-   {:data :=grid-traces-no-xform
-    :layout :=grid-layout
-    ::ht/defaults (assoc standard-defaults-map
-                         :inner-plots plots)}))
+  (-> {:data :=grid-traces
+       :layout :=grid-layout
+       ::ht/defaults (merge standard-defaults-map
+                            {:=inner-plots plots})}
+      plotly-xform))
+
+
