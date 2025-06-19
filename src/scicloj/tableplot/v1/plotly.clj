@@ -476,7 +476,7 @@ The design matrix simply uses these columns without any additional transformatio
               :gridcolor "#ffff"
               :ticklen 4}
         n (count =inner-plots)
-        nrow (if (> =grid-nrows n) n =grid-nrows)
+        nrow (min =grid-nrows n)
         ncol (-> (/ n nrow) math/ceil)
         step-row (/ 1.0 nrow)
         step-col (/ 1.0 ncol)]
