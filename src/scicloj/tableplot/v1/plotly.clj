@@ -1460,5 +1460,5 @@ then the density is estimated in groups.
   (plotly-xform
    {:data :=grid-traces-no-xform
     :layout :=grid-layout
-    ::ht/defaults (assoc standard-defaults
+    ::ht/defaults (assoc standard-defaults-map
                          :inner-plots plots)}))
