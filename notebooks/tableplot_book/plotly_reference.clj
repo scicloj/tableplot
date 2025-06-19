@@ -8,7 +8,7 @@
 
 ;; In this tutorial, we use:
 
-;; * The Tableplot plotly API namepace
+;; * The Tableplot plotly API namepace `scicloj.tableplot.v1.plotly`
 ;; * [Tablecloth](https://scicloj.github.io/tablecloth/) for dataset processing and column processing
 ;; * [dtype-next](https://github.com/cnuernber/dtype-next)'s tensor namespace for tensor examples
 ;; * dtype-next's buffered image namespace for image representation
