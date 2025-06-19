@@ -463,39 +463,43 @@ The design matrix simply uses these columns without any additional transformatio
                        :dragmode :select})))))
 
 (dag/defn-with-deps submap->grid-nrows
+  nil
   [=inner-plots]
   (-> =inner-plots count math/sqrt math/ceil))
 
-(dag/defn-with-deps submap->grid-layout ;; define
-  ([=inner-plots =grid-nrows] ;; grid-nrows; be default derived from grid-nplots
-   (let [axis {:showline false
-               :zeroline false
-               :gridcolor "#ffff"
-               :ticklen 4}
-         n (count =inner-plots)
-         nrow (if (> grid-nrows n) n grid-nrows)
-         ncol (-> (/ n nrow) math/ceil)
-         step-row (/ 1.0 nrow)
-         step-col (/ 1.0 ncol)]
-     (into {}
-           (concat
-            (map #(vector (keyword (str "xaxis" %)) (conj axis {:domain (vector (* step-row (dec %)) (* step-row %))}))
-                 (range 1 (inc nrow)))
-            (map #(vector (keyword (str "yaxis" %)) (conj axis {:domain (vector (* step-col (dec %)) (* step-col %))}))
-                 (range 1 (inc ncol)))))))) ;; no gaps between plots
+(dag/defn-with-deps submap->grid-layout
+  ;; define
+  nil
+  [=inner-plots =grid-nrows] ;; grid-nrows; be default derived from grid-nplots
+  (let [axis {:showline false
+              :zeroline false
+              :gridcolor "#ffff"
+              :ticklen 4}
+        n (count =inner-plots)
+        nrow (if (> =grid-nrows n) n =grid-nrows)
+        ncol (-> (/ n nrow) math/ceil)
+        step-row (/ 1.0 nrow)
+        step-col (/ 1.0 ncol)]
+    (into {}
+          (concat
+           (map #(vector (keyword (str "xaxis" %)) (conj axis {:domain (vector (* step-row (dec %)) (* step-row %))}))
+                (range 1 (inc nrow)))
+           (map #(vector (keyword (str "yaxis" %)) (conj axis {:domain (vector (* step-col (dec %)) (* step-col %))}))
+                (range 1 (inc ncol))))))) ;; no gaps between plots
 
 (dag/defn-with-deps grid-traces-no-xform
-  ([=inner-plots =grid-nrows]
-   (let [n (count =inner-plots)
-         nrow (if (> =grid-nrows n) n nrow)
-         ncol (-> (/ n nrow) math/ceil)]
-     (mapcat (fn [plot-layers xaxis yaxis]
-               (map (fn [layer] (conj layer {:xaxis (str "x" xaxis)
-                                             :yaxis (str "y" yaxis)}))
-                    plot-layers))
-             (->> =inner-plots (map :data))
-             (mapcat #(repeat ncol %) (range 1 (inc nrow)))
-             (cycle (range 1 (inc ncol)))))))
+  nil
+  [=inner-plots =grid-nrows]
+  (let [n (count =inner-plots)
+        nrow (min =grid-nrows n)
+        ncol (-> (/ n nrow) math/ceil)]
+    (mapcat (fn [plot-layers xaxis yaxis]
+              (map (fn [layer] (conj layer {:xaxis (str "x" xaxis)
+                                            :yaxis (str "y" yaxis)}))
+                   plot-layers))
+            (->> =inner-plots (map :data))
+            (mapcat #(repeat ncol %) (range 1 (inc nrow)))
+            (cycle (range 1 (inc ncol))))))
 
 (dag/defn-with-deps submap->colnames
   "Extract all column names of the dataset."
@@ -1454,7 +1458,7 @@ then the density is estimated in groups.
   "Arrange a list of plots into a grid."
   [plots]
   (plotly-xform
-     {:data :=grid-traces-no-xform
-      :layout :=grid-layout
-      ::ht/defaults (assoc standard-defaults-man
-                           :inner-plots plots)}))
+   {:data :=grid-traces-no-xform
+    :layout :=grid-layout
+    ::ht/defaults (assoc standard-defaults
+                         :inner-plots plots)}))
