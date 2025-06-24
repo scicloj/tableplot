@@ -462,6 +462,45 @@ The design matrix simply uses these columns without any additional transformatio
                       {:hovermode :closest
                        :dragmode :select})))))
 
+(dag/defn-with-deps submap->grid-nrows
+  "Compute the number of rows for a grid given its inner plots."
+  [=inner-plots]
+  (-> =inner-plots count math/sqrt math/ceil))
+
+(dag/defn-with-deps submap->grid-layout
+  ;; define
+  nil
+  [=inner-plots =grid-nrows] ;; grid-nrows; be default derived from grid-nplots
+  (let [axis {:showline false
+              :zeroline false
+              :gridcolor "#ffff"
+              :ticklen 4}
+        n (count =inner-plots)
+        nrow (min =grid-nrows n)
+        ncol (-> (/ n nrow) math/ceil)
+        step-row (/ 1.0 nrow)
+        step-col (/ 1.0 ncol)]
+    (into {}
+          (concat
+           (map #(vector (keyword (str "xaxis" %)) (conj axis {:domain (vector (* step-row (dec %)) (* step-row %))}))
+                (range 1 (inc nrow)))
+           (map #(vector (keyword (str "yaxis" %)) (conj axis {:domain (vector (* step-col (dec %)) (* step-col %))}))
+                (range 1 (inc ncol))))))) ;; no gaps between plots
+
+(dag/defn-with-deps submap->grid-traces
+  nil
+  [=inner-plots =grid-nrows]
+  (let [n (count =inner-plots)
+        nrow (min =grid-nrows n)
+        ncol (-> (/ n nrow) math/ceil)]
+    (mapcat (fn [plot-layers xaxis yaxis]
+              (map (fn [layer] (conj layer {:xaxis (str "x" xaxis)
+                                            :yaxis (str "y" yaxis)}))
+                   plot-layers))
+            (->> =inner-plots (map :data))
+            (mapcat #(repeat ncol %) (range 1 (inc nrow)))
+            (cycle (range 1 (inc ncol))))))
+
 (dag/defn-with-deps submap->colnames
   "Extract all column names of the dataset."
   [=dataset]
@@ -613,6 +652,12 @@ The design matrix simply uses these columns without any additional transformatio
     "The color for the x axis grid lines."]
    [:=yaxis-gridcolor "rgb(255,255,255)"
     "The color for the y axis grid lines."]
+   [:=colnames hc/RMV
+    "Column names for a SPLOM plot."]
+   [:=inner-plots hc/RMV
+    "List of plots (used in a grid)"]
+   [:=grid-nrows submap->grid-nrows
+    "The number of rows in a plot grid."]
    [:=colnames submap->colnames
     "Column names for a SPLOM plot. The default is all columns of the dataset."]
    [:=splom-layout submap->splom-layout
@@ -697,6 +742,7 @@ The design matrix simply uses these columns without any additional transformatio
                standard-defaults-map
                {:=dataset dataset})
        (base submap))))
+
 
 
 (defn plot
@@ -1393,7 +1439,6 @@ then the density is estimated in groups.
 
 (defn splom
   "Show a SPLOM (ScatterPLOt Matrix) of given dimensions of a dataset.
-
   🔑 **Main useful keys:**
   `:=dataset` `:=colnames`
   `:=color` `:=color-type` `:=symbol`
@@ -1406,5 +1451,13 @@ then the density is estimated in groups.
              :layout :=splom-layout)
       plotly-xform))
 
+(defn grid
+  "Arrange a list of plots into a grid."
+  [plots]
+  (base view-base
+        (merge standard-defaults-map
+               {:=traces submap->grid-traces
+                :=layout submap->grid-layout
+                :=inner-plots plots})))
 
 
