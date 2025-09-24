@@ -1185,7 +1185,7 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
   :uint8))
 
 (defonce Crab-Nebula-image
-  (-> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Crab_Nebula.jpg/240px-Crab_Nebula.jpg"
+  (-> "https://scicloj.github.io/sci-cloj-logo-transparent.png"
       (java.net.URL.)
       (javax.imageio.ImageIO/read)))
 
