@@ -14,7 +14,7 @@
 
 ;; For this tutorial, we require:
 
-;; * Tableplot's Hanami API namepace
+;; * Tableplot's Hanami API namespace
 
 ;; * [Hanami](https://github.com/jsa-aerial/hanami)
 
