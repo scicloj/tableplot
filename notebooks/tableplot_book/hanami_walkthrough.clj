@@ -136,10 +136,10 @@
 
 (-> (rdatasets/datasets-iris)
     (hanami/plot hanami/point-chart
-                {:=x :sepal-width
-                 :=y :sepal-length
-                 :=color :species
-                 :=mark-size 200})
+                 {:=x :sepal-width
+                  :=y :sepal-length
+                  :=color :species
+                  :=mark-size 200})
     kind/pprint)
 
 ;; On the other hand, in the following example,
@@ -213,13 +213,13 @@
 
 (-> (rdatasets/datasets-iris)
     (hanami/plot ht/rule-chart
-                {:X :sepal-width
-                 :Y :sepal-length
-                 :X2 :petal-width
-                 :Y2 :petal-length
-                 :OPACITY 0.5
-                 :SIZE 3
-                 :COLOR "species"}))
+                 {:X :sepal-width
+                  :Y :sepal-length
+                  :X2 :petal-width
+                  :Y2 :petal-length
+                  :OPACITY 0.5
+                  :SIZE 3
+                  :COLOR "species"}))
 
 ;; ## Time series
 
@@ -228,9 +228,9 @@
 (-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/plot hanami/line-chart
-                {:=x :date
-                 :=y :value
-                 :=mark-color "purple"}))
+                 {:=x :date
+                  :=y :value
+                  :=mark-color "purple"}))
 
 ;; You see, the `:date` field was correctly inferred to be
 ;; of the `:temporal` kind.
@@ -382,11 +382,11 @@
 (-> (rdatasets/ggplot2-economics_long)
     (tc/select-rows #(-> % :variable (= "unemploy")))
     (hanami/base {:=x :date
-                 :=y :value})
+                  :=y :value})
     (hanami/layer-line {:=mark-color "purple"})
     (hanami/update-data tc/random 5)
     (hanami/layer-point {:=mark-color "green"
-                        :=mark-size 200})
+                         :=mark-size 200})
     hanami/plot
     (assoc-in [:encoding :y :scale :type] "log"))
 
@@ -401,9 +401,9 @@
 
 (-> (rdatasets/datasets-iris)
     (hanami/base {:=title "dummy"
-                 :=mark-color "green"
-                 :=x :sepal-width
-                 :=y :sepal-length})
+                  :=mark-color "green"
+                  :=x :sepal-width
+                  :=y :sepal-length})
     hanami/layer-point
     (hanami/layer-smooth {:=mark-color "orange"}))
 
@@ -414,10 +414,10 @@
 
 (-> (rdatasets/datasets-iris)
     (hanami/base {:=x :sepal-width
-                 :=y :sepal-length})
+                  :=y :sepal-length})
     hanami/layer-point
     (hanami/layer-smooth {:=predictors [:petal-width
-                                       :petal-length]}))
+                                        :petal-length]}))
 
 ;; ## Grouping
 
@@ -429,9 +429,9 @@
 
 (-> (rdatasets/datasets-iris)
     (hanami/base {:=title "dummy"
-                 :=color :species
-                 :=x :sepal-width
-                 :=y :sepal-length})
+                  :=color :species
+                  :=x :sepal-width
+                  :=y :sepal-length})
     hanami/layer-point
     hanami/layer-smooth)
 
@@ -443,11 +443,11 @@
 
 (-> (rdatasets/datasets-iris)
     (hanami/base {:=title "dummy"
-                 :=mark-color "green"
-                 :=color :species
-                 :=group []
-                 :=x :sepal-width
-                 :=y :sepal-length})
+                  :=mark-color "green"
+                  :=color :species
+                  :=group []
+                  :=x :sepal-width
+                  :=y :sepal-length})
     hanami/layer-point
     hanami/layer-smooth)
 
@@ -504,18 +504,18 @@
     (tc/add-column :month #(datetime/long-temporal-field :months (:date %)))
     (tc/map-columns :yearmonth [:year :month] (fn [y m] (+ m (* 12 y))))
     (hanami/base {:=x :date
-                 :=y :value})
+                  :=y :value})
     (hanami/layer-smooth {:=color :relative-time
-                         :=mark-size 10
-                         :=group []
-                         :=predictors [:yearmonth]})
+                          :=mark-size 10
+                          :=group []
+                          :=predictors [:yearmonth]})
     ;; Keep only the past for the following layer:
     (hanami/update-data (fn [dataset]
-                         (-> dataset
-                             (tc/select-rows (fn [row]
-                                               (-> row :relative-time (= "Past")))))))
+                          (-> dataset
+                              (tc/select-rows (fn [row]
+                                                (-> row :relative-time (= "Past")))))))
     (hanami/layer-line {:=mark-color "purple"
-                       :=mark-size 3}))
+                        :=mark-size 3}))
 
 ;; ## Histograms
 
@@ -527,4 +527,4 @@
 
 (-> (rdatasets/datasets-iris)
     (hanami/layer-histogram {:=x :sepal-width
-                            :=histogram-nbins 30}))
+                             :=histogram-nbins 30}))
