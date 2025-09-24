@@ -73,7 +73,7 @@
 ;; process:
 
 ;; 1. The parameter map passed to a function such as `plotly/layer-point` 
-;; typically contain Plotly-specific [Hanami substitution
+;; typically contains Plotly-specific [Hanami substitution
 ;; keys](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations).
 ;; 2. The values of those keys are automatically combined with default values
 ;; calculated for other Plotly-specific keys.
@@ -170,7 +170,7 @@
 
 ;; Tableplot infers the type of relevant fields from the data.
 
-;; The example above was colored as it were since `:species`
+;; The example above was colored as it was since the `:species`
 ;; column was nominal, so it was assigned distinct colours.
 
 ;; In the following example, the coloring is by a quantitative
