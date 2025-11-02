@@ -53,9 +53,9 @@
  t8_l113
  (is
   ((fn*
-    [p1__94322#]
+    [p1__86401#]
     (->
-     p1__94322#
+     p1__86401#
      :aerial.hanami.templates/defaults
      :=dataset
      tc/row-count
@@ -67,8 +67,8 @@
  t9_l119
  (is
   ((fn*
-    [p1__94323#]
-    (-> p1__94323# meta :kindly/kind (= :kind/pprint)))
+    [p1__86402#]
+    (-> p1__86402# meta :kindly/kind (= :kind/pprint)))
    v7_l111)))
 
 
@@ -106,8 +106,17 @@
    {:=x :mpg, :=y :disp, :=color :cyl, :=mark-size 20})))
 
 
+(deftest
+ t24_l199
+ (is
+  ((fn*
+    [p1__86403#]
+    (= (-> p1__86403# plotly/plot :data first :type) "scatter"))
+   v22_l191)))
+
+
 (def
- v24_l200
+ v26_l203
  (->
   (rdatasets/datasets-mtcars)
   (plotly/layer-point
@@ -119,70 +128,150 @@
 
 
 (def
- v26_l212
+ v28_l215
  (->
   (rdatasets/datasets-mtcars)
   (plotly/layer-boxplot {:=x :cyl, :=y :disp})))
 
 
+(deftest
+ t30_l221
+ (is
+  ((fn*
+    [p1__86404#]
+    (= (-> p1__86404# plotly/plot :data first :type) "box"))
+   v28_l215)))
+
+
 (def
- v28_l219
+ v32_l225
  (->
   (rdatasets/datasets-mtcars)
   (plotly/layer-violin {:=x :cyl, :=y :disp})))
 
 
 (def
- v30_l226
+ v34_l232
  (->
   (rdatasets/datasets-mtcars)
   (plotly/layer-violin {:=x :cyl, :=y :disp, :=box-visible true})))
 
 
+(deftest
+ t36_l239
+ (is
+  ((fn*
+    [p1__86405#]
+    (=
+     (->
+      p1__86405#
+      :aerial.hanami.templates/defaults
+      :=layers
+      first
+      :aerial.hanami.templates/defaults
+      :=box-visible)
+     true))
+   v34_l232)))
+
+
 (def
- v32_l234
+ v38_l243
  (->
   (rdatasets/datasets-mtcars)
   (tc/group-by [:cyl])
   (tc/aggregate
-   {:total-disp (fn* [p1__94324#] (-> p1__94324# :disp tcc/sum))})
+   {:total-disp (fn* [p1__86406#] (-> p1__86406# :disp tcc/sum))})
   (tc/order-by [:cyl])
   (plotly/layer-line
    {:=x :cyl, :=mark-fill :tozeroy, :=y :total-disp})))
 
 
+(deftest
+ t40_l253
+ (is
+  ((fn*
+    [p1__86407#]
+    (=
+     (->
+      p1__86407#
+      :aerial.hanami.templates/defaults
+      :=layers
+      first
+      :aerial.hanami.templates/defaults
+      :=mark-fill)
+     :tozeroy))
+   v38_l243)))
+
+
 (def
- v34_l245
+ v42_l257
  (->
   (rdatasets/datasets-mtcars)
   (tc/group-by [:cyl])
   (tc/aggregate
-   {:total-disp (fn* [p1__94325#] (-> p1__94325# :disp tcc/sum))})
+   {:total-disp (fn* [p1__86408#] (-> p1__86408# :disp tcc/sum))})
   (plotly/layer-bar {:=x :cyl, :=y :total-disp})))
 
 
+(deftest
+ t44_l265
+ (is
+  ((fn*
+    [p1__86409#]
+    (= (-> p1__86409# plotly/plot :data first :type) "bar"))
+   v42_l257)))
+
+
 (def
- v35_l252
+ v45_l267
  (->
   (rdatasets/datasets-mtcars)
   (tc/group-by [:cyl])
   (tc/aggregate
-   {:total-disp (fn* [p1__94326#] (-> p1__94326# :disp tcc/sum))})
+   {:total-disp (fn* [p1__86410#] (-> p1__86410# :disp tcc/sum))})
   (tc/add-column :bar-width 0.5)
   (plotly/layer-bar
    {:=x :cyl, :=bar-width :bar-width, :=y :total-disp})))
 
 
+(deftest
+ t47_l277
+ (is
+  ((fn*
+    [p1__86411#]
+    (=
+     (->
+      p1__86411#
+      :aerial.hanami.templates/defaults
+      :=layers
+      first
+      :aerial.hanami.templates/defaults
+      :=bar-width)
+     :bar-width))
+   v45_l267)))
+
+
 (def
- v37_l263
+ v49_l281
  (->
   (rdatasets/datasets-mtcars)
   (plotly/layer-text
    {:=x :mpg, :=y :disp, :=text :cyl, :=mark-size 20})))
 
 
+(deftest
+ t51_l289
+ (is
+  ((fn*
+    [p1__86412#]
+    (and
+     (= (-> p1__86412# plotly/plot :data first :type) "scatter")
+     (= (-> p1__86412# plotly/plot :data first :mode) :text)))
+   v49_l281)))
+
+
 (def
- v38_l270
+ v52_l292
  (->
   (rdatasets/datasets-mtcars)
   (plotly/layer-text
@@ -194,8 +283,25 @@
     :=mark-size 20})))
 
 
+(deftest
+ t54_l303
+ (is
+  ((fn*
+    [p1__86413#]
+    (=
+     (->
+      p1__86413#
+      :aerial.hanami.templates/defaults
+      :=layers
+      first
+      :aerial.hanami.templates/defaults
+      :=textfont)
+     {:family "Courier New, monospace", :size 16, :color :purple}))
+   v52_l292)))
+
+
 (def
- v40_l284
+ v56_l312
  (->
   {:x (range 5),
    :y (range 5),
@@ -204,8 +310,17 @@
   (plotly/layer-heatmap {:=colorscale :Viridis})))
 
 
+(deftest
+ t58_l321
+ (is
+  ((fn*
+    [p1__86414#]
+    (= (-> p1__86414# plotly/plot :data first :type) "heatmap"))
+   v56_l312)))
+
+
 (def
- v42_l294
+ v60_l325
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-segment
@@ -218,8 +333,19 @@
     :=color :species})))
 
 
+(deftest
+ t62_l336
+ (is
+  ((fn*
+    [p1__86415#]
+    (and
+     (= (-> p1__86415# plotly/plot :data first :type) "scatter")
+     (= (-> p1__86415# plotly/plot :data first :mode) :lines)))
+   v60_l325)))
+
+
 (def
- v44_l306
+ v64_l341
  (->
   {:x (range 10)}
   tc/dataset
@@ -241,7 +367,7 @@
 
 
 (def
- v45_l314
+ v65_l349
  (->
   {:ABCD (range 1 11),
    :EFGH [5 2.5 5 7.5 5 2.5 7.5 4.5 5.5 5],
@@ -262,16 +388,16 @@
 
 
 (def
- v47_l339
+ v67_l374
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__94327#] (-> p1__94327# :variable (= "unemploy"))))
+   (fn* [p1__86416#] (-> p1__86416# :variable (= "unemploy"))))
   (plotly/layer-line {:=x :date, :=y :value, :=mark-color "purple"})))
 
 
 (def
- v49_l351
+ v69_l386
  (->
   (rdatasets/datasets-iris)
   (plotly/splom
@@ -281,12 +407,21 @@
     :=width 600})))
 
 
+(deftest
+ t71_l393
+ (is
+  ((fn*
+    [p1__86417#]
+    (= (-> p1__86417# plotly/plot :data first :type) :splom))
+   v69_l386)))
+
+
 (def
- v51_l361
+ v73_l399
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__94328#] (-> p1__94328# :variable (= "unemploy"))))
+   (fn* [p1__86418#] (-> p1__86418# :variable (= "unemploy"))))
   (plotly/layer-point
    {:=x :date,
     :=y :value,
@@ -297,23 +432,34 @@
 
 
 (def
- v53_l375
+ v75_l413
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__94329#] (-> p1__94329# :variable (= "unemploy"))))
+   (fn* [p1__86419#] (-> p1__86419# :variable (= "unemploy"))))
   (plotly/base {:=x :date, :=y :value})
   (plotly/layer-point
    {:=mark-color "green", :=mark-size 20, :=mark-opacity 0.5})
   (plotly/layer-line {:=mark-color "purple"})))
 
 
+(deftest
+ t77_l423
+ (is
+  ((fn*
+    [p1__86420#]
+    (=
+     (-> p1__86420# :aerial.hanami.templates/defaults :=layers count)
+     2))
+   v75_l413)))
+
+
 (def
- v55_l386
+ v79_l427
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__94330#] (-> p1__94330# :variable (= "unemploy"))))
+   (fn* [p1__86421#] (-> p1__86421# :variable (= "unemploy"))))
   (plotly/base {:=x :date, :=y :value})
   (plotly/layer-point
    {:=mark-color "green",
@@ -324,11 +470,11 @@
 
 
 (def
- v57_l410
+ v81_l451
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__94331#] (-> p1__94331# :variable (= "unemploy"))))
+   (fn* [p1__86422#] (-> p1__86422# :variable (= "unemploy"))))
   (plotly/base {:=x :date, :=y :value})
   (plotly/layer-line {:=mark-color "purple"})
   (plotly/update-data tc/random 5)
@@ -336,8 +482,19 @@
    {:=mark-color "green", :=mark-size 15, :=mark-opacity 0.5})))
 
 
+(deftest
+ t83_l462
+ (is
+  ((fn*
+    [p1__86423#]
+    (=
+     (-> p1__86423# :aerial.hanami.templates/defaults :=layers count)
+     2))
+   v81_l451)))
+
+
 (def
- v59_l422
+ v85_l466
  (->
   (tc/dataset {:x (range 4), :y [1 2 5 9]})
   tc/dataset
@@ -348,7 +505,7 @@
 
 
 (def
- v61_l437
+ v87_l481
  (->
   (rdatasets/datasets-iris)
   (plotly/base {:=x :sepal-width, :=y :sepal-length})
@@ -356,8 +513,21 @@
   (plotly/layer-smooth {:=mark-color "orange", :=name "Predicted"})))
 
 
+(deftest
+ t89_l490
+ (is
+  ((fn*
+    [p1__86424#]
+    (and
+     (=
+      (-> p1__86424# :aerial.hanami.templates/defaults :=layers count)
+      2)
+     (= (-> p1__86424# plotly/plot :data count) 2)))
+   v87_l481)))
+
+
 (def
- v63_l450
+ v91_l498
  (->
   (rdatasets/datasets-iris)
   (plotly/base {:=x :sepal-width, :=y :sepal-length})
@@ -369,7 +539,7 @@
 
 
 (def
- v65_l465
+ v93_l513
  (->
   (rdatasets/datasets-iris)
   (plotly/base {:=x :sepal-width, :=y :sepal-length})
@@ -383,7 +553,7 @@
 
 
 (def
- v67_l478
+ v95_l526
  (->
   (rdatasets/datasets-iris)
   (plotly/base {:=x :sepal-width, :=y :sepal-length})
@@ -397,11 +567,11 @@
     :=name "Predicted"})))
 
 
-(def v69_l495 (require 'scicloj.ml.tribuo))
+(def v97_l543 (require 'scicloj.ml.tribuo))
 
 
 (def
- v70_l497
+ v98_l545
  (def
   regression-tree-options
   {:model-type :scicloj.ml.tribuo/regression,
@@ -419,7 +589,7 @@
 
 
 (def
- v71_l509
+ v99_l557
  (->
   (rdatasets/datasets-iris)
   (plotly/base {:=x :sepal-width, :=y :sepal-length})
@@ -431,7 +601,7 @@
 
 
 (def
- v73_l522
+ v101_l570
  (defonce
   tips
   (->
@@ -440,7 +610,7 @@
 
 
 (def
- v74_l526
+ v102_l574
  (->
   tips
   (tc/split :holdout {:seed 1})
@@ -452,7 +622,7 @@
     (->
      ds
      (tc/select-rows
-      (fn* [p1__94332#] (-> p1__94332# :$split-name (= :train)))))))
+      (fn* [p1__86425#] (-> p1__86425# :$split-name (= :train)))))))
   (plotly/layer-smooth
    {:=model-options regression-tree-options,
     :=name "prediction",
@@ -460,7 +630,7 @@
 
 
 (def
- v76_l546
+ v104_l594
  (->
   (rdatasets/datasets-iris)
   (plotly/base
@@ -472,8 +642,15 @@
   plotly/layer-smooth))
 
 
+(deftest
+ t106_l603
+ (is
+  ((fn* [p1__86426#] (= (-> p1__86426# plotly/plot :data count) 6))
+   v104_l594)))
+
+
 (def
- v78_l560
+ v108_l611
  (->
   (rdatasets/datasets-iris)
   (plotly/base
@@ -487,7 +664,7 @@
 
 
 (def
- v80_l572
+ v110_l623
  (->
   (rdatasets/datasets-iris)
   (plotly/base {:=title "dummy", :=x :sepal-width, :=y :sepal-length})
@@ -495,12 +672,19 @@
   (plotly/layer-smooth {:=name "Predicted", :=mark-color "blue"})))
 
 
+(deftest
+ t112_l632
+ (is
+  ((fn* [p1__86427#] (= (-> p1__86427# plotly/plot :data count) 4))
+   v110_l623)))
+
+
 (def
- v82_l590
+ v114_l644
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__94333#] (-> p1__94333# :variable (= "unemploy"))))
+   (fn* [p1__86428#] (-> p1__86428# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -515,11 +699,11 @@
 
 
 (def
- v84_l602
+ v116_l656
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__94334#] (-> p1__94334# :variable (= "unemploy"))))
+   (fn* [p1__86429#] (-> p1__86429# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -533,23 +717,23 @@
   (tc/add-column
    :year
    (fn*
-    [p1__94335#]
-    (datetime/long-temporal-field :years (:date p1__94335#))))
+    [p1__86430#]
+    (datetime/long-temporal-field :years (:date p1__86430#))))
   (tc/add-column
    :month
    (fn*
-    [p1__94336#]
-    (datetime/long-temporal-field :months (:date p1__94336#))))
+    [p1__86431#]
+    (datetime/long-temporal-field :months (:date p1__86431#))))
   (tc/map-columns :yearmonth [:year :month] (fn [y m] (+ m (* 12 y))))
   (print/print-range 6)))
 
 
 (def
- v86_l621
+ v118_l675
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__94337#] (-> p1__94337# :variable (= "unemploy"))))
+   (fn* [p1__86432#] (-> p1__86432# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -563,13 +747,13 @@
   (tc/add-column
    :year
    (fn*
-    [p1__94338#]
-    (datetime/long-temporal-field :years (:date p1__94338#))))
+    [p1__86433#]
+    (datetime/long-temporal-field :years (:date p1__86433#))))
   (tc/add-column
    :month
    (fn*
-    [p1__94339#]
-    (datetime/long-temporal-field :months (:date p1__94339#))))
+    [p1__86434#]
+    (datetime/long-temporal-field :months (:date p1__86434#))))
   (tc/map-columns :yearmonth [:year :month] (fn [y m] (+ m (* 12 y))))
   (plotly/base {:=x :date, :=y :value})
   (plotly/layer-smooth
@@ -588,21 +772,30 @@
 
 
 (def
- v88_l652
+ v120_l706
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-histogram {:=x :sepal-width})))
 
 
+(deftest
+ t122_l710
+ (is
+  ((fn*
+    [p1__86435#]
+    (= (-> p1__86435# plotly/plot :data first :type) "bar"))
+   v120_l706)))
+
+
 (def
- v89_l655
+ v123_l712
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-histogram {:=x :sepal-width, :=histogram-nbins 30})))
 
 
 (def
- v90_l659
+ v124_l716
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-histogram
@@ -610,43 +803,85 @@
 
 
 (def
- v92_l668
+ v126_l725
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-histogram2d
    {:=x :sepal-width, :=y :sepal-length, :=histogram-nbins 15})))
 
 
+(deftest
+ t128_l731
+ (is
+  ((fn*
+    [p1__86436#]
+    (= (-> p1__86436# plotly/plot :data first :type) "heatmap"))
+   v126_l725)))
+
+
 (def
- v94_l679
+ v130_l739
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-density {:=x :sepal-width})))
 
 
+(deftest
+ t132_l743
+ (is
+  ((fn*
+    [p1__86437#]
+    (= (-> p1__86437# plotly/plot :data first :type) "scatter"))
+   v130_l739)))
+
+
 (def
- v95_l682
+ v133_l745
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-density {:=x :sepal-width, :=density-bandwidth 0.05})))
 
 
+(deftest
+ t135_l750
+ (is
+  ((fn*
+    [p1__86438#]
+    (=
+     (->
+      p1__86438#
+      :aerial.hanami.templates/defaults
+      :=layers
+      first
+      :aerial.hanami.templates/defaults
+      :=density-bandwidth)
+     0.05))
+   v133_l745)))
+
+
 (def
- v96_l686
+ v136_l752
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-density {:=x :sepal-width, :=density-bandwidth 1})))
 
 
 (def
- v97_l690
+ v137_l756
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-density {:=x :sepal-width, :=color :species})))
 
 
+(deftest
+ t139_l761
+ (is
+  ((fn* [p1__86439#] (= (-> p1__86439# plotly/plot :data count) 3))
+   v137_l756)))
+
+
 (def
- v99_l701
+ v141_l770
  (->
   {:lat [45.5 43.4 49.13 51.1 53.34 45.24 44.64 48.25 49.89 50.45],
    :lon
@@ -704,7 +939,7 @@
 
 
 (def
- v101_l732
+ v143_l801
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-point
@@ -715,8 +950,25 @@
     :=coordinates :3d})))
 
 
+(deftest
+ t145_l809
+ (is
+  ((fn*
+    [p1__86440#]
+    (=
+     (->
+      p1__86440#
+      :aerial.hanami.templates/defaults
+      :=layers
+      first
+      :aerial.hanami.templates/defaults
+      :=coordinates)
+     :3d))
+   v143_l801)))
+
+
 (def
- v102_l739
+ v146_l811
  (->
   (rdatasets/datasets-iris)
   (plotly/layer-point
@@ -728,7 +980,7 @@
 
 
 (def
- v104_l750
+ v148_l822
  (->
   {:z
    (for [i (range 20)] (for [j (range 20)] (Math/sin (/ (* i j) 10))))}
@@ -736,8 +988,17 @@
   (plotly/layer-surface {:=colorscale :Viridis})))
 
 
+(deftest
+ t150_l829
+ (is
+  ((fn*
+    [p1__86441#]
+    (= (-> p1__86441# plotly/plot :data first :type) "surface"))
+   v148_l822)))
+
+
 (def
- v106_l760
+ v152_l835
  (def
   rain-data
   (tc/dataset
@@ -747,7 +1008,7 @@
 
 
 (def
- v107_l767
+ v153_l842
  (->
   rain-data
   (plotly/layer-bar
@@ -758,8 +1019,25 @@
     :=mark-opacity 0.6})))
 
 
+(deftest
+ t155_l851
+ (is
+  ((fn*
+    [p1__86442#]
+    (=
+     (->
+      p1__86442#
+      :aerial.hanami.templates/defaults
+      :=layers
+      first
+      :aerial.hanami.templates/defaults
+      :=coordinates)
+     :polar))
+   v153_l842)))
+
+
 (def
- v109_l778
+ v157_l856
  (->
   rain-data
   (plotly/base {})
@@ -780,7 +1058,7 @@
 
 
 (def
- v111_l796
+ v159_l874
  (let
   [n 50]
   (->
@@ -789,7 +1067,7 @@
     (->>
      (repeatedly n (fn* [] (* 10 (rand))))
      (reductions +)
-     (map (fn* [p1__94340#] (rem p1__94340# 360)))),
+     (map (fn* [p1__86443#] (rem p1__86443# 360)))),
     :color (range n)}
    tc/dataset
    (plotly/layer-point
@@ -807,7 +1085,7 @@
 
 
 (def
- v113_l824
+ v161_l902
  (def
   example-to-debug
   (->
@@ -817,28 +1095,28 @@
     {:=x :sepal-width, :=y :sepal-length, :=color :species}))))
 
 
-(def v114_l831 (-> example-to-debug plotly/dag))
+(def v162_l909 (-> example-to-debug plotly/dag))
 
 
 (def
- v116_l838
+ v164_l916
  (-> example-to-debug (plotly/debug :=layers) kind/pprint))
 
 
 (def
- v118_l844
+ v166_l922
  (-> example-to-debug (plotly/debug :=traces) kind/pprint))
 
 
 (def
- v120_l850
+ v168_l928
  (->
   example-to-debug
   (plotly/debug {:layers :=layers, :traces :=traces})
   kind/pprint))
 
 
-(def v122_l859 (-> example-to-debug (plotly/debug :=background)))
+(def v170_l937 (-> example-to-debug (plotly/debug :=background)))
 
 
-(def v124_l867 (-> example-to-debug plotly/plot kind/pprint))
+(def v172_l945 (-> example-to-debug plotly/plot kind/pprint))

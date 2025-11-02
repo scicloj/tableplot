@@ -195,6 +195,9 @@
       :=color :cyl
       :=mark-size 20}))
 
+;; Test: quantitative color creates scatter trace
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "scatter")])
+
 ;; We can override the inferred types and thus affect the generated plot:
 
 (-> (rdatasets/datasets-mtcars)
@@ -214,6 +217,9 @@
      {:=x :cyl
       :=y :disp}))
 
+;; Test: boxplot produces box trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "box")])
+
 ;; ### Violin plot
 
 (-> (rdatasets/datasets-mtcars)
@@ -229,6 +235,9 @@
       :=y :disp
       :=box-visible true}))
 
+;; Test: violin with box visible setting
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=box-visible) true)])
+
 ;; ### Area chart
 
 (-> (rdatasets/datasets-mtcars)
@@ -240,6 +249,9 @@
       :=mark-fill :tozeroy
       :=y :total-disp}))
 
+;; Test: area chart has fill setting
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=mark-fill) :tozeroy)])
+
 ;; ### Bar chart
 
 (-> (rdatasets/datasets-mtcars)
@@ -248,6 +260,9 @@
     (plotly/layer-bar
      {:=x :cyl
       :=y :total-disp}))
+
+;; Test: bar chart produces bar trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "bar")])
 
 (-> (rdatasets/datasets-mtcars)
     (tc/group-by [:cyl])
@@ -258,6 +273,9 @@
       :=bar-width :bar-width
       :=y :total-disp}))
 
+;; Test: bar chart with bar-width setting
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=bar-width) :bar-width)])
+
 ;; ### Text
 
 (-> (rdatasets/datasets-mtcars)
@@ -266,6 +284,10 @@
       :=y :disp
       :=text :cyl
       :=mark-size 20}))
+
+;; Test: text layer produces scatter trace with text mode
+(kind/test-last [#(and (= (-> % plotly/plot :data first :type) "scatter")
+                       (= (-> % plotly/plot :data first :mode) :text))])
 
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-text
@@ -276,6 +298,12 @@
                   :size 16
                   :color :purple}
       :=mark-size 20}))
+
+;; Test: text layer with textfont setting
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=textfont)
+                     {:family "Courier New, monospace"
+                      :size 16
+                      :color :purple})])
 
 ;; ### Heatmap
 
@@ -289,6 +317,9 @@
     tc/dataset
     (plotly/layer-heatmap {:=colorscale :Viridis}))
 
+;; Test: heatmap produces heatmap trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "heatmap")])
+
 ;; ### Segment plot
 
 (-> (rdatasets/datasets-iris)
@@ -300,6 +331,10 @@
       :=mark-opacity 0.4
       :=mark-size 3
       :=color :species}))
+
+;; Test: segment layer produces scatter trace with lines mode
+(kind/test-last [#(and (= (-> % plotly/plot :data first :type) "scatter")
+                       (= (-> % plotly/plot :data first :mode) :lines))])
 
 ;; ## Varying color and size
 
@@ -354,6 +389,9 @@
                    :=height 600
                    :=width 600}))
 
+;; Test: SPLOM produces splom trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) :splom)])
+
 ;; ## Multiple layers
 
 ;; We can draw more than one layer:
@@ -380,6 +418,9 @@
                          :=mark-size 20
                          :=mark-opacity 0.5})
     (plotly/layer-line {:=mark-color "purple"}))
+
+;; Test: base with shared parameters creates 2 layers
+(kind/test-last [#(= (-> % ::ht/defaults :=layers count) 2)])
 
 ;; Layers can be named:
 
@@ -417,6 +458,9 @@
                          :=mark-size 15
                          :=mark-opacity 0.5}))
 
+;; Test: update-data creates 2 layers
+(kind/test-last [#(= (-> % ::ht/defaults :=layers count) 2)])
+
 ;; ## Overriding layer data
 
 (-> (tc/dataset {:x (range 4)
@@ -441,6 +485,10 @@
                          :=name "Actual"})
     (plotly/layer-smooth {:=mark-color "orange"
                           :=name "Predicted"}))
+
+;; Test: smooth with point creates 2 layers and 2 traces
+(kind/test-last [#(and (= (-> % ::ht/defaults :=layers count) 2)
+                       (= (-> % plotly/plot :data count) 2))])
 
 ;; By default, the regression is computed with only one predictor variable,
 ;; which is `:=x`.
@@ -551,6 +599,9 @@
     plotly/layer-point
     plotly/layer-smooth)
 
+;; Test: automatic grouping by color creates 6 traces (3 points + 3 smooth)
+(kind/test-last [#(= (-> % plotly/plot :data count) 6)])
+
 ;; This happened because the `:color` field was `:species`,
 ;; which is of `:nominal` type.
 
@@ -576,6 +627,9 @@
     (plotly/layer-point {:=color :species})
     (plotly/layer-smooth {:=name "Predicted"
                           :=mark-color "blue"}))
+
+;; Test: layer-specific color creates 4 traces (3 colored points + 1 smooth)
+(kind/test-last [#(= (-> % plotly/plot :data count) 4)])
 
 ;; ## Example: out-of-sample predictions
 
@@ -652,6 +706,9 @@
 (-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width}))
 
+;; Test: histogram produces bar trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "bar")])
+
 (-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
@@ -670,6 +727,9 @@
                                :=y :sepal-length
                                :=histogram-nbins 15}))
 
+;; Test: histogram2d produces heatmap trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "heatmap")])
+
 ;; ## Density
 
 ;; (experimental)
@@ -679,9 +739,15 @@
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width}))
 
+;; Test: density layer produces scatter trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "scatter")])
+
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=density-bandwidth 0.05}))
+
+;; Test: density with bandwidth setting
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=density-bandwidth) 0.05)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
@@ -690,6 +756,9 @@
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
+
+;; Test: density with color grouping creates 3 traces
+(kind/test-last [#(= (-> % plotly/plot :data count) 3)])
 
 ;; ## Coordinates
 ;; (WIP)
@@ -736,6 +805,9 @@
                          :=color :petal-width
                          :=coordinates :3d}))
 
+;; Test: 3d coordinates setting
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=coordinates) :3d)])
+
 (-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
@@ -752,6 +824,9 @@
             (Math/sin (/ (* i j) 10))))}
     tc/dataset
     (plotly/layer-surface {:=colorscale :Viridis}))
+
+;; Test: surface plot produces surface trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "surface")])
 
 ;; ### polar
 
@@ -771,6 +846,9 @@
       :=coordinates :polar
       :=mark-size 20
       :=mark-opacity 0.6}))
+
+;; Test: polar coordinates setting
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=coordinates) :polar)])
 
 ;; Controlling the polar layout
 ;; (by manipulating the raw Plotly.js spec):
