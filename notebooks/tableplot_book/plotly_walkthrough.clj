@@ -37,7 +37,8 @@
             [tech.v3.dataset.print :as print]
             [scicloj.kindly.v4.kind :as kind]
             [scicloj.kindly.v4.api :as kindly]
-            [scicloj.metamorph.ml.rdatasets :as rdatasets]))
+            [scicloj.metamorph.ml.rdatasets :as rdatasets]
+            [aerial.hanami.templates :as ht]))
 ^:kindly/hide-code
 (comment
   ;; These were in the `require` but aren't used below:
@@ -108,6 +109,17 @@
         :=mark-opacity 0.6})))
 
 (kind/pprint example1)
+
+(kind/test-last [#(-> %
+                      :aerial.hanami.templates/defaults
+                      :=dataset
+                      tc/row-count
+                      (= 10))])
+
+(kind/test-last [#(-> %
+                      meta
+                      :kindly/kind
+                      (= :kind/pprint))])
 
 ;; This template has all the necessary knowledge, including the substitution
 ;; keys, to turn into a plot. This happens when your visual tool (e.g., Clay)

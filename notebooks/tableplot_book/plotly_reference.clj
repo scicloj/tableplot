@@ -34,7 +34,6 @@
 ^:kindly/hide-code
 (require '[scicloj.tableplot.v1.book-utils :as book-utils])
 
-
 (book-utils/md
  "## Overview 🐦
 The Tableplot Plotly API allows the user to write functional pipelines
@@ -67,6 +66,17 @@ will display by realizing it and using it as a Plotly.js specification.
                          :=y :sepal-length
                          :=color :species
                          :=mark-size 10}))
+
+;; Test: template has dataset
+(kind/test-last [#(contains? (::ht/defaults %) :=dataset)])
+
+;; Test: layer has correct x and y mappings
+(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layers first ::ht/defaults)]
+                    (and (= (:=x layer-defaults) :sepal-width)
+                         (= (:=y layer-defaults) :sepal-length)))])
+
+;; Test: realized spec produces scatter type traces
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "scatter")])
 
 (book-utils/md "To inspect it, let us use [Kindly](https://scicloj.github.io/kindly-noted/) to request
 that this template would rather be pretty-printed as a data structure.")
@@ -101,7 +111,6 @@ the `plot` function:
                          :=mark-size 10})
     plotly/plot
     kind/portal)
-
 
 (book-utils/md "
 This is useful for debugging, and also when one wishes to edit the Plotly.js
@@ -174,7 +183,7 @@ Here is how we represent that in Clojure:
           :y [10 11 12 13]
           :text ["A<br>size: 40" "B<br>size: 60" "C<br>size: 80" "D<br>size: 100"]
           :mode :markers
-          :marker {:color ["rgb(93, 164, 214)", "rgb(255, 144, 14)",  "rgb(44, 160, 101)", "rgb(255, 65, 54)"]
+          :marker {:color ["rgb(93, 164, 214)", "rgb(255, 144, 14)", "rgb(44, 160, 101)", "rgb(255, 65, 54)"]
                    :size [40 60 80 100]}}]
   :layout {:title {:text "Bubble Chart Hover Text"}
            :showlegend false
@@ -308,7 +317,7 @@ For example:
      :lon [-73.57, -79.24, -123.06, -114.1, -113.28,
            -75.43, -63.57, -123.21, -97.13, -104.6]
      :text ["Montreal", "Toronto", "Vancouver", "Calgary", "Edmonton",
-            "Ottawa", "Halifax", "Victoria", "Winnepeg", "Regina"],}
+            "Ottawa", "Halifax", "Victoria", "Winnepeg", "Regina"]}
     tc/dataset
     (plotly/base {:=coordinates :geo
                   :=lat :lat
@@ -332,8 +341,6 @@ For example:
                :showlakes true
                :showrivers true}))
 
-
-
 ;; #### 3d
 
 (-> (rdatasets/datasets-iris)
@@ -342,6 +349,9 @@ For example:
                          :=z :petal-length
                          :=color :petal-width
                          :=coordinates :3d}))
+
+;; Test: 3d coordinates are configured correctly
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=coordinates) :3d)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
@@ -368,6 +378,9 @@ For example:
       :=coordinates :polar
       :=mark-size 20
       :=mark-opacity 0.6}))
+
+;; Test: polar coordinates are configured correctly
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=coordinates) :polar)])
 
 ;; Controlling the polar layout
 ;; (by manipulating the raw Plotly.js spec):
@@ -410,9 +423,6 @@ For example:
         :=coordinates :polar
         :=mark-size 3
         :=mark-opacity 0.6})))
-
-
-
 
 (book-utils/md "
 
@@ -476,8 +486,6 @@ Coloring by a Quantitative column:
       :=color :cyl
       :=mark-size 20}))
 
-
-
 (book-utils/md "
 Overriding a quantitative column to be considered nominal by the `:=color-type` key:
 ")
@@ -488,6 +496,9 @@ Overriding a quantitative column to be considered nominal by the `:=color-type` 
       :=color :cyl
       :=color-type :nominal
       :=mark-size 20}))
+
+;; Test: color-type can be explicitly set to nominal
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=color-type) :nominal)])
 
 (book-utils/md "
 ### Stat
@@ -520,6 +531,12 @@ Setting layout options:
                          :=mark-size 10
                          :=mark-opacity 0.6}))
 
+;; Test: layout settings (background, height, width) are applied
+(kind/test-last [#(let [layout (-> % plotly/plot :layout)]
+                    (and (= (:plot_bgcolor layout) "floralwhite")
+                         (= (:height layout) 300)
+                         (= (:width layout) 400)))])
+
 (book-utils/md "
 Setting properties which are shared between layers.")
 
@@ -531,6 +548,13 @@ Setting properties which are shared between layers.")
                          :=mark-size 20
                          :=mark-opacity 0.3})
     (plotly/layer-point {:=color :species}))
+
+;; Test: base with multiple layers creates 2 layers
+(kind/test-last [#(= (-> % ::ht/defaults :=layers count) 2)])
+
+;; Test: base sets shared x and y defaults
+(kind/test-last [#(and (= (-> % ::ht/defaults :=x) :sepal-width)
+                       (= (-> % ::ht/defaults :=y) :sepal-length))])
 
 (book-utils/include-fnvar-as-section #'plotly/layer)
 
@@ -710,6 +734,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=y :value
       :=mark-color "purple"}))
 
+;; Test: layer-line produces lines mode traces
+(kind/test-last [#(= (-> % plotly/plot :data first :mode) :lines)])
+
 (book-utils/include-fnvar-as-section #'plotly/layer-bar)
 
 (book-utils/md "#### For example")
@@ -723,6 +750,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=bar-width :bar-width
       :=y :total-disp}))
 
+;; Test: bar chart produces correct trace type
+(kind/test-last [#(-> % plotly/plot :data first :type (= "bar"))])
+
 (book-utils/include-fnvar-as-section #'plotly/layer-boxplot)
 
 (book-utils/md "#### For example")
@@ -731,6 +761,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
     (plotly/layer-boxplot
      {:=x :cyl
       :=y :disp}))
+
+;; Test: boxplot produces box trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "box")])
 
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-boxplot
@@ -756,17 +789,26 @@ Coloring by `:cyl` and overriding `:=colorscale`:
      {:=x :cyl
       :=y :disp}))
 
+;; Test: violin produces violin trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "violin")])
+
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
      {:=x :cyl
       :=y :disp
       :=box-visible true}))
 
+;; Test: violin with box-visible option is configured correctly
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=box-visible) true)])
+
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
      {:=x :cyl
       :=y :disp
       :=meanline-visible true}))
+
+;; Test: meanline-visible option is configured
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=meanline-visible) true)])
 
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
@@ -783,6 +825,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=color-type :nominal
       :=violinmode :group}))
 
+;; Test: violinmode option is configured
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=violinmode) :group)])
+
 (book-utils/include-fnvar-as-section #'plotly/layer-segment)
 
 (book-utils/md "#### For example")
@@ -796,6 +841,10 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=mark-opacity 0.4
       :=mark-size 3
       :=color :species}))
+
+;; Test: segment produces scatter traces with lines mode
+(kind/test-last [#(and (= (-> % plotly/plot :data first :type) "scatter")
+                       (= (-> % plotly/plot :data first :mode) :lines))])
 
 (book-utils/include-fnvar-as-section #'plotly/layer-text)
 
@@ -811,6 +860,12 @@ Coloring by `:cyl` and overriding `:=colorscale`:
                   :color :purple}
       :=mark-size 20}))
 
+;; Test: text layer produces text mode traces
+(kind/test-last [#(= (-> % plotly/plot :data first :mode) :text)])
+
+;; Test: textfont configuration is applied
+(kind/test-last [#(= (-> % plotly/plot :data first :textfont :color) :purple)])
+
 (book-utils/include-fnvar-as-section #'plotly/layer-histogram)
 
 (book-utils/md "#### Examples:")
@@ -822,11 +877,16 @@ Coloring by `:cyl` and overriding `:=colorscale`:
     (plotly/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
 
+;; Test: histogram layer has correct nbins configuration
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=histogram-nbins) 30)])
+
 (-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width
                              :=color :species
                              :=mark-opacity 0.5}))
 
+;; Test: histogram with grouping creates 3 traces (one per species)
+(kind/test-last [#(= (-> % plotly/plot :data count) 3)])
 
 (book-utils/include-fnvar-as-section #'plotly/layer-histogram2d)
 
@@ -840,6 +900,9 @@ We are exploring various rules of thumbs to determine it automatically.
 (-> (rdatasets/datasets-iris)
     (plotly/layer-histogram2d {:=x :sepal-width
                                :=y :sepal-length}))
+
+;; Test: histogram2d produces heatmap trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "heatmap")])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-histogram2d {:=x :sepal-width
@@ -859,7 +922,6 @@ We are exploring various rules of thumbs to determine it automatically.
                                 (:x %)))
       (plotly/layer-histogram2d {:=histogram-nbins 250})))
 
-
 (book-utils/include-fnvar-as-section #'plotly/layer-density)
 
 (book-utils/md "#### Examples:")
@@ -867,9 +929,17 @@ We are exploring various rules of thumbs to determine it automatically.
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width}))
 
+;; Test: density produces scatter trace with line mode and tozeroy fill
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)]
+                    (and (= (:mode trace) :lines)
+                         (= (:fill trace) :tozeroy)))])
+
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=density-bandwidth 0.05}))
+
+;; Test: density bandwidth is configured correctly
+(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=density-bandwidth) 0.05)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
@@ -879,6 +949,8 @@ We are exploring various rules of thumbs to determine it automatically.
     (plotly/layer-density {:=x :sepal-width
                            :=color :species}))
 
+;; Test: density with color grouping creates 3 traces
+(kind/test-last [#(= (-> % plotly/plot :data count) 3)])
 
 ;; Witn no substitution keys, we can rely on
 ;; the default for `:=x` being the `:x` column:
@@ -901,6 +973,17 @@ We are exploring various rules of thumbs to determine it automatically.
     (plotly/layer-smooth {:=mark-color "orange"
                           :=name "Predicted"}))
 
+;; Test: multi-layer plot has 2 layers
+(kind/test-last [#(= (-> % ::ht/defaults :=layers count) 2)])
+
+;; Test: realized plot has 2 traces
+(kind/test-last [#(= (-> % plotly/plot :data count) 2)])
+
+;; Test: traces have correct names
+(kind/test-last [#(let [traces (-> % plotly/plot :data)]
+                    (and (= (:name (first traces)) "Actual")
+                         (= (:name (second traces)) "Predicted")))])
+
 (book-utils/md "Multiple linear regression of `:=y` by `:=predictors`:")
 
 (-> (rdatasets/datasets-iris)
@@ -912,6 +995,10 @@ We are exploring various rules of thumbs to determine it automatically.
                                         :petal-length]
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
+
+;; Test: smooth layer with predictors is configured correctly
+(kind/test-last [#(= (-> % ::ht/defaults :=layers second ::ht/defaults :=predictors)
+                     [:petal-width :petal-length])])
 
 (book-utils/md "Polynomial regression of `:=y` by `:=design-matrix`:")
 
@@ -925,6 +1012,9 @@ We are exploring various rules of thumbs to determine it automatically.
                                                                :sepal-width)]]
                           :=mark-opacity 0.5
                           :=name "Predicted"}))
+
+;; Test: smooth layer with design-matrix is configured
+(kind/test-last [#(not (nil? (-> % ::ht/defaults :=layers second ::ht/defaults :=design-matrix)))])
 
 (book-utils/md "Custom regression defined by `:=model-options`:")
 
@@ -973,6 +1063,9 @@ since `:=color-type` is `:nominal`:")
     plotly/layer-point
     (plotly/layer-smooth {:=mark-color "red"}))
 
+;; Test: group can be set to empty array to override grouping
+(kind/test-last [#(= (-> % ::ht/defaults :=group) [])])
+
 (book-utils/md "An simpler way to achieve this -- the color is only defined for the point layer:")
 
 (-> (rdatasets/datasets-iris)
@@ -998,6 +1091,9 @@ since `:=color-type` is `:nominal`:")
                (* (math/sin (/ j 5)) j))))}
     tc/dataset
     plotly/layer-heatmap)
+
+;; Test: heatmap produces heatmap trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "heatmap")])
 
 ;; Mixed Categorical and numerical `x,y` axes:
 
@@ -1033,7 +1129,6 @@ since `:=color-type` is `:nominal`:")
                            :=y :time
                            :=z :temperature}))
 
-
 ;; Customizing [color scales](https://plotly.com/javascript/colorscales/):
 
 (-> {:x (range 100)
@@ -1060,6 +1155,8 @@ since `:=color-type` is `:nominal`:")
                        :y #(tcc/- (:w %) (tcc/+ (:u %) (:v %)))})
       plotly/layer-correlation))
 
+;; Test: correlation produces heatmap trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "heatmap")])
 
 ;; Correlations of a few columns with a different
 ;; [color scale](https://plotly.com/javascript/colorscales/)
@@ -1140,8 +1237,6 @@ since `:=color-type` is `:nominal`:")
                                                   (xy->z x y)))}))
                              :=mark-opacity 0.5})))
 
-
-
 (book-utils/include-fnvar-as-section #'plotly/surface)
 
 (book-utils/md "#### For example")
@@ -1157,9 +1252,12 @@ since `:=color-type` is `:nominal`:")
          -
          math/exp))))
 
+;; Test: surface function produces surface trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) :surface)])
+
 (book-utils/include-fnvar-as-section #'plotly/imshow)
 
-(book-utils/md 
+(book-utils/md
  "Imshow uses dtype-next's [BufferedImage support](https://cnuernber.github.io/dtype-next/buffered-image.html) to figure out the right order of color channels, etc.
 
 So, it can handle plain vectors of vectors, dtype next tensors, and actual Java BufferedImage objects.")
@@ -1172,6 +1270,9 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
       (* 10 j) ; Green
       (* 10 (+ i j)) ; Blue
       ])))
+
+;; Test: imshow produces image trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) :image)])
 
 (plotly/imshow
  (tensor/compute-tensor
@@ -1202,6 +1303,9 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                                :petal-length]
                    :=height 600
                    :=width 600}))
+
+;; Test: splom produces splom trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) :splom)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/splom {:=colnames [:sepal-width
