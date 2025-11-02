@@ -34,4 +34,4 @@
 _quarto.yml
 temp
 *.qmd
-
+.clojure-mcp
