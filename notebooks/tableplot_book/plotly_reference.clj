@@ -68,10 +68,10 @@ will display by realizing it and using it as a Plotly.js specification.
                          :=mark-size 10}))
 
 ;; Test: template has dataset
-(kind/test-last [#(contains? (::ht/defaults %) :=dataset)])
+(kind/test-last [#(contains? (:aerial.hanami.templates/defaults %) :=dataset)])
 
 ;; Test: layer has correct x and y mappings
-(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layers first ::ht/defaults)]
+(kind/test-last [#(let [layer-defaults (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults)]
                     (and (= (:=x layer-defaults) :sepal-width)
                          (= (:=y layer-defaults) :sepal-length)))])
 
@@ -351,7 +351,7 @@ For example:
                          :=coordinates :3d}))
 
 ;; Test: 3d coordinates are configured correctly
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=coordinates) :3d)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=coordinates) :3d)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
@@ -380,7 +380,7 @@ For example:
       :=mark-opacity 0.6}))
 
 ;; Test: polar coordinates are configured correctly
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=coordinates) :polar)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=coordinates) :polar)])
 
 ;; Controlling the polar layout
 ;; (by manipulating the raw Plotly.js spec):
@@ -498,7 +498,7 @@ Overriding a quantitative column to be considered nominal by the `:=color-type` 
       :=mark-size 20}))
 
 ;; Test: color-type can be explicitly set to nominal
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=color-type) :nominal)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=color-type) :nominal)])
 
 (book-utils/md "
 ### Stat
@@ -550,11 +550,11 @@ Setting properties which are shared between layers.")
     (plotly/layer-point {:=color :species}))
 
 ;; Test: base with multiple layers creates 2 layers
-(kind/test-last [#(= (-> % ::ht/defaults :=layers count) 2)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers count) 2)])
 
 ;; Test: base sets shared x and y defaults
-(kind/test-last [#(and (= (-> % ::ht/defaults :=x) :sepal-width)
-                       (= (-> % ::ht/defaults :=y) :sepal-length))])
+(kind/test-last [#(and (= (-> % :aerial.hanami.templates/defaults :=x) :sepal-width)
+                       (= (-> % :aerial.hanami.templates/defaults :=y) :sepal-length))])
 
 (book-utils/include-fnvar-as-section #'plotly/layer)
 
@@ -586,6 +586,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :disp
       :=mark-size 20}))
 
+;; Test: mark size appears in realized spec
+(kind/test-last [#(= (-> % plotly/plot :data first :marker :size) 20)])
+
 ;; Customizing mark symbol:
 
 (-> (rdatasets/datasets-mtcars)
@@ -593,6 +596,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
      {:=x :mpg
       :=y :disp
       :=mark-symbol :diamond}))
+
+;; Test: mark symbol appears in realized spec
+(kind/test-last [#(= (-> % plotly/plot :data first :marker :symbol) :diamond)])
 
 ;; Customizing mark color:
 
@@ -602,6 +608,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :disp
       :=mark-color "darkred"}))
 
+;; Test: mark color appears in realized spec
+(kind/test-last [#(= (-> % plotly/plot :data first :marker :color) "darkred")])
+
 ;; Customizing mark opacity:
 
 (-> (rdatasets/datasets-mtcars)
@@ -609,6 +618,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
      {:=x :mpg
       :=y :disp
       :=mark-opacity 0.5}))
+
+;; Test: mark opacity appears in realized spec (at trace level, not marker)
+(kind/test-last [#(= (-> % plotly/plot :data first :opacity) 0.5)])
 
 ;; Coloring by `:cyl` (considered `:quantitative` as it is a numerical column).
 
@@ -618,6 +630,9 @@ Of course, this can also be expressed more succinctly using `layer-point`.
       :=y :disp
       :=color :cyl
       :=mark-size 20}))
+
+;; Test: quantitative color creates vector of color values in marker
+(kind/test-last [#(vector? (-> % plotly/plot :data first :marker :color))])
 
 (book-utils/md "
 Coloring by `:cyl` and overriding `:=colorscale`:
@@ -631,6 +646,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=colorscale :Greens
       :=mark-size 20}))
 
+;; Test: custom colorscale appears in spec
+(kind/test-last [#(= (-> % plotly/plot :data first :marker :colorscale) :Greens)])
+
 ;; Coloring by `:cyl`, and marking it as `:nominal`:
 
 (-> (rdatasets/datasets-mtcars)
@@ -641,6 +659,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=color-type :nominal
       :=mark-size 20}))
 
+;; Test: nominal color creates multiple traces (one per group)
+(kind/test-last [#(> (-> % plotly/plot :data count) 1)])
+
 ;; Determining mark size by `:cyl`:
 
 (-> (rdatasets/datasets-mtcars)
@@ -649,6 +670,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=y :disp
       :=size :cyl}))
 
+;; Test: size mapping creates vector of sizes in spec
+(kind/test-last [#(vector? (-> % plotly/plot :data first :marker :size))])
+
 (book-utils/md "Determining mark size by `:cyl` and specifying the `:=size-range`:")
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-point
@@ -656,6 +680,11 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=y :disp
       :=size :cyl
       :=size-range [5 15]}))
+
+;; Test: size-range constrains marker sizes
+(kind/test-last [#(let [sizes (-> % plotly/plot :data first :marker :size)]
+                    (and (vector? sizes)
+                         (every? (fn [s] (<= 5 s 15)) sizes)))])
 
 (book-utils/md
  "Determining mark size by `:cyl`, and marking `:=size-type` as `:nominal`: ")
@@ -676,6 +705,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=symbol :cyl
       :=mark-size 20
       :=mark-color "darkred"}))
+
+;; Test: symbol mapping creates marker with symbol key
+(kind/test-last [#(some? (-> % plotly/plot :data first :marker :symbol))])
 
 ;; Using the fact that `:=x` and `:=y` default to `:x` and `:y`:
 
@@ -716,6 +748,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
                          :=color :petal-width
                          :=coordinates :3d}))
 
+;; Test: 3d coordinates produce scatter3d trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "scatter3d")])
+
 (-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
                          :=y :sepal-length
@@ -737,6 +772,9 @@ Coloring by `:cyl` and overriding `:=colorscale`:
 ;; Test: layer-line produces lines mode traces
 (kind/test-last [#(= (-> % plotly/plot :data first :mode) :lines)])
 
+;; Test: line color appears in realized spec
+(kind/test-last [#(= (-> % plotly/plot :data first :line :color) "purple")])
+
 (book-utils/include-fnvar-as-section #'plotly/layer-bar)
 
 (book-utils/md "#### For example")
@@ -753,6 +791,11 @@ Coloring by `:cyl` and overriding `:=colorscale`:
 ;; Test: bar chart produces correct trace type
 (kind/test-last [#(-> % plotly/plot :data first :type (= "bar"))])
 
+;; Test: bar chart has x and y data arrays
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)]
+                    (and (vector? (:x trace))
+                         (vector? (:y trace))))])
+
 (book-utils/include-fnvar-as-section #'plotly/layer-boxplot)
 
 (book-utils/md "#### For example")
@@ -765,12 +808,20 @@ Coloring by `:cyl` and overriding `:=colorscale`:
 ;; Test: boxplot produces box trace type
 (kind/test-last [#(= (-> % plotly/plot :data first :type) "box")])
 
+;; Test: boxplot has x and y data
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)]
+                    (and (some? (:x trace))
+                         (some? (:y trace))))])
+
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-boxplot
      {:=x :cyl
       :=y :disp
       :=color :am
       :=color-type :nominal}))
+
+;; Test: boxplot with nominal color creates multiple traces
+(kind/test-last [#(> (-> % plotly/plot :data count) 1)])
 
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-boxplot
@@ -799,7 +850,7 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=box-visible true}))
 
 ;; Test: violin with box-visible option is configured correctly
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=box-visible) true)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=box-visible) true)])
 
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
@@ -808,7 +859,7 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=meanline-visible true}))
 
 ;; Test: meanline-visible option is configured
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=meanline-visible) true)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=meanline-visible) true)])
 
 (-> (rdatasets/datasets-mtcars)
     (plotly/layer-violin
@@ -826,7 +877,7 @@ Coloring by `:cyl` and overriding `:=colorscale`:
       :=violinmode :group}))
 
 ;; Test: violinmode option is configured
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=violinmode) :group)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=violinmode) :group)])
 
 (book-utils/include-fnvar-as-section #'plotly/layer-segment)
 
@@ -873,12 +924,26 @@ Coloring by `:cyl` and overriding `:=colorscale`:
 (-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width}))
 
+;; Test: histogram produces bar trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "bar")])
+
+;; Test: histogram has x and y data (bins and counts)
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)]
+                    (and (vector? (:x trace))
+                         (vector? (:y trace))
+                         (pos? (count (:x trace)))))])
+
 (-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
 
 ;; Test: histogram layer has correct nbins configuration
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=histogram-nbins) 30)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=histogram-nbins) 30)])
+
+;; Test: histogram with 30 bins produces approximately 30 bins
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)
+                        nbins (count (:x trace))]
+                    (<= 25 nbins 35))])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-histogram {:=x :sepal-width
@@ -934,12 +999,22 @@ We are exploring various rules of thumbs to determine it automatically.
                     (and (= (:mode trace) :lines)
                          (= (:fill trace) :tozeroy)))])
 
+;; Test: density curve has many points (smooth curve)
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)]
+                    (and (vector? (:x trace))
+                         (vector? (:y trace))
+                         (> (count (:x trace)) 50)))])
+
+;; Test: density y-values are non-negative
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)]
+                    (every? (fn [y] (>= y 0)) (:y trace)))])
+
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
                            :=density-bandwidth 0.05}))
 
 ;; Test: density bandwidth is configured correctly
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=density-bandwidth) 0.05)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=density-bandwidth) 0.05)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
@@ -974,7 +1049,7 @@ We are exploring various rules of thumbs to determine it automatically.
                           :=name "Predicted"}))
 
 ;; Test: multi-layer plot has 2 layers
-(kind/test-last [#(= (-> % ::ht/defaults :=layers count) 2)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers count) 2)])
 
 ;; Test: realized plot has 2 traces
 (kind/test-last [#(= (-> % plotly/plot :data count) 2)])
@@ -983,6 +1058,15 @@ We are exploring various rules of thumbs to determine it automatically.
 (kind/test-last [#(let [traces (-> % plotly/plot :data)]
                     (and (= (:name (first traces)) "Actual")
                          (= (:name (second traces)) "Predicted")))])
+
+;; Test: smooth trace has predicted y-values
+(kind/test-last [#(let [smooth-trace (-> % plotly/plot :data second)]
+                    (and (vector? (:x smooth-trace))
+                         (vector? (:y smooth-trace))
+                         (pos? (count (:y smooth-trace)))))])
+
+;; Test: smooth line color appears in spec
+(kind/test-last [#(= (-> % plotly/plot :data second :line :color) "orange")])
 
 (book-utils/md "Multiple linear regression of `:=y` by `:=predictors`:")
 
@@ -997,7 +1081,7 @@ We are exploring various rules of thumbs to determine it automatically.
                           :=name "Predicted"}))
 
 ;; Test: smooth layer with predictors is configured correctly
-(kind/test-last [#(= (-> % ::ht/defaults :=layers second ::ht/defaults :=predictors)
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers second :aerial.hanami.templates/defaults :=predictors)
                      [:petal-width :petal-length])])
 
 (book-utils/md "Polynomial regression of `:=y` by `:=design-matrix`:")
@@ -1014,7 +1098,7 @@ We are exploring various rules of thumbs to determine it automatically.
                           :=name "Predicted"}))
 
 ;; Test: smooth layer with design-matrix is configured
-(kind/test-last [#(not (nil? (-> % ::ht/defaults :=layers second ::ht/defaults :=design-matrix)))])
+(kind/test-last [#(not (nil? (-> % :aerial.hanami.templates/defaults :=layers second :aerial.hanami.templates/defaults :=design-matrix)))])
 
 (book-utils/md "Custom regression defined by `:=model-options`:")
 
@@ -1064,7 +1148,7 @@ since `:=color-type` is `:nominal`:")
     (plotly/layer-smooth {:=mark-color "red"}))
 
 ;; Test: group can be set to empty array to override grouping
-(kind/test-last [#(= (-> % ::ht/defaults :=group) [])])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=group) [])])
 
 (book-utils/md "An simpler way to achieve this -- the color is only defined for the point layer:")
 
@@ -1094,6 +1178,17 @@ since `:=color-type` is `:nominal`:")
 
 ;; Test: heatmap produces heatmap trace type
 (kind/test-last [#(= (-> % plotly/plot :data first :type) "heatmap")])
+
+;; Test: heatmap has x, y, and z data
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)]
+                    (and (vector? (:x trace))
+                         (vector? (:y trace))
+                         (vector? (:z trace))))])
+
+;; Test: heatmap z is a 2D matrix (vector of seqs)
+(kind/test-last [#(let [z (-> % plotly/plot :data first :z)]
+                    (and (vector? z)
+                         (seq? (first z))))])
 
 ;; Mixed Categorical and numerical `x,y` axes:
 
@@ -1157,6 +1252,16 @@ since `:=color-type` is `:nominal`:")
 
 ;; Test: correlation produces heatmap trace type
 (kind/test-last [#(= (-> % plotly/plot :data first :type) "heatmap")])
+
+;; Test: correlation matrix is square
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)
+                        z (:z trace)]
+                    (= (count z) (count (first z))))])
+
+;; Test: correlation values are in valid range [-1, 1]
+(kind/test-last [#(let [z (-> % plotly/plot :data first :z)
+                        all-vals (flatten z)]
+                    (every? (fn [v] (<= -1 v 1)) all-vals))])
 
 ;; Correlations of a few columns with a different
 ;; [color scale](https://plotly.com/javascript/colorscales/)
@@ -1255,6 +1360,12 @@ since `:=color-type` is `:nominal`:")
 ;; Test: surface function produces surface trace type
 (kind/test-last [#(= (-> % plotly/plot :data first :type) :surface)])
 
+;; Test: surface has z data as 2D matrix (vector of seqs)
+(kind/test-last [#(let [z (-> % plotly/plot :data first :z)]
+                    (and (seq? z)
+                         (seq? (first z))
+                         (> (count z) 0)))])
+
 (book-utils/include-fnvar-as-section #'plotly/imshow)
 
 (book-utils/md
@@ -1273,6 +1384,9 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 
 ;; Test: imshow produces image trace type
 (kind/test-last [#(= (-> % plotly/plot :data first :type) :image)])
+
+;; Test: imshow has image data in z
+(kind/test-last [#(some? (-> % plotly/plot :data first :z))])
 
 (plotly/imshow
  (tensor/compute-tensor
@@ -1307,6 +1421,12 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
 ;; Test: splom produces splom trace type
 (kind/test-last [#(= (-> % plotly/plot :data first :type) :splom)])
 
+;; Test: splom has dimensions configured for each column
+(kind/test-last [#(let [trace (-> % plotly/plot :data first)
+                        dims (:dimensions trace)]
+                    (and (seq? dims)
+                         (= (count dims) 4)))])
+
 (-> (rdatasets/datasets-iris)
     (plotly/splom {:=colnames [:sepal-width
                                :sepal-length
@@ -1315,6 +1435,9 @@ So, it can handle plain vectors of vectors, dtype next tensors, and actual Java 
                    :=color :species
                    :=height 600
                    :=width 600}))
+
+;; Test: splom with color grouping creates multiple traces
+(kind/test-last [#(> (-> % plotly/plot :data count) 1)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/splom {:=colnames [:sepal-width
