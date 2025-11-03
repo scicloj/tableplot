@@ -183,12 +183,58 @@ clj -X:test
 ```
 
 ### Testing
+
+#### Unit Testing with Clay Test Generation
+The project uses Clay's `kind/test-last` mechanism for generating unit tests from notebooks:
+
+```clojure
+;; In notebook files (e.g., plotly_walkthrough.clj, plotly_reference.clj)
+(-> dataset
+    (plotly/layer-point {:=x :x :=y :y}))
+
+;; Add test annotation - must contain exactly ONE predicate
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "scatter")])
+```
+
+**Test Pattern Best Practices:**
+1. **Single predicate per test**: Each `kind/test-last` takes ONE predicate function
+2. **REPL verification**: Always test predicates in REPL before adding to file
+3. **Template-level tests**: Check `::ht/defaults` for mappings and settings
+4. **Spec-level tests**: Use `plotly/plot` to realize and test final Plotly.js spec
+5. **Layer-specific tests**: Navigate to `(-> template ::ht/defaults :=layers first ::ht/defaults)`
+
+**Test Coverage (as of current session):**
+- `plotly_reference.clj`: 36 tests covering all major layer types and features
+- `plotly_walkthrough.clj`: 24 tests covering key examples and patterns
+- Total: 60 comprehensive API tests
+
+**Common Test Patterns:**
+```clojure
+;; Template has correct dataset
+(kind/test-last [#(contains? (::ht/defaults %) :=dataset)])
+
+;; Layer has correct mappings
+(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layers first ::ht/defaults)]
+                    (and (= (:=x layer-defaults) :sepal-width)
+                         (= (:=y layer-defaults) :sepal-length)))])
+
+;; Realized spec has correct trace type
+(kind/test-last [#(= (-> % plotly/plot :data first :type) "scatter")])
+
+;; Check multiple traces from grouping
+(kind/test-last [#(= (-> % plotly/plot :data count) 3)])
+```
+
+**Running Tests:**
 ```bash
 # Run all tests
 clj -T:build test
 
 # Run specific test namespaces
 clj -M:test -n test.namespace
+
+# Generate tests from notebooks using Clay
+# (Tests are auto-generated when rendering notebooks with Clay)
 ```
 
 ### Building and Deployment

@@ -52,6 +52,8 @@
                   :=color :species
                   :=mark-size 200}))
 
+(kind/test-last [#(= (-> % :mark :type) "circle")])
+
 ;; Soon, the Tableplot docs will offer an introduction to the use of
 ;; Hanami templates and substitution keys.
 ;; For now, please see the [Hanami documentation](https://github.com/jsa-aerial/hanami).
@@ -75,6 +77,11 @@
       :=color :species
       :=mark-size 200}))
 
+(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layer first ::ht/defaults)]
+                    (and (= (:=x layer-defaults) :sepal-width)
+                         (= (:=y layer-defaults) :sepal-length)
+                         (= (:=color layer-defaults) :species)))])
+
 ;; The value returned by a `hanami/plot` function
 ;; is a [Vega-Lite](https://vega.github.io/vega-lite/) spec:
 
@@ -85,6 +92,10 @@
                   :=color :species
                   :=mark-size 200})
     kind/pprint)
+
+(kind/test-last [#(and (contains? % :data)
+                       (contains? % :encoding)
+                       (= (-> % :mark :type) "circle"))])
 
 ;; By looking at the `:values` key above,
 ;; you can see that the dataset was implicitly represented as CSV,
@@ -101,6 +112,8 @@
                   :=mark-size 200})
     meta)
 
+(kind/test-last [#(= (:kindly/kind %) :kind/vega-lite)])
+
 ;; ## Using original Hanami templates and defaults
 
 ;; We can also use Hanami's original templates (`ht/chart`)
@@ -112,6 +125,8 @@
                   :Y :sepal-length
                   :MSIZE 200
                   :COLOR "species"}))
+
+(kind/test-last [#(= (-> % :mark :type) "circle")])
 
 (-> (rdatasets/datasets-iris)
     (hanami/plot ht/point-chart
@@ -134,6 +149,10 @@
                   :=color :species
                   :=mark-size 200}))
 
+(kind/test-last [#(and (= (-> % :encoding :x :type) :quantitative)
+                       (= (-> % :encoding :y :type) :quantitative)
+                       (= (-> % :encoding :color :type) :nominal))])
+
 (-> (rdatasets/datasets-iris)
     (hanami/plot hanami/point-chart
                  {:=x :sepal-width
@@ -152,6 +171,8 @@
                   :=color :cyl
                   :=mark-size 200}))
 
+(kind/test-last [#(= (-> % :encoding :color :type) :quantitative)])
+
 (-> (rdatasets/datasets-mtcars)
     (hanami/plot hanami/point-chart
                  {:=x :mpg
@@ -169,6 +190,8 @@
                   :=color :cyl
                   :=color-type :nominal
                   :=mark-size 200}))
+
+(kind/test-last [#(= (-> % :encoding :color :type) :nominal)])
 
 (-> (rdatasets/datasets-mtcars)
     (hanami/plot hanami/point-chart
@@ -189,6 +212,9 @@
                   :=x-type :nominal
                   :=y :disp}))
 
+(kind/test-last [#(and (= (-> % :mark :type) "boxplot")
+                       (= (-> % :encoding :x :type) :nominal))])
+
 ;; An original Hanami boxplot:
 
 (-> (rdatasets/datasets-mtcars)
@@ -196,6 +222,8 @@
                  {:X :cyl
                   :XTYPE :nominal
                   :Y :disp}))
+
+(kind/test-last [#(= (-> % :mark :type) "boxplot")])
 
 ;; Plotting segments with Tableplot:
 
@@ -208,6 +236,10 @@
                   :=mark-opacity 0.5
                   :=mark-size 3
                   :=color :species}))
+
+(kind/test-last [#(and (= (-> % :mark :type) "rule")
+                       (contains? (-> % :encoding) :x2)
+                       (contains? (-> % :encoding) :y2))])
 
 ;; Plotting segments with original Hanami:
 
@@ -232,6 +264,9 @@
                   :=y :value
                   :=mark-color "purple"}))
 
+(kind/test-last [#(and (= (-> % :mark :type) "line")
+                       (= (-> % :encoding :x :type) :temporal))])
+
 ;; You see, the `:date` field was correctly inferred to be
 ;; of the `:temporal` kind.
 
@@ -254,6 +289,8 @@
                  {:=x :date
                   :=y :value
                   :=mark-color "purple"}))
+
+(kind/test-last [#(contains? (::ht/defaults %) :=dataset)])
 
 ;; The result is displayed the same way, but the internal representation
 ;; delays the Hanami transformation of templates.
@@ -296,6 +333,8 @@
                   :=mark-color "purple"})
     hanami/layer-line)
 
+(kind/test-last [#(= (-> % ::ht/defaults :=layer count) 1)])
+
 ;; The substitution keys can also be specified on the layer level:
 
 (-> (rdatasets/ggplot2-economics_long)
@@ -314,6 +353,8 @@
                          :=mark-size 200
                          :=mark-opacity 0.1})
     (hanami/layer-line {:=mark-color "purple"}))
+
+(kind/test-last [#(= (-> % ::ht/defaults :=layer count) 2)])
 
 ;; We can also skip the base and have everything in the layer:
 
@@ -339,6 +380,10 @@
     (hanami/update-data tc/random 5)
     (hanami/layer-point {:=mark-color "green"
                          :=mark-size 200}))
+
+(kind/test-last [#(let [layers (-> % ::ht/defaults :=layer)]
+                    (and (= (count layers) 2)
+                         (= (-> layers second ::ht/defaults :=layer-dataset tc/row-count) 5)))])
 
 ;; You see, we have lots of data for the lines,
 ;; but only five random points.
@@ -375,6 +420,8 @@
     hanami/plot
     (assoc :background "lightgrey"))
 
+(kind/test-last [#(= (:background %) "lightgrey")])
+
 ;; For another example, let us change the y scale to logarithmic.
 ;; See [Scale](https://vega.github.io/vega-lite/docs/scale.html)
 ;; in the Vega-Lite documentation.
@@ -389,6 +436,8 @@
                          :=mark-size 200})
     hanami/plot
     (assoc-in [:encoding :y :scale :type] "log"))
+
+(kind/test-last [#(= (-> % :encoding :y :scale :type) "log")])
 
 ;; ## Smoothing
 
@@ -407,6 +456,8 @@
     hanami/layer-point
     (hanami/layer-smooth {:=mark-color "orange"}))
 
+(kind/test-last [#(= (-> % ::ht/defaults :=layer count) 2)])
+
 ;; By default, the regression is computed with only one predictor variable,
 ;; which is `:=x`.
 ;; But this can be overriden using the `:predictors` key.
@@ -418,6 +469,9 @@
     hanami/layer-point
     (hanami/layer-smooth {:=predictors [:petal-width
                                         :petal-length]}))
+
+(kind/test-last [#(let [smooth-layer (-> % ::ht/defaults :=layer second ::ht/defaults)]
+                    (= (:=predictors smooth-layer) [:petal-width :petal-length]))])
 
 ;; ## Grouping
 
@@ -435,6 +489,9 @@
     hanami/layer-point
     hanami/layer-smooth)
 
+(kind/test-last [#(let [base-defaults (-> % ::ht/defaults)]
+                    (= (:=color base-defaults) :species))])
+
 ;; This happened because the `:color` field was `:species`,
 ;; which is of `:nominal` type.
 
@@ -450,6 +507,9 @@
                   :=y :sepal-length})
     hanami/layer-point
     hanami/layer-smooth)
+
+(kind/test-last [#(let [base-defaults (-> % ::ht/defaults)]
+                    (= (:=group base-defaults) []))])
 
 ;; ## Example: out-of-sample predictions
 
@@ -525,6 +585,15 @@
 (-> (rdatasets/datasets-iris)
     (hanami/layer-histogram {:=x :sepal-width}))
 
+(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layer first ::ht/defaults)]
+                    (= (:=x layer-defaults) :sepal-width))])
+
 (-> (rdatasets/datasets-iris)
     (hanami/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
+
+(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layer first ::ht/defaults)]
+                    (= (:=histogram-nbins layer-defaults) 30))])
+
+
+
