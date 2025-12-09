@@ -204,26 +204,49 @@ The project uses Clay's `kind/test-last` mechanism for generating unit tests fro
 5. **Layer-specific tests**: Navigate to `(-> template ::ht/defaults :=layers first ::ht/defaults)`
 
 **Test Coverage (as of current session):**
-- `plotly_reference.clj`: 36 tests covering all major layer types and features
+- `plotly_reference.clj`: 67 tests (36 original + 31 new spec-level tests)
 - `plotly_walkthrough.clj`: 24 tests covering key examples and patterns
-- Total: 60 comprehensive API tests
+- `hanami_walkthrough.clj`: 19 tests covering Hanami/Vega-Lite API
+- Total: 110 comprehensive API tests
 
 **Common Test Patterns:**
+
+*Template-level tests* (check configuration before realization):
 ```clojure
 ;; Template has correct dataset
-(kind/test-last [#(contains? (::ht/defaults %) :=dataset)])
+(kind/test-last [#(contains? (:aerial.hanami.templates/defaults %) :=dataset)])
 
 ;; Layer has correct mappings
-(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layers first ::ht/defaults)]
+(kind/test-last [#(let [layer-defaults (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults)]
                     (and (= (:=x layer-defaults) :sepal-width)
                          (= (:=y layer-defaults) :sepal-length)))])
+```
 
-;; Realized spec has correct trace type
+*Spec-level tests* (check realized Plotly.js/Vega-Lite output):
+```clojure
+;; Plotly: Check trace type in realized spec
 (kind/test-last [#(= (-> % plotly/plot :data first :type) "scatter")])
+
+;; Plotly: Check marker properties appear in spec
+(kind/test-last [#(= (-> % plotly/plot :data first :marker :size) 20)])
+
+;; Plotly: Check aesthetic mappings create expected structures
+(kind/test-last [#(vector? (-> % plotly/plot :data first :marker :color))])
+
+;; Vega-Lite: Check encoding types
+(kind/test-last [#(= (-> % hanami/plot :encoding :x :type) :quantitative)])
 
 ;; Check multiple traces from grouping
 (kind/test-last [#(= (-> % plotly/plot :data count) 3)])
 ```
+
+**Important Testing Notes:**
+- Use `:aerial.hanami.templates/defaults` not `::ht/defaults` (namespace-qualified keywords don't work in test generation context)
+- **Prefer spec-level tests** over template-level tests - they verify actual output
+- For Plotly: opacity is at trace level (`:opacity`), not marker level
+- For Plotly: z-data in heatmaps/surfaces can be lazy seqs, use `seq?` not `vector?`
+- For Plotly: SPLOM dimensions are seqs, not vectors
+- For Vega-Lite: encoding types are keywords (`:quantitative`), not strings
 
 **Running Tests:**
 ```bash
