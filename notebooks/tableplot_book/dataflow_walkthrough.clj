@@ -1,18 +1,10 @@
 ;; # Dataflow Model Walkthrough 🌊
 
-;; Tableplot includes a general-purpose dataflow system for creating templates with automatic dependency resolution and caching. While this system powers the visualization layer functions in Tableplot, it can be used for any kind of composable, data-driven transformations. It is inspired by [Hanami](http://github.com/jsa-aerial/hanami)'s templating but is different in a few ways.
+;; Tableplot's dataflow system creates templates with automatic dependency resolution and caching. This system is inspired by the work of Jon Anthony (jsa-aerial), author of [Hanami](http://github.com/jsa-aerial/hanami), building on Hanami's template substitution while adding explicit dependency management.
 
-;; This walkthrough explores the `xform`, `dag`, and `cache` namespaces that implement this dataflow model.
+;; Hanami drew from [lambda calculus](https://en.wikipedia.org/wiki/Lambda_calculus) ideas. This dataflow model applies similar minimalistic principles to parameterized data transformations.
 
-;; ## Overview
-
-;; The dataflow system consists of three core components:
-
-;; 1. **Template Transformation** (`xform.clj`) - A template substitution system adapted from Hanami that recursively replaces keys with their values
-;; 2. **Dependency Management** (`dag.clj`) - Functions that declare their dependencies and are computed in the correct order
-;; 3. **Caching** (`cache.clj`) - Memoization of computed values to avoid redundant computation
-
-;; Together, these create a system for building composable, lazy, dependency-aware computations.
+;; This walkthrough explores three namespaces: `xform` for template transformation, `dag` for dependency management, and `cache` for memoization.
 
 ;; ## Setup
 
@@ -25,30 +17,29 @@
             [scicloj.kindly.v4.kind :as kind]
             [tablecloth.api :as tc]))
 
-;; ## Part 1: Template Transformation with `xform`
+;; ## Template Transformation with `xform`
 
-;; ### The Problem: Repetitive Configuration
+;; Template transformation is [term rewriting](https://en.wikipedia.org/wiki/Rewriting) - we substitute terms until reaching a [fixpoint](https://en.wikipedia.org/wiki/Fixed_point_(mathematics)) (a value that cannot be reduced further).
 
-;; Imagine building visualization specifications. You find yourself writing the same structure over and over:
+;; ### Six Rules
 
-;; ```clojure
-;; {:plot {:data my-data
-;;         :layout {:title {:text "My Chart"}}}
-;;  :plot {:data other-data
-;;         :layout {:title {:text "Other Chart"}}}
-;; ```
+;; Given a term `T` and an environment `E` (a map from keys to values):
 
-;; You want to parameterize these structures - define a template once, then fill in the values. But you also want:
-;; - **Computed values** that depend on other parameters
-;; - **Sensible defaults** that can be overridden
-;; - **Deep nesting** without manually threading values through every level
-;; - **Optional parameters** that don't clutter output when unused
+;; **Rule 1: Lookup** - If `T` is a key in `E`, replace with `E[T]` and recurse.
 
-;; Template transformation solves this by treating data structures as templates with placeholder keys that get recursively replaced with their values.
+;; **Rule 2: Identity** - If `T` is a key not in `E`, it's a fixpoint.
 
-;; ### Basic Substitution
+;; **Rule 3: Function Application** - If `T` is a function, apply it to `E` and recurse.
 
-;; The `xform` function performs template substitution. It takes a template (any nested data structure) and a substitution map, then recursively replaces keys with their values until no more substitutions are possible:
+;; **Rule 4: Collection Recursion** - If `T` is a map or vector, recurse on elements.
+
+;; **Rule 5: Template Defaults** - Templates extend the environment via `::ht/defaults`.
+
+;; **Rule 6: Value** - Non-collection, non-key values (numbers, strings, datasets) pass through.
+
+;; ### Examples
+
+;; **Lookup and Identity**
 
 (xform/xform
  {:a :B
@@ -59,14 +50,11 @@
 
 (kind/test-last [#(= % {:a 10, :c 20})])
 
-;; ### Recursive Lookup and Termination
+;; Here `:a` → `:B` → `:C` → `10` (stops when 10 isn't in the map).
 
-;; The substitution process is truly recursive: **any non-collection value** (strings, numbers, keywords, etc.) that appears as a substitution result triggers another lookup. This continues until either:
+;; **Multi-step Substitution**
 
-;; 1. A value is found that isn't in the substitution map (terminates)
-;; 2. A value maps to itself (terminates)
-
-;; Strings and numbers can act as template keys:
+;; Even strings and numbers can act as keys:
 
 (xform/xform
  {:title :Title}
@@ -75,28 +63,19 @@
 
 (kind/test-last [#(= % {:title "Resolved!"})])
 
-;; This enables indirect lookups through intermediate values:
-
-(xform/xform
- {:result :Key}
- {:Key "lookup-this"
-  "lookup-this" 42})
-
-(kind/test-last [#(= % {:result 42})])
-
-;; Termination occurs when a key maps to itself or to a value not in the map:
+;; **Fixpoint Detection**
 
 (xform/xform
  {:self-ref :X
   :not-found :Y}
- {:X :X ; maps to itself
-  :Y :Missing}) ; :Missing not in map
+ {:X :X ;; maps to itself → fixpoint
+  :Y :Missing}) ;; :Missing not in map → fixpoint
 
 (kind/test-last [#(= % {:self-ref :X, :not-found :Missing})])
 
-;; ### Dataset Pass-Through
+;; **Dataset Pass-Through**
 
-;; **Important for Tableplot users:** Dataset objects are **never transformed**. They pass through unchanged, preventing xform from recursively processing their internal structure:
+;; Datasets pass through unchanged:
 
 (xform/xform
  {:data :Data
@@ -106,11 +85,9 @@
 (kind/test-last [#(and (= (-> % :data tc/column-names) [:x :y])
                        (= (-> % :nested :deep :data tc/column-names) [:x :y]))])
 
-;; This is crucial because datasets contain complex internal structures that shouldn't be treated as templates.
+;; **Function Application**
 
-;; ### Function Values
-
-;; Substitution values can be functions that receive the entire substitution map, enabling dynamic computation based on other values:
+;; Functions receive the entire environment:
 
 (xform/xform
  {:greeting :Greeting}
@@ -120,63 +97,49 @@
 
 (kind/test-last [#(= % {:greeting "Hello, Alice!"})])
 
-;; ### Template Defaults
+;; **Template Defaults**
 
-;; Templates can include their own defaults via the `:aerial.hanami.templates/defaults` key. These defaults are merged with the provided substitution map.
-
-;; **Note:** When you have no user substitutions, you can omit the empty map `{}`:
+;; Templates extend the environment:
 
 (xform/xform
  {:message :Message
-  :aerial.hanami.templates/defaults {:Name "World"
-                                     :Message (fn [{:keys [Name]}]
-                                                (str "Hello, " Name "!"))}})
+  ::ht/defaults {:Name "World"
+                 :Message (fn [{:keys [Name]}]
+                            (str "Hello, " Name "!"))}})
 
 (kind/test-last [#(= % {:message "Hello, World!"})])
 
-;; **Important:** Template defaults (from `:aerial.hanami.templates/defaults` in the template) take precedence over values in the substitution map when using the map form. To override template defaults, use the multi-arity form with key-value pairs:
+;; To override defaults, use key-value pairs:
 
 (xform/xform
  {:message :Message
-  :aerial.hanami.templates/defaults {:Name "World"
-                                     :Message (fn [{:keys [Name]}]
-                                                (str "Hello, " Name "!"))}}
+  ::ht/defaults {:Name "World"
+                 :Message (fn [{:keys [Name]}]
+                            (str "Hello, " Name "!"))}}
  :Name "Clojure")
 
 (kind/test-last [#(= % {:message "Hello, Clojure!"})])
 
-;; Alternatively, you can use `:aerial.hanami.common/user-kvs` in the substitution map to explicitly override template defaults:
+;; ### Nested Defaults
 
-(xform/xform
- {:message :Message
-  :aerial.hanami.templates/defaults {:Name "World"
-                                     :Message (fn [{:keys [Name]}]
-                                                (str "Hello, " Name "!"))}}
- {:Name "Clojure"
-  :aerial.hanami.common/user-kvs {:Name "Clojure"}})
-
-(kind/test-last [#(= % {:message "Hello, Clojure!"})])
-
-;; ### Nested Template Defaults
-
-;; Template defaults can appear **at any level** of the structure, not just at the top. Each nested map can have its own `:aerial.hanami.templates/defaults`:
+;; Defaults can appear at any level:
 
 (xform/xform
  {:title :Title
   :section {:heading :Heading
-            :aerial.hanami.templates/defaults {:Heading "Default Heading"}}
-  :aerial.hanami.templates/defaults {:Title "Default Title"}})
+            ::ht/defaults {:Heading "Default Heading"}}
+  ::ht/defaults {:Title "Default Title"}})
 
 (kind/test-last [#(= % {:title "Default Title"
                         :section {:heading "Default Heading"}})])
 
-;; Nested defaults can reference values from parent-level defaults:
+;; Inner environments access outer bindings:
 
 (xform/xform
  {:outer {:inner :InnerValue
-          :aerial.hanami.templates/defaults {:InnerValue (fn [{:keys [OuterValue]}]
-                                                           (str "Inner uses: " OuterValue))}}
-  :aerial.hanami.templates/defaults {:OuterValue "Parent Value"}})
+          ::ht/defaults {:InnerValue (fn [{:keys [OuterValue]}]
+                                       (str "Inner uses: " OuterValue))}}
+  ::ht/defaults {:OuterValue "Parent Value"}})
 
 (kind/test-last [#(= % {:outer {:inner "Inner uses: Parent Value"}})])
 
@@ -184,40 +147,29 @@
 
 (xform/xform
  {:section {:heading :Heading
-            :aerial.hanami.templates/defaults {:Heading "Default Heading"}}}
+            ::ht/defaults {:Heading "Default Heading"}}}
  :Heading "User Heading")
 
 (kind/test-last [#(= % {:section {:heading "User Heading"}})])
 
-;; This enables modular, composable template design where different parts of a template can have their own defaults.
-
-;; ### Nested Defaults with Dependencies
-
-;; Nested defaults work seamlessly with `dag/fn-with-deps` (covered in Part 2). Functions in nested defaults can depend on values from parent defaults:
+;; Nested defaults work with `dag/fn-with-deps`:
 
 (xform/xform
  {:config {:database {:url :DbUrl
                       :pool-size :PoolSize}
-           :aerial.hanami.templates/defaults {:DbHost "localhost"
-                                              :DbPort 5432
-                                              :DbName "mydb"
-                                              :DbUrl (dag/fn-with-deps nil [DbHost DbPort DbName]
-                                                                       (str "postgresql://" DbHost ":" DbPort "/" DbName))
-                                              :PoolSize (dag/fn-with-deps nil [Environment]
-                                                                          (if (= Environment "prod") 50 10))}}
-  :aerial.hanami.templates/defaults {:Environment "prod"}})
+           ::ht/defaults {:DbHost "localhost"
+                          :DbPort 5432
+                          :DbName "mydb"
+                          :DbUrl (dag/fn-with-deps nil [DbHost DbPort DbName]
+                                                   (str "postgresql://" DbHost ":" DbPort "/" DbName))
+                          :PoolSize (dag/fn-with-deps nil [Environment]
+                                                      (if (= Environment "prod") 50 10))}}
+  ::ht/defaults {:Environment "prod"}})
 
 (kind/test-last [#(= % {:config {:database {:url "postgresql://localhost:5432/mydb"
                                             :pool-size 50}}})])
 
-;; Notice how:
-;; - `DbUrl` depends on `DbHost`, `DbPort`, `DbName` (all local to the nested defaults)
-;; - `PoolSize` depends on `Environment` (from the parent defaults)
-;; - Dependencies are resolved correctly regardless of nesting level
-
-;; ### Nested Structures and Collections
-
-;; Template transformation works recursively on nested structures and collections:
+;; **Recursive Transformation**
 
 (xform/xform
  {:user {:name :UserName
@@ -231,18 +183,16 @@
 (kind/test-last [#(= % {:user {:name "Bob", :age 30}
                         :items [{:x 10} {:y 20}]})])
 
-;; ### Recursive Empty Collection Removal
+;; ### Removing Empty Structure
 
-;; One of Hanami's most powerful features is the **recursive** removal of empty collections. This allows you to create elaborate templates with many optional parameters, yet produce lean results when most parameters use their default `hc/RMV` value.
-
-;; By default, empty collections are removed from the output. The removal is recursive - when a collection becomes empty, its parent may also become empty, cascading upward:
+;; Empty collections are removed recursively. When a collection becomes empty, its parent may also become empty:
 
 (xform/xform
  {:outer {:middle {:inner []}}})
 
 (kind/test-last [#(= % {})])
 
-;; The mechanism uses the special `hc/RMV` value. Most template parameters default to `hc/RMV`, meaning they're only included if you provide a value:
+;; The `hc/RMV` value marks parameters as optional:
 
 (xform/xform
  {:title :Title
@@ -254,9 +204,7 @@
 
 (kind/test-last [#(= % {:title "My Chart"})])
 
-;; #### Elaborate Templates → Lean Results
-
-;; This recursive removal enables a powerful pattern: create comprehensive templates with many optional parameters, but get lean output when using defaults. Here's a realistic visualization template:
+;; Here's a realistic visualization template with many optional parameters:
 
 (xform/xform
  {:plot {:data :Data
@@ -277,112 +225,67 @@
                   :annotations :Annotations
                   :shapes :Shapes
                   :images :Images}}
-  :aerial.hanami.templates/defaults {:TitleSize hc/RMV
-                                      :TitleFamily hc/RMV
-                                      :TitleColor hc/RMV
-                                      :TitleX hc/RMV
-                                      :TitleY hc/RMV
-                                      :XAxisTitle hc/RMV
-                                      :ShowXGrid hc/RMV
-                                      :XGridColor hc/RMV
-                                      :XGridWidth hc/RMV
-                                      :YAxisTitle hc/RMV
-                                      :ShowYGrid hc/RMV
-                                      :YGridColor hc/RMV
-                                      :YGridWidth hc/RMV
-                                      :Annotations hc/RMV
-                                      :Shapes hc/RMV
-                                      :Images hc/RMV}}
+  ::ht/defaults {:TitleSize hc/RMV
+                 :TitleFamily hc/RMV
+                 :TitleColor hc/RMV
+                 :TitleX hc/RMV
+                 :TitleY hc/RMV
+                 :XAxisTitle hc/RMV
+                 :ShowXGrid hc/RMV
+                 :XGridColor hc/RMV
+                 :XGridWidth hc/RMV
+                 :YAxisTitle hc/RMV
+                 :ShowYGrid hc/RMV
+                 :YGridColor hc/RMV
+                 :YGridWidth hc/RMV
+                 :Annotations hc/RMV
+                 :Shapes hc/RMV
+                 :Images hc/RMV}}
  :Data [{:x [1 2 3] :y [4 5 6] :type "scatter"}]
  :Title "Simple Chart")
 
 (kind/test-last [#(= % {:plot {:data [{:x [1 2 3] :y [4 5 6] :type "scatter"}]
                                :layout {:title {:text "Simple Chart"}}}})])
 
-;; Notice how the elaborate template with 17 parameters produces a lean result with just the data and title! The recursive removal cascaded through empty maps: `:font`, `:xaxis`, `:yaxis` all removed, leaving only the specified values.
+;; The 17-parameter template produces lean output with just data and title. Empty maps (`:font`, `:xaxis`, `:yaxis`) are removed.
 
-;; **Why This Matters for Tableplot:**
+;; Tableplot layer functions offer dozens of optional parameters. Default everything to `hc/RMV`, and users get clean output without specifying irrelevant details.
 
-;; Tableplot's layer functions define comprehensive templates with dozens of optional parameters for colors, sizes, opacity, tooltips, hover behavior, etc. Most users only need a few of these. Thanks to recursive `hc/RMV` removal:
-
-;; 1. **Template authors** can provide complete, well-documented APIs
-;; 2. **Users** get clean results without specifying irrelevant parameters  
-;; 3. **Default values** are `hc/RMV`, so unspecified options don't clutter output
-;; 4. **Progressive disclosure** - start simple, add complexity only when needed
-
-;; This pattern enables templates to be both powerful and approachable.
-
-;; #### Conditional Defaults
-
-;; You can create **conditional defaults** by using functions that return `hc/RMV` based on logic. This enables parameters that are only included when certain conditions are met:
+;; Functions can return `hc/RMV` to conditionally include values:
 
 (xform/xform
  {:title :Title
   :subtitle :Subtitle
-  :aerial.hanami.templates/defaults {:ShowSubtitle true
-                                      :Title "My Chart"
-                                      :Subtitle (fn [{:keys [ShowSubtitle]}]
-                                                  (if ShowSubtitle "A subtitle" hc/RMV))}})
+  ::ht/defaults {:ShowSubtitle true
+                 :Title "My Chart"
+                 :Subtitle (fn [{:keys [ShowSubtitle]}]
+                             (if ShowSubtitle "A subtitle" hc/RMV))}})
 
 (kind/test-last [#(= % {:title "My Chart", :subtitle "A subtitle"})])
 
-;; When the condition is false, the value becomes `hc/RMV` and gets removed:
-
 (xform/xform
  {:title :Title
   :subtitle :Subtitle
-  :aerial.hanami.templates/defaults {:ShowSubtitle true
-                                      :Title "My Chart"
-                                      :Subtitle (fn [{:keys [ShowSubtitle]}]
-                                                  (if ShowSubtitle "A subtitle" hc/RMV))}}
+  ::ht/defaults {:ShowSubtitle true
+                 :Title "My Chart"
+                 :Subtitle (fn [{:keys [ShowSubtitle]}]
+                             (if ShowSubtitle "A subtitle" hc/RMV))}}
  :ShowSubtitle false)
 
 (kind/test-last [#(= % {:title "My Chart"})])
 
-;; This pattern is powerful for:
-;; - Feature flags (show/hide UI elements)
-;; - Environment-specific configuration (only include debug info in dev mode)
-;; - Conditional validation (only validate when validation is enabled)
-;; - Progressive disclosure (show advanced options only when requested)
+;; ## Dependencies with `dag`
 
-;; ### Moving Forward: Dependencies
+;; Functions can receive the entire environment, but that makes dependencies invisible. The `dag` namespace lets functions declare what they need.
 
-;; So far we've seen how to create flexible templates with computed values using functions. But there's a limitation: when one parameter depends on another, we have to ensure values are computed in the right order. In the next part, we'll see how the `dag` namespace solves this by letting functions **declare their dependencies** explicitly.
+;; **Rule 7: Declared Dependencies** - resolve dependencies before applying function body.
 
-;; ## Part 2: Dependency-Aware Functions with `dag`
-
-;; ### The Problem: Manual Dependency Ordering
-
-;; Template transformation lets us parameterize structures, but what if one parameter depends on computing another first?
-
-;; ```clojure
-;; ;; We want circumference, which needs radius, which needs area
-;; {:Area 100
-;;  :Radius ...needs Area first...
-;;  :Circumference ...needs Radius first...}
-;; ```
-
-;; Without dependency management, you have to:
-
-;; 1. Manually compute values in the right order
-;; 2. Pass intermediate results around
-;; 3. Remember which values depend on which
-;; 4. Update all call sites when dependencies change
-
-;; The `dag` namespace solves this by letting functions **declare their dependencies**. The system automatically:
-;; - Computes values in the correct order
-;; - Resolves transitive dependencies (A needs B, B needs C → compute C, then B, then A)
-;; - Handles complex graphs like diamonds (A and B both need C → compute C once)
-;; - Caches intermediate results to avoid redundant work
-
-;; ### `fn-with-deps`: Declaring Dependencies
-
-;; The `fn-with-deps` macro creates a function that declares its dependencies. Before the function is called, its dependencies are automatically resolved via `xform`:
+;; The `fn-with-deps` macro declares dependencies:
 
 (xform/xform
  {:b :B
   :c :C
-  :aerial.hanami.templates/defaults
+  ::ht/defaults
   {:A 10
    :B (dag/fn-with-deps "B depends on A"
                         [A]
@@ -393,13 +296,13 @@
 
 (kind/test-last [#(= % {:b 20, :c 25})])
 
-;; ### Diamond Dependencies
+;; The system computes in order: `:C` needs `:B`, which needs `:A`. So A=10, then B=20, then C=25.
 
-;; The system handles complex dependency graphs, including diamond patterns where multiple paths lead to the same node:
+;; When multiple values need the same dependency:
 
 (xform/xform
  {:result :E
-  :aerial.hanami.templates/defaults
+  ::ht/defaults
   {:A 5
    :B (dag/fn-with-deps nil [A] (* A 2))
    :C (dag/fn-with-deps nil [A] (+ A 3))
@@ -408,24 +311,9 @@
 
 (kind/test-last [#(= % {:result 180})])
 
-;; ### Circular Dependencies
+;; Both B and C need A. The system computes A once, then B and C, then D, then E. The system doesn't detect cycles - if A needs B and B needs A, you'll get `StackOverflowError`.
 
-;; **Important**: The system does not detect circular dependencies. If you create a cycle (A depends on B, B depends on A), you'll get a `StackOverflowError`:
-
-;; ```clojure
-;; (xform/xform
-;;  {:result :A
-;;   :aerial.hanami.templates/defaults
-;;   {:A (dag/fn-with-deps nil [B] (inc B))
-;;    :B (dag/fn-with-deps nil [A] (inc A))}})
-;; ;; => StackOverflowError
-;; ```
-
-;; When you encounter a `StackOverflowError`, check your dependency graph for cycles. Each function should only depend on values that don't transitively depend on it.
-
-;; ### `defn-with-deps`: Named Functions
-
-;; For reusable functions with dependencies, use `defn-with-deps`:
+;; For reusable functions:
 
 (dag/defn-with-deps area->radius
   "Compute radius from area"
@@ -439,7 +327,7 @@
 
 (xform/xform
  {:circumference :Circumference
-  :aerial.hanami.templates/defaults
+  ::ht/defaults
   {:Area 100
    :Radius area->radius
    :Circumference radius->circumference}})
@@ -447,9 +335,7 @@
 (kind/test-last [#(let [expected (* 2 Math/PI (Math/sqrt (/ 100 Math/PI)))]
                     (< (Math/abs (- (:circumference %) expected)) 0.001))])
 
-;; ### Inspecting Dependencies
-
-;; Functions created with `fn-with-deps` carry metadata about their dependencies, accessible via `(meta fn)` with the key `:scicloj.tableplot.v1.dag/dep-ks`. This is useful for debugging and understanding dependency graphs:
+;; Functions carry dependencies in metadata:
 
 (:scicloj.tableplot.v1.dag/dep-ks (meta area->radius))
 
@@ -458,8 +344,6 @@
 (:scicloj.tableplot.v1.dag/dep-ks (meta radius->circumference))
 
 (kind/test-last [#(= % [:Radius])])
-
-;; You can also inspect anonymous functions:
 
 (def complex-fn
   (dag/fn-with-deps "Complex computation"
@@ -470,30 +354,9 @@
 
 (kind/test-last [#(= % [:A :B :C])])
 
-;; ### Moving Forward: Caching
+;; ## Caching with `cache`
 
-;; We now have dependency-aware functions that compute values in the correct order. But what happens when the same dependency is needed by multiple functions? Without caching, we'd compute the same value multiple times. In the next part, we'll see how the `cache` namespace provides automatic memoization to avoid redundant work.
-
-;; ## Part 3: Caching with `cache`
-
-;; ### The Problem: Redundant Computation
-
-;; With dependencies, the system computes values in the right order. But what if the same value is needed multiple times?
-
-;; ```clojure
-;; ;; Both B and C need A
-;; {:A (expensive-computation)
-;;  :B (fn [A] ...)  ; computes A
-;;  :C (fn [A] ...)  ; computes A again?!
-;; ```
-
-;; Without caching, expensive computations run repeatedly. With large datasets or complex calculations, this becomes a performance bottleneck.
-
-;; The `cache` namespace provides memoization for dependency resolution. When a value is computed once, subsequent requests return the cached result.
-
-;; ### `cached-xform-k`: Memoized Key Resolution
-
-;; The `dag/cached-xform-k` function resolves a key via `xform` and caches the result:
+;; The `cache` namespace [memoizes](https://en.wikipedia.org/wiki/Memoization) dependency resolution. If both B and C need A, A is computed once.
 
 (let [call-count (atom 0)
       expensive-fn (fn [{:keys [X]}]
@@ -508,11 +371,7 @@
 
 (kind/test-last [#(= % 1)])
 
-;; The `with-clean-cache` macro ensures we start with an empty cache.
-
-;; ### Automatic Caching in Dependencies
-
-;; Functions created with `fn-with-deps` automatically use caching for their dependencies:
+;; The expensive function ran once despite three lookups. `with-clean-cache` clears the cache before and after. Dependencies are cached automatically:
 
 (def computation-log (atom []))
 
@@ -522,7 +381,7 @@
   (do
     (xform/xform
      {:result :C
-      :aerial.hanami.templates/defaults
+      ::ht/defaults
       {:A (fn [_]
             (swap! computation-log conj :computing-A)
             10)
@@ -536,11 +395,7 @@
 
 (kind/test-last [#(= % [:computing-A :computing-B :computing-C])])
 
-;; Even though `:A` is needed by both `:B` and `:C`, it's only computed once. The log shows the computation order: `:A` first, then `:B`, then `:C`.
-
-;; ### How Dependencies Are Cached
-
-;; When you use `fn-with-deps`, the system automatically uses `cached-xform-k` for each dependency. Let's trace this more explicitly:
+;; `:A` is needed by both `:B` and `:C`, but computed only once. More explicitly:
 
 (def detailed-log (atom []))
 
@@ -550,7 +405,7 @@
   (do
     (xform/xform
      {:final :D
-      :aerial.hanami.templates/defaults
+      ::ht/defaults
       {:A (fn [_]
             (swap! detailed-log conj [:computing :A])
             100)
@@ -570,17 +425,9 @@
                         [:computing :C :with-A 100]
                         [:computing :D :with-B 200 :with-C 150]])])
 
-;; The log shows that:
+;; A computed once, B and C both receive 100, D receives 200 and 150.
 
-;; 1. `:A` is computed once (even though both `:B` and `:C` need it)
-;; 2. `:B` and `:C` receive the cached value `100`
-;; 3. `:D` receives the cached values `200` and `150`
-
-;; This automatic caching of dependencies is why `fn-with-deps` is so powerful - you declare what you need, and the system ensures it's computed exactly once.
-
-;; ### Cache Keys
-
-;; The cache key includes both the key name and the substitution map, so different contexts maintain separate caches:
+;; The cache key includes the key name and substitution map, so different contexts get separate caches:
 
 (cache/with-clean-cache
   [(dag/cached-xform-k :Result {:X 5, :Result (fn [{:keys [X]}] (* X X))})
@@ -588,23 +435,9 @@
 
 (kind/test-last [#(= % [25 49])])
 
-;; ### All Three Systems Together
+;; ## Examples
 
-;; We've now seen the three core components:
-
-;; 1. **Templates** (`xform`) - Parameterize structures with computed values
-;; 2. **Dependencies** (`dag`) - Declare what each value needs, computed in the right order
-;; 3. **Caching** (`cache`) - Avoid redundant computation
-
-;; These work seamlessly together: templates can use dependency-aware functions, and dependencies are automatically cached. In the next part, we'll see realistic examples of all three systems working in harmony.
-
-;; ## Part 4: Putting It Together
-
-;; Now let's see how all three systems work together in a realistic scenario.
-
-;; ### Comprehensive Example: Data Visualization Pipeline
-
-;; Let's build a data processing and visualization pipeline that demonstrates templates, dependencies, and caching working together:
+;; ### Data Visualization Pipeline
 
 (def viz-pipeline
   {:visualization
@@ -616,9 +449,8 @@
                      :gridcolor :GridColor}
              :yaxis {:title :YAxisLabel
                      :gridcolor :GridColor}}
-    :aerial.hanami.templates/defaults
-    {;; Data pipeline dependencies
-     :RawData (tc/dataset {:x [1 2 3 4 5]
+    ::ht/defaults
+    {:RawData (tc/dataset {:x [1 2 3 4 5]
                            :y [10 15 13 17 20]})
      :FilteredData (dag/fn-with-deps
                     "Filter data based on threshold"
@@ -628,14 +460,10 @@
                      "Transform filtered data"
                      [FilteredData ScaleFactor]
                      (tc/map-columns FilteredData :y [:y] #(* % ScaleFactor)))
-
-     ;; Computed labels based on processing
      :XAxisLabel (dag/fn-with-deps nil [RawData]
                                    (str "X Values (n=" (tc/row-count RawData) ")"))
      :YAxisLabel (dag/fn-with-deps nil [ScaleFactor]
                                    (str "Y Values (scaled ×" ScaleFactor ")"))
-
-     ;; Conditional styling
      :ChartTitle (dag/fn-with-deps nil [MinValue ScaleFactor]
                                    (str "Filtered & Scaled Data (threshold=" MinValue ", scale=" ScaleFactor ")"))
      :TitleFontSize (dag/fn-with-deps nil [Environment]
@@ -644,16 +472,12 @@
                                    (if (= Environment "dark-mode") "#ffffff" "#000000"))
      :GridColor (dag/fn-with-deps nil [Environment]
                                   (if (= Environment "dark-mode") "#444444" hc/RMV))
-
-     ;; Parameters with defaults
      :MinValue 12
      :ScaleFactor 2
      :Environment "standard"}}
-   :aerial.hanami.templates/defaults {:TitleFontSize hc/RMV
-                                       :TitleColor hc/RMV
-                                       :GridColor hc/RMV}})
-
-;; Use it with defaults:
+   ::ht/defaults {:TitleFontSize hc/RMV
+                  :TitleColor hc/RMV
+                  :GridColor hc/RMV}})
 
 ^:kind/pprint
 (cache/with-clean-cache
@@ -668,8 +492,6 @@
                        (= (tc/row-count (get-in % [:visualization :data]))
                           4))])
 
-;; Override for presentation mode:
-
 ^:kind/pprint
 (cache/with-clean-cache
   (xform/xform viz-pipeline
@@ -683,17 +505,7 @@
                        (= (tc/row-count (get-in % [:visualization :data]))
                           3))])
 
-;; This example demonstrates:
-;; - **Templates**: Nested structure with `:aerial.hanami.templates/defaults` at multiple levels
-;; - **Dependencies**: Data processing pipeline where each step depends on previous ones
-;; - **Caching**: Each dependency computed once, even when needed by multiple downstream computations
-;; - **Conditional logic**: Styling changes based on environment
-;; - **Recursive removal**: Unused styling options removed from output
-;; - **Easy overrides**: Change environment and threshold with simple parameters
-
 ;; ### Configuration System
-
-;; A configuration system demonstrates how template defaults, functions, and dependencies combine:
 
 (def app-config
   {:Environment "production"
@@ -724,8 +536,6 @@
                         :log-level "WARN"
                         :max-conn 50})])
 
-;; Override for development:
-
 (xform/xform
  {:db-url :DatabaseURL
   :log-level :LogLevel
@@ -738,15 +548,13 @@
 
 ;; ### Lazy Evaluation
 
-;; The system is lazy - values are only computed when needed:
-
 (def lazy-counter (atom 0))
 
 (reset! lazy-counter 0)
 
 (xform/xform
  {:needed :A
-  :aerial.hanami.templates/defaults
+  ::ht/defaults
   {:A (fn [_]
         (swap! lazy-counter inc)
         "value-a")
@@ -758,59 +566,29 @@
 
 (kind/test-last [#(= % 1)])
 
-;; ### How Tableplot Uses This System
+;; Only `:A` computed despite `:B` being in the environment.
 
-;; Tableplot's layer functions use this dataflow system extensively. Here's a simplified example:
+;; ### Tableplot Layers
 
 (defn simplified-layer-point [dataset options]
-  (let [layer-defaults
-        {:=dataset dataset
-         :=mark :point
-         :=x (get options :=x :x)
-         :=y (get options :=y :y)
-         :=x-data (dag/fn-with-deps nil [=dataset =x]
-                                    (get =dataset =x))
-         :=y-data (dag/fn-with-deps nil [=dataset =y]
-                                    (get =dataset =y))
-         :=trace (dag/fn-with-deps nil [=x-data =y-data =mark]
-                                   {:type (name =mark)
-                                    :x =x-data
-                                    :y =y-data})}]
-    {:aerial.hanami.templates/defaults (merge layer-defaults options)
-     :kindly/f #(xform/xform %)}))
-
-;; This pattern allows:
-;; - Lazy computation of trace data
-;; - Automatic dependency resolution (`=trace` depends on `=x-data`, `=y-data`, and `=mark`)
-;; - Easy override of any parameter
-;; - Caching of expensive operations
+  {::ht/defaults (merge {:=dataset dataset
+                         :=mark :point
+                         :=x-data (dag/fn-with-deps nil [=dataset =x]
+                                                    (get =dataset =x))
+                         :=y-data (dag/fn-with-deps nil [=dataset =y]
+                                                    (get =dataset =y))
+                         :=trace (dag/fn-with-deps nil [=x-data =y-data =mark]
+                                                   {:type (name =mark)
+                                                    :x =x-data
+                                                    :y =y-data})}
+                        options)
+   :kindly/f #(xform/xform %)})
 
 ;; ## Summary
 
-;; The dataflow system provides:
-
-;; 1. **Template Transformation**: Recursive substitution of keys with values, including function-computed values
-;; 2. **Dependency Management**: Explicit declaration of dependencies with automatic resolution
-;; 3. **Caching**: Memoization to avoid redundant computation
-;; 4. **Composability**: Templates can be merged, parameterized, and reused
-;; 5. **Laziness**: Values only computed when needed
-
-;; These features combine to create a system for building complex, composable, data-driven transformations - useful far beyond just data visualization!
-
-;; ## Key Takeaways
-
-;; - Use `xform/xform` for template substitution with recursive key replacement
-;; - Use `dag/fn-with-deps` to create functions that declare their dependencies
-;; - Use `dag/defn-with-deps` for reusable named functions with dependencies
-;; - Use `cache/with-clean-cache` to control caching behavior in tests
-;; - Dependencies are automatically cached to avoid redundant computation
-;; - The system handles complex dependency graphs including diamonds and chains
-;; - Templates can include defaults via `:aerial.hanami.templates/defaults`
-;; - The system is lazy - values are only computed when requested
-;; - Template defaults take precedence over map values; use multi-arity form or `:aerial.hanami.common/user-kvs` to override
-;; - `hc/RMV` combined with `:aerial.hanami.common/rmv-empty?` enables conditional template inclusion
+;; Six rewriting rules plus declared dependencies create a system for parameterized data transformations. This work builds on Jon Anthony's Hanami, which showed how term rewriting could parameterize data structures. Tableplot adds explicit dependency declaration and caching.
 
 ;; For more information:
 ;; - [Hanami documentation](https://github.com/jsa-aerial/hanami) - The template system that inspired `xform`
 ;; - [Plotly walkthrough](tableplot_book.plotly_walkthrough.html) - See the dataflow system in action
-;; - [Plotly reference](tableplot_book.plotly_reference.html) - Comprehensive examples of the dataflow system
+;; - [Plotly reference](tableplot_book.plotly_reference.html) - Comprehensive examples
