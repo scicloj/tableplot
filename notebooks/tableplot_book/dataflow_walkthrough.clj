@@ -137,6 +137,40 @@
 
 (kind/test-last [#(= % {:message "Hello, Clojure!"})])
 
+;; ### Nested Template Defaults
+
+;; Template defaults can appear **at any level** of the structure, not just at the top. Each nested map can have its own `::ht/defaults`:
+
+(xform/xform
+ {:title :Title
+  :section {:heading :Heading
+            ::ht/defaults {:Heading "Default Heading"}}
+  ::ht/defaults {:Title "Default Title"}})
+
+(kind/test-last [#(= % {:title "Default Title"
+                        :section {:heading "Default Heading"}})])
+
+;; Nested defaults can reference values from parent-level defaults:
+
+(xform/xform
+ {:outer {:inner :InnerValue
+          ::ht/defaults {:InnerValue (fn [{:keys [OuterValue]}]
+                                       (str "Inner uses: " OuterValue))}}
+  ::ht/defaults {:OuterValue "Parent Value"}})
+
+(kind/test-last [#(= % {:outer {:inner "Inner uses: Parent Value"}})])
+
+;; User substitutions override nested defaults:
+
+(xform/xform
+ {:section {:heading :Heading
+            ::ht/defaults {:Heading "Default Heading"}}}
+ :Heading "User Heading")
+
+(kind/test-last [#(= % {:section {:heading "User Heading"}})])
+
+;; This enables modular, composable template design where different parts of a template can have their own defaults.
+
 ;; ### Nested Structures and Collections
 
 ;; Template transformation works recursively on nested structures and collections:
