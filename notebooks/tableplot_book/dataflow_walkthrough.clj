@@ -33,7 +33,7 @@
 
 ;; **Rule 4: Collection Recursion** - If `T` is a map or vector, recurse on elements.
 
-;; **Rule 5: Template Defaults** - Templates extend the environment via `::ht/defaults`.
+;; **Rule 5: Template Defaults** - Templates extend the environment via `:aerial.hanami.templates/defaults`.
 
 ;; **Rule 6: Value** - Non-collection, non-key values (numbers, strings, datasets) pass through.
 
@@ -103,7 +103,7 @@
 
 (xform/xform
  {:message :Message
-  ::ht/defaults {:Name "World"
+  :aerial.hanami.templates/defaults {:Name "World"
                  :Message (fn [{:keys [Name]}]
                             (str "Hello, " Name "!"))}})
 
@@ -113,7 +113,7 @@
 
 (xform/xform
  {:message :Message
-  ::ht/defaults {:Name "World"
+  :aerial.hanami.templates/defaults {:Name "World"
                  :Message (fn [{:keys [Name]}]
                             (str "Hello, " Name "!"))}}
  :Name "Clojure")
@@ -127,8 +127,8 @@
 (xform/xform
  {:title :Title
   :section {:heading :Heading
-            ::ht/defaults {:Heading "Default Heading"}}
-  ::ht/defaults {:Title "Default Title"}})
+            :aerial.hanami.templates/defaults {:Heading "Default Heading"}}
+  :aerial.hanami.templates/defaults {:Title "Default Title"}})
 
 (kind/test-last [#(= % {:title "Default Title"
                         :section {:heading "Default Heading"}})])
@@ -137,9 +137,9 @@
 
 (xform/xform
  {:outer {:inner :InnerValue
-          ::ht/defaults {:InnerValue (fn [{:keys [OuterValue]}]
+          :aerial.hanami.templates/defaults {:InnerValue (fn [{:keys [OuterValue]}]
                                        (str "Inner uses: " OuterValue))}}
-  ::ht/defaults {:OuterValue "Parent Value"}})
+  :aerial.hanami.templates/defaults {:OuterValue "Parent Value"}})
 
 (kind/test-last [#(= % {:outer {:inner "Inner uses: Parent Value"}})])
 
@@ -147,7 +147,7 @@
 
 (xform/xform
  {:section {:heading :Heading
-            ::ht/defaults {:Heading "Default Heading"}}}
+            :aerial.hanami.templates/defaults {:Heading "Default Heading"}}}
  :Heading "User Heading")
 
 (kind/test-last [#(= % {:section {:heading "User Heading"}})])
@@ -157,14 +157,14 @@
 (xform/xform
  {:config {:database {:url :DbUrl
                       :pool-size :PoolSize}
-           ::ht/defaults {:DbHost "localhost"
+           :aerial.hanami.templates/defaults {:DbHost "localhost"
                           :DbPort 5432
                           :DbName "mydb"
                           :DbUrl (dag/fn-with-deps nil [DbHost DbPort DbName]
                                                    (str "postgresql://" DbHost ":" DbPort "/" DbName))
                           :PoolSize (dag/fn-with-deps nil [Environment]
                                                       (if (= Environment "prod") 50 10))}}
-  ::ht/defaults {:Environment "prod"}})
+  :aerial.hanami.templates/defaults {:Environment "prod"}})
 
 (kind/test-last [#(= % {:config {:database {:url "postgresql://localhost:5432/mydb"
                                             :pool-size 50}}})])
@@ -225,7 +225,7 @@
                   :annotations :Annotations
                   :shapes :Shapes
                   :images :Images}}
-  ::ht/defaults {:TitleSize hc/RMV
+  :aerial.hanami.templates/defaults {:TitleSize hc/RMV
                  :TitleFamily hc/RMV
                  :TitleColor hc/RMV
                  :TitleX hc/RMV
@@ -256,7 +256,7 @@
 (xform/xform
  {:title :Title
   :subtitle :Subtitle
-  ::ht/defaults {:ShowSubtitle true
+  :aerial.hanami.templates/defaults {:ShowSubtitle true
                  :Title "My Chart"
                  :Subtitle (fn [{:keys [ShowSubtitle]}]
                              (if ShowSubtitle "A subtitle" hc/RMV))}})
@@ -266,7 +266,7 @@
 (xform/xform
  {:title :Title
   :subtitle :Subtitle
-  ::ht/defaults {:ShowSubtitle true
+  :aerial.hanami.templates/defaults {:ShowSubtitle true
                  :Title "My Chart"
                  :Subtitle (fn [{:keys [ShowSubtitle]}]
                              (if ShowSubtitle "A subtitle" hc/RMV))}}
@@ -285,7 +285,7 @@
 (xform/xform
  {:b :B
   :c :C
-  ::ht/defaults
+  :aerial.hanami.templates/defaults
   {:A 10
    :B (dag/fn-with-deps "B depends on A"
                         [A]
@@ -302,7 +302,7 @@
 
 (xform/xform
  {:result :E
-  ::ht/defaults
+  :aerial.hanami.templates/defaults
   {:A 5
    :B (dag/fn-with-deps nil [A] (* A 2))
    :C (dag/fn-with-deps nil [A] (+ A 3))
@@ -327,7 +327,7 @@
 
 (xform/xform
  {:circumference :Circumference
-  ::ht/defaults
+  :aerial.hanami.templates/defaults
   {:Area 100
    :Radius area->radius
    :Circumference radius->circumference}})
@@ -381,7 +381,7 @@
   (do
     (xform/xform
      {:result :C
-      ::ht/defaults
+      :aerial.hanami.templates/defaults
       {:A (fn [_]
             (swap! computation-log conj :computing-A)
             10)
@@ -405,7 +405,7 @@
   (do
     (xform/xform
      {:final :D
-      ::ht/defaults
+      :aerial.hanami.templates/defaults
       {:A (fn [_]
             (swap! detailed-log conj [:computing :A])
             100)
@@ -449,7 +449,7 @@
                      :gridcolor :GridColor}
              :yaxis {:title :YAxisLabel
                      :gridcolor :GridColor}}
-    ::ht/defaults
+    :aerial.hanami.templates/defaults
     {:RawData (tc/dataset {:x [1 2 3 4 5]
                            :y [10 15 13 17 20]})
      :FilteredData (dag/fn-with-deps
@@ -475,7 +475,7 @@
      :MinValue 12
      :ScaleFactor 2
      :Environment "standard"}}
-   ::ht/defaults {:TitleFontSize hc/RMV
+   :aerial.hanami.templates/defaults {:TitleFontSize hc/RMV
                   :TitleColor hc/RMV
                   :GridColor hc/RMV}})
 
@@ -554,7 +554,7 @@
 
 (xform/xform
  {:needed :A
-  ::ht/defaults
+  :aerial.hanami.templates/defaults
   {:A (fn [_]
         (swap! lazy-counter inc)
         "value-a")
@@ -571,7 +571,7 @@
 ;; ### Tableplot Layers
 
 (defn simplified-layer-point [dataset options]
-  {::ht/defaults (merge {:=dataset dataset
+  {:aerial.hanami.templates/defaults (merge {:=dataset dataset
                          :=mark :point
                          :=x-data (dag/fn-with-deps nil [=dataset =x]
                                                     (get =dataset =x))
