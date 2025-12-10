@@ -232,26 +232,25 @@
                           :gridwidth :YGridWidth}
                   :annotations :Annotations
                   :shapes :Shapes
-                  :images :Images}}}
- {:Data [{:x [1 2 3] :y [4 5 6] :type "scatter"}]
-  :Title "Simple Chart"
-  ;; All other parameters default to hc/RMV
-  :TitleSize hc/RMV
-  :TitleFamily hc/RMV
-  :TitleColor hc/RMV
-  :TitleX hc/RMV
-  :TitleY hc/RMV
-  :XAxisTitle hc/RMV
-  :ShowXGrid hc/RMV
-  :XGridColor hc/RMV
-  :XGridWidth hc/RMV
-  :YAxisTitle hc/RMV
-  :ShowYGrid hc/RMV
-  :YGridColor hc/RMV
-  :YGridWidth hc/RMV
-  :Annotations hc/RMV
-  :Shapes hc/RMV
-  :Images hc/RMV})
+                  :images :Images}}
+  ::ht/defaults {:TitleSize hc/RMV
+                 :TitleFamily hc/RMV
+                 :TitleColor hc/RMV
+                 :TitleX hc/RMV
+                 :TitleY hc/RMV
+                 :XAxisTitle hc/RMV
+                 :ShowXGrid hc/RMV
+                 :XGridColor hc/RMV
+                 :XGridWidth hc/RMV
+                 :YAxisTitle hc/RMV
+                 :ShowYGrid hc/RMV
+                 :YGridColor hc/RMV
+                 :YGridWidth hc/RMV
+                 :Annotations hc/RMV
+                 :Shapes hc/RMV
+                 :Images hc/RMV}}
+ :Data [{:x [1 2 3] :y [4 5 6] :type "scatter"}]
+ :Title "Simple Chart")
 
 (kind/test-last [#(= % {:plot {:data [{:x [1 2 3] :y [4 5 6] :type "scatter"}]
                                :layout {:title {:text "Simple Chart"}}}})])
@@ -493,7 +492,7 @@
 
 ;; This pattern allows:
 ;; - Lazy computation of trace data
-;; - Automatic dependency resolution (=trace depends on =x-data, =y-data, and =mark)
+;; - Automatic dependency resolution (`=trace` depends on `=x-data`, `=y-data`, and `=mark`)
 ;; - Easy override of any parameter
 ;; - Caching of expensive operations
 
