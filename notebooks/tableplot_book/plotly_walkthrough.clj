@@ -236,7 +236,7 @@
       :=box-visible true}))
 
 ;; Test: violin with box visible setting
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=box-visible) true)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=box-visible) true)])
 
 ;; ### Area chart
 
@@ -250,7 +250,7 @@
       :=y :total-disp}))
 
 ;; Test: area chart has fill setting
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=mark-fill) :tozeroy)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=mark-fill) :tozeroy)])
 
 ;; ### Bar chart
 
@@ -274,7 +274,7 @@
       :=y :total-disp}))
 
 ;; Test: bar chart with bar-width setting
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=bar-width) :bar-width)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=bar-width) :bar-width)])
 
 ;; ### Text
 
@@ -300,7 +300,7 @@
       :=mark-size 20}))
 
 ;; Test: text layer with textfont setting
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=textfont)
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=textfont)
                      {:family "Courier New, monospace"
                       :size 16
                       :color :purple})])
@@ -420,7 +420,7 @@
     (plotly/layer-line {:=mark-color "purple"}))
 
 ;; Test: base with shared parameters creates 2 layers
-(kind/test-last [#(= (-> % ::ht/defaults :=layers count) 2)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers count) 2)])
 
 ;; Layers can be named:
 
@@ -459,7 +459,7 @@
                          :=mark-opacity 0.5}))
 
 ;; Test: update-data creates 2 layers
-(kind/test-last [#(= (-> % ::ht/defaults :=layers count) 2)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers count) 2)])
 
 ;; ## Overriding layer data
 
@@ -487,7 +487,7 @@
                           :=name "Predicted"}))
 
 ;; Test: smooth with point creates 2 layers and 2 traces
-(kind/test-last [#(and (= (-> % ::ht/defaults :=layers count) 2)
+(kind/test-last [#(and (= (-> % :aerial.hanami.templates/defaults :=layers count) 2)
                        (= (-> % plotly/plot :data count) 2))])
 
 ;; By default, the regression is computed with only one predictor variable,
@@ -747,7 +747,7 @@
                            :=density-bandwidth 0.05}))
 
 ;; Test: density with bandwidth setting
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=density-bandwidth) 0.05)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=density-bandwidth) 0.05)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-density {:=x :sepal-width
@@ -806,7 +806,7 @@
                          :=coordinates :3d}))
 
 ;; Test: 3d coordinates setting
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=coordinates) :3d)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=coordinates) :3d)])
 
 (-> (rdatasets/datasets-iris)
     (plotly/layer-point {:=x :sepal-width
@@ -848,7 +848,7 @@
       :=mark-opacity 0.6}))
 
 ;; Test: polar coordinates setting
-(kind/test-last [#(= (-> % ::ht/defaults :=layers first ::ht/defaults :=coordinates) :polar)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layers first :aerial.hanami.templates/defaults :=coordinates) :polar)])
 
 ;; Controlling the polar layout
 ;; (by manipulating the raw Plotly.js spec):

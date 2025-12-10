@@ -77,7 +77,11 @@
       :=color :species
       :=mark-size 200}))
 
-(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layer first ::ht/defaults)]
+(kind/test-last [#(let [layer-defaults (-> %
+                                           :aerial.hanami.templates/defaults
+                                           :=layer
+                                           first
+                                           :aerial.hanami.templates/defaults)]
                     (and (= (:=x layer-defaults) :sepal-width)
                          (= (:=y layer-defaults) :sepal-length)
                          (= (:=color layer-defaults) :species)))])
@@ -290,7 +294,7 @@
                   :=y :value
                   :=mark-color "purple"}))
 
-(kind/test-last [#(contains? (::ht/defaults %) :=dataset)])
+(kind/test-last [#(contains? (:aerial.hanami.templates/defaults %) :=dataset)])
 
 ;; The result is displayed the same way, but the internal representation
 ;; delays the Hanami transformation of templates.
@@ -333,7 +337,7 @@
                   :=mark-color "purple"})
     hanami/layer-line)
 
-(kind/test-last [#(= (-> % ::ht/defaults :=layer count) 1)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layer count) 1)])
 
 ;; The substitution keys can also be specified on the layer level:
 
@@ -354,7 +358,7 @@
                          :=mark-opacity 0.1})
     (hanami/layer-line {:=mark-color "purple"}))
 
-(kind/test-last [#(= (-> % ::ht/defaults :=layer count) 2)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layer count) 2)])
 
 ;; We can also skip the base and have everything in the layer:
 
@@ -381,9 +385,9 @@
     (hanami/layer-point {:=mark-color "green"
                          :=mark-size 200}))
 
-(kind/test-last [#(let [layers (-> % ::ht/defaults :=layer)]
+(kind/test-last [#(let [layers (-> % :aerial.hanami.templates/defaults :=layer)]
                     (and (= (count layers) 2)
-                         (= (-> layers second ::ht/defaults :=layer-dataset tc/row-count) 5)))])
+                         (= (-> layers second :aerial.hanami.templates/defaults :=layer-dataset tc/row-count) 5)))])
 
 ;; You see, we have lots of data for the lines,
 ;; but only five random points.
@@ -456,7 +460,7 @@
     hanami/layer-point
     (hanami/layer-smooth {:=mark-color "orange"}))
 
-(kind/test-last [#(= (-> % ::ht/defaults :=layer count) 2)])
+(kind/test-last [#(= (-> % :aerial.hanami.templates/defaults :=layer count) 2)])
 
 ;; By default, the regression is computed with only one predictor variable,
 ;; which is `:=x`.
@@ -470,7 +474,7 @@
     (hanami/layer-smooth {:=predictors [:petal-width
                                         :petal-length]}))
 
-(kind/test-last [#(let [smooth-layer (-> % ::ht/defaults :=layer second ::ht/defaults)]
+(kind/test-last [#(let [smooth-layer (-> % :aerial.hanami.templates/defaults :=layer second :aerial.hanami.templates/defaults)]
                     (= (:=predictors smooth-layer) [:petal-width :petal-length]))])
 
 ;; ## Grouping
@@ -489,7 +493,7 @@
     hanami/layer-point
     hanami/layer-smooth)
 
-(kind/test-last [#(let [base-defaults (-> % ::ht/defaults)]
+(kind/test-last [#(let [base-defaults (-> % :aerial.hanami.templates/defaults)]
                     (= (:=color base-defaults) :species))])
 
 ;; This happened because the `:color` field was `:species`,
@@ -508,7 +512,7 @@
     hanami/layer-point
     hanami/layer-smooth)
 
-(kind/test-last [#(let [base-defaults (-> % ::ht/defaults)]
+(kind/test-last [#(let [base-defaults (-> % :aerial.hanami.templates/defaults)]
                     (= (:=group base-defaults) []))])
 
 ;; ## Example: out-of-sample predictions
@@ -585,14 +589,14 @@
 (-> (rdatasets/datasets-iris)
     (hanami/layer-histogram {:=x :sepal-width}))
 
-(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layer first ::ht/defaults)]
+(kind/test-last [#(let [layer-defaults (-> % :aerial.hanami.templates/defaults :=layer first :aerial.hanami.templates/defaults)]
                     (= (:=x layer-defaults) :sepal-width))])
 
 (-> (rdatasets/datasets-iris)
     (hanami/layer-histogram {:=x :sepal-width
                              :=histogram-nbins 30}))
 
-(kind/test-last [#(let [layer-defaults (-> % ::ht/defaults :=layer first ::ht/defaults)]
+(kind/test-last [#(let [layer-defaults (-> % :aerial.hanami.templates/defaults :=layer first :aerial.hanami.templates/defaults)]
                     (= (:=histogram-nbins layer-defaults) 30))])
 
 

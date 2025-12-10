@@ -1,6 +1,6 @@
 ;; # Dataflow Model Walkthrough 🌊
 
-;; Tableplot includes a general-purpose dataflow system for creating templates with automatic dependency resolution and caching. While this system powers the visualization layer functions in Tableplot, it can be used for any kind of composable, data-driven transformations.
+;; Tableplot includes a general-purpose dataflow system for creating templates with automatic dependency resolution and caching. While this system powers the visualization layer functions in Tableplot, it can be used for any kind of composable, data-driven transformations. It is inspired by [Hanami](http://github.com/jsa-aerial/hanami)'s templating but is different in a few ways.
 
 ;; This walkthrough explores the `xform`, `dag`, and `cache` namespaces that implement this dataflow model.
 
@@ -122,50 +122,50 @@
 
 ;; ### Template Defaults
 
-;; Templates can include their own defaults via the `::ht/defaults` key. These defaults are merged with the provided substitution map.
+;; Templates can include their own defaults via the `:aerial.hanami.templates/defaults` key. These defaults are merged with the provided substitution map.
 
 ;; **Note:** When you have no user substitutions, you can omit the empty map `{}`:
 
 (xform/xform
  {:message :Message
-  ::ht/defaults {:Name "World"
-                 :Message (fn [{:keys [Name]}]
-                            (str "Hello, " Name "!"))}})
+  :aerial.hanami.templates/defaults {:Name "World"
+                                     :Message (fn [{:keys [Name]}]
+                                                (str "Hello, " Name "!"))}})
 
 (kind/test-last [#(= % {:message "Hello, World!"})])
 
-;; **Important:** Template defaults (from `::ht/defaults` in the template) take precedence over values in the substitution map when using the map form. To override template defaults, use the multi-arity form with key-value pairs:
+;; **Important:** Template defaults (from `:aerial.hanami.templates/defaults` in the template) take precedence over values in the substitution map when using the map form. To override template defaults, use the multi-arity form with key-value pairs:
 
 (xform/xform
  {:message :Message
-  ::ht/defaults {:Name "World"
-                 :Message (fn [{:keys [Name]}]
-                            (str "Hello, " Name "!"))}}
+  :aerial.hanami.templates/defaults {:Name "World"
+                                     :Message (fn [{:keys [Name]}]
+                                                (str "Hello, " Name "!"))}}
  :Name "Clojure")
 
 (kind/test-last [#(= % {:message "Hello, Clojure!"})])
 
-;; Alternatively, you can use `::hc/user-kvs` in the substitution map to explicitly override template defaults:
+;; Alternatively, you can use `:aerial.hanami.common/user-kvs` in the substitution map to explicitly override template defaults:
 
 (xform/xform
  {:message :Message
-  ::ht/defaults {:Name "World"
-                 :Message (fn [{:keys [Name]}]
-                            (str "Hello, " Name "!"))}}
+  :aerial.hanami.templates/defaults {:Name "World"
+                                     :Message (fn [{:keys [Name]}]
+                                                (str "Hello, " Name "!"))}}
  {:Name "Clojure"
-  ::hc/user-kvs {:Name "Clojure"}})
+  :aerial.hanami.common/user-kvs {:Name "Clojure"}})
 
 (kind/test-last [#(= % {:message "Hello, Clojure!"})])
 
 ;; ### Nested Template Defaults
 
-;; Template defaults can appear **at any level** of the structure, not just at the top. Each nested map can have its own `::ht/defaults`:
+;; Template defaults can appear **at any level** of the structure, not just at the top. Each nested map can have its own `:aerial.hanami.templates/defaults`:
 
 (xform/xform
  {:title :Title
   :section {:heading :Heading
-            ::ht/defaults {:Heading "Default Heading"}}
-  ::ht/defaults {:Title "Default Title"}})
+            :aerial.hanami.templates/defaults {:Heading "Default Heading"}}
+  :aerial.hanami.templates/defaults {:Title "Default Title"}})
 
 (kind/test-last [#(= % {:title "Default Title"
                         :section {:heading "Default Heading"}})])
@@ -174,9 +174,9 @@
 
 (xform/xform
  {:outer {:inner :InnerValue
-          ::ht/defaults {:InnerValue (fn [{:keys [OuterValue]}]
-                                       (str "Inner uses: " OuterValue))}}
-  ::ht/defaults {:OuterValue "Parent Value"}})
+          :aerial.hanami.templates/defaults {:InnerValue (fn [{:keys [OuterValue]}]
+                                                           (str "Inner uses: " OuterValue))}}
+  :aerial.hanami.templates/defaults {:OuterValue "Parent Value"}})
 
 (kind/test-last [#(= % {:outer {:inner "Inner uses: Parent Value"}})])
 
@@ -184,7 +184,7 @@
 
 (xform/xform
  {:section {:heading :Heading
-            ::ht/defaults {:Heading "Default Heading"}}}
+            :aerial.hanami.templates/defaults {:Heading "Default Heading"}}}
  :Heading "User Heading")
 
 (kind/test-last [#(= % {:section {:heading "User Heading"}})])
@@ -198,14 +198,14 @@
 (xform/xform
  {:config {:database {:url :DbUrl
                       :pool-size :PoolSize}
-           ::ht/defaults {:DbHost "localhost"
-                          :DbPort 5432
-                          :DbName "mydb"
-                          :DbUrl (dag/fn-with-deps nil [DbHost DbPort DbName]
-                                                   (str "postgresql://" DbHost ":" DbPort "/" DbName))
-                          :PoolSize (dag/fn-with-deps nil [Environment]
-                                                      (if (= Environment "prod") 50 10))}}
-  ::ht/defaults {:Environment "prod"}})
+           :aerial.hanami.templates/defaults {:DbHost "localhost"
+                                              :DbPort 5432
+                                              :DbName "mydb"
+                                              :DbUrl (dag/fn-with-deps nil [DbHost DbPort DbName]
+                                                                       (str "postgresql://" DbHost ":" DbPort "/" DbName))
+                                              :PoolSize (dag/fn-with-deps nil [Environment]
+                                                                          (if (= Environment "prod") 50 10))}}
+  :aerial.hanami.templates/defaults {:Environment "prod"}})
 
 (kind/test-last [#(= % {:config {:database {:url "postgresql://localhost:5432/mydb"
                                             :pool-size 50}}})])
@@ -277,22 +277,22 @@
                   :annotations :Annotations
                   :shapes :Shapes
                   :images :Images}}
-  ::ht/defaults {:TitleSize hc/RMV
-                 :TitleFamily hc/RMV
-                 :TitleColor hc/RMV
-                 :TitleX hc/RMV
-                 :TitleY hc/RMV
-                 :XAxisTitle hc/RMV
-                 :ShowXGrid hc/RMV
-                 :XGridColor hc/RMV
-                 :XGridWidth hc/RMV
-                 :YAxisTitle hc/RMV
-                 :ShowYGrid hc/RMV
-                 :YGridColor hc/RMV
-                 :YGridWidth hc/RMV
-                 :Annotations hc/RMV
-                 :Shapes hc/RMV
-                 :Images hc/RMV}}
+  :aerial.hanami.templates/defaults {:TitleSize hc/RMV
+                                      :TitleFamily hc/RMV
+                                      :TitleColor hc/RMV
+                                      :TitleX hc/RMV
+                                      :TitleY hc/RMV
+                                      :XAxisTitle hc/RMV
+                                      :ShowXGrid hc/RMV
+                                      :XGridColor hc/RMV
+                                      :XGridWidth hc/RMV
+                                      :YAxisTitle hc/RMV
+                                      :ShowYGrid hc/RMV
+                                      :YGridColor hc/RMV
+                                      :YGridWidth hc/RMV
+                                      :Annotations hc/RMV
+                                      :Shapes hc/RMV
+                                      :Images hc/RMV}}
  :Data [{:x [1 2 3] :y [4 5 6] :type "scatter"}]
  :Title "Simple Chart")
 
@@ -319,10 +319,10 @@
 (xform/xform
  {:title :Title
   :subtitle :Subtitle
-  ::ht/defaults {:ShowSubtitle true
-                 :Title "My Chart"
-                 :Subtitle (fn [{:keys [ShowSubtitle]}]
-                             (if ShowSubtitle "A subtitle" hc/RMV))}})
+  :aerial.hanami.templates/defaults {:ShowSubtitle true
+                                      :Title "My Chart"
+                                      :Subtitle (fn [{:keys [ShowSubtitle]}]
+                                                  (if ShowSubtitle "A subtitle" hc/RMV))}})
 
 (kind/test-last [#(= % {:title "My Chart", :subtitle "A subtitle"})])
 
@@ -331,10 +331,10 @@
 (xform/xform
  {:title :Title
   :subtitle :Subtitle
-  ::ht/defaults {:ShowSubtitle true
-                 :Title "My Chart"
-                 :Subtitle (fn [{:keys [ShowSubtitle]}]
-                             (if ShowSubtitle "A subtitle" hc/RMV))}}
+  :aerial.hanami.templates/defaults {:ShowSubtitle true
+                                      :Title "My Chart"
+                                      :Subtitle (fn [{:keys [ShowSubtitle]}]
+                                                  (if ShowSubtitle "A subtitle" hc/RMV))}}
  :ShowSubtitle false)
 
 (kind/test-last [#(= % {:title "My Chart"})])
@@ -382,7 +382,7 @@
 (xform/xform
  {:b :B
   :c :C
-  ::ht/defaults
+  :aerial.hanami.templates/defaults
   {:A 10
    :B (dag/fn-with-deps "B depends on A"
                         [A]
@@ -399,7 +399,7 @@
 
 (xform/xform
  {:result :E
-  ::ht/defaults
+  :aerial.hanami.templates/defaults
   {:A 5
    :B (dag/fn-with-deps nil [A] (* A 2))
    :C (dag/fn-with-deps nil [A] (+ A 3))
@@ -415,7 +415,7 @@
 ;; ```clojure
 ;; (xform/xform
 ;;  {:result :A
-;;   ::ht/defaults
+;;   :aerial.hanami.templates/defaults
 ;;   {:A (dag/fn-with-deps nil [B] (inc B))
 ;;    :B (dag/fn-with-deps nil [A] (inc A))}})
 ;; ;; => StackOverflowError
@@ -439,7 +439,7 @@
 
 (xform/xform
  {:circumference :Circumference
-  ::ht/defaults
+  :aerial.hanami.templates/defaults
   {:Area 100
    :Radius area->radius
    :Circumference radius->circumference}})
@@ -449,13 +449,13 @@
 
 ;; ### Inspecting Dependencies
 
-;; Functions created with `fn-with-deps` carry metadata about their dependencies, accessible via `(meta fn)` with the key `::dag/dep-ks`. This is useful for debugging and understanding dependency graphs:
+;; Functions created with `fn-with-deps` carry metadata about their dependencies, accessible via `(meta fn)` with the key `:scicloj.tableplot.v1.dag/dep-ks`. This is useful for debugging and understanding dependency graphs:
 
-(::dag/dep-ks (meta area->radius))
+(:scicloj.tableplot.v1.dag/dep-ks (meta area->radius))
 
 (kind/test-last [#(= % [:Area])])
 
-(::dag/dep-ks (meta radius->circumference))
+(:scicloj.tableplot.v1.dag/dep-ks (meta radius->circumference))
 
 (kind/test-last [#(= % [:Radius])])
 
@@ -466,7 +466,7 @@
                     [A B C]
                     (+ A B C)))
 
-(::dag/dep-ks (meta complex-fn))
+(:scicloj.tableplot.v1.dag/dep-ks (meta complex-fn))
 
 (kind/test-last [#(= % [:A :B :C])])
 
@@ -522,7 +522,7 @@
   (do
     (xform/xform
      {:result :C
-      ::ht/defaults
+      :aerial.hanami.templates/defaults
       {:A (fn [_]
             (swap! computation-log conj :computing-A)
             10)
@@ -550,7 +550,7 @@
   (do
     (xform/xform
      {:final :D
-      ::ht/defaults
+      :aerial.hanami.templates/defaults
       {:A (fn [_]
             (swap! detailed-log conj [:computing :A])
             100)
@@ -616,7 +616,7 @@
                      :gridcolor :GridColor}
              :yaxis {:title :YAxisLabel
                      :gridcolor :GridColor}}
-    ::ht/defaults
+    :aerial.hanami.templates/defaults
     {;; Data pipeline dependencies
      :RawData (tc/dataset {:x [1 2 3 4 5]
                            :y [10 15 13 17 20]})
@@ -649,9 +649,9 @@
      :MinValue 12
      :ScaleFactor 2
      :Environment "standard"}}
-   ::ht/defaults {:TitleFontSize hc/RMV
-                  :TitleColor hc/RMV
-                  :GridColor hc/RMV}})
+   :aerial.hanami.templates/defaults {:TitleFontSize hc/RMV
+                                       :TitleColor hc/RMV
+                                       :GridColor hc/RMV}})
 
 ;; Use it with defaults:
 
@@ -684,7 +684,7 @@
                           3))])
 
 ;; This example demonstrates:
-;; - **Templates**: Nested structure with `::ht/defaults` at multiple levels
+;; - **Templates**: Nested structure with `:aerial.hanami.templates/defaults` at multiple levels
 ;; - **Dependencies**: Data processing pipeline where each step depends on previous ones
 ;; - **Caching**: Each dependency computed once, even when needed by multiple downstream computations
 ;; - **Conditional logic**: Styling changes based on environment
@@ -746,7 +746,7 @@
 
 (xform/xform
  {:needed :A
-  ::ht/defaults
+  :aerial.hanami.templates/defaults
   {:A (fn [_]
         (swap! lazy-counter inc)
         "value-a")
@@ -776,7 +776,7 @@
                                    {:type (name =mark)
                                     :x =x-data
                                     :y =y-data})}]
-    {::ht/defaults (merge layer-defaults options)
+    {:aerial.hanami.templates/defaults (merge layer-defaults options)
      :kindly/f #(xform/xform %)}))
 
 ;; This pattern allows:
@@ -805,10 +805,10 @@
 ;; - Use `cache/with-clean-cache` to control caching behavior in tests
 ;; - Dependencies are automatically cached to avoid redundant computation
 ;; - The system handles complex dependency graphs including diamonds and chains
-;; - Templates can include defaults via `::ht/defaults`
+;; - Templates can include defaults via `:aerial.hanami.templates/defaults`
 ;; - The system is lazy - values are only computed when requested
-;; - Template defaults take precedence over map values; use multi-arity form or `::hc/user-kvs` to override
-;; - `hc/RMV` combined with `::hc/rmv-empty?` enables conditional template inclusion
+;; - Template defaults take precedence over map values; use multi-arity form or `:aerial.hanami.common/user-kvs` to override
+;; - `hc/RMV` combined with `:aerial.hanami.common/rmv-empty?` enables conditional template inclusion
 
 ;; For more information:
 ;; - [Hanami documentation](https://github.com/jsa-aerial/hanami) - The template system that inspired `xform`

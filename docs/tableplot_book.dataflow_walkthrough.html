@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.24">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Dataflow Model Walkthrough 🌊 – Tableplot</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./tableplot_book.transpile_reference.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dc55a5b9e770e841cd82e46aadbfb9b0.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-4733e8157e70199ce9f3a43518a2fc2a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./tableplot_book.dataflow_walkthrough.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Dataflow Model Walkthrough 🌊</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="./index.html" class="sidebar-logo-link">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Tableplot</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Preface 👋</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tableplot_book.plotly_walkthrough.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Plotly walkthrough 👣</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tableplot_book.plotly_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Plotly API reference 📖</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tableplot_book.hanami_walkthrough.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Hanami walkthrough 👣</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tableplot_book.transpile_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tableplot_book.dataflow_walkthrough.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Dataflow Model Walkthrough 🌊</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview"><span class="header-section-number">6.1</span> Overview</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup"><span class="header-section-number">6.2</span> Setup</a></li>
+  <li><a href="#part-1-template-transformation-with-xform" id="toc-part-1-template-transformation-with-xform" class="nav-link" data-scroll-target="#part-1-template-transformation-with-xform"><span class="header-section-number">6.3</span> Part 1: Template Transformation with <code>xform</code></a>
+  <ul>
+  <li><a href="#the-problem-repetitive-configuration" id="toc-the-problem-repetitive-configuration" class="nav-link" data-scroll-target="#the-problem-repetitive-configuration"><span class="header-section-number">6.3.1</span> The Problem: Repetitive Configuration</a></li>
+  <li><a href="#basic-substitution" id="toc-basic-substitution" class="nav-link" data-scroll-target="#basic-substitution"><span class="header-section-number">6.3.2</span> Basic Substitution</a></li>
+  <li><a href="#recursive-lookup-and-termination" id="toc-recursive-lookup-and-termination" class="nav-link" data-scroll-target="#recursive-lookup-and-termination"><span class="header-section-number">6.3.3</span> Recursive Lookup and Termination</a></li>
+  <li><a href="#dataset-pass-through" id="toc-dataset-pass-through" class="nav-link" data-scroll-target="#dataset-pass-through"><span class="header-section-number">6.3.4</span> Dataset Pass-Through</a></li>
+  <li><a href="#function-values" id="toc-function-values" class="nav-link" data-scroll-target="#function-values"><span class="header-section-number">6.3.5</span> Function Values</a></li>
+  <li><a href="#template-defaults" id="toc-template-defaults" class="nav-link" data-scroll-target="#template-defaults"><span class="header-section-number">6.3.6</span> Template Defaults</a></li>
+  <li><a href="#nested-template-defaults" id="toc-nested-template-defaults" class="nav-link" data-scroll-target="#nested-template-defaults"><span class="header-section-number">6.3.7</span> Nested Template Defaults</a></li>
+  <li><a href="#nested-defaults-with-dependencies" id="toc-nested-defaults-with-dependencies" class="nav-link" data-scroll-target="#nested-defaults-with-dependencies"><span class="header-section-number">6.3.8</span> Nested Defaults with Dependencies</a></li>
+  <li><a href="#nested-structures-and-collections" id="toc-nested-structures-and-collections" class="nav-link" data-scroll-target="#nested-structures-and-collections"><span class="header-section-number">6.3.9</span> Nested Structures and Collections</a></li>
+  <li><a href="#recursive-empty-collection-removal" id="toc-recursive-empty-collection-removal" class="nav-link" data-scroll-target="#recursive-empty-collection-removal"><span class="header-section-number">6.3.10</span> Recursive Empty Collection Removal</a>
+  <ul class="collapse">
+  <li><a href="#elaborate-templates-lean-results" id="toc-elaborate-templates-lean-results" class="nav-link" data-scroll-target="#elaborate-templates-lean-results"><span class="header-section-number">6.3.10.1</span> Elaborate Templates → Lean Results</a></li>
+  <li><a href="#conditional-defaults" id="toc-conditional-defaults" class="nav-link" data-scroll-target="#conditional-defaults"><span class="header-section-number">6.3.10.2</span> Conditional Defaults</a></li>
+  </ul></li>
+  <li><a href="#moving-forward-dependencies" id="toc-moving-forward-dependencies" class="nav-link" data-scroll-target="#moving-forward-dependencies"><span class="header-section-number">6.3.11</span> Moving Forward: Dependencies</a></li>
+  </ul></li>
+  <li><a href="#part-2-dependency-aware-functions-with-dag" id="toc-part-2-dependency-aware-functions-with-dag" class="nav-link" data-scroll-target="#part-2-dependency-aware-functions-with-dag"><span class="header-section-number">6.4</span> Part 2: Dependency-Aware Functions with <code>dag</code></a>
+  <ul>
+  <li><a href="#the-problem-manual-dependency-ordering" id="toc-the-problem-manual-dependency-ordering" class="nav-link" data-scroll-target="#the-problem-manual-dependency-ordering"><span class="header-section-number">6.4.1</span> The Problem: Manual Dependency Ordering</a></li>
+  <li><a href="#fn-with-deps-declaring-dependencies" id="toc-fn-with-deps-declaring-dependencies" class="nav-link" data-scroll-target="#fn-with-deps-declaring-dependencies"><span class="header-section-number">6.4.2</span> <code>fn-with-deps</code>: Declaring Dependencies</a></li>
+  <li><a href="#diamond-dependencies" id="toc-diamond-dependencies" class="nav-link" data-scroll-target="#diamond-dependencies"><span class="header-section-number">6.4.3</span> Diamond Dependencies</a></li>
+  <li><a href="#circular-dependencies" id="toc-circular-dependencies" class="nav-link" data-scroll-target="#circular-dependencies"><span class="header-section-number">6.4.4</span> Circular Dependencies</a></li>
+  <li><a href="#defn-with-deps-named-functions" id="toc-defn-with-deps-named-functions" class="nav-link" data-scroll-target="#defn-with-deps-named-functions"><span class="header-section-number">6.4.5</span> <code>defn-with-deps</code>: Named Functions</a></li>
+  <li><a href="#inspecting-dependencies" id="toc-inspecting-dependencies" class="nav-link" data-scroll-target="#inspecting-dependencies"><span class="header-section-number">6.4.6</span> Inspecting Dependencies</a></li>
+  <li><a href="#moving-forward-caching" id="toc-moving-forward-caching" class="nav-link" data-scroll-target="#moving-forward-caching"><span class="header-section-number">6.4.7</span> Moving Forward: Caching</a></li>
+  </ul></li>
+  <li><a href="#part-3-caching-with-cache" id="toc-part-3-caching-with-cache" class="nav-link" data-scroll-target="#part-3-caching-with-cache"><span class="header-section-number">6.5</span> Part 3: Caching with <code>cache</code></a>
+  <ul>
+  <li><a href="#the-problem-redundant-computation" id="toc-the-problem-redundant-computation" class="nav-link" data-scroll-target="#the-problem-redundant-computation"><span class="header-section-number">6.5.1</span> The Problem: Redundant Computation</a></li>
+  <li><a href="#cached-xform-k-memoized-key-resolution" id="toc-cached-xform-k-memoized-key-resolution" class="nav-link" data-scroll-target="#cached-xform-k-memoized-key-resolution"><span class="header-section-number">6.5.2</span> <code>cached-xform-k</code>: Memoized Key Resolution</a></li>
+  <li><a href="#automatic-caching-in-dependencies" id="toc-automatic-caching-in-dependencies" class="nav-link" data-scroll-target="#automatic-caching-in-dependencies"><span class="header-section-number">6.5.3</span> Automatic Caching in Dependencies</a></li>
+  <li><a href="#how-dependencies-are-cached" id="toc-how-dependencies-are-cached" class="nav-link" data-scroll-target="#how-dependencies-are-cached"><span class="header-section-number">6.5.4</span> How Dependencies Are Cached</a></li>
+  <li><a href="#cache-keys" id="toc-cache-keys" class="nav-link" data-scroll-target="#cache-keys"><span class="header-section-number">6.5.5</span> Cache Keys</a></li>
+  <li><a href="#all-three-systems-together" id="toc-all-three-systems-together" class="nav-link" data-scroll-target="#all-three-systems-together"><span class="header-section-number">6.5.6</span> All Three Systems Together</a></li>
+  </ul></li>
+  <li><a href="#part-4-putting-it-together" id="toc-part-4-putting-it-together" class="nav-link" data-scroll-target="#part-4-putting-it-together"><span class="header-section-number">6.6</span> Part 4: Putting It Together</a>
+  <ul>
+  <li><a href="#comprehensive-example-data-visualization-pipeline" id="toc-comprehensive-example-data-visualization-pipeline" class="nav-link" data-scroll-target="#comprehensive-example-data-visualization-pipeline"><span class="header-section-number">6.6.1</span> Comprehensive Example: Data Visualization Pipeline</a></li>
+  <li><a href="#configuration-system" id="toc-configuration-system" class="nav-link" data-scroll-target="#configuration-system"><span class="header-section-number">6.6.2</span> Configuration System</a></li>
+  <li><a href="#lazy-evaluation" id="toc-lazy-evaluation" class="nav-link" data-scroll-target="#lazy-evaluation"><span class="header-section-number">6.6.3</span> Lazy Evaluation</a></li>
+  <li><a href="#how-tableplot-uses-this-system" id="toc-how-tableplot-uses-this-system" class="nav-link" data-scroll-target="#how-tableplot-uses-this-system"><span class="header-section-number">6.6.4</span> How Tableplot Uses This System</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">6.7</span> Summary</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">6.8</span> Key Takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Dataflow Model Walkthrough 🌊</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" type="text/javascript"></script>
+<p>Tableplot includes a general-purpose dataflow system for creating templates with automatic dependency resolution and caching. While this system powers the visualization layer functions in Tableplot, it can be used for any kind of composable, data-driven transformations. It is inspired by <a href="http://github.com/jsa-aerial/hanami">Hanami</a>’s templating but is different in a few ways.</p>
+<p>This walkthrough explores the <code>xform</code>, <code>dag</code>, and <code>cache</code> namespaces that implement this dataflow model.</p>
+<section id="overview" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="overview"><span class="header-section-number">6.1</span> Overview</h2>
+<p>The dataflow system consists of three core components:</p>
+<ol type="1">
+<li><strong>Template Transformation</strong> (<code>xform.clj</code>) - A template substitution system adapted from Hanami that recursively replaces keys with their values</li>
+<li><strong>Dependency Management</strong> (<code>dag.clj</code>) - Functions that declare their dependencies and are computed in the correct order</li>
+<li><strong>Caching</strong> (<code>cache.clj</code>) - Memoization of computed values to avoid redundant computation</li>
+</ol>
+<p>Together, these create a system for building composable, lazy, dependency-aware computations.</p>
+</section>
+<section id="setup" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="setup"><span class="header-section-number">6.2</span> Setup</h2>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> tableplot-book.dataflow-walkthrough</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [scicloj.tableplot.v1.xform <span class="at">:as</span> xform]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>            [scicloj.tableplot.v1.dag <span class="at">:as</span> dag]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            [scicloj.tableplot.v1.cache <span class="at">:as</span> cache]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            [aerial.hanami.templates <span class="at">:as</span> ht]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            [aerial.hanami.common <span class="at">:as</span> hc]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            [scicloj.kindly.v4.kind <span class="at">:as</span> kind]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            [tablecloth.api <span class="at">:as</span> tc]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="part-1-template-transformation-with-xform" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="part-1-template-transformation-with-xform"><span class="header-section-number">6.3</span> Part 1: Template Transformation with <code>xform</code></h2>
+<section id="the-problem-repetitive-configuration" class="level3" data-number="6.3.1">
+<h3 data-number="6.3.1" class="anchored" data-anchor-id="the-problem-repetitive-configuration"><span class="header-section-number">6.3.1</span> The Problem: Repetitive Configuration</h3>
+<p>Imagine building visualization specifications. You find yourself writing the same structure over and over:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:plot</span> {<span class="at">:data</span> my-data</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">:layout</span> {<span class="at">:title</span> {<span class="at">:text</span> <span class="st">"My Chart"</span>}}}</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:plot</span> {<span class="at">:data</span> other-data</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">:layout</span> {<span class="at">:title</span> {<span class="at">:text</span> <span class="st">"Other Chart"</span>}}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>You want to parameterize these structures - define a template once, then fill in the values. But you also want:</p>
+<ul>
+<li><strong>Computed values</strong> that depend on other parameters</li>
+<li><strong>Sensible defaults</strong> that can be overridden</li>
+<li><strong>Deep nesting</strong> without manually threading values through every level</li>
+<li><strong>Optional parameters</strong> that don’t clutter output when unused</li>
+</ul>
+<p>Template transformation solves this by treating data structures as templates with placeholder keys that get recursively replaced with their values.</p>
+</section>
+<section id="basic-substitution" class="level3" data-number="6.3.2">
+<h3 data-number="6.3.2" class="anchored" data-anchor-id="basic-substitution"><span class="header-section-number">6.3.2</span> Basic Substitution</h3>
+<p>The <code>xform</code> function performs template substitution. It takes a template (any nested data structure) and a substitution map, then recursively replaces keys with their values until no more substitutions are possible:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:a</span> <span class="at">:B</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:c</span> <span class="at">:D</span>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a> {<span class="at">:B</span> <span class="at">:C</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">:C</span> <span class="dv">10</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">:D</span> <span class="dv">20</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:a</span> <span class="dv">10</span>, <span class="at">:c</span> <span class="dv">20</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="recursive-lookup-and-termination" class="level3" data-number="6.3.3">
+<h3 data-number="6.3.3" class="anchored" data-anchor-id="recursive-lookup-and-termination"><span class="header-section-number">6.3.3</span> Recursive Lookup and Termination</h3>
+<p>The substitution process is truly recursive: <strong>any non-collection value</strong> (strings, numbers, keywords, etc.) that appears as a substitution result triggers another lookup. This continues until either:</p>
+<ol type="1">
+<li>A value is found that isn’t in the substitution map (terminates)</li>
+<li>A value maps to itself (terminates)</li>
+</ol>
+<p>Strings and numbers can act as template keys:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:title</span> <span class="at">:Title</span>}</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">:Title</span> <span class="st">"MyTitle"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"MyTitle"</span> <span class="st">"Resolved!"</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:title</span> <span class="st">"Resolved!"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This enables indirect lookups through intermediate values:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:result</span> <span class="at">:Key</span>}</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">:Key</span> <span class="st">"lookup-this"</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"lookup-this"</span> <span class="dv">42</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:result</span> <span class="dv">42</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Termination occurs when a key maps to itself or to a value not in the map:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:self-ref</span> <span class="at">:X</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:not-found</span> <span class="at">:Y</span>}</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a> {<span class="at">:X</span> <span class="at">:X</span> <span class="co">; maps to itself</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Y</span> <span class="at">:Missing</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:self-ref</span> <span class="at">:X</span>, <span class="at">:not-found</span> <span class="at">:Missing</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>:Missing not in map</p>
+</section>
+<section id="dataset-pass-through" class="level3" data-number="6.3.4">
+<h3 data-number="6.3.4" class="anchored" data-anchor-id="dataset-pass-through"><span class="header-section-number">6.3.4</span> Dataset Pass-Through</h3>
+<p><strong>Important for Tableplot users:</strong> Dataset objects are <strong>never transformed</strong>. They pass through unchanged, preventing xform from recursively processing their internal structure:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:data</span> <span class="at">:Data</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:nested</span> {<span class="at">:deep</span> {<span class="at">:data</span> <span class="at">:Data</span>}}}</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a> {<span class="at">:Data</span> (tc/dataset {<span class="at">:x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>] <span class="at">:y</span> [<span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span>]})})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td data-valign="top"><div class="code-copy-outer-scaffold"><div>
+<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:data</code></pre>
+</div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></td>
+<td><div style="margin-left:10px;">
+<div class="clay-dataset">
+<p>_unnamed [3 2]:</p>
+<table class="table caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">:x</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">:y</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">6</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td data-valign="top"><div class="code-copy-outer-scaffold"><div>
+<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:nested</code></pre>
+</div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></td>
+<td><div style="margin-left:10px;">
+<div>
+<p>{</p>
+<div class="clay-map" style="margin-left:10%;width:110%;">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td data-valign="top"><div class="code-copy-outer-scaffold"><div>
+<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:deep</code></pre>
+</div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></td>
+<td><div style="margin-left:10px;">
+<div>
+<p>{</p>
+<div class="clay-map" style="margin-left:10%;width:110%;">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td data-valign="top"><div class="code-copy-outer-scaffold"><div>
+<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:data</code></pre>
+</div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></td>
+<td><div style="margin-left:10px;">
+<div class="clay-dataset">
+<p>_unnamed [3 2]:</p>
+<table class="table caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">:x</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">:y</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">6</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>}</p>
+</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>}</p>
+</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div><p>}</p></div>
+<p>This is crucial because datasets contain complex internal structures that shouldn’t be treated as templates.</p>
+</section>
+<section id="function-values" class="level3" data-number="6.3.5">
+<h3 data-number="6.3.5" class="anchored" data-anchor-id="function-values"><span class="header-section-number">6.3.5</span> Function Values</h3>
+<p>Substitution values can be functions that receive the entire substitution map, enabling dynamic computation based on other values:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:greeting</span> <span class="at">:Greeting</span>}</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">:Name</span> <span class="st">"Alice"</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Greeting</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [Name]}]</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">str</span> <span class="st">"Hello, "</span> Name <span class="st">"!"</span>))})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:greeting</span> <span class="st">"Hello, Alice!"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="template-defaults" class="level3" data-number="6.3.6">
+<h3 data-number="6.3.6" class="anchored" data-anchor-id="template-defaults"><span class="header-section-number">6.3.6</span> Template Defaults</h3>
+<p>Templates can include their own defaults via the <code>:aerial.hanami.templates/defaults</code> key. These defaults are merged with the provided substitution map.</p>
+<p><strong>Note:</strong> When you have no user substitutions, you can omit the empty map <code>{}</code>:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:message</span> <span class="at">:Message</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:Name</span> <span class="st">"World"</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:Message</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [Name]}]</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>                                                (<span class="kw">str</span> <span class="st">"Hello, "</span> Name <span class="st">"!"</span>))}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:message</span> <span class="st">"Hello, World!"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><strong>Important:</strong> Template defaults (from <code>:aerial.hanami.templates/defaults</code> in the template) take precedence over values in the substitution map when using the map form. To override template defaults, use the multi-arity form with key-value pairs:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:message</span> <span class="at">:Message</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:Name</span> <span class="st">"World"</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:Message</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [Name]}]</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>                                                (<span class="kw">str</span> <span class="st">"Hello, "</span> Name <span class="st">"!"</span>))}}</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a> <span class="at">:Name</span> <span class="st">"Clojure"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:message</span> <span class="st">"Hello, Clojure!"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Alternatively, you can use <code>:aerial.hanami.common/user-kvs</code> in the substitution map to explicitly override template defaults:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:message</span> <span class="at">:Message</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:Name</span> <span class="st">"World"</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:Message</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [Name]}]</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                                                (<span class="kw">str</span> <span class="st">"Hello, "</span> Name <span class="st">"!"</span>))}}</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a> {<span class="at">:Name</span> <span class="st">"Clojure"</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.common/user-kvs</span> {<span class="at">:Name</span> <span class="st">"Clojure"</span>}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:message</span> <span class="st">"Hello, Clojure!"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="nested-template-defaults" class="level3" data-number="6.3.7">
+<h3 data-number="6.3.7" class="anchored" data-anchor-id="nested-template-defaults"><span class="header-section-number">6.3.7</span> Nested Template Defaults</h3>
+<p>Template defaults can appear <strong>at any level</strong> of the structure, not just at the top. Each nested map can have its own <code>:aerial.hanami.templates/defaults</code>:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:title</span> <span class="at">:Title</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:section</span> {<span class="at">:heading</span> <span class="at">:Heading</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:Heading</span> <span class="st">"Default Heading"</span>}}</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:Title</span> <span class="st">"Default Title"</span>}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:title</span> <span class="st">"Default Title"</span>, <span class="at">:section</span> {<span class="at">:heading</span> <span class="st">"Default Heading"</span>}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Nested defaults can reference values from parent-level defaults:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:outer</span> {<span class="at">:inner</span> <span class="at">:InnerValue</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:InnerValue</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [OuterValue]}]</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                                                           (<span class="kw">str</span> <span class="st">"Inner uses: "</span> OuterValue))}}</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:OuterValue</span> <span class="st">"Parent Value"</span>}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:outer</span> {<span class="at">:inner</span> <span class="st">"Inner uses: Parent Value"</span>}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>User substitutions override nested defaults:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:section</span> {<span class="at">:heading</span> <span class="at">:Heading</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:Heading</span> <span class="st">"Default Heading"</span>}}}</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:Heading</span> <span class="st">"User Heading"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:section</span> {<span class="at">:heading</span> <span class="st">"User Heading"</span>}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This enables modular, composable template design where different parts of a template can have their own defaults.</p>
+</section>
+<section id="nested-defaults-with-dependencies" class="level3" data-number="6.3.8">
+<h3 data-number="6.3.8" class="anchored" data-anchor-id="nested-defaults-with-dependencies"><span class="header-section-number">6.3.8</span> Nested Defaults with Dependencies</h3>
+<p>Nested defaults work seamlessly with <code>dag/fn-with-deps</code> (covered in Part 2). Functions in nested defaults can depend on values from parent defaults:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:config</span> {<span class="at">:database</span> {<span class="at">:url</span> <span class="at">:DbUrl</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">:pool-size</span> <span class="at">:PoolSize</span>}</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:DbHost</span> <span class="st">"localhost"</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">:DbPort</span> <span class="dv">5432</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">:DbName</span> <span class="st">"mydb"</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">:DbUrl</span> (dag/fn-with-deps <span class="va">nil</span> [DbHost DbPort DbName]</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>                                                                       (<span class="kw">str</span> <span class="st">"postgresql://"</span> DbHost <span class="st">":"</span> DbPort <span class="st">"/"</span> DbName))</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">:PoolSize</span> (dag/fn-with-deps <span class="va">nil</span> [Environment]</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>                                                                          (<span class="kw">if</span> (<span class="kw">=</span> Environment <span class="st">"prod"</span>) <span class="dv">50</span> <span class="dv">10</span>))}}</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:Environment</span> <span class="st">"prod"</span>}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:config</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:database</span> {<span class="at">:url</span> <span class="st">"postgresql://localhost:5432/mydb"</span>, <span class="at">:pool-size</span> <span class="dv">50</span>}}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Notice how:</p>
+<ul>
+<li><code>DbUrl</code> depends on <code>DbHost</code>, <code>DbPort</code>, <code>DbName</code> (all local to the nested defaults)</li>
+<li><code>PoolSize</code> depends on <code>Environment</code> (from the parent defaults)</li>
+<li>Dependencies are resolved correctly regardless of nesting level</li>
+</ul>
+</section>
+<section id="nested-structures-and-collections" class="level3" data-number="6.3.9">
+<h3 data-number="6.3.9" class="anchored" data-anchor-id="nested-structures-and-collections"><span class="header-section-number">6.3.9</span> Nested Structures and Collections</h3>
+<p>Template transformation works recursively on nested structures and collections:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:user</span> {<span class="at">:name</span> <span class="at">:UserName</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">:age</span> <span class="at">:UserAge</span>}</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:items</span> [{<span class="at">:x</span> <span class="at">:X</span>} {<span class="at">:y</span> <span class="at">:Y</span>}]}</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a> {<span class="at">:UserName</span> <span class="st">"Bob"</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">:UserAge</span> <span class="dv">30</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">:X</span> <span class="dv">10</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Y</span> <span class="dv">20</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:user</span> {<span class="at">:name</span> <span class="st">"Bob"</span>, <span class="at">:age</span> <span class="dv">30</span>}, <span class="at">:items</span> [{<span class="at">:x</span> <span class="dv">10</span>} {<span class="at">:y</span> <span class="dv">20</span>}]}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="recursive-empty-collection-removal" class="level3" data-number="6.3.10">
+<h3 data-number="6.3.10" class="anchored" data-anchor-id="recursive-empty-collection-removal"><span class="header-section-number">6.3.10</span> Recursive Empty Collection Removal</h3>
+<p>One of Hanami’s most powerful features is the <strong>recursive</strong> removal of empty collections. This allows you to create elaborate templates with many optional parameters, yet produce lean results when most parameters use their default <code>hc/RMV</code> value.</p>
+<p>By default, empty collections are removed from the output. The removal is recursive - when a collection becomes empty, its parent may also become empty, cascading upward:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:outer</span> {<span class="at">:middle</span> {<span class="at">:inner</span> []}}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>{}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The mechanism uses the special <code>hc/RMV</code> value. Most template parameters default to <code>hc/RMV</code>, meaning they’re only included if you provide a value:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:title</span> <span class="at">:Title</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:subtitle</span> <span class="at">:Subtitle</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:footer</span> <span class="at">:Footer</span>}</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a> {<span class="at">:Title</span> <span class="st">"My Chart"</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Subtitle</span> hc/RMV</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Footer</span> hc/RMV})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:title</span> <span class="st">"My Chart"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="elaborate-templates-lean-results" class="level4" data-number="6.3.10.1">
+<h4 data-number="6.3.10.1" class="anchored" data-anchor-id="elaborate-templates-lean-results"><span class="header-section-number">6.3.10.1</span> Elaborate Templates → Lean Results</h4>
+<p>This recursive removal enables a powerful pattern: create comprehensive templates with many optional parameters, but get lean output when using defaults. Here’s a realistic visualization template:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:plot</span> {<span class="at">:data</span> <span class="at">:Data</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">:layout</span> {<span class="at">:title</span> {<span class="at">:text</span> <span class="at">:Title</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:font</span> {<span class="at">:size</span> <span class="at">:TitleSize</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">:family</span> <span class="at">:TitleFamily</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">:color</span> <span class="at">:TitleColor</span>}</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:x</span> <span class="at">:TitleX</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:y</span> <span class="at">:TitleY</span>}</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:xaxis</span> {<span class="at">:title</span> <span class="at">:XAxisTitle</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:showgrid</span> <span class="at">:ShowXGrid</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:gridcolor</span> <span class="at">:XGridColor</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:gridwidth</span> <span class="at">:XGridWidth</span>}</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:yaxis</span> {<span class="at">:title</span> <span class="at">:YAxisTitle</span></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:showgrid</span> <span class="at">:ShowYGrid</span></span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:gridcolor</span> <span class="at">:YGridColor</span></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:gridwidth</span> <span class="at">:YGridWidth</span>}</span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:annotations</span> <span class="at">:Annotations</span></span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:shapes</span> <span class="at">:Shapes</span></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:images</span> <span class="at">:Images</span>}}</span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:TitleSize</span> hc/RMV</span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:TitleFamily</span> hc/RMV</span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:TitleColor</span> hc/RMV</span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:TitleX</span> hc/RMV</span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:TitleY</span> hc/RMV</span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:XAxisTitle</span> hc/RMV</span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:ShowXGrid</span> hc/RMV</span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:XGridColor</span> hc/RMV</span>
+<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:XGridWidth</span> hc/RMV</span>
+<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:YAxisTitle</span> hc/RMV</span>
+<span id="cb38-30"><a href="#cb38-30" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:ShowYGrid</span> hc/RMV</span>
+<span id="cb38-31"><a href="#cb38-31" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:YGridColor</span> hc/RMV</span>
+<span id="cb38-32"><a href="#cb38-32" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:YGridWidth</span> hc/RMV</span>
+<span id="cb38-33"><a href="#cb38-33" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:Annotations</span> hc/RMV</span>
+<span id="cb38-34"><a href="#cb38-34" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:Shapes</span> hc/RMV</span>
+<span id="cb38-35"><a href="#cb38-35" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:Images</span> hc/RMV}}</span>
+<span id="cb38-36"><a href="#cb38-36" aria-hidden="true" tabindex="-1"></a> <span class="at">:Data</span> [{<span class="at">:x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>] <span class="at">:y</span> [<span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span>] <span class="at">:type</span> <span class="st">"scatter"</span>}]</span>
+<span id="cb38-37"><a href="#cb38-37" aria-hidden="true" tabindex="-1"></a> <span class="at">:Title</span> <span class="st">"Simple Chart"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:plot</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:data</span> [{<span class="at">:x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>], <span class="at">:y</span> [<span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span>], <span class="at">:type</span> <span class="st">"scatter"</span>}],</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:layout</span> {<span class="at">:title</span> {<span class="at">:text</span> <span class="st">"Simple Chart"</span>}}}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Notice how the elaborate template with 17 parameters produces a lean result with just the data and title! The recursive removal cascaded through empty maps: <code>:font</code>, <code>:xaxis</code>, <code>:yaxis</code> all removed, leaving only the specified values.</p>
+<p><strong>Why This Matters for Tableplot:</strong></p>
+<p>Tableplot’s layer functions define comprehensive templates with dozens of optional parameters for colors, sizes, opacity, tooltips, hover behavior, etc. Most users only need a few of these. Thanks to recursive <code>hc/RMV</code> removal:</p>
+<ol type="1">
+<li><strong>Template authors</strong> can provide complete, well-documented APIs</li>
+<li><strong>Users</strong> get clean results without specifying irrelevant parameters<br>
+</li>
+<li><strong>Default values</strong> are <code>hc/RMV</code>, so unspecified options don’t clutter output</li>
+<li><strong>Progressive disclosure</strong> - start simple, add complexity only when needed</li>
+</ol>
+<p>This pattern enables templates to be both powerful and approachable.</p>
+</section>
+<section id="conditional-defaults" class="level4" data-number="6.3.10.2">
+<h4 data-number="6.3.10.2" class="anchored" data-anchor-id="conditional-defaults"><span class="header-section-number">6.3.10.2</span> Conditional Defaults</h4>
+<p>You can create <strong>conditional defaults</strong> by using functions that return <code>hc/RMV</code> based on logic. This enables parameters that are only included when certain conditions are met:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:title</span> <span class="at">:Title</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:subtitle</span> <span class="at">:Subtitle</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:ShowSubtitle</span> <span class="va">true</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:Title</span> <span class="st">"My Chart"</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:Subtitle</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [ShowSubtitle]}]</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>                                                  (<span class="kw">if</span> ShowSubtitle <span class="st">"A subtitle"</span> hc/RMV))}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:title</span> <span class="st">"My Chart"</span>, <span class="at">:subtitle</span> <span class="st">"A subtitle"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>When the condition is false, the value becomes <code>hc/RMV</code> and gets removed:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:title</span> <span class="at">:Title</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:subtitle</span> <span class="at">:Subtitle</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:ShowSubtitle</span> <span class="va">true</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:Title</span> <span class="st">"My Chart"</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">:Subtitle</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [ShowSubtitle]}]</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>                                                  (<span class="kw">if</span> ShowSubtitle <span class="st">"A subtitle"</span> hc/RMV))}}</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a> <span class="at">:ShowSubtitle</span> <span class="va">false</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:title</span> <span class="st">"My Chart"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This pattern is powerful for:</p>
+<ul>
+<li>Feature flags (show/hide UI elements)</li>
+<li>Environment-specific configuration (only include debug info in dev mode)</li>
+<li>Conditional validation (only validate when validation is enabled)</li>
+<li>Progressive disclosure (show advanced options only when requested)</li>
+</ul>
+</section>
+</section>
+<section id="moving-forward-dependencies" class="level3" data-number="6.3.11">
+<h3 data-number="6.3.11" class="anchored" data-anchor-id="moving-forward-dependencies"><span class="header-section-number">6.3.11</span> Moving Forward: Dependencies</h3>
+<p>So far we’ve seen how to create flexible templates with computed values using functions. But there’s a limitation: when one parameter depends on another, we have to ensure values are computed in the right order. In the next part, we’ll see how the <code>dag</code> namespace solves this by letting functions <strong>declare their dependencies</strong> explicitly.</p>
+</section>
+</section>
+<section id="part-2-dependency-aware-functions-with-dag" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="part-2-dependency-aware-functions-with-dag"><span class="header-section-number">6.4</span> Part 2: Dependency-Aware Functions with <code>dag</code></h2>
+<section id="the-problem-manual-dependency-ordering" class="level3" data-number="6.4.1">
+<h3 data-number="6.4.1" class="anchored" data-anchor-id="the-problem-manual-dependency-ordering"><span class="header-section-number">6.4.1</span> The Problem: Manual Dependency Ordering</h3>
+<p>Template transformation lets us parameterize structures, but what if one parameter depends on computing another first?</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co">;; We want circumference, which needs radius, which needs area</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>{<span class="at">:Area</span> <span class="dv">100</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:Radius</span> ...needs Area <span class="kw">first</span>...</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:Circumference</span> ...needs Radius <span class="kw">first</span>...}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Without dependency management, you have to:</p>
+<ol type="1">
+<li>Manually compute values in the right order</li>
+<li>Pass intermediate results around</li>
+<li>Remember which values depend on which</li>
+<li>Update all call sites when dependencies change</li>
+</ol>
+<p>The <code>dag</code> namespace solves this by letting functions <strong>declare their dependencies</strong>. The system automatically:</p>
+<ul>
+<li>Computes values in the correct order</li>
+<li>Resolves transitive dependencies (A needs B, B needs C → compute C, then B, then A)</li>
+<li>Handles complex graphs like diamonds (A and B both need C → compute C once)</li>
+<li>Caches intermediate results to avoid redundant work</li>
+</ul>
+</section>
+<section id="fn-with-deps-declaring-dependencies" class="level3" data-number="6.4.2">
+<h3 data-number="6.4.2" class="anchored" data-anchor-id="fn-with-deps-declaring-dependencies"><span class="header-section-number">6.4.2</span> <code>fn-with-deps</code>: Declaring Dependencies</h3>
+<p>The <code>fn-with-deps</code> macro creates a function that declares its dependencies. Before the function is called, its dependencies are automatically resolved via <code>xform</code>:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:b</span> <span class="at">:B</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:c</span> <span class="at">:C</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:A</span> <span class="dv">10</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">:B</span> (dag/fn-with-deps <span class="st">"B depends on A"</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>                        [A]</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>                        (<span class="kw">*</span> A <span class="dv">2</span>))</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>   <span class="at">:C</span> (dag/fn-with-deps <span class="st">"C depends on B"</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>                        [B]</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>                        (<span class="kw">+</span> B <span class="dv">5</span>))}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:b</span> <span class="dv">20</span>, <span class="at">:c</span> <span class="dv">25</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="diamond-dependencies" class="level3" data-number="6.4.3">
+<h3 data-number="6.4.3" class="anchored" data-anchor-id="diamond-dependencies"><span class="header-section-number">6.4.3</span> Diamond Dependencies</h3>
+<p>The system handles complex dependency graphs, including diamond patterns where multiple paths lead to the same node:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:result</span> <span class="at">:E</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:A</span> <span class="dv">5</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">:B</span> (dag/fn-with-deps <span class="va">nil</span> [A] (<span class="kw">*</span> A <span class="dv">2</span>))</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">:C</span> (dag/fn-with-deps <span class="va">nil</span> [A] (<span class="kw">+</span> A <span class="dv">3</span>))</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>   <span class="at">:D</span> (dag/fn-with-deps <span class="va">nil</span> [B C] (<span class="kw">+</span> B C))</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>   <span class="at">:E</span> (dag/fn-with-deps <span class="va">nil</span> [D] (<span class="kw">*</span> D <span class="dv">10</span>))}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:result</span> <span class="dv">180</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="circular-dependencies" class="level3" data-number="6.4.4">
+<h3 data-number="6.4.4" class="anchored" data-anchor-id="circular-dependencies"><span class="header-section-number">6.4.4</span> Circular Dependencies</h3>
+<p><strong>Important</strong>: The system does not detect circular dependencies. If you create a cycle (A depends on B, B depends on A), you’ll get a <code>StackOverflowError</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:result</span> <span class="at">:A</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:A</span> (dag/fn-with-deps <span class="va">nil</span> [B] (<span class="kw">inc</span> B))</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">:B</span> (dag/fn-with-deps <span class="va">nil</span> [A] (<span class="kw">inc</span> A))}})</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="co">;; =&gt; StackOverflowError</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When you encounter a <code>StackOverflowError</code>, check your dependency graph for cycles. Each function should only depend on values that don’t transitively depend on it.</p>
+</section>
+<section id="defn-with-deps-named-functions" class="level3" data-number="6.4.5">
+<h3 data-number="6.4.5" class="anchored" data-anchor-id="defn-with-deps-named-functions"><span class="header-section-number">6.4.5</span> <code>defn-with-deps</code>: Named Functions</h3>
+<p>For reusable functions with dependencies, use <code>defn-with-deps</code>:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>(dag/defn-with-deps area-&gt;radius</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Compute radius from area"</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  [Area]</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  (Math/sqrt (<span class="kw">/</span> Area Math/PI)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="va">#'tableplot-book.dataflow-walkthrough/area-&gt;radius</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>(dag/defn-with-deps radius-&gt;circumference</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Compute circumference from radius"</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  [Radius]</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">*</span> <span class="dv">2</span> Math/PI Radius))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="va">#'tableplot-book.dataflow-walkthrough/radius-&gt;circumference</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:circumference</span> <span class="at">:Circumference</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:Area</span> <span class="dv">100</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">:Radius</span> area-&gt;radius</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">:Circumference</span> radius-&gt;circumference}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:circumference</span> <span class="fl">35.449077018110316</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="inspecting-dependencies" class="level3" data-number="6.4.6">
+<h3 data-number="6.4.6" class="anchored" data-anchor-id="inspecting-dependencies"><span class="header-section-number">6.4.6</span> Inspecting Dependencies</h3>
+<p>Functions created with <code>fn-with-deps</code> carry metadata about their dependencies, accessible via <code>(meta fn)</code> with the key <code>:scicloj.tableplot.v1.dag/dep-ks</code>. This is useful for debugging and understanding dependency graphs:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>(<span class="at">:scicloj.tableplot.v1.dag/dep-ks</span> (<span class="kw">meta</span> area-&gt;radius))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>[<span class="at">:Area</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>(<span class="at">:scicloj.tableplot.v1.dag/dep-ks</span> (<span class="kw">meta</span> radius-&gt;circumference))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>[<span class="at">:Radius</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>You can also inspect anonymous functions:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> complex-fn</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>  (dag/fn-with-deps <span class="st">"Complex computation"</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>                    [A B C]</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>                    (<span class="kw">+</span> A B C)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>(<span class="at">:scicloj.tableplot.v1.dag/dep-ks</span> (<span class="kw">meta</span> complex-fn))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>[<span class="at">:A</span> <span class="at">:B</span> <span class="at">:C</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="moving-forward-caching" class="level3" data-number="6.4.7">
+<h3 data-number="6.4.7" class="anchored" data-anchor-id="moving-forward-caching"><span class="header-section-number">6.4.7</span> Moving Forward: Caching</h3>
+<p>We now have dependency-aware functions that compute values in the correct order. But what happens when the same dependency is needed by multiple functions? Without caching, we’d compute the same value multiple times. In the next part, we’ll see how the <code>cache</code> namespace provides automatic memoization to avoid redundant work.</p>
+</section>
+</section>
+<section id="part-3-caching-with-cache" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="part-3-caching-with-cache"><span class="header-section-number">6.5</span> Part 3: Caching with <code>cache</code></h2>
+<section id="the-problem-redundant-computation" class="level3" data-number="6.5.1">
+<h3 data-number="6.5.1" class="anchored" data-anchor-id="the-problem-redundant-computation"><span class="header-section-number">6.5.1</span> The Problem: Redundant Computation</h3>
+<p>With dependencies, the system computes values in the right order. But what if the same value is needed multiple times?</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co">;; Both B and C need A</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>{<span class="at">:A</span> (expensive-computation)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:B</span> (<span class="kw">fn</span> [A] ...)  <span class="co">; computes A</span></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:C</span> (<span class="kw">fn</span> [A] ...)  <span class="co">; computes A again?!</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Without caching, expensive computations run repeatedly. With large datasets or complex calculations, this becomes a performance bottleneck.</p>
+<p>The <code>cache</code> namespace provides memoization for dependency resolution. When a value is computed once, subsequent requests return the cached result.</p>
+</section>
+<section id="cached-xform-k-memoized-key-resolution" class="level3" data-number="6.5.2">
+<h3 data-number="6.5.2" class="anchored" data-anchor-id="cached-xform-k-memoized-key-resolution"><span class="header-section-number">6.5.2</span> <code>cached-xform-k</code>: Memoized Key Resolution</h3>
+<p>The <code>dag/cached-xform-k</code> function resolves a key via <code>xform</code> and caches the result:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [call-count (<span class="kw">atom</span> <span class="dv">0</span>)</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>      expensive-fn (<span class="kw">fn</span> [{<span class="at">:keys</span> [X]}]</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">swap!</span> call-count <span class="kw">inc</span>)</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">println</span> <span class="st">"Computing..."</span>)</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">*</span> X X))]</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>  (cache/with-clean-cache</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">do</span></span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">dotimes</span> [_ <span class="dv">3</span>]</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>        (dag/cached-xform-k <span class="at">:Y</span> {<span class="at">:X</span> <span class="dv">5</span>, <span class="at">:Y</span> expensive-fn}))</span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">@call-count</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>Computing...
+</code></pre>
+</div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The <code>with-clean-cache</code> macro ensures we start with an empty cache.</p>
+</section>
+<section id="automatic-caching-in-dependencies" class="level3" data-number="6.5.3">
+<h3 data-number="6.5.3" class="anchored" data-anchor-id="automatic-caching-in-dependencies"><span class="header-section-number">6.5.3</span> Automatic Caching in Dependencies</h3>
+<p>Functions created with <code>fn-with-deps</code> automatically use caching for their dependencies:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> computation-log </span>(<span class="kw">atom</span> []))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">reset!</span> computation-log [])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>[]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>(cache/with-clean-cache</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">do</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    (xform/xform</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:result</span> <span class="at">:C</span></span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">:aerial.hanami.templates/defaults</span></span>
+<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a>      {<span class="at">:A</span> (<span class="kw">fn</span> [_]</span>
+<span id="cb70-7"><a href="#cb70-7" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">swap!</span> computation-log <span class="kw">conj</span> <span class="at">:computing-A</span>)</span>
+<span id="cb70-8"><a href="#cb70-8" aria-hidden="true" tabindex="-1"></a>            <span class="dv">10</span>)</span>
+<span id="cb70-9"><a href="#cb70-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">:B</span> (dag/fn-with-deps <span class="va">nil</span> [A]</span>
+<span id="cb70-10"><a href="#cb70-10" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">swap!</span> computation-log <span class="kw">conj</span> <span class="at">:computing-B</span>)</span>
+<span id="cb70-11"><a href="#cb70-11" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">*</span> A <span class="dv">2</span>))</span>
+<span id="cb70-12"><a href="#cb70-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">:C</span> (dag/fn-with-deps <span class="va">nil</span> [A B]</span>
+<span id="cb70-13"><a href="#cb70-13" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">swap!</span> computation-log <span class="kw">conj</span> <span class="at">:computing-C</span>)</span>
+<span id="cb70-14"><a href="#cb70-14" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">+</span> A B))}})</span>
+<span id="cb70-15"><a href="#cb70-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">@computation-log</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>[<span class="at">:computing-A</span> <span class="at">:computing-B</span> <span class="at">:computing-C</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Even though <code>:A</code> is needed by both <code>:B</code> and <code>:C</code>, it’s only computed once. The log shows the computation order: <code>:A</code> first, then <code>:B</code>, then <code>:C</code>.</p>
+</section>
+<section id="how-dependencies-are-cached" class="level3" data-number="6.5.4">
+<h3 data-number="6.5.4" class="anchored" data-anchor-id="how-dependencies-are-cached"><span class="header-section-number">6.5.4</span> How Dependencies Are Cached</h3>
+<p>When you use <code>fn-with-deps</code>, the system automatically uses <code>cached-xform-k</code> for each dependency. Let’s trace this more explicitly:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> detailed-log </span>(<span class="kw">atom</span> []))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">reset!</span> detailed-log [])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>[]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb75"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>(cache/with-clean-cache</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">do</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>    (xform/xform</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:final</span> <span class="at">:D</span></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">:aerial.hanami.templates/defaults</span></span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>      {<span class="at">:A</span> (<span class="kw">fn</span> [_]</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">swap!</span> detailed-log <span class="kw">conj</span> [<span class="at">:computing</span> <span class="at">:A</span>])</span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a>            <span class="dv">100</span>)</span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">:B</span> (dag/fn-with-deps <span class="va">nil</span> [A]</span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">swap!</span> detailed-log <span class="kw">conj</span> [<span class="at">:computing</span> <span class="at">:B</span> <span class="at">:with-A</span> A])</span>
+<span id="cb75-11"><a href="#cb75-11" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">*</span> A <span class="dv">2</span>))</span>
+<span id="cb75-12"><a href="#cb75-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">:C</span> (dag/fn-with-deps <span class="va">nil</span> [A]</span>
+<span id="cb75-13"><a href="#cb75-13" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">swap!</span> detailed-log <span class="kw">conj</span> [<span class="at">:computing</span> <span class="at">:C</span> <span class="at">:with-A</span> A])</span>
+<span id="cb75-14"><a href="#cb75-14" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">+</span> A <span class="dv">50</span>))</span>
+<span id="cb75-15"><a href="#cb75-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">:D</span> (dag/fn-with-deps <span class="va">nil</span> [B C]</span>
+<span id="cb75-16"><a href="#cb75-16" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">swap!</span> detailed-log <span class="kw">conj</span> [<span class="at">:computing</span> <span class="at">:D</span> <span class="at">:with-B</span> B <span class="at">:with-C</span> C])</span>
+<span id="cb75-17"><a href="#cb75-17" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">+</span> B C))}})</span>
+<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">@detailed-log</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb76"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>[[<span class="at">:computing</span> <span class="at">:A</span>]</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:computing</span> <span class="at">:B</span> <span class="at">:with-A</span> <span class="dv">100</span>]</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a> [<span class="at">:computing</span> <span class="at">:C</span> <span class="at">:with-A</span> <span class="dv">100</span>]</span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a> [<span class="at">:computing</span> <span class="at">:D</span> <span class="at">:with-B</span> <span class="dv">200</span> <span class="at">:with-C</span> <span class="dv">150</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The log shows that:</p>
+<ol type="1">
+<li><code>:A</code> is computed once (even though both <code>:B</code> and <code>:C</code> need it)</li>
+<li><code>:B</code> and <code>:C</code> receive the cached value <code>100</code></li>
+<li><code>:D</code> receives the cached values <code>200</code> and <code>150</code></li>
+</ol>
+<p>This automatic caching of dependencies is why <code>fn-with-deps</code> is so powerful - you declare what you need, and the system ensures it’s computed exactly once.</p>
+</section>
+<section id="cache-keys" class="level3" data-number="6.5.5">
+<h3 data-number="6.5.5" class="anchored" data-anchor-id="cache-keys"><span class="header-section-number">6.5.5</span> Cache Keys</h3>
+<p>The cache key includes both the key name and the substitution map, so different contexts maintain separate caches:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>(cache/with-clean-cache</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>  [(dag/cached-xform-k <span class="at">:Result</span> {<span class="at">:X</span> <span class="dv">5</span>, <span class="at">:Result</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [X]}] (<span class="kw">*</span> X X))})</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>   (dag/cached-xform-k <span class="at">:Result</span> {<span class="at">:X</span> <span class="dv">7</span>, <span class="at">:Result</span> (<span class="kw">fn</span> [{<span class="at">:keys</span> [X]}] (<span class="kw">*</span> X X))})])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">25</span> <span class="dv">49</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="all-three-systems-together" class="level3" data-number="6.5.6">
+<h3 data-number="6.5.6" class="anchored" data-anchor-id="all-three-systems-together"><span class="header-section-number">6.5.6</span> All Three Systems Together</h3>
+<p>We’ve now seen the three core components:</p>
+<ol type="1">
+<li><strong>Templates</strong> (<code>xform</code>) - Parameterize structures with computed values</li>
+<li><strong>Dependencies</strong> (<code>dag</code>) - Declare what each value needs, computed in the right order</li>
+<li><strong>Caching</strong> (<code>cache</code>) - Avoid redundant computation</li>
+</ol>
+<p>These work seamlessly together: templates can use dependency-aware functions, and dependencies are automatically cached. In the next part, we’ll see realistic examples of all three systems working in harmony.</p>
+</section>
+</section>
+<section id="part-4-putting-it-together" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="part-4-putting-it-together"><span class="header-section-number">6.6</span> Part 4: Putting It Together</h2>
+<p>Now let’s see how all three systems work together in a realistic scenario.</p>
+<section id="comprehensive-example-data-visualization-pipeline" class="level3" data-number="6.6.1">
+<h3 data-number="6.6.1" class="anchored" data-anchor-id="comprehensive-example-data-visualization-pipeline"><span class="header-section-number">6.6.1</span> Comprehensive Example: Data Visualization Pipeline</h3>
+<p>Let’s build a data processing and visualization pipeline that demonstrates templates, dependencies, and caching working together:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> viz-pipeline</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:visualization</span></span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:data</span> <span class="at">:ProcessedData</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">:layout</span> {<span class="at">:title</span> {<span class="at">:text</span> <span class="at">:ChartTitle</span></span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">:font</span> {<span class="at">:size</span> <span class="at">:TitleFontSize</span></span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:color</span> <span class="at">:TitleColor</span>}}</span>
+<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">:xaxis</span> {<span class="at">:title</span> <span class="at">:XAxisLabel</span></span>
+<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">:gridcolor</span> <span class="at">:GridColor</span>}</span>
+<span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">:yaxis</span> {<span class="at">:title</span> <span class="at">:YAxisLabel</span></span>
+<span id="cb79-10"><a href="#cb79-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">:gridcolor</span> <span class="at">:GridColor</span>}}</span>
+<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">:aerial.hanami.templates/defaults</span></span>
+<span id="cb79-12"><a href="#cb79-12" aria-hidden="true" tabindex="-1"></a>    {<span class="co">;; Data pipeline dependencies</span></span>
+<span id="cb79-13"><a href="#cb79-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">:RawData</span> (tc/dataset {<span class="at">:x</span> [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span>]</span>
+<span id="cb79-14"><a href="#cb79-14" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:y</span> [<span class="dv">10</span> <span class="dv">15</span> <span class="dv">13</span> <span class="dv">17</span> <span class="dv">20</span>]})</span>
+<span id="cb79-15"><a href="#cb79-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">:FilteredData</span> (dag/fn-with-deps</span>
+<span id="cb79-16"><a href="#cb79-16" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"Filter data based on threshold"</span></span>
+<span id="cb79-17"><a href="#cb79-17" aria-hidden="true" tabindex="-1"></a>                    [RawData MinValue]</span>
+<span id="cb79-18"><a href="#cb79-18" aria-hidden="true" tabindex="-1"></a>                    (tc/select-rows RawData #(<span class="kw">&gt;</span> (<span class="at">:y</span> <span class="va">%</span>) MinValue)))</span>
+<span id="cb79-19"><a href="#cb79-19" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ProcessedData</span> (dag/fn-with-deps</span>
+<span id="cb79-20"><a href="#cb79-20" aria-hidden="true" tabindex="-1"></a>                     <span class="st">"Transform filtered data"</span></span>
+<span id="cb79-21"><a href="#cb79-21" aria-hidden="true" tabindex="-1"></a>                     [FilteredData ScaleFactor]</span>
+<span id="cb79-22"><a href="#cb79-22" aria-hidden="true" tabindex="-1"></a>                     (tc/map-columns FilteredData <span class="at">:y</span> [<span class="at">:y</span>] #(<span class="kw">*</span> <span class="va">%</span> ScaleFactor)))</span>
+<span id="cb79-23"><a href="#cb79-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-24"><a href="#cb79-24" aria-hidden="true" tabindex="-1"></a>     <span class="co">;; Computed labels based on processing</span></span>
+<span id="cb79-25"><a href="#cb79-25" aria-hidden="true" tabindex="-1"></a>     <span class="at">:XAxisLabel</span> (dag/fn-with-deps <span class="va">nil</span> [RawData]</span>
+<span id="cb79-26"><a href="#cb79-26" aria-hidden="true" tabindex="-1"></a>                                   (<span class="kw">str</span> <span class="st">"X Values (n="</span> (tc/row-count RawData) <span class="st">")"</span>))</span>
+<span id="cb79-27"><a href="#cb79-27" aria-hidden="true" tabindex="-1"></a>     <span class="at">:YAxisLabel</span> (dag/fn-with-deps <span class="va">nil</span> [ScaleFactor]</span>
+<span id="cb79-28"><a href="#cb79-28" aria-hidden="true" tabindex="-1"></a>                                   (<span class="kw">str</span> <span class="st">"Y Values (scaled ×"</span> ScaleFactor <span class="st">")"</span>))</span>
+<span id="cb79-29"><a href="#cb79-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-30"><a href="#cb79-30" aria-hidden="true" tabindex="-1"></a>     <span class="co">;; Conditional styling</span></span>
+<span id="cb79-31"><a href="#cb79-31" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ChartTitle</span> (dag/fn-with-deps <span class="va">nil</span> [MinValue ScaleFactor]</span>
+<span id="cb79-32"><a href="#cb79-32" aria-hidden="true" tabindex="-1"></a>                                   (<span class="kw">str</span> <span class="st">"Filtered &amp; Scaled Data (threshold="</span> MinValue <span class="st">", scale="</span> ScaleFactor <span class="st">")"</span>))</span>
+<span id="cb79-33"><a href="#cb79-33" aria-hidden="true" tabindex="-1"></a>     <span class="at">:TitleFontSize</span> (dag/fn-with-deps <span class="va">nil</span> [Environment]</span>
+<span id="cb79-34"><a href="#cb79-34" aria-hidden="true" tabindex="-1"></a>                                      (<span class="kw">if</span> (<span class="kw">=</span> Environment <span class="st">"presentation"</span>) <span class="dv">24</span> <span class="dv">16</span>))</span>
+<span id="cb79-35"><a href="#cb79-35" aria-hidden="true" tabindex="-1"></a>     <span class="at">:TitleColor</span> (dag/fn-with-deps <span class="va">nil</span> [Environment]</span>
+<span id="cb79-36"><a href="#cb79-36" aria-hidden="true" tabindex="-1"></a>                                   (<span class="kw">if</span> (<span class="kw">=</span> Environment <span class="st">"dark-mode"</span>) <span class="st">"#ffffff"</span> <span class="st">"#000000"</span>))</span>
+<span id="cb79-37"><a href="#cb79-37" aria-hidden="true" tabindex="-1"></a>     <span class="at">:GridColor</span> (dag/fn-with-deps <span class="va">nil</span> [Environment]</span>
+<span id="cb79-38"><a href="#cb79-38" aria-hidden="true" tabindex="-1"></a>                                  (<span class="kw">if</span> (<span class="kw">=</span> Environment <span class="st">"dark-mode"</span>) <span class="st">"#444444"</span> hc/RMV))</span>
+<span id="cb79-39"><a href="#cb79-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-40"><a href="#cb79-40" aria-hidden="true" tabindex="-1"></a>     <span class="co">;; Parameters with defaults</span></span>
+<span id="cb79-41"><a href="#cb79-41" aria-hidden="true" tabindex="-1"></a>     <span class="at">:MinValue</span> <span class="dv">12</span></span>
+<span id="cb79-42"><a href="#cb79-42" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ScaleFactor</span> <span class="dv">2</span></span>
+<span id="cb79-43"><a href="#cb79-43" aria-hidden="true" tabindex="-1"></a>     <span class="at">:Environment</span> <span class="st">"standard"</span>}}</span>
+<span id="cb79-44"><a href="#cb79-44" aria-hidden="true" tabindex="-1"></a>   <span class="at">:aerial.hanami.templates/defaults</span> {<span class="at">:TitleFontSize</span> hc/RMV</span>
+<span id="cb79-45"><a href="#cb79-45" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">:TitleColor</span> hc/RMV</span>
+<span id="cb79-46"><a href="#cb79-46" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">:GridColor</span> hc/RMV}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Use it with defaults:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/pprint</span></span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>(cache/with-clean-cache</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>  (xform/xform viz-pipeline))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:visualization</span> {<span class="at">:data</span> _unnamed [<span class="dv">4</span> <span class="dv">2</span>]:</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>| <span class="at">:x</span> | <span class="at">:y</span> |</span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>|---:|---:|</span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>|  <span class="dv">2</span> | <span class="dv">30</span> |</span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>|  <span class="dv">3</span> | <span class="dv">26</span> |</span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a>|  <span class="dv">4</span> | <span class="dv">34</span> |</span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a>|  <span class="dv">5</span> | <span class="dv">40</span> |</span>
+<span id="cb81-9"><a href="#cb81-9" aria-hidden="true" tabindex="-1"></a>,</span>
+<span id="cb81-10"><a href="#cb81-10" aria-hidden="true" tabindex="-1"></a>                 <span class="at">:layout</span></span>
+<span id="cb81-11"><a href="#cb81-11" aria-hidden="true" tabindex="-1"></a>                 {<span class="at">:title</span></span>
+<span id="cb81-12"><a href="#cb81-12" aria-hidden="true" tabindex="-1"></a>                  {<span class="at">:text</span></span>
+<span id="cb81-13"><a href="#cb81-13" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"Filtered &amp; Scaled Data (threshold=12, scale=2)"</span>,</span>
+<span id="cb81-14"><a href="#cb81-14" aria-hidden="true" tabindex="-1"></a>                   <span class="at">:font</span> {<span class="at">:size</span> <span class="dv">16</span>, <span class="at">:color</span> <span class="st">"#000000"</span>}},</span>
+<span id="cb81-15"><a href="#cb81-15" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:xaxis</span> {<span class="at">:title</span> <span class="st">"X Values (n=5)"</span>},</span>
+<span id="cb81-16"><a href="#cb81-16" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:yaxis</span> {<span class="at">:title</span> <span class="st">"Y Values (scaled ×2)"</span>}}}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Override for presentation mode:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb82"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/pprint</span></span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>(cache/with-clean-cache</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>  (xform/xform viz-pipeline</span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">:Environment</span> <span class="st">"presentation"</span></span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">:MinValue</span> <span class="dv">14</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:visualization</span> {<span class="at">:data</span> _unnamed [<span class="dv">3</span> <span class="dv">2</span>]:</span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>| <span class="at">:x</span> | <span class="at">:y</span> |</span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>|---:|---:|</span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>|  <span class="dv">2</span> | <span class="dv">30</span> |</span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>|  <span class="dv">4</span> | <span class="dv">34</span> |</span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>|  <span class="dv">5</span> | <span class="dv">40</span> |</span>
+<span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a>,</span>
+<span id="cb83-9"><a href="#cb83-9" aria-hidden="true" tabindex="-1"></a>                 <span class="at">:layout</span></span>
+<span id="cb83-10"><a href="#cb83-10" aria-hidden="true" tabindex="-1"></a>                 {<span class="at">:title</span></span>
+<span id="cb83-11"><a href="#cb83-11" aria-hidden="true" tabindex="-1"></a>                  {<span class="at">:text</span></span>
+<span id="cb83-12"><a href="#cb83-12" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"Filtered &amp; Scaled Data (threshold=14, scale=2)"</span>,</span>
+<span id="cb83-13"><a href="#cb83-13" aria-hidden="true" tabindex="-1"></a>                   <span class="at">:font</span> {<span class="at">:size</span> <span class="dv">24</span>, <span class="at">:color</span> <span class="st">"#000000"</span>}},</span>
+<span id="cb83-14"><a href="#cb83-14" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:xaxis</span> {<span class="at">:title</span> <span class="st">"X Values (n=5)"</span>},</span>
+<span id="cb83-15"><a href="#cb83-15" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:yaxis</span> {<span class="at">:title</span> <span class="st">"Y Values (scaled ×2)"</span>}}}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This example demonstrates:</p>
+<ul>
+<li><strong>Templates</strong>: Nested structure with <code>:aerial.hanami.templates/defaults</code> at multiple levels</li>
+<li><strong>Dependencies</strong>: Data processing pipeline where each step depends on previous ones</li>
+<li><strong>Caching</strong>: Each dependency computed once, even when needed by multiple downstream computations</li>
+<li><strong>Conditional logic</strong>: Styling changes based on environment</li>
+<li><strong>Recursive removal</strong>: Unused styling options removed from output</li>
+<li><strong>Easy overrides</strong>: Change environment and threshold with simple parameters</li>
+</ul>
+</section>
+<section id="configuration-system" class="level3" data-number="6.6.2">
+<h3 data-number="6.6.2" class="anchored" data-anchor-id="configuration-system"><span class="header-section-number">6.6.2</span> Configuration System</h3>
+<p>A configuration system demonstrates how template defaults, functions, and dependencies combine:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb84"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> app-config</span></span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:Environment</span> <span class="st">"production"</span></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:DatabaseHost</span> <span class="st">"db.example.com"</span></span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:DatabasePort</span> <span class="dv">5432</span></span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">:DatabaseName</span> <span class="st">"myapp"</span></span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">:DatabaseURL</span> (dag/fn-with-deps</span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Build database connection string"</span></span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a>                 [DatabaseHost DatabasePort DatabaseName]</span>
+<span id="cb84-9"><a href="#cb84-9" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">format</span> <span class="st">"postgresql://%s:%d/%s"</span></span>
+<span id="cb84-10"><a href="#cb84-10" aria-hidden="true" tabindex="-1"></a>                         DatabaseHost DatabasePort DatabaseName))</span>
+<span id="cb84-11"><a href="#cb84-11" aria-hidden="true" tabindex="-1"></a>   <span class="at">:LogLevel</span> (dag/fn-with-deps</span>
+<span id="cb84-12"><a href="#cb84-12" aria-hidden="true" tabindex="-1"></a>              <span class="st">"Set log level based on environment"</span></span>
+<span id="cb84-13"><a href="#cb84-13" aria-hidden="true" tabindex="-1"></a>              [Environment]</span>
+<span id="cb84-14"><a href="#cb84-14" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">if</span> (<span class="kw">=</span> Environment <span class="st">"production"</span>) <span class="st">"WARN"</span> <span class="st">"DEBUG"</span>))</span>
+<span id="cb84-15"><a href="#cb84-15" aria-hidden="true" tabindex="-1"></a>   <span class="at">:MaxConnections</span> (dag/fn-with-deps</span>
+<span id="cb84-16"><a href="#cb84-16" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"Set connection pool size based on environment"</span></span>
+<span id="cb84-17"><a href="#cb84-17" aria-hidden="true" tabindex="-1"></a>                    [Environment]</span>
+<span id="cb84-18"><a href="#cb84-18" aria-hidden="true" tabindex="-1"></a>                    (<span class="kw">if</span> (<span class="kw">=</span> Environment <span class="st">"production"</span>) <span class="dv">50</span> <span class="dv">10</span>))})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb85"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:db-url</span> <span class="at">:DatabaseURL</span></span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:log-level</span> <span class="at">:LogLevel</span></span>
+<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:max-conn</span> <span class="at">:MaxConnections</span>}</span>
+<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a> app-config)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb86"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:db-url</span> <span class="st">"postgresql://db.example.com:5432/myapp"</span>,</span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:log-level</span> <span class="st">"WARN"</span>,</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:max-conn</span> <span class="dv">50</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Override for development:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb87"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:db-url</span> <span class="at">:DatabaseURL</span></span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:log-level</span> <span class="at">:LogLevel</span></span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:max-conn</span> <span class="at">:MaxConnections</span>}</span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a> (<span class="kw">assoc</span> app-config <span class="at">:Environment</span> <span class="st">"development"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb88"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:db-url</span> <span class="st">"postgresql://db.example.com:5432/myapp"</span>,</span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:log-level</span> <span class="st">"DEBUG"</span>,</span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:max-conn</span> <span class="dv">10</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="lazy-evaluation" class="level3" data-number="6.6.3">
+<h3 data-number="6.6.3" class="anchored" data-anchor-id="lazy-evaluation"><span class="header-section-number">6.6.3</span> Lazy Evaluation</h3>
+<p>The system is lazy - values are only computed when needed:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb89"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> lazy-counter </span>(<span class="kw">atom</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb90"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">reset!</span> lazy-counter <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb91"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb92"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>(xform/xform</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:needed</span> <span class="at">:A</span></span>
+<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aerial.hanami.templates/defaults</span></span>
+<span id="cb92-4"><a href="#cb92-4" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:A</span> (<span class="kw">fn</span> [_]</span>
+<span id="cb92-5"><a href="#cb92-5" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">swap!</span> lazy-counter <span class="kw">inc</span>)</span>
+<span id="cb92-6"><a href="#cb92-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"value-a"</span>)</span>
+<span id="cb92-7"><a href="#cb92-7" aria-hidden="true" tabindex="-1"></a>   <span class="at">:B</span> (<span class="kw">fn</span> [_]</span>
+<span id="cb92-8"><a href="#cb92-8" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">swap!</span> lazy-counter <span class="kw">inc</span>)</span>
+<span id="cb92-9"><a href="#cb92-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">"value-b"</span>)}})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb93"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:needed</span> <span class="st">"value-a"</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb94"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">deref</span> lazy-counter)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="printedClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb95"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="how-tableplot-uses-this-system" class="level3" data-number="6.6.4">
+<h3 data-number="6.6.4" class="anchored" data-anchor-id="how-tableplot-uses-this-system"><span class="header-section-number">6.6.4</span> How Tableplot Uses This System</h3>
+<p>Tableplot’s layer functions use this dataflow system extensively. Here’s a simplified example:</p>
+<div class="sourceClojure">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb96"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> simplified-layer-point </span>[dataset options]</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [layer-defaults</span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>        {:=dataset dataset</span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>         :=mark <span class="at">:point</span></span>
+<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a>         :=x (<span class="kw">get</span> options :=x <span class="at">:x</span>)</span>
+<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a>         :=y (<span class="kw">get</span> options :=y <span class="at">:y</span>)</span>
+<span id="cb96-7"><a href="#cb96-7" aria-hidden="true" tabindex="-1"></a>         :=x-data (dag/fn-with-deps <span class="va">nil</span> [=dataset =x]</span>
+<span id="cb96-8"><a href="#cb96-8" aria-hidden="true" tabindex="-1"></a>                                    (<span class="kw">get</span> =dataset =x))</span>
+<span id="cb96-9"><a href="#cb96-9" aria-hidden="true" tabindex="-1"></a>         :=y-data (dag/fn-with-deps <span class="va">nil</span> [=dataset =y]</span>
+<span id="cb96-10"><a href="#cb96-10" aria-hidden="true" tabindex="-1"></a>                                    (<span class="kw">get</span> =dataset =y))</span>
+<span id="cb96-11"><a href="#cb96-11" aria-hidden="true" tabindex="-1"></a>         :=trace (dag/fn-with-deps <span class="va">nil</span> [=x-data =y-data =mark]</span>
+<span id="cb96-12"><a href="#cb96-12" aria-hidden="true" tabindex="-1"></a>                                   {<span class="at">:type</span> (<span class="kw">name</span> =mark)</span>
+<span id="cb96-13"><a href="#cb96-13" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">:x</span> =x-data</span>
+<span id="cb96-14"><a href="#cb96-14" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">:y</span> =y-data})}]</span>
+<span id="cb96-15"><a href="#cb96-15" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:aerial.hanami.templates/defaults</span> (<span class="kw">merge</span> layer-defaults options)</span>
+<span id="cb96-16"><a href="#cb96-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">:kindly/f</span> #(xform/xform <span class="va">%</span>)}))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This pattern allows:</p>
+<ul>
+<li>Lazy computation of trace data</li>
+<li>Automatic dependency resolution (<code>=trace</code> depends on <code>=x-data</code>, <code>=y-data</code>, and <code>=mark</code>)</li>
+<li>Easy override of any parameter</li>
+<li>Caching of expensive operations</li>
+</ul>
+</section>
+</section>
+<section id="summary" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="summary"><span class="header-section-number">6.7</span> Summary</h2>
+<p>The dataflow system provides:</p>
+<ol type="1">
+<li><strong>Template Transformation</strong>: Recursive substitution of keys with values, including function-computed values</li>
+<li><strong>Dependency Management</strong>: Explicit declaration of dependencies with automatic resolution</li>
+<li><strong>Caching</strong>: Memoization to avoid redundant computation</li>
+<li><strong>Composability</strong>: Templates can be merged, parameterized, and reused</li>
+<li><strong>Laziness</strong>: Values only computed when needed</li>
+</ol>
+<p>These features combine to create a system for building complex, composable, data-driven transformations - useful far beyond just data visualization!</p>
+</section>
+<section id="key-takeaways" class="level2" data-number="6.8">
+<h2 data-number="6.8" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">6.8</span> Key Takeaways</h2>
+<ul>
+<li>Use <code>xform/xform</code> for template substitution with recursive key replacement</li>
+<li>Use <code>dag/fn-with-deps</code> to create functions that declare their dependencies</li>
+<li>Use <code>dag/defn-with-deps</code> for reusable named functions with dependencies</li>
+<li>Use <code>cache/with-clean-cache</code> to control caching behavior in tests</li>
+<li>Dependencies are automatically cached to avoid redundant computation</li>
+<li>The system handles complex dependency graphs including diamonds and chains</li>
+<li>Templates can include defaults via <code>:aerial.hanami.templates/defaults</code></li>
+<li>The system is lazy - values are only computed when requested</li>
+<li>Template defaults take precedence over map values; use multi-arity form or <code>:aerial.hanami.common/user-kvs</code> to override</li>
+<li><code>hc/RMV</code> combined with <code>:aerial.hanami.common/rmv-empty?</code> enables conditional template inclusion</li>
+</ul>
+<p>For more information:</p>
+<ul>
+<li><a href="https://github.com/jsa-aerial/hanami">Hanami documentation</a> - The template system that inspired <code>xform</code></li>
+<li><a href="tableplot_book.plotly_walkthrough.html">Plotly walkthrough</a> - See the dataflow system in action</li>
+<li><a href="tableplot_book.plotly_reference.html">Plotly reference</a> - Comprehensive examples of the dataflow system</li>
+</ul>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/scicloj/tableplot/blob/main/notebooks/tableplot_book/dataflow_walkthrough.clj">notebooks/tableplot_book/dataflow_walkthrough.clj</a></small></small></pre></div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./tableplot_book.transpile_reference.html" class="pagination-link" aria-label="Transpile API reference 📖 - experimental 🧪">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

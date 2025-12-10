@@ -65,6 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<link href="./tableplot_book.dataflow_walkthrough.html" rel="next">
 <link href="./tableplot_book.hanami_walkthrough.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -174,6 +175,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Transpile API reference 📖 - experimental 🧪</span></span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tableplot_book.dataflow_walkthrough.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Dataflow Model Walkthrough 🌊</span></span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -256,13 +263,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="tableplot_book.transpile_reference_files/md-default0.js" type="text/javascript"></script>
-<script src="tableplot_book.transpile_reference_files/md-default1.js" type="text/javascript"></script>
-<script src="tableplot_book.transpile_reference_files/plotly2.js" type="text/javascript"></script>
-<script src="tableplot_book.transpile_reference_files/echarts3.js" type="text/javascript"></script>
-<script src="tableplot_book.transpile_reference_files/vega4.js" type="text/javascript"></script>
-<script src="tableplot_book.transpile_reference_files/vega5.js" type="text/javascript"></script>
-<script src="tableplot_book.transpile_reference_files/vega6.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.20.0/plotly.min.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.1/dist/echarts.min.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.25.0" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.16.3" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.22.2" type="text/javascript"></script>
 <script src="https://code.highcharts.com/highcharts.js" type="text/javascript"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-providers@2.0.0/leaflet-providers.min.js" type="text/javascript"></script>
@@ -356,8 +363,8 @@ function randomize(){
 <p>The structure will be a <a href="#:div"><code>:div</code></a> with a <a href="#:script"><code>:script</code></a> element that has some Javascript code.</p>
 <p>The code is transpiled from <a href="#script"><code>script</code></a> with some variable bindings preceeding it:</p>
 <ul>
-<li>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</li>
-<li>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</li>
+<li><p>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</p></li>
+<li><p>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</p></li>
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> defined by deep-merging <a href="#kindly-options"><code>kindly-options</code></a> into <a href="#*base-kindly-options*"><code>*base-kindly-options*</code></a>.</p>
 <section id="examples-1" class="level4" data-number="5.2.2.1">
@@ -442,7 +449,13 @@ Plotly.newPlot(plotly_animaton_element,{
   ],
   "layout":{"title":"Would you please click the points?"}
 });
-plotly_animaton_element.on("plotly_click",function (){
+plotly_animaton_element.on{
+  "source":"on",
+  "line":120,
+  "column":10,
+  "end_line":120,
+  "end_column":12
+}("plotly_click",function (){
   alert("Thanks for clicking.");
 });
 })();</script></div>
@@ -462,7 +475,7 @@ plotly_animaton_element.on("plotly_click",function (){
 <div class="printedClojure">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>[<span class="at">:div</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:script</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"(function () {</span><span class="sc">\n</span><span class="st">let data = {</span><span class="sc">\"</span><span class="st">x</span><span class="sc">\"</span><span class="st">:[1,2,3,4],</span><span class="sc">\"</span><span class="st">y</span><span class="sc">\"</span><span class="st">:[3,4,9,16]};</span><span class="sc">\n</span><span class="st">let x = data['x'];</span><span class="sc">\n</span><span class="st">let y = data['y'];</span><span class="sc">\n</span><span class="st">let plotly_animaton_element = document.currentScript.parentElement;</span><span class="sc">\n</span><span class="st">Plotly.newPlot(plotly_animaton_element,{</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">data</span><span class="sc">\"</span><span class="st">:[</span><span class="sc">\n</span><span class="st">    {</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">x</span><span class="sc">\"</span><span class="st">:x,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">y</span><span class="sc">\"</span><span class="st">:y,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">mode</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">markers</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">type</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">scatter</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">marker</span><span class="sc">\"</span><span class="st">:{</span><span class="sc">\"</span><span class="st">size</span><span class="sc">\"</span><span class="st">:20}</span><span class="sc">\n</span><span class="st">  }</span><span class="sc">\n</span><span class="st">  ],</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">layout</span><span class="sc">\"</span><span class="st">:{</span><span class="sc">\"</span><span class="st">title</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">Would you please click the points?</span><span class="sc">\"</span><span class="st">}</span><span class="sc">\n</span><span class="st">});</span><span class="sc">\n</span><span class="st">plotly_animaton_element.on(</span><span class="sc">\"</span><span class="st">plotly_click</span><span class="sc">\"</span><span class="st">,function (){</span><span class="sc">\n</span><span class="st">  alert(</span><span class="sc">\"</span><span class="st">Thanks for clicking.</span><span class="sc">\"</span><span class="st">);</span><span class="sc">\n</span><span class="st">});</span><span class="sc">\n</span><span class="st">})();"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"(function () {</span><span class="sc">\n</span><span class="st">let data = {</span><span class="sc">\"</span><span class="st">x</span><span class="sc">\"</span><span class="st">:[1,2,3,4],</span><span class="sc">\"</span><span class="st">y</span><span class="sc">\"</span><span class="st">:[3,4,9,16]};</span><span class="sc">\n</span><span class="st">let x = data['x'];</span><span class="sc">\n</span><span class="st">let y = data['y'];</span><span class="sc">\n</span><span class="st">let plotly_animaton_element = document.currentScript.parentElement;</span><span class="sc">\n</span><span class="st">Plotly.newPlot(plotly_animaton_element,{</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">data</span><span class="sc">\"</span><span class="st">:[</span><span class="sc">\n</span><span class="st">    {</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">x</span><span class="sc">\"</span><span class="st">:x,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">y</span><span class="sc">\"</span><span class="st">:y,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">mode</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">markers</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">type</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">scatter</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">    </span><span class="sc">\"</span><span class="st">marker</span><span class="sc">\"</span><span class="st">:{</span><span class="sc">\"</span><span class="st">size</span><span class="sc">\"</span><span class="st">:20}</span><span class="sc">\n</span><span class="st">  }</span><span class="sc">\n</span><span class="st">  ],</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">layout</span><span class="sc">\"</span><span class="st">:{</span><span class="sc">\"</span><span class="st">title</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">Would you please click the points?</span><span class="sc">\"</span><span class="st">}</span><span class="sc">\n</span><span class="st">});</span><span class="sc">\n</span><span class="st">plotly_animaton_element.on{</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">source</span><span class="sc">\"</span><span class="st">:</span><span class="sc">\"</span><span class="st">on</span><span class="sc">\"</span><span class="st">,</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">line</span><span class="sc">\"</span><span class="st">:120,</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">column</span><span class="sc">\"</span><span class="st">:10,</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">end_line</span><span class="sc">\"</span><span class="st">:120,</span><span class="sc">\n</span><span class="st">  </span><span class="sc">\"</span><span class="st">end_column</span><span class="sc">\"</span><span class="st">:12</span><span class="sc">\n</span><span class="st">}(</span><span class="sc">\"</span><span class="st">plotly_click</span><span class="sc">\"</span><span class="st">,function (){</span><span class="sc">\n</span><span class="st">  alert(</span><span class="sc">\"</span><span class="st">Thanks for clicking.</span><span class="sc">\"</span><span class="st">);</span><span class="sc">\n</span><span class="st">});</span><span class="sc">\n</span><span class="st">})();"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Let us focus on the code of the script:</p>
 <div class="sourceClojure">
@@ -489,10 +502,16 @@ plotly_animaton_element.on("plotly_click",function (){
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  ],</span>
 <span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">"layout"</span>:{<span class="st">"title"</span>:<span class="st">"Would you please click the points?"</span>}</span>
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>})<span class="co">;</span></span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>plotly_animaton_element.on(<span class="st">"plotly_click"</span>,function (){</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  alert(<span class="st">"Thanks for clicking."</span>)<span class="co">;</span></span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>})<span class="co">;</span></span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>})()<span class="co">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>plotly_animaton_element.on{</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"source"</span>:<span class="st">"on"</span>,</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">"line"</span><span class="at">:120</span>,</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">"column"</span><span class="at">:10</span>,</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">"end_line"</span><span class="at">:120</span>,</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">"end_column"</span><span class="at">:12</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>}(<span class="st">"plotly_click"</span>,function (){</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  alert(<span class="st">"Thanks for clicking."</span>)<span class="co">;</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>})<span class="co">;</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>})()<span class="co">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 </section>
@@ -503,10 +522,10 @@ plotly_animaton_element.on("plotly_click",function (){
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, create a corresponding <a href="https://echarts.apache.org/en/index.html">Apache Echarts</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
 <p>The script will include the following:</p>
 <ul>
-<li>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</li>
-<li>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</li>
-<li>The <a href="#form"><code>form</code></a> transpiled to Javascript.</li>
-<li>Additional code to visualize it.</li>
+<li><p>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</p></li>
+<li><p>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</p></li>
+<li><p>The <a href="#form"><code>form</code></a> transpiled to Javascript.</p></li>
+<li><p>Additional code to visualize it.</p></li>
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
@@ -598,10 +617,10 @@ chart.setOption({
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, reate a corrseponding <a href="https://plotly.com/javascript/">Plotly.js</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
 <p>The script will include the following:</p>
 <ul>
-<li>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</li>
-<li>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</li>
-<li>The <a href="#form"><code>form</code></a> transpiled to Javascript.</li>
-<li>Additional code to visualize it.</li>
+<li><p>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</p></li>
+<li><p>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</p></li>
+<li><p>The <a href="#form"><code>form</code></a> transpiled to Javascript.</p></li>
+<li><p>Additional code to visualize it.</p></li>
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
@@ -658,10 +677,10 @@ Plotly.newPlot(
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, create a corresponding <a href="https://github.com/vega/vega-embed">Vega-Embed</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
 <p>The script will include the following:</p>
 <ul>
-<li>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</li>
-<li>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</li>
-<li>The <a href="#form"><code>form</code></a> transpiled to Javascript.</li>
-<li>Additional code to visualize it.</li>
+<li><p>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</p></li>
+<li><p>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</p></li>
+<li><p>The <a href="#form"><code>form</code></a> transpiled to Javascript.</p></li>
+<li><p>Additional code to visualize it.</p></li>
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
@@ -700,10 +719,10 @@ vegaEmbed(document.currentScript.parentElement,{
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, create a corresponding <a href="https://www.highcharts.com/">Highcharts</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
 <p>The script will include the following:</p>
 <ul>
-<li>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</li>
-<li>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</li>
-<li>The <a href="#form"><code>form</code></a> transpiled to Javascript.</li>
-<li>Additional code to visualize it.</li>
+<li><p>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</p></li>
+<li><p>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</p></li>
+<li><p>The <a href="#form"><code>form</code></a> transpiled to Javascript.</p></li>
+<li><p>Additional code to visualize it.</p></li>
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
@@ -738,10 +757,10 @@ Highcharts.chart(document.currentScript.parentElement,{
 <p>Given a data structure <a href="#data"><code>data</code></a> and a form <a href="#form"><code>form</code></a>, create a corresponding <a href="https://leafletjs.com/">Leaflet</a> data visualization using <a href="#div-with-script"><code>div-with-script</code></a>.</p>
 <p>The script will include the following:</p>
 <ul>
-<li>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</li>
-<li>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</li>
-<li>The <a href="#form"><code>form</code></a> transpiled to Javascript, and is assumed to define a function to process a Leaflet map.</li>
-<li>Additional code to visualize it.</li>
+<li><p>A Javscript variable called <a href="#data"><code>data</code></a> is bound to the <a href="#data"><code>data</code></a> value converted to JSON.</p></li>
+<li><p>If <a href="#data"><code>data</code></a> is a map that has some keys of symbol type, then corresponding Javascript variables named by these symbols are bound to the corresponding values converted to JSON.</p></li>
+<li><p>The <a href="#form"><code>form</code></a> transpiled to Javascript, and is assumed to define a function to process a Leaflet map.</p></li>
+<li><p>Additional code to visualize it.</p></li>
 </ul>
 <p>The resulting structure is marked by the <a href="https://scicloj.github.io/kindly-noted/kindly">Kindly</a> standard as <code>kind/hiccup</code> with <a href="https://scicloj.github.io/kindly-noted/kindly.html#passing-options">Kindly options</a> necessart to make the plot work.</p>
 <p>If no <a href="#data"><code>data</code></a> value is passed, it is considered <a href="#nil"><code>nil</code></a>.</p>
@@ -775,8 +794,32 @@ let marker = data['marker'];
 let popup = data['popup'];
 let f = function (m){
   m.setView(center,zoom);
-  L.tileLayer.provider(provider).addTo(m);
-  L.marker(marker).addTo(m).bindPopup(popup).openPopup();
+  L.tileLayer.provider(provider).addTo{
+    "source":"addTo",
+    "line":257,
+    "column":13,
+    "end_line":257,
+    "end_column":18
+  }(m);
+  L.marker(marker).addTo{
+    "source":"addTo",
+    "line":260,
+    "column":13,
+    "end_line":260,
+    "end_column":18
+  }(m).bindPopup{
+    "source":"bindPopup",
+    "line":261,
+    "column":13,
+    "end_line":261,
+    "end_column":22
+  }(popup).openPopup{
+    "source":"openPopup",
+    "line":262,
+    "column":13,
+    "end_line":262,
+    "end_column":22
+  }();
 };
 let m = L.map(document.currentScript.parentElement);
 f(m);
@@ -1210,6 +1253,9 @@ f(m);
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="./tableplot_book.dataflow_walkthrough.html" class="pagination-link" aria-label="Dataflow Model Walkthrough 🌊">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Dataflow Model Walkthrough 🌊</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav>
 </div> <!-- /content -->

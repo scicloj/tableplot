@@ -53,9 +53,9 @@
  t8_l113
  (is
   ((fn*
-    [p1__86401#]
+    [p1__68579#]
     (->
-     p1__86401#
+     p1__68579#
      :aerial.hanami.templates/defaults
      :=dataset
      tc/row-count
@@ -67,8 +67,8 @@
  t9_l119
  (is
   ((fn*
-    [p1__86402#]
-    (-> p1__86402# meta :kindly/kind (= :kind/pprint)))
+    [p1__68580#]
+    (-> p1__68580# meta :kindly/kind (= :kind/pprint)))
    v7_l111)))
 
 
@@ -110,8 +110,8 @@
  t24_l199
  (is
   ((fn*
-    [p1__86403#]
-    (= (-> p1__86403# plotly/plot :data first :type) "scatter"))
+    [p1__68581#]
+    (= (-> p1__68581# plotly/plot :data first :type) "scatter"))
    v22_l191)))
 
 
@@ -138,8 +138,8 @@
  t30_l221
  (is
   ((fn*
-    [p1__86404#]
-    (= (-> p1__86404# plotly/plot :data first :type) "box"))
+    [p1__68582#]
+    (= (-> p1__68582# plotly/plot :data first :type) "box"))
    v28_l215)))
 
 
@@ -161,10 +161,10 @@
  t36_l239
  (is
   ((fn*
-    [p1__86405#]
+    [p1__68583#]
     (=
      (->
-      p1__86405#
+      p1__68583#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -180,7 +180,7 @@
   (rdatasets/datasets-mtcars)
   (tc/group-by [:cyl])
   (tc/aggregate
-   {:total-disp (fn* [p1__86406#] (-> p1__86406# :disp tcc/sum))})
+   {:total-disp (fn* [p1__68584#] (-> p1__68584# :disp tcc/sum))})
   (tc/order-by [:cyl])
   (plotly/layer-line
    {:=x :cyl, :=mark-fill :tozeroy, :=y :total-disp})))
@@ -190,10 +190,10 @@
  t40_l253
  (is
   ((fn*
-    [p1__86407#]
+    [p1__68585#]
     (=
      (->
-      p1__86407#
+      p1__68585#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -209,7 +209,7 @@
   (rdatasets/datasets-mtcars)
   (tc/group-by [:cyl])
   (tc/aggregate
-   {:total-disp (fn* [p1__86408#] (-> p1__86408# :disp tcc/sum))})
+   {:total-disp (fn* [p1__68586#] (-> p1__68586# :disp tcc/sum))})
   (plotly/layer-bar {:=x :cyl, :=y :total-disp})))
 
 
@@ -217,8 +217,8 @@
  t44_l265
  (is
   ((fn*
-    [p1__86409#]
-    (= (-> p1__86409# plotly/plot :data first :type) "bar"))
+    [p1__68587#]
+    (= (-> p1__68587# plotly/plot :data first :type) "bar"))
    v42_l257)))
 
 
@@ -228,7 +228,7 @@
   (rdatasets/datasets-mtcars)
   (tc/group-by [:cyl])
   (tc/aggregate
-   {:total-disp (fn* [p1__86410#] (-> p1__86410# :disp tcc/sum))})
+   {:total-disp (fn* [p1__68588#] (-> p1__68588# :disp tcc/sum))})
   (tc/add-column :bar-width 0.5)
   (plotly/layer-bar
    {:=x :cyl, :=bar-width :bar-width, :=y :total-disp})))
@@ -238,10 +238,10 @@
  t47_l277
  (is
   ((fn*
-    [p1__86411#]
+    [p1__68589#]
     (=
      (->
-      p1__86411#
+      p1__68589#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -263,10 +263,10 @@
  t51_l289
  (is
   ((fn*
-    [p1__86412#]
+    [p1__68590#]
     (and
-     (= (-> p1__86412# plotly/plot :data first :type) "scatter")
-     (= (-> p1__86412# plotly/plot :data first :mode) :text)))
+     (= (-> p1__68590# plotly/plot :data first :type) "scatter")
+     (= (-> p1__68590# plotly/plot :data first :mode) :text)))
    v49_l281)))
 
 
@@ -287,10 +287,10 @@
  t54_l303
  (is
   ((fn*
-    [p1__86413#]
+    [p1__68591#]
     (=
      (->
-      p1__86413#
+      p1__68591#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -314,8 +314,8 @@
  t58_l321
  (is
   ((fn*
-    [p1__86414#]
-    (= (-> p1__86414# plotly/plot :data first :type) "heatmap"))
+    [p1__68592#]
+    (= (-> p1__68592# plotly/plot :data first :type) "heatmap"))
    v56_l312)))
 
 
@@ -337,10 +337,10 @@
  t62_l336
  (is
   ((fn*
-    [p1__86415#]
+    [p1__68593#]
     (and
-     (= (-> p1__86415# plotly/plot :data first :type) "scatter")
-     (= (-> p1__86415# plotly/plot :data first :mode) :lines)))
+     (= (-> p1__68593# plotly/plot :data first :type) "scatter")
+     (= (-> p1__68593# plotly/plot :data first :mode) :lines)))
    v60_l325)))
 
 
@@ -392,7 +392,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__86416#] (-> p1__86416# :variable (= "unemploy"))))
+   (fn* [p1__68594#] (-> p1__68594# :variable (= "unemploy"))))
   (plotly/layer-line {:=x :date, :=y :value, :=mark-color "purple"})))
 
 
@@ -411,8 +411,8 @@
  t71_l393
  (is
   ((fn*
-    [p1__86417#]
-    (= (-> p1__86417# plotly/plot :data first :type) :splom))
+    [p1__68595#]
+    (= (-> p1__68595# plotly/plot :data first :type) :splom))
    v69_l386)))
 
 
@@ -421,7 +421,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__86418#] (-> p1__86418# :variable (= "unemploy"))))
+   (fn* [p1__68596#] (-> p1__68596# :variable (= "unemploy"))))
   (plotly/layer-point
    {:=x :date,
     :=y :value,
@@ -436,7 +436,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__86419#] (-> p1__86419# :variable (= "unemploy"))))
+   (fn* [p1__68597#] (-> p1__68597# :variable (= "unemploy"))))
   (plotly/base {:=x :date, :=y :value})
   (plotly/layer-point
    {:=mark-color "green", :=mark-size 20, :=mark-opacity 0.5})
@@ -447,9 +447,9 @@
  t77_l423
  (is
   ((fn*
-    [p1__86420#]
+    [p1__68598#]
     (=
-     (-> p1__86420# :aerial.hanami.templates/defaults :=layers count)
+     (-> p1__68598# :aerial.hanami.templates/defaults :=layers count)
      2))
    v75_l413)))
 
@@ -459,7 +459,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__86421#] (-> p1__86421# :variable (= "unemploy"))))
+   (fn* [p1__68599#] (-> p1__68599# :variable (= "unemploy"))))
   (plotly/base {:=x :date, :=y :value})
   (plotly/layer-point
    {:=mark-color "green",
@@ -474,7 +474,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__86422#] (-> p1__86422# :variable (= "unemploy"))))
+   (fn* [p1__68600#] (-> p1__68600# :variable (= "unemploy"))))
   (plotly/base {:=x :date, :=y :value})
   (plotly/layer-line {:=mark-color "purple"})
   (plotly/update-data tc/random 5)
@@ -486,9 +486,9 @@
  t83_l462
  (is
   ((fn*
-    [p1__86423#]
+    [p1__68601#]
     (=
-     (-> p1__86423# :aerial.hanami.templates/defaults :=layers count)
+     (-> p1__68601# :aerial.hanami.templates/defaults :=layers count)
      2))
    v81_l451)))
 
@@ -517,12 +517,12 @@
  t89_l490
  (is
   ((fn*
-    [p1__86424#]
+    [p1__68602#]
     (and
      (=
-      (-> p1__86424# :aerial.hanami.templates/defaults :=layers count)
+      (-> p1__68602# :aerial.hanami.templates/defaults :=layers count)
       2)
-     (= (-> p1__86424# plotly/plot :data count) 2)))
+     (= (-> p1__68602# plotly/plot :data count) 2)))
    v87_l481)))
 
 
@@ -622,7 +622,7 @@
     (->
      ds
      (tc/select-rows
-      (fn* [p1__86425#] (-> p1__86425# :$split-name (= :train)))))))
+      (fn* [p1__68603#] (-> p1__68603# :$split-name (= :train)))))))
   (plotly/layer-smooth
    {:=model-options regression-tree-options,
     :=name "prediction",
@@ -645,7 +645,7 @@
 (deftest
  t106_l603
  (is
-  ((fn* [p1__86426#] (= (-> p1__86426# plotly/plot :data count) 6))
+  ((fn* [p1__68604#] (= (-> p1__68604# plotly/plot :data count) 6))
    v104_l594)))
 
 
@@ -675,7 +675,7 @@
 (deftest
  t112_l632
  (is
-  ((fn* [p1__86427#] (= (-> p1__86427# plotly/plot :data count) 4))
+  ((fn* [p1__68605#] (= (-> p1__68605# plotly/plot :data count) 4))
    v110_l623)))
 
 
@@ -684,7 +684,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__86428#] (-> p1__86428# :variable (= "unemploy"))))
+   (fn* [p1__68606#] (-> p1__68606# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -703,7 +703,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__86429#] (-> p1__86429# :variable (= "unemploy"))))
+   (fn* [p1__68607#] (-> p1__68607# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -717,13 +717,13 @@
   (tc/add-column
    :year
    (fn*
-    [p1__86430#]
-    (datetime/long-temporal-field :years (:date p1__86430#))))
+    [p1__68608#]
+    (datetime/long-temporal-field :years (:date p1__68608#))))
   (tc/add-column
    :month
    (fn*
-    [p1__86431#]
-    (datetime/long-temporal-field :months (:date p1__86431#))))
+    [p1__68609#]
+    (datetime/long-temporal-field :months (:date p1__68609#))))
   (tc/map-columns :yearmonth [:year :month] (fn [y m] (+ m (* 12 y))))
   (print/print-range 6)))
 
@@ -733,7 +733,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__86432#] (-> p1__86432# :variable (= "unemploy"))))
+   (fn* [p1__68610#] (-> p1__68610# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -747,13 +747,13 @@
   (tc/add-column
    :year
    (fn*
-    [p1__86433#]
-    (datetime/long-temporal-field :years (:date p1__86433#))))
+    [p1__68611#]
+    (datetime/long-temporal-field :years (:date p1__68611#))))
   (tc/add-column
    :month
    (fn*
-    [p1__86434#]
-    (datetime/long-temporal-field :months (:date p1__86434#))))
+    [p1__68612#]
+    (datetime/long-temporal-field :months (:date p1__68612#))))
   (tc/map-columns :yearmonth [:year :month] (fn [y m] (+ m (* 12 y))))
   (plotly/base {:=x :date, :=y :value})
   (plotly/layer-smooth
@@ -782,8 +782,8 @@
  t122_l710
  (is
   ((fn*
-    [p1__86435#]
-    (= (-> p1__86435# plotly/plot :data first :type) "bar"))
+    [p1__68613#]
+    (= (-> p1__68613# plotly/plot :data first :type) "bar"))
    v120_l706)))
 
 
@@ -814,8 +814,8 @@
  t128_l731
  (is
   ((fn*
-    [p1__86436#]
-    (= (-> p1__86436# plotly/plot :data first :type) "heatmap"))
+    [p1__68614#]
+    (= (-> p1__68614# plotly/plot :data first :type) "heatmap"))
    v126_l725)))
 
 
@@ -830,8 +830,8 @@
  t132_l743
  (is
   ((fn*
-    [p1__86437#]
-    (= (-> p1__86437# plotly/plot :data first :type) "scatter"))
+    [p1__68615#]
+    (= (-> p1__68615# plotly/plot :data first :type) "scatter"))
    v130_l739)))
 
 
@@ -846,10 +846,10 @@
  t135_l750
  (is
   ((fn*
-    [p1__86438#]
+    [p1__68616#]
     (=
      (->
-      p1__86438#
+      p1__68616#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -876,7 +876,7 @@
 (deftest
  t139_l761
  (is
-  ((fn* [p1__86439#] (= (-> p1__86439# plotly/plot :data count) 3))
+  ((fn* [p1__68617#] (= (-> p1__68617# plotly/plot :data count) 3))
    v137_l756)))
 
 
@@ -954,10 +954,10 @@
  t145_l809
  (is
   ((fn*
-    [p1__86440#]
+    [p1__68618#]
     (=
      (->
-      p1__86440#
+      p1__68618#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -992,8 +992,8 @@
  t150_l829
  (is
   ((fn*
-    [p1__86441#]
-    (= (-> p1__86441# plotly/plot :data first :type) "surface"))
+    [p1__68619#]
+    (= (-> p1__68619# plotly/plot :data first :type) "surface"))
    v148_l822)))
 
 
@@ -1023,10 +1023,10 @@
  t155_l851
  (is
   ((fn*
-    [p1__86442#]
+    [p1__68620#]
     (=
      (->
-      p1__86442#
+      p1__68620#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -1067,7 +1067,7 @@
     (->>
      (repeatedly n (fn* [] (* 10 (rand))))
      (reductions +)
-     (map (fn* [p1__86443#] (rem p1__86443# 360)))),
+     (map (fn* [p1__68621#] (rem p1__68621# 360)))),
     :color (range n)}
    tc/dataset
    (plotly/layer-point

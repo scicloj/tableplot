@@ -40,9 +40,9 @@
  t6_l71
  (is
   ((fn*
-    [p1__103413#]
+    [p1__69409#]
     (contains?
-     (:aerial.hanami.templates/defaults p1__103413#)
+     (:aerial.hanami.templates/defaults p1__69409#)
      :=dataset))
    v4_l64)))
 
@@ -51,11 +51,11 @@
  t8_l74
  (is
   ((fn*
-    [p1__103414#]
+    [p1__69410#]
     (let
      [layer-defaults
       (->
-       p1__103414#
+       p1__69410#
        :aerial.hanami.templates/defaults
        :=layers
        first
@@ -70,8 +70,8 @@
  t10_l79
  (is
   ((fn*
-    [p1__103415#]
-    (= (-> p1__103415# plotly/plot :data first :type) "scatter"))
+    [p1__69411#]
+    (= (-> p1__69411# plotly/plot :data first :type) "scatter"))
    v4_l64)))
 
 
@@ -363,10 +363,10 @@
  t39_l354
  (is
   ((fn*
-    [p1__103416#]
+    [p1__69412#]
     (=
      (->
-      p1__103416#
+      p1__69412#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -414,10 +414,10 @@
  t45_l383
  (is
   ((fn*
-    [p1__103417#]
+    [p1__69413#]
     (=
      (->
-      p1__103417#
+      p1__69413#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -458,7 +458,7 @@
     (->>
      (repeatedly n (fn* [] (* 10 (rand))))
      (reductions +)
-     (map (fn* [p1__103418#] (rem p1__103418# 360)))),
+     (map (fn* [p1__69414#] (rem p1__69414# 360)))),
     :color (range n)}
    tc/dataset
    (plotly/layer-point
@@ -539,10 +539,10 @@
  t59_l501
  (is
   ((fn*
-    [p1__103419#]
+    [p1__69415#]
     (=
      (->
-      p1__103419#
+      p1__69415#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -583,9 +583,9 @@
  t65_l535
  (is
   ((fn*
-    [p1__103420#]
+    [p1__69416#]
     (let
-     [layout (-> p1__103420# plotly/plot :layout)]
+     [layout (-> p1__69416# plotly/plot :layout)]
      (and
       (= (:plot_bgcolor layout) "floralwhite")
       (= (:height layout) 300)
@@ -613,9 +613,9 @@
  t69_l553
  (is
   ((fn*
-    [p1__103421#]
+    [p1__69417#]
     (=
-     (-> p1__103421# :aerial.hanami.templates/defaults :=layers count)
+     (-> p1__69417# :aerial.hanami.templates/defaults :=layers count)
      2))
    v67_l543)))
 
@@ -624,13 +624,13 @@
  t71_l556
  (is
   ((fn*
-    [p1__103422#]
+    [p1__69418#]
     (and
      (=
-      (-> p1__103422# :aerial.hanami.templates/defaults :=x)
+      (-> p1__69418# :aerial.hanami.templates/defaults :=x)
       :sepal-width)
      (=
-      (-> p1__103422# :aerial.hanami.templates/defaults :=y)
+      (-> p1__69418# :aerial.hanami.templates/defaults :=y)
       :sepal-length)))
    v67_l543)))
 
@@ -684,8 +684,8 @@
  t82_l590
  (is
   ((fn*
-    [p1__103423#]
-    (= (-> p1__103423# plotly/plot :data first :marker :size) 20))
+    [p1__69419#]
+    (= (-> p1__69419# plotly/plot :data first :marker :size) 20))
    v80_l583)))
 
 
@@ -700,9 +700,9 @@
  t86_l601
  (is
   ((fn*
-    [p1__103424#]
+    [p1__69420#]
     (=
-     (-> p1__103424# plotly/plot :data first :marker :symbol)
+     (-> p1__69420# plotly/plot :data first :marker :symbol)
      :diamond))
    v84_l594)))
 
@@ -718,9 +718,9 @@
  t90_l612
  (is
   ((fn*
-    [p1__103425#]
+    [p1__69421#]
     (=
-     (-> p1__103425# plotly/plot :data first :marker :color)
+     (-> p1__69421# plotly/plot :data first :marker :color)
      "darkred"))
    v88_l605)))
 
@@ -736,8 +736,8 @@
  t94_l623
  (is
   ((fn*
-    [p1__103426#]
-    (= (-> p1__103426# plotly/plot :data first :opacity) 0.5))
+    [p1__69422#]
+    (= (-> p1__69422# plotly/plot :data first :opacity) 0.5))
    v92_l616)))
 
 
@@ -753,8 +753,8 @@
  t98_l635
  (is
   ((fn*
-    [p1__103427#]
-    (vector? (-> p1__103427# plotly/plot :data first :marker :color)))
+    [p1__69423#]
+    (vector? (-> p1__69423# plotly/plot :data first :marker :color)))
    v96_l627)))
 
 
@@ -780,9 +780,9 @@
  t102_l650
  (is
   ((fn*
-    [p1__103428#]
+    [p1__69424#]
     (=
-     (-> p1__103428# plotly/plot :data first :marker :colorscale)
+     (-> p1__69424# plotly/plot :data first :marker :colorscale)
      :Greens))
    v100_l641)))
 
@@ -802,7 +802,7 @@
 (deftest
  t106_l663
  (is
-  ((fn* [p1__103429#] (> (-> p1__103429# plotly/plot :data count) 1))
+  ((fn* [p1__69425#] (> (-> p1__69425# plotly/plot :data count) 1))
    v104_l654)))
 
 
@@ -817,8 +817,8 @@
  t110_l674
  (is
   ((fn*
-    [p1__103430#]
-    (vector? (-> p1__103430# plotly/plot :data first :marker :size)))
+    [p1__69426#]
+    (vector? (-> p1__69426# plotly/plot :data first :marker :size)))
    v108_l667)))
 
 
@@ -840,9 +840,9 @@
  t114_l685
  (is
   ((fn*
-    [p1__103431#]
+    [p1__69427#]
     (let
-     [sizes (-> p1__103431# plotly/plot :data first :marker :size)]
+     [sizes (-> p1__69427# plotly/plot :data first :marker :size)]
      (and (vector? sizes) (every? (fn [s] (<= 5 s 15)) sizes))))
    v112_l677)))
 
@@ -877,8 +877,8 @@
  t120_l710
  (is
   ((fn*
-    [p1__103432#]
-    (some? (-> p1__103432# plotly/plot :data first :marker :symbol)))
+    [p1__69428#]
+    (some? (-> p1__69428# plotly/plot :data first :marker :symbol)))
    v118_l701)))
 
 
@@ -923,8 +923,8 @@
  t130_l752
  (is
   ((fn*
-    [p1__103433#]
-    (= (-> p1__103433# plotly/plot :data first :type) "scatter3d"))
+    [p1__69429#]
+    (= (-> p1__69429# plotly/plot :data first :type) "scatter3d"))
    v128_l744)))
 
 
@@ -953,7 +953,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__103434#] (-> p1__103434# :variable (= "unemploy"))))
+   (fn* [p1__69430#] (-> p1__69430# :variable (= "unemploy"))))
   (plotly/layer-line {:=x :date, :=y :value, :=mark-color "purple"})))
 
 
@@ -961,8 +961,8 @@
  t136_l773
  (is
   ((fn*
-    [p1__103435#]
-    (= (-> p1__103435# plotly/plot :data first :mode) :lines))
+    [p1__69431#]
+    (= (-> p1__69431# plotly/plot :data first :mode) :lines))
    v134_l765)))
 
 
@@ -970,8 +970,8 @@
  t138_l776
  (is
   ((fn*
-    [p1__103436#]
-    (= (-> p1__103436# plotly/plot :data first :line :color) "purple"))
+    [p1__69432#]
+    (= (-> p1__69432# plotly/plot :data first :line :color) "purple"))
    v134_l765)))
 
 
@@ -987,7 +987,7 @@
   (rdatasets/datasets-mtcars)
   (tc/group-by [:cyl])
   (tc/aggregate
-   {:total-disp (fn* [p1__103437#] (-> p1__103437# :disp tcc/sum))})
+   {:total-disp (fn* [p1__69433#] (-> p1__69433# :disp tcc/sum))})
   (tc/add-column :bar-width 0.5)
   (plotly/layer-bar
    {:=x :cyl, :=bar-width :bar-width, :=y :total-disp})))
@@ -997,8 +997,8 @@
  t143_l792
  (is
   ((fn*
-    [p1__103438#]
-    (-> p1__103438# plotly/plot :data first :type (= "bar")))
+    [p1__69434#]
+    (-> p1__69434# plotly/plot :data first :type (= "bar")))
    v141_l782)))
 
 
@@ -1006,9 +1006,9 @@
  t145_l795
  (is
   ((fn*
-    [p1__103439#]
+    [p1__69435#]
     (let
-     [trace (-> p1__103439# plotly/plot :data first)]
+     [trace (-> p1__69435# plotly/plot :data first)]
      (and (vector? (:x trace)) (vector? (:y trace)))))
    v141_l782)))
 
@@ -1032,8 +1032,8 @@
  t150_l809
  (is
   ((fn*
-    [p1__103440#]
-    (= (-> p1__103440# plotly/plot :data first :type) "box"))
+    [p1__69436#]
+    (= (-> p1__69436# plotly/plot :data first :type) "box"))
    v148_l803)))
 
 
@@ -1041,9 +1041,9 @@
  t152_l812
  (is
   ((fn*
-    [p1__103441#]
+    [p1__69437#]
     (let
-     [trace (-> p1__103441# plotly/plot :data first)]
+     [trace (-> p1__69437# plotly/plot :data first)]
      (and (some? (:x trace)) (some? (:y trace)))))
    v148_l803)))
 
@@ -1059,7 +1059,7 @@
 (deftest
  t155_l824
  (is
-  ((fn* [p1__103442#] (> (-> p1__103442# plotly/plot :data count) 1))
+  ((fn* [p1__69438#] (> (-> p1__69438# plotly/plot :data count) 1))
    v153_l816)))
 
 
@@ -1094,8 +1094,8 @@
  t161_l844
  (is
   ((fn*
-    [p1__103443#]
-    (= (-> p1__103443# plotly/plot :data first :type) "violin"))
+    [p1__69439#]
+    (= (-> p1__69439# plotly/plot :data first :type) "violin"))
    v159_l838)))
 
 
@@ -1110,10 +1110,10 @@
  t164_l853
  (is
   ((fn*
-    [p1__103444#]
+    [p1__69440#]
     (=
      (->
-      p1__103444#
+      p1__69440#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -1134,10 +1134,10 @@
  t167_l862
  (is
   ((fn*
-    [p1__103445#]
+    [p1__69441#]
     (=
      (->
-      p1__103445#
+      p1__69441#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -1171,10 +1171,10 @@
  t171_l880
  (is
   ((fn*
-    [p1__103446#]
+    [p1__69442#]
     (=
      (->
-      p1__103446#
+      p1__69442#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -1210,10 +1210,10 @@
  t176_l897
  (is
   ((fn*
-    [p1__103447#]
+    [p1__69443#]
     (and
-     (= (-> p1__103447# plotly/plot :data first :type) "scatter")
-     (= (-> p1__103447# plotly/plot :data first :mode) :lines)))
+     (= (-> p1__69443# plotly/plot :data first :type) "scatter")
+     (= (-> p1__69443# plotly/plot :data first :mode) :lines)))
    v174_l886)))
 
 
@@ -1242,8 +1242,8 @@
  t181_l915
  (is
   ((fn*
-    [p1__103448#]
-    (= (-> p1__103448# plotly/plot :data first :mode) :text))
+    [p1__69444#]
+    (= (-> p1__69444# plotly/plot :data first :mode) :text))
    v179_l904)))
 
 
@@ -1251,9 +1251,9 @@
  t183_l918
  (is
   ((fn*
-    [p1__103449#]
+    [p1__69445#]
     (=
-     (-> p1__103449# plotly/plot :data first :textfont :color)
+     (-> p1__69445# plotly/plot :data first :textfont :color)
      :purple))
    v179_l904)))
 
@@ -1277,8 +1277,8 @@
  t188_l928
  (is
   ((fn*
-    [p1__103450#]
-    (= (-> p1__103450# plotly/plot :data first :type) "bar"))
+    [p1__69446#]
+    (= (-> p1__69446# plotly/plot :data first :type) "bar"))
    v186_l924)))
 
 
@@ -1286,9 +1286,9 @@
  t190_l931
  (is
   ((fn*
-    [p1__103451#]
+    [p1__69447#]
     (let
-     [trace (-> p1__103451# plotly/plot :data first)]
+     [trace (-> p1__69447# plotly/plot :data first)]
      (and
       (vector? (:x trace))
       (vector? (:y trace))
@@ -1307,10 +1307,10 @@
  t193_l941
  (is
   ((fn*
-    [p1__103452#]
+    [p1__69448#]
     (=
      (->
-      p1__103452#
+      p1__69448#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -1324,10 +1324,10 @@
  t195_l944
  (is
   ((fn*
-    [p1__103453#]
+    [p1__69449#]
     (let
      [trace
-      (-> p1__103453# plotly/plot :data first)
+      (-> p1__69449# plotly/plot :data first)
       nbins
       (count (:x trace))]
      (<= 25 nbins 35)))
@@ -1345,7 +1345,7 @@
 (deftest
  t198_l954
  (is
-  ((fn* [p1__103454#] (= (-> p1__103454# plotly/plot :data count) 3))
+  ((fn* [p1__69450#] (= (-> p1__69450# plotly/plot :data count) 3))
    v196_l948)))
 
 
@@ -1374,8 +1374,8 @@
  t204_l970
  (is
   ((fn*
-    [p1__103455#]
-    (= (-> p1__103455# plotly/plot :data first :type) "heatmap"))
+    [p1__69451#]
+    (= (-> p1__69451# plotly/plot :data first :type) "heatmap"))
    v202_l965)))
 
 
@@ -1405,8 +1405,8 @@
    (tc/add-column
     :y
     (fn*
-     [p1__103456#]
-     (tcc/* (repeatedly n rand) (:x p1__103456#) (:x p1__103456#))))
+     [p1__69452#]
+     (tcc/* (repeatedly n rand) (:x p1__69452#) (:x p1__69452#))))
    (plotly/layer-histogram2d {:=histogram-nbins 250}))))
 
 
@@ -1429,9 +1429,9 @@
  t212_l998
  (is
   ((fn*
-    [p1__103457#]
+    [p1__69453#]
     (let
-     [trace (-> p1__103457# plotly/plot :data first)]
+     [trace (-> p1__69453# plotly/plot :data first)]
      (and (= (:mode trace) :lines) (= (:fill trace) :tozeroy))))
    v210_l994)))
 
@@ -1440,9 +1440,9 @@
  t214_l1003
  (is
   ((fn*
-    [p1__103458#]
+    [p1__69454#]
     (let
-     [trace (-> p1__103458# plotly/plot :data first)]
+     [trace (-> p1__69454# plotly/plot :data first)]
      (and
       (vector? (:x trace))
       (vector? (:y trace))
@@ -1454,9 +1454,9 @@
  t216_l1009
  (is
   ((fn*
-    [p1__103459#]
+    [p1__69455#]
     (let
-     [trace (-> p1__103459# plotly/plot :data first)]
+     [trace (-> p1__69455# plotly/plot :data first)]
      (every? (fn [y] (>= y 0)) (:y trace))))
    v210_l994)))
 
@@ -1472,10 +1472,10 @@
  t219_l1017
  (is
   ((fn*
-    [p1__103460#]
+    [p1__69456#]
     (=
      (->
-      p1__103460#
+      p1__69456#
       :aerial.hanami.templates/defaults
       :=layers
       first
@@ -1502,7 +1502,7 @@
 (deftest
  t223_l1028
  (is
-  ((fn* [p1__103461#] (= (-> p1__103461# plotly/plot :data count) 3))
+  ((fn* [p1__69457#] (= (-> p1__69457# plotly/plot :data count) 3))
    v221_l1023)))
 
 
@@ -1537,9 +1537,9 @@
  t231_l1052
  (is
   ((fn*
-    [p1__103462#]
+    [p1__69458#]
     (=
-     (-> p1__103462# :aerial.hanami.templates/defaults :=layers count)
+     (-> p1__69458# :aerial.hanami.templates/defaults :=layers count)
      2))
    v229_l1043)))
 
@@ -1547,7 +1547,7 @@
 (deftest
  t233_l1055
  (is
-  ((fn* [p1__103463#] (= (-> p1__103463# plotly/plot :data count) 2))
+  ((fn* [p1__69459#] (= (-> p1__69459# plotly/plot :data count) 2))
    v229_l1043)))
 
 
@@ -1555,9 +1555,9 @@
  t235_l1058
  (is
   ((fn*
-    [p1__103464#]
+    [p1__69460#]
     (let
-     [traces (-> p1__103464# plotly/plot :data)]
+     [traces (-> p1__69460# plotly/plot :data)]
      (and
       (= (:name (first traces)) "Actual")
       (= (:name (second traces)) "Predicted"))))
@@ -1568,9 +1568,9 @@
  t237_l1063
  (is
   ((fn*
-    [p1__103465#]
+    [p1__69461#]
     (let
-     [smooth-trace (-> p1__103465# plotly/plot :data second)]
+     [smooth-trace (-> p1__69461# plotly/plot :data second)]
      (and
       (vector? (:x smooth-trace))
       (vector? (:y smooth-trace))
@@ -1582,10 +1582,8 @@
  t239_l1069
  (is
   ((fn*
-    [p1__103466#]
-    (=
-     (-> p1__103466# plotly/plot :data second :line :color)
-     "orange"))
+    [p1__69462#]
+    (= (-> p1__69462# plotly/plot :data second :line :color) "orange"))
    v229_l1043)))
 
 
@@ -1611,10 +1609,10 @@
  t243_l1084
  (is
   ((fn*
-    [p1__103467#]
+    [p1__69463#]
     (=
      (->
-      p1__103467#
+      p1__69463#
       :aerial.hanami.templates/defaults
       :=layers
       second
@@ -1647,11 +1645,11 @@
  t247_l1101
  (is
   ((fn*
-    [p1__103468#]
+    [p1__69464#]
     (not
      (nil?
       (->
-       p1__103468#
+       p1__69464#
        :aerial.hanami.templates/defaults
        :=layers
        second
@@ -1741,8 +1739,8 @@
  t257_l1151
  (is
   ((fn*
-    [p1__103469#]
-    (= (-> p1__103469# :aerial.hanami.templates/defaults :=group) []))
+    [p1__69465#]
+    (= (-> p1__69465# :aerial.hanami.templates/defaults :=group) []))
    v255_l1141)))
 
 
@@ -1788,8 +1786,8 @@
  t265_l1180
  (is
   ((fn*
-    [p1__103470#]
-    (= (-> p1__103470# plotly/plot :data first :type) "heatmap"))
+    [p1__69466#]
+    (= (-> p1__69466# plotly/plot :data first :type) "heatmap"))
    v263_l1170)))
 
 
@@ -1797,9 +1795,9 @@
  t267_l1183
  (is
   ((fn*
-    [p1__103471#]
+    [p1__69467#]
     (let
-     [trace (-> p1__103471# plotly/plot :data first)]
+     [trace (-> p1__69467# plotly/plot :data first)]
      (and
       (vector? (:x trace))
       (vector? (:y trace))
@@ -1811,9 +1809,9 @@
  t269_l1189
  (is
   ((fn*
-    [p1__103472#]
+    [p1__69468#]
     (let
-     [z (-> p1__103472# plotly/plot :data first :z)]
+     [z (-> p1__69468# plotly/plot :data first :z)]
      (and (vector? z) (seq? (first z)))))
    v263_l1170)))
 
@@ -1881,13 +1879,13 @@
     :w (repeatedly n rand)}
    tc/dataset
    (tc/add-columns
-    {:x (fn* [p1__103473#] (tcc/+ (:u p1__103473#) (:v p1__103473#))),
+    {:x (fn* [p1__69469#] (tcc/+ (:u p1__69469#) (:v p1__69469#))),
      :y
      (fn*
-      [p1__103474#]
+      [p1__69470#]
       (tcc/-
-       (:w p1__103474#)
-       (tcc/+ (:u p1__103474#) (:v p1__103474#))))})
+       (:w p1__69470#)
+       (tcc/+ (:u p1__69470#) (:v p1__69470#))))})
    plotly/layer-correlation)))
 
 
@@ -1895,8 +1893,8 @@
  t283_l1254
  (is
   ((fn*
-    [p1__103475#]
-    (= (-> p1__103475# plotly/plot :data first :type) "heatmap"))
+    [p1__69471#]
+    (= (-> p1__69471# plotly/plot :data first :type) "heatmap"))
    v281_l1244)))
 
 
@@ -1904,9 +1902,9 @@
  t285_l1257
  (is
   ((fn*
-    [p1__103476#]
+    [p1__69472#]
     (let
-     [trace (-> p1__103476# plotly/plot :data first) z (:z trace)]
+     [trace (-> p1__69472# plotly/plot :data first) z (:z trace)]
      (= (count z) (count (first z)))))
    v281_l1244)))
 
@@ -1915,10 +1913,10 @@
  t287_l1262
  (is
   ((fn*
-    [p1__103477#]
+    [p1__69473#]
     (let
      [z
-      (-> p1__103477# plotly/plot :data first :z)
+      (-> p1__69473# plotly/plot :data first :z)
       all-vals
       (flatten z)]
      (every? (fn [v] (<= -1 v 1)) all-vals)))
@@ -1935,7 +1933,7 @@
     :w (repeatedly n rand)}
    tc/dataset
    (tc/add-columns
-    {:x (fn* [p1__103478#] (tcc/+ (:u p1__103478#) (:v p1__103478#)))})
+    {:x (fn* [p1__69474#] (tcc/+ (:u p1__69474#) (:v p1__69474#)))})
    (plotly/layer-correlation {:=zmin 0, :=zmax 1, :=colorscale :hot}))))
 
 
@@ -2033,8 +2031,8 @@
  t301_l1361
  (is
   ((fn*
-    [p1__103479#]
-    (= (-> p1__103479# plotly/plot :data first :type) :surface))
+    [p1__69475#]
+    (= (-> p1__69475# plotly/plot :data first :type) :surface))
    v299_l1349)))
 
 
@@ -2042,9 +2040,9 @@
  t303_l1364
  (is
   ((fn*
-    [p1__103480#]
+    [p1__69476#]
     (let
-     [z (-> p1__103480# plotly/plot :data first :z)]
+     [z (-> p1__69476# plotly/plot :data first :z)]
      (and (seq? z) (seq? (first z)) (> (count z) 0))))
    v299_l1349)))
 
@@ -2073,8 +2071,8 @@
  t309_l1386
  (is
   ((fn*
-    [p1__103481#]
-    (= (-> p1__103481# plotly/plot :data first :type) :image))
+    [p1__69477#]
+    (= (-> p1__69477# plotly/plot :data first :type) :image))
    v307_l1377)))
 
 
@@ -2082,8 +2080,8 @@
  t311_l1389
  (is
   ((fn*
-    [p1__103482#]
-    (some? (-> p1__103482# plotly/plot :data first :z)))
+    [p1__69478#]
+    (some? (-> p1__69478# plotly/plot :data first :z)))
    v307_l1377)))
 
 
@@ -2129,8 +2127,8 @@
  t319_l1422
  (is
   ((fn*
-    [p1__103483#]
-    (= (-> p1__103483# plotly/plot :data first :type) :splom))
+    [p1__69479#]
+    (= (-> p1__69479# plotly/plot :data first :type) :splom))
    v317_l1413)))
 
 
@@ -2138,10 +2136,10 @@
  t321_l1425
  (is
   ((fn*
-    [p1__103484#]
+    [p1__69480#]
     (let
      [trace
-      (-> p1__103484# plotly/plot :data first)
+      (-> p1__69480# plotly/plot :data first)
       dims
       (:dimensions trace)]
      (and (seq? dims) (= (count dims) 4))))
@@ -2162,7 +2160,7 @@
 (deftest
  t324_l1440
  (is
-  ((fn* [p1__103485#] (> (-> p1__103485# plotly/plot :data count) 1))
+  ((fn* [p1__69481#] (> (-> p1__69481# plotly/plot :data count) 1))
    v322_l1430)))
 
 
