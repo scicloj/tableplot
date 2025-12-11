@@ -3,6 +3,7 @@
 
   Converts Entry IR to Vega-Lite specifications for SVG rendering."
   (:require [scicloj.tableplot.v1.aog.ir :as ir]
+            [scicloj.tableplot.v1.aog.themes :as themes]
             [clojure.data.json :as json]
             [applied-science.darkstar :as darkstar]
             [scicloj.kindly.v4.kind :as kind]))
@@ -379,7 +380,9 @@
 
   Args:
   - entries: Vector of Entry maps or single Entry map
-  - opts: Optional map (reserved for future use, currently ignored)
+  - opts: Optional map with keys:
+    - :theme - Theme keyword (:tableplot-subtle, :tableplot-balanced, :tableplot-bold, 
+               :ggplot2, :vega) or custom theme map. Defaults to :tableplot-balanced
 
   Returns:
   - Vega-Lite spec with Kindly :vega-lite kind metadata"
@@ -387,8 +390,9 @@
    (vegalite entries {}))
   ([entries opts]
    (let [entries-vec (if (vector? entries) entries [entries])
-         spec (entries->vegalite-spec entries-vec)]
-     ;; Don't pass opts to kind/vega-lite - it expects Kindly options not Vega-Lite options
+         base-spec (entries->vegalite-spec entries-vec)
+         theme (get opts :theme :tableplot-balanced)
+         spec (themes/apply-theme base-spec theme)]
      (kind/vega-lite spec))))
 
 ;;; =============================================================================

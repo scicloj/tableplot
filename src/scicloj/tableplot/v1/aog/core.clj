@@ -336,6 +336,8 @@
   - layers: Single layer or vector of layers (result of aog/*)
   - opts: Optional map with keys:
     - :backend - Backend to use (:vegalite or :plotly, default :vegalite)
+    - :theme - Theme keyword (:tableplot-subtle, :tableplot-balanced, :tableplot-bold, 
+               :ggplot2, :vega) or custom theme map. Defaults to :tableplot-balanced
     - :layout - Layout configuration (Plotly only)
 
   Returns:
@@ -350,7 +352,9 @@
                (aog/mapping :bill-length :bill-depth {:color :species})
                (aog/+ (aog/scatter {:alpha 0.5})
                       (aog/linear)))
-        {:layout {:title \"Penguins\"}})"
+        {:theme :tableplot-bold})
+  
+  (draw layers {:theme :ggplot2})"
   ([layers]
    (draw layers {}))
   ([layers opts]
@@ -364,7 +368,7 @@
 
      (case backend
        :vegalite
-       ;; Use Vega-Lite backend
+       ;; Use Vega-Lite backend - pass opts through for theme
        ((requiring-resolve 'scicloj.tableplot.v1.aog.vegalite/vegalite)
         entries opts)
 
