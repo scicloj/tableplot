@@ -17,6 +17,7 @@ Tableplot is a Clojure data visualization library inspired by ggplot2's layered 
 - Composable plotting functions with pipeline-friendly API
 - Statistical transformations (smoothing, histograms, density plots)
 - Multiple plot types (scatter, line, bar, heatmap, 3D surfaces, etc.)
+- **Dataflow system with term rewriting and explicit dependency tracking**
 
 ## Project Structure
 
@@ -24,13 +25,21 @@ Tableplot is a Clojure data visualization library inspired by ggplot2's layered 
 
 ```
 src/scicloj/tableplot/v1/
-├── plotly.clj          # Main Plotly backend implementation
+├── plotly.clj          # Main Plotly backend implementation (~90 substitution keys)
 ├── hanami.clj          # Vega-Lite backend via Hanami
 ├── transpile.clj       # Cross-backend transpilation
-├── dag.clj             # Dependency-aware function system
-├── xform.clj           # Data transformations
+├── dag.clj             # Dependency-aware function system (Rule 7: explicit dependencies)
+├── xform.clj           # Term rewriting engine (Rules 1-6: substitution semantics)
+├── cache.clj           # Memoization layer for expensive computations
 ├── util.clj            # Utility functions
-└── cache.clj           # Caching mechanisms
+├── palette.clj         # Color/size/symbol palette management
+└── aog/                # NEW: AlgebraOfGraphics-style API (beta)
+    ├── core.clj        # Algebraic layer composition (* and + operators)
+    ├── ir.clj          # Intermediate representation with Malli schemas
+    ├── processing.clj  # Layer → ProcessedLayer → Entry pipeline
+    ├── transforms.clj  # Statistical transformations (linear, smooth, density, histogram)
+    ├── scales.clj      # Automatic scale inference (categorical & continuous)
+    └── plotly.clj      # Plotly.js backend for AoG
 ```
 
 ### Documentation and Examples
@@ -41,19 +50,23 @@ notebooks/tableplot_book/  # Example notebooks and tutorials
 ├── plotly_walkthrough.clj    # Plotly API examples
 ├── hanami_walkthrough.clj    # Hanami/Vega-Lite examples
 ├── plotly_reference.clj      # Complete Plotly reference
-└── transpile_reference.clj   # Cross-backend examples
+├── transpile_reference.clj   # Cross-backend examples
+├── dataflow_walkthrough.clj  # Complete dataflow system documentation
+├── dataflow_design_analysis.md  # Deep analysis for future GG systems
+└── aog_demo.clj              # NEW: AlgebraOfGraphics API examples (20+ plots)
 ```
 
 ## Core Dependencies
 
 ### Required Dependencies
 - **tablecloth** (7.029.2) - Dataset manipulation and processing
-- **aerial.hanami** (0.20.1) - Vega-Lite template system
+- **aerial.hanami** (0.20.1) - Vega-Lite template system (inspiration for xform)
 - **metamorph.ml** (1.2) - Machine learning pipeline integration
 - **fastmath** (3.0.0-alpha3) - Mathematical operations and statistics
 - **kindly** (4-beta16) - Visualization standard compliance
 - **tempfiles** (1-beta1) - Temporary file management
 - **std.lang** (4.0.10) - Language utilities
+- **com.rpl/specter** - Recursive tree transformation in xform
 
 ### Development Dependencies
 - **noj** (2-beta18) - Data science stack (dev/test)
@@ -98,6 +111,51 @@ Vega-Lite backend for web-standard visualizations.
 (hanami/facet context facet-config)
 ```
 
+#### `scicloj.tableplot.v1.xform`
+Core term rewriting engine (direct port of Hanami's xform with dataset pass-through).
+
+**Key Function:**
+```clojure
+;; Apply substitution rules to template with environment
+(xform/xform template env)
+(xform/xform template :key1 val1 :key2 val2)
+
+;; Example:
+(xform/xform
+  {:x :X, :y :Y}
+  {:X :year, :Y :temperature})
+;; => {:x :year, :y :temperature}
+```
+
+#### `scicloj.tableplot.v1.dag`
+Explicit dependency tracking (Rule 7 addition to Hanami's model).
+
+**Key Macros:**
+```clojure
+;; Define function with declared dependencies
+(dag/defn-with-deps area->radius
+  "Compute radius from area"
+  [Area]  ; dependency list
+  (Math/sqrt (/ Area Math/PI)))
+
+;; Anonymous function with dependencies
+(dag/fn-with-deps nil [X Y] (+ X Y))
+
+;; Metadata inspection
+(:scicloj.tableplot.v1.dag/dep-ks (meta area->radius))
+;; => [:Area]
+```
+
+#### `scicloj.tableplot.v1.cache`
+Memoization for expensive operations.
+
+**Key Macro:**
+```clojure
+;; Execute with fresh cache
+(cache/with-clean-cache
+  (xform/xform template env))
+```
+
 ### Common Usage Patterns
 
 #### Basic Plotting Pipeline
@@ -123,44 +181,199 @@ Vega-Lite backend for web-standard visualizations.
 
 ## Architecture
 
+### The Dataflow System: Term Rewriting with Explicit Dependencies
+
+Tableplot's core innovation is a **two-layer dataflow system**:
+
+#### Layer 1: Six Core Substitution Rules (from Hanami)
+
+Given a term `T` and an environment `E`:
+
+1. **Lookup** — If `T` is a key in `E`, replace with `E[T]` and recurse
+2. **Identity** — If `T` is a key not in `E`, it's a fixpoint (stop)
+3. **Function Application** — If `T` is a function, apply to `E` and recurse
+4. **Collection Recursion** — If `T` is a map/vector, recurse on elements
+5. **Template Defaults** — `::ht/defaults` merges into environment for nested scope
+6. **Value Pass-through** — Primitives, datasets, etc. pass through unchanged
+
+**Implementation**: `xform.clj` using Specter for recursive transformation
+
+**Example**:
+```clojure
+(xform/xform
+  {:a :B, :c :D}
+  {:B :C, :C 10, :D 20})
+;; Reduction: :a → :B → :C → 10 (fixpoint)
+;; Result: {:a 10, :c 20}
+```
+
+#### Layer 2: Explicit Dependencies (Tableplot Addition)
+
+**Rule 7: Declared Dependencies** — Functions declare parameter requirements via metadata
+
+**Implementation**: `dag.clj` provides `defn-with-deps` macro
+
+**Example**:
+```clojure
+(dag/defn-with-deps smooth-stat
+  "Fit regression model"
+  [=dataset =x =y =group]  ; Explicit dependencies
+  (if =group
+    (group-and-fit =dataset =group =x =y)
+    (fit-model =dataset =x =y)))
+
+;; The system:
+;; 1. Sees :=stat → smooth-stat
+;; 2. Reads metadata: needs [=dataset =x =y =group]
+;; 3. Resolves each dependency (with caching)
+;; 4. Calls function with resolved values
+;; 5. Caches result
+```
+
+#### Why This Solves Grammar-of-Graphics Problems
+
+**Parameter Threading**: Keys like `:=x`, `:=y`, `:=dataset` flow automatically through substitution—no manual passing needed.
+
+**Statistical Pipelines**: Stats declare dependencies, compute once, cache results. Grouping variables respected automatically.
+
+**Layered Composition**: Each layer inherits base environment via nested `::ht/defaults`, adds local parameters.
+
+**Hierarchical Scoping**: Nested defaults create local contexts (e.g., facet-specific overrides).
+
 ### Dependency-Aware Function System (DAG)
+
 The library uses a sophisticated dependency system defined in `dag.clj`:
 
 - `defn-with-deps` macro creates functions that declare their data dependencies
-- Automatic caching of intermediate computations
+- Automatic caching of intermediate computations via `cache/cached-xform-k`
 - Lazy evaluation of expensive operations
 - Dependency resolution for complex visualization pipelines
+- **Metadata-based introspection**: Query function dependencies before execution
 
 ### Data Flow Architecture
+
 1. **Input Dataset** (Tablecloth/tech.ml.dataset)
-2. **Layer Functions** apply aesthetic mappings and transformations
-3. **Statistical Computations** (optional) - smoothing, binning, etc.
-4. **Backend-Specific Rendering** (Plotly/Vega-Lite/ECharts)
-5. **Kindly Metadata** added for tool integration
-6. **Visualization Output** (JSON specifications)
+2. **Layer Functions** create templates with `::ht/defaults` (environment)
+3. **Base Function** merges ~90 standard substitution keys
+4. **Template Composition** via pipeline (`->`) or direct merge
+5. **Statistical Computations** (optional) - declare dependencies, cache results
+6. **Term Rewriting** (`xform/xform`) resolves all substitution keys to fixpoint
+7. **Trace Generation** (`submap->traces`) converts layers to Plotly.js/Vega-Lite format
+8. **Kindly Metadata** added for tool integration
+9. **Visualization Output** (JSON specifications)
+
+**Data Pipeline Pattern** (in Plotly backend):
+```
+=dataset → =stat → =x-after-stat → layer :x → trace :x
+          ↓
+    (statistical transformation with caching)
+```
 
 ### Cross-Backend Compatibility
+
 The `transpile.clj` namespace enables cross-backend functionality:
 - Convert between Plotly and Vega-Lite specifications
 - Maintain feature parity across backends
 - Backend-specific optimizations
+
+### Key Implementation Details
+
+**Fixpoint Computation**:
+- `xform` applies rules recursively until no changes occur
+- Self-reference (`:X → :X`) detected as fixpoint
+- Missing keys also fixpoints (`:Y` not in environment → `:Y`)
+
+**Recursive Removal (`hc/RMV`)**:
+- Sentinel value for optional parameters
+- Collections containing only `RMV` removed recursively
+- Enables clean output without unused keys
+
+**Caching Strategy**:
+- Cache key: `[substitution-key entire-environment]`
+- Same key + different environment → separate cache entries
+- Multiple references to same key in same environment → computed once
+- Scoped to `with-clean-cache` blocks
+
+**Type Inference**:
+- Inspect dataset column metadata (`:categorical-data`)
+- Check column types (`:numerical` vs others)
+- Infer `:nominal` or `:quantitative` for aesthetic mappings
+
+**Grouping**:
+- Categorical aesthetics (`:=color`, `:=size`, `:=symbol`) create groups
+- Stats compute separately per group
+- Palette assignment cached for consistency
 
 ## Implementation Patterns
 
 ### Aesthetic Mappings
 - Keys prefixed with `=` (e.g., `:=x`, `:=y`, `:=color`)
 - Automatic type inference from dataset columns
-- Support for continuous and categorical mappings
+- Support for continuous (`:quantitative`) and categorical (`:nominal`) mappings
 
-### Template System
-- Built on Hanami's substitution key system
-- Composable plot specifications
-- Default value propagation and merging
+### Template System (Substitution Keys)
+
+**Standard defaults** (~90 keys in `plotly.clj`):
+```clojure
+[:=dataset hc/RMV "The data to be plotted"]
+[:=x :x "The column for the x axis"]
+[:=y :y "The column for the y axis"]
+[:=color hc/RMV "The column to determine color"]
+[:=stat :=dataset "Data after statistical transformation"]
+[:=x-after-stat :=x "X column after stat"]
+[:=inferred-group submap->group "Inferred from aesthetics"]
+[:=traces submap->traces "Final Plotly.js traces"]
+;; ... ~80 more
+```
+
+**Key categories**:
+- **Data pipeline**: `=dataset`, `=stat`, `=x-after-stat`
+- **Aesthetics**: `=x`, `=y`, `=color`, `=size`, `=symbol`
+- **Types**: `=x-type`, `=color-type` (inferred)
+- **Grouping**: `=inferred-group`, `=group`
+- **Output**: `=traces`, `=layout`, `=layers`
+
+### Template Composition Patterns
+
+**Nested Defaults** (hierarchical environments):
+```clojure
+{:title :Title
+ :section {:heading :Heading
+           ::ht/defaults {:Heading "Default Heading"}}
+ ::ht/defaults {:Title "Default Title"}}
+
+;; Inner scope has access to both defaults
+;; User substitutions override nested defaults
+```
+
+**Layer Composition**:
+```clojure
+(defn layer [dataset-or-template layer-spec submap]
+  (-> template
+      (update-in [::ht/defaults :=layers]
+                 (fnil conj [])
+                 (update layer-spec ::ht/defaults merge submap))))
+
+;; Each layer: inherits base environment + adds local parameters
+```
+
+**Conditional Inclusion**:
+```clojure
+;; Function can return RMV to remove parameter
+{:subtitle :Subtitle
+ ::ht/defaults
+ {:ShowSubtitle false
+  :Subtitle (fn [{:keys [ShowSubtitle]}]
+              (if ShowSubtitle "A subtitle" hc/RMV))}}
+;; Result: {:subtitle} removed
+```
 
 ### Caching Strategy
-- Intermediate results cached by content hash
-- Statistical computations cached separately
-- Cache invalidation on data changes
+
+- Intermediate results cached by `[key environment]` pair
+- Statistical computations cached separately via `dag/cached-xform-k`
+- Cache invalidation via `cache/with-clean-cache` macro
+- Palette assignments cached for visual consistency
 
 ## Development Workflow
 
@@ -207,7 +420,7 @@ The project uses Clay's `kind/test-last` mechanism for generating unit tests fro
 - `plotly_reference.clj`: 67 tests (36 original + 31 new spec-level tests)
 - `plotly_walkthrough.clj`: 24 tests covering key examples and patterns
 - `hanami_walkthrough.clj`: 19 tests covering Hanami/Vega-Lite API
-- Total: 110 comprehensive API tests
+- **Total: 110 comprehensive API tests**
 
 **Common Test Patterns:**
 
@@ -279,19 +492,44 @@ clj -T:build deploy
 ### Adding New Plot Types
 1. Define layer function in appropriate backend namespace
 2. Implement aesthetic mapping logic
-3. Add statistical transformation if needed
+3. Add statistical transformation if needed (using `dag/defn-with-deps`)
 4. Update documentation and examples
 
+**Pattern**:
+```clojure
+(defn layer-new-type
+  [dataset-or-template submap]
+  (layer dataset-or-template
+         layer-base
+         (merge {:=mark :new-type
+                 :=stat default-stat}
+                submap)))
+```
+
 ### Custom Statistical Transformations
-1. Implement stat function with `defn-with-deps`
-2. Define data dependencies and caching strategy
-3. Integrate with existing layer functions
+
+**Pattern**:
+```clojure
+(dag/defn-with-deps my-stat
+  "Documentation"
+  [=dataset =x =y =group]  ; Declare dependencies
+  (if =group
+    (-> =dataset
+        (tc/group-by =group)
+        (tc/aggregate transform-fn))
+    (transform-fn =dataset)))
+
+;; Use in layer:
+{:=stat my-stat}
+```
 
 ### New Backend Support
 1. Create new namespace following `plotly.clj` pattern
 2. Implement core functions: `base`, `plot`, layer functions
-3. Add transpilation support in `transpile.clj`
-4. Update cross-backend tests
+3. Define substitution keys (inspired by `standard-defaults`)
+4. Implement trace/spec generation function (like `submap->traces`)
+5. Add transpilation support in `transpile.clj`
+6. Update cross-backend tests
 
 ### Integration Points
 - **Kindly**: Add new visualization kinds
@@ -309,10 +547,11 @@ clj -T:build deploy
 
 ### Creating Custom Statistical Functions
 ```clojure
-(defn-with-deps custom-stat [dataset x-col y-col]
-  [dataset :=x :=y]  ; dependencies
+(dag/defn-with-deps custom-stat
+  "Custom statistical transformation"
+  [=dataset =x =y]  ; dependencies
   ;; transformation logic
-  (tc/add-column dataset :computed-col computed-values))
+  (tc/add-column =dataset :computed-col computed-values))
 ```
 
 ### Cross-Backend Testing
@@ -322,5 +561,238 @@ clj -T:build deploy
 (plotly/layer-point viz-spec)
 (hanami/layer-point viz-spec)
 ```
+
+### Debugging Substitution Chains
+
+**Check template before realization**:
+```clojure
+(def template
+  (-> dataset
+      (plotly/base {:=x :year})
+      (plotly/layer-point {})))
+
+;; Inspect defaults
+(::ht/defaults template)
+
+;; Check layer configuration
+(-> template ::ht/defaults :=layers first ::ht/defaults)
+```
+
+**Inspect function dependencies**:
+```clojure
+(:scicloj.tableplot.v1.dag/dep-ks (meta smooth-stat))
+;; => [:=dataset :=x :=y :=group]
+```
+
+**Test xform directly**:
+```clojure
+(require '[scicloj.tableplot.v1.xform :as xform])
+(require '[scicloj.tableplot.v1.cache :as cache])
+
+(cache/with-clean-cache
+  (xform/xform
+    {:result :X}
+    {:X :Y, :Y 10}))
+;; => {:result 10}
+```
+
+## Design Principles and Patterns
+
+### Comparison to Other Systems
+
+| Feature | Hanami | Tableplot |
+|---------|--------|-----------|
+| **Substitution** | Pure (Rules 1-6) | Pure + explicit deps (Rule 7) |
+| **Dependencies** | Implicit (via fixpoint) | Explicit (`dag/fn-with-deps`) |
+| **Caching** | None | Built-in memoization |
+| **Introspection** | Must run xform | Metadata inspection |
+| **Type Dispatch** | Yes (`subkeyfns`) | No (explicit functions) |
+| **Target** | Vega-Lite | Plotly.js (+ Vega-Lite) |
+
+### Why Explicit Dependencies?
+
+1. **Introspection**: Query "what does this need?" without running
+2. **Caching**: Expensive stats computed once, cached automatically
+3. **Debugging**: Clear dependency graph, easier to trace errors
+4. **Tooling**: Can generate dependency visualizations
+
+### Mathematical Foundation
+
+The six rules form a **small-step operational semantics** for term rewriting:
+
+```
+T, E → T'  (term T in environment E reduces to term T')
+```
+
+The system computes the **transitive closure**: reduce until reaching a fixpoint where no rules apply.
+
+Connections to formal systems:
+- **Lambda calculus**: Function application and substitution
+- **Rewriting systems**: Confluence and termination properties
+- **Fixed-point theory**: Iterative approximation of solutions
+
+### Limitations and Future Work
+
+**Current Limitations**:
+1. No cycle detection (`:A → :B → :A` causes stack overflow)
+2. Cryptic error messages when substitution fails
+3. Difficult to debug deep substitution chains
+4. No faceting yet (small multiples)
+5. Cache scope management could be more flexible
+
+**Future Directions** (see `dataflow_design_analysis.md`):
+1. Implement faceting (`facet-wrap`, `facet-grid`)
+2. Add validation layer (catch typos, missing columns early)
+3. Improve error messages (track substitution path)
+4. Build dependency graph visualizer
+5. Consider separating concerns (substitution / dependencies / caching)
+
+## AlgebraOfGraphics API (Beta)
+
+### Overview
+
+A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algebraic composition of visualizations through multiplication (`*`) and addition (`+`) operators.
+
+**Status**: Beta implementation with core features working, visual validation pending
+
+**Namespace**: `scicloj.tableplot.v1.aog.*`
+
+### Core Concepts
+
+**Algebraic Operations**:
+- `*` (multiplication) - Merge layer specifications (Cartesian product)
+- `+` (addition) - Overlay multiple layers
+
+**Basic Usage**:
+```clojure
+(require '[scicloj.tableplot.v1.aog.core :as aog])
+
+;; Simple scatter plot
+(aog/draw
+  (aog/* (aog/data dataset)
+         (aog/mapping :x :y)
+         (aog/scatter {:alpha 0.7})))
+
+;; Colored by categorical variable
+(aog/draw
+  (aog/* (aog/data dataset)
+         (aog/mapping :x :y {:color :species})
+         (aog/scatter {:alpha 0.6})))
+
+;; Overlay scatter + linear regression
+(aog/draw
+  (aog/* (aog/data dataset)
+         (aog/mapping :x :y {:color :species})
+         (aog/+ (aog/scatter {:alpha 0.5})
+                (aog/linear))))
+```
+
+### Architecture
+
+**Pipeline**: Layer → ProcessedLayer → Entry → Plotly.js
+
+1. **Layer** (user-facing): Data + mappings + transformation + plottype
+2. **ProcessedLayer**: After transformations, with scale information
+3. **Entry** (IR): Backend-agnostic specification
+4. **Plotly.js**: Final rendered specification
+
+**Key Features**:
+- ✅ Grouped transformations (linear, smooth respect categorical aesthetics)
+- ✅ Automatic scale inference (categorical colors, continuous sizes)
+- ✅ Statistical transformations (linear regression, smoothing, density, histogram)
+- ✅ Multiple data formats (maps, vectors, tablecloth datasets)
+- ✅ Malli schema validation throughout pipeline
+- ⏳ Faceting (designed but not implemented)
+
+### Available Functions
+
+**Layer Construction**:
+```clojure
+(aog/data dataset)           ; Attach data
+(aog/mapping :x :y {:color :species})  ; Specify aesthetics
+(aog/scatter {:alpha 0.5})   ; Scatter plot
+(aog/line {:width 2})        ; Line plot
+(aog/bar)                    ; Bar plot
+```
+
+**Statistical Transformations**:
+```clojure
+(aog/linear)                 ; Linear regression (grouped by aesthetics)
+(aog/smooth)                 ; Smoothing (moving average)
+(aog/density)                ; Kernel density estimation
+(aog/histogram {:bins 20})   ; Histogram with configurable bins
+```
+
+**Composition**:
+```clojure
+(aog/* layer1 layer2)        ; Merge specifications
+(aog/+ layer1 layer2)        ; Overlay on same plot
+(aog/draw layers)            ; Render to Plotly.js
+```
+
+### Implementation Details
+
+**Grouping/Split-Apply-Combine**:
+- Transformations identify categorical aesthetics (`:color`, `:shape`, `:linetype`)
+- Data split by groups using `tc/group-by`
+- Transformations applied per group
+- Results combined with group columns preserved
+
+**Scale Inference**:
+- Categorical scales: domain extracted from unique values, mapped to color palette
+- Continuous scales: domain from min/max, mapped to visual ranges
+- Default Plotly/D3 color palette for categorical variables
+
+**Plotly.js Generation**:
+- Scatter plots: colors in `:marker`
+- Line plots: colors in `:line`
+- Automatic detection of categorical vs hex color codes
+- Implicit y-columns for density (`:density`) and histogram (`:count`)
+
+**Malli Validation**:
+- All IR structures validated with schemas
+- Clear error messages on validation failure
+- Schema inspection available via `ir/schemas`
+
+### Known Limitations
+
+1. **Visual validation pending**: Specs structurally correct but not visually tested in browser
+2. **No faceting**: Infrastructure exists but not implemented
+3. **No legend generation testing**: Relying on Plotly.js defaults
+4. **Simple smoothing**: Uses moving average, not true loess
+5. **Limited plot types**: Only scatter, line, bar, histogram currently
+
+### Next Steps for AoG
+
+**Immediate (next session)**:
+- Visual validation in notebook/browser
+- Test with larger, real datasets
+- Verify grouped transformations render correctly
+- Check color palette distinctiveness
+
+**Future enhancements**:
+- Implement faceting (row/col facets)
+- Add more plot types (box, violin, heatmap)
+- Improve smoothing algorithm
+- Custom color palettes
+- Scale customization
+- Integration with main Tableplot API
+
+**Reference**: See `notebooks/tableplot_book/aog_demo.clj` for 20+ working examples
+
+## Reference Documentation
+
+For deep dives into the dataflow system:
+
+- **`notebooks/tableplot_book/dataflow_walkthrough.clj`**: Complete tutorial on the six rules, dependency tracking, caching, and practical examples
+- **`notebooks/tableplot_book/dataflow_design_analysis.md`**: Comprehensive analysis for future grammar-of-graphics work, including:
+  - Full implementation details (xform.clj, dag.clj, cache.clj)
+  - Tableplot patterns in practice (~90 substitution keys explained)
+  - Comparison framework for GG systems
+  - Conversion patterns (e.g., Julia's Algebra of Graphics → Tableplot)
+  - Alternative design considerations
+  - Open questions and limitations
+  - Future directions for research
+- **`notebooks/tableplot_book/aog_demo.clj`**: AlgebraOfGraphics API examples and comprehensive feature showcase
 
 This summary provides the essential information needed for an LLM to understand and work effectively with the Tableplot codebase, including its architecture, APIs, patterns, and extension points.
