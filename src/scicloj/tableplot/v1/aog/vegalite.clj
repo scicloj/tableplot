@@ -66,14 +66,17 @@
   Returns:
   - Map with :values key containing row-oriented data"
   [positional named]
-  (let [;; Determine field names based on number of positional args
-        pos-fields (case (count positional)
+  (let [;; Filter out empty positional arrays (e.g., from density with 1D data)
+        non-empty-positional (vec (filter seq positional))
+
+        ;; Determine field names based on number of non-empty positional args
+        pos-fields (case (count non-empty-positional)
                      0 []
                      1 [:x]
                      2 [:x :y]
                      3 [:x :y :z]
                      (concat [:x :y :z]
-                             (map #(keyword (str "pos" %)) (range (- (count positional) 3)))))
+                             (map #(keyword (str "pos" %)) (range (- (count non-empty-positional) 3)))))
 
         ;; Extract data arrays from named attributes (for color, size, etc.)
         named-data-keys (filter #(let [v (get named %)]
@@ -82,8 +85,8 @@
                                 (keys named))
 
         ;; Create row maps
-        n-rows (if (seq positional)
-                 (count (first positional))
+        n-rows (if (seq non-empty-positional)
+                 (count (first non-empty-positional))
                  (if (seq named-data-keys)
                    (count (get named (first named-data-keys)))
                    0))
@@ -92,10 +95,10 @@
         rows (vec
               (for [i (range n-rows)]
                 (merge
-                 ;; Positional fields
+                 ;; Positional fields - only from non-empty arrays
                  (into {} (map-indexed (fn [idx arr]
                                          [(nth pos-fields idx) (nth arr i)])
-                                       positional))
+                                       non-empty-positional))
                  ;; Named data fields - keep as keywords
                  (into {} (map (fn [k]
                                  [k (nth (get named k) i)])
