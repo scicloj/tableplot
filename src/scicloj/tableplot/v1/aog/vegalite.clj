@@ -381,8 +381,10 @@
   Args:
   - entries: Vector of Entry maps or single Entry map
   - opts: Optional map with keys:
-    - :theme - Theme keyword (:tableplot-subtle, :tableplot-balanced, :tableplot-bold, 
+    - :theme - Theme keyword (:tableplot-subtle, :tableplot-balanced, :tableplot-bold,
                :ggplot2, :vega) or custom theme map. Defaults to :tableplot-balanced
+    - :width - Width in pixels (default: 600)
+    - :height - Height in pixels (default: 400)
 
   Returns:
   - Vega-Lite spec with Kindly :vega-lite kind metadata"
@@ -392,7 +394,11 @@
    (let [entries-vec (if (vector? entries) entries [entries])
          base-spec (entries->vegalite-spec entries-vec)
          theme (get opts :theme :tableplot-balanced)
-         spec (themes/apply-theme base-spec theme)]
+         spec-with-theme (themes/apply-theme base-spec theme)
+         ;; Allow width/height override from opts
+         spec (cond-> spec-with-theme
+                (:width opts) (assoc :width (:width opts))
+                (:height opts) (assoc :height (:height opts)))]
      (kind/vega-lite spec))))
 
 ;;; =============================================================================

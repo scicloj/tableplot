@@ -336,8 +336,10 @@
   - layers: Single layer or vector of layers (result of aog/*)
   - opts: Optional map with keys:
     - :backend - Backend to use (:vegalite or :plotly, default :vegalite)
-    - :theme - Theme keyword (:tableplot-subtle, :tableplot-balanced, :tableplot-bold, 
+    - :theme - Theme keyword (:tableplot-subtle, :tableplot-balanced, :tableplot-bold,
                :ggplot2, :vega) or custom theme map. Defaults to :tableplot-balanced
+    - :width - Width in pixels (default: 600)
+    - :height - Height in pixels (default: 400)
     - :layout - Layout configuration (Plotly only)
 
   Returns:
@@ -352,9 +354,9 @@
                (aog/mapping :bill-length :bill-depth {:color :species})
                (aog/+ (aog/scatter {:alpha 0.5})
                       (aog/linear)))
-        {:theme :tableplot-bold})
-  
-  (draw layers {:theme :ggplot2})"
+        {:theme :tableplot-bold
+         :width 800
+         :height 600})"
   ([layers]
    (draw layers {}))
   ([layers opts]

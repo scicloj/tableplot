@@ -44,7 +44,9 @@
 ;; Base ggplot2-inspired config
 (def ggplot2-base
   "Base ggplot2 aesthetic - gray background, white grid"
-  {:view {:stroke "transparent"
+  {:width 600   ;; Default width for notebooks/web
+   :height 400  ;; Default height (3:2 aspect ratio)
+   :view {:stroke "transparent"
           :strokeWidth 0
           :fill "#EBEBEB"} ;; Gray plot area background
    :axis {:grid true
@@ -156,15 +158,26 @@
 
 (defn apply-theme
   "Apply theme config to a Vega-Lite spec.
-  
+
+  Width and height are applied at top-level of spec.
+  Other theme settings go in :config.
+
   Args:
   - spec: Vega-Lite specification map
   - theme: Theme keyword or custom config map
-  
+
   Returns:
   - Spec with theme applied"
   [spec theme]
   (let [theme-config (get-theme theme)]
     (if theme-config
-      (assoc spec :config theme-config)
+      (let [;; Extract width/height from theme (they go at top level)
+            width (:width theme-config)
+            height (:height theme-config)
+            ;; Rest goes in :config
+            config (dissoc theme-config :width :height)]
+        (cond-> spec
+          true (assoc :config config)
+          width (assoc :width width)
+          height (assoc :height height)))
       spec))) ;; No config = use Vega defaults
