@@ -131,8 +131,26 @@
         encoding-with-size (if size-data
                              (assoc encoding-with-color :size {:field :size
                                                                :type :quantitative})
-                             encoding-with-color)]
-    encoding-with-size))
+                             encoding-with-color)
+
+        ;; Add faceting channels - facet/col/row are special aesthetics
+        facet-data (get named :facet)
+        col-data (get named :col)
+        row-data (get named :row)
+
+        encoding-with-facet (cond
+                              facet-data
+                              (assoc encoding-with-size :facet {:field :facet
+                                                                :type (infer-type facet-data)})
+                              col-data
+                              (assoc encoding-with-size :column {:field :col
+                                                                 :type (infer-type col-data)})
+                              row-data
+                              (assoc encoding-with-size :row {:field :row
+                                                              :type (infer-type row-data)})
+                              :else
+                              encoding-with-size)]
+    encoding-with-facet))
 
 ;;; =============================================================================
 ;;; Mark properties
@@ -218,11 +236,20 @@
                (merge {:type mark-type} mark-props)
                mark-type)
 
+        ;; Check if this spec uses faceting
+        has-faceting? (or (contains? encoding :column)
+                          (contains? encoding :row)
+                          (contains? encoding :facet))
+
         ;; Construct spec with keyword keys
-        spec {:$schema "https://vega.github.io/schema/vega-lite/v5.json"
-              :mark mark
-              :encoding encoding
-              :data data}]
+        ;; Add width/height and autosize for faceted plots to ensure they display properly
+        spec (cond-> {:$schema "https://vega.github.io/schema/vega-lite/v5.json"
+                      :mark mark
+                      :encoding encoding
+                      :data data}
+               has-faceting? (assoc :width 200
+                                    :height 200
+                                    :autosize {:type "fit" :contains "padding"}))]
 
     spec))
 
@@ -324,9 +351,21 @@
                             :data data}))
                        entries)
 
+          ;; Check if any layer has faceting
+          has-faceting? (some (fn [layer]
+                                (let [enc (:encoding layer)]
+                                  (or (contains? enc :column)
+                                      (contains? enc :row)
+                                      (contains? enc :facet))))
+                              layers)
+
           ;; Construct layered spec with keyword keys
-          spec {:$schema "https://vega.github.io/schema/vega-lite/v5.json"
-                :layer layers}]
+          ;; Add width/height and autosize for faceted plots
+          spec (cond-> {:$schema "https://vega.github.io/schema/vega-lite/v5.json"
+                        :layer layers}
+                 has-faceting? (assoc :width 200
+                                      :height 200
+                                      :autosize {:type "fit" :contains "padding"}))]
 
       spec)))
 

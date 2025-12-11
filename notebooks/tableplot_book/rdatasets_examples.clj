@@ -7,8 +7,7 @@
 (ns tableplot-book.rdatasets-examples
   (:require [scicloj.tableplot.v1.aog.core :as aog]
             [scicloj.metamorph.ml.rdatasets :as rdatasets]
-            [tablecloth.api :as tc]
-            [scicloj.kindly.v4.kind :as kind]))
+            [tablecloth.api :as tc]))
 
 ;; ## Dataset Overview
 ;;
@@ -23,7 +22,7 @@
 (def mtcars (rdatasets/datasets-mtcars))
 
 ;; Let's examine the structure:
-(kind/table mtcars)
+mtcars
 
 ;; ### Basic Scatter Plot
 ;;
@@ -69,7 +68,7 @@
 
 (def iris (rdatasets/datasets-iris))
 
-(kind/table iris)
+iris
 
 ;; ### Sepal Dimensions
 ;;
@@ -95,7 +94,7 @@
 
 (def penguins (rdatasets/palmerpenguins-penguins))
 
-(kind/table penguins)
+penguins
 
 ;; ### Bill Dimensions by Species
 ;;
@@ -123,7 +122,7 @@
 
 ;; Show first few rows and size:
 (println "Diamonds dataset:" (tc/row-count diamonds) "rows")
-(kind/table (tc/head diamonds 10))
+(tc/head diamonds 10)
 
 ;; ### Carat vs Price
 ;;
@@ -161,7 +160,7 @@
 (def flights (rdatasets/nycflights13-flights))
 
 (println "Flights dataset:" (tc/row-count flights) "rows")
-(kind/table (tc/head flights))
+(tc/head flights)
 
 ;; ### Sample of Flights
 ;;
@@ -201,7 +200,7 @@
 
 (def economics (rdatasets/ggplot2-economics))
 
-(kind/table economics)
+economics
 
 ;; ### Unemployment Over Time
 ;;
@@ -227,7 +226,7 @@
 
 (def gapminder (rdatasets/gapminder-gapminder))
 
-(kind/table (tc/head gapminder))
+(tc/head gapminder)
 
 ;; ### Life Expectancy vs GDP (2007)
 ;;
@@ -240,6 +239,45 @@
         (aog/mapping :gdp-percap :life-exp {:color :continent :size :pop})
         (aog/scatter)))
 
+;; ## Example 8: Faceting
+
+;; ### Penguins Faceted by Island
+;;
+;; Faceting creates small multiples - separate panels for each category.
+;; Colors remain consistent across facets automatically.
+
+(aog/draw
+ (aog/* (aog/data penguins)
+        (aog/mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
+        (aog/scatter)))
+
+;; ### Iris Faceted by Species - Column Layout
+;;
+;; Use `:col` for horizontal facets:
+
+(aog/draw
+ (aog/* (aog/data iris)
+        (aog/mapping :sepal-length :sepal-width {:col :species})
+        (aog/scatter)))
+
+;; ### Row Faceting
+;;
+;; Use `:row` for vertical facets:
+
+(aog/draw
+ (aog/* (aog/data iris)
+        (aog/mapping :sepal-length :sepal-width {:row :species})
+        (aog/scatter)))
+
+;; ### Wrapped Faceting
+;;
+;; Use `:facet` for wrapped layout (automatically arranges facets in a grid):
+
+(aog/draw
+ (aog/* (aog/data iris)
+        (aog/mapping :sepal-length :sepal-width {:facet :species})
+        (aog/scatter)))
+
 ;; ## Summary
 ;;
 ;; These examples demonstrate the Vega-Lite backend working with:
@@ -249,9 +287,9 @@
 ;; - Time series data (economics)
 ;; - Multiple aesthetics (color, size)
 ;; - Statistical transformations (linear regression)
+;; - Faceting/small multiples with consistent color scales
 ;;
 ;; Next steps to explore:
-;; - Faceting/small multiples
 ;; - More statistical transformations (smooth, density, histogram)
-;; - Additional plot types (bar, area, etc.)
+;; - Additional plot types (bar, area, box, violin)
 ;; - Custom scales and themes
