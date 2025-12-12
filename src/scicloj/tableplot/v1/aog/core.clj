@@ -377,6 +377,95 @@
   (into [layer1] more-layers))
 
 ;;; =============================================================================
+;;; Scale transformations
+
+(defn log-scale
+  "Create a logarithmic scale specification.
+
+  Args:
+  - axis: :x or :y
+  - opts: Optional map with:
+    - :base - Log base (default 10)
+    - :domain - Custom domain [min max]
+    - :nice - Round domain to nice values (default true)
+
+  Example:
+  (log-scale :y {:base 10 :domain [1 1000]})"
+  ([axis]
+   (log-scale axis {}))
+  ([axis opts]
+   (let [base (get opts :base 10)
+         domain (get opts :domain)
+         nice (get opts :nice true)
+         scale-config (cond-> {:type "log" :base base}
+                        domain (assoc :domain (vec domain))
+                        nice (assoc :nice nice))
+         scale-key (keyword (str (name axis) "-scale"))]
+     (ir/layer nil nil [] {scale-key scale-config}))))
+
+(defn pow-scale
+  "Create a power scale specification.
+
+  Args:
+  - axis: :x or :y
+  - exponent: Power exponent (e.g., 2 for square, 0.5 for sqrt)
+  - opts: Optional map with :domain, :nice
+
+  Example:
+  (pow-scale :y 0.5)  ; square root scale"
+  ([axis exponent]
+   (pow-scale axis exponent {}))
+  ([axis exponent opts]
+   (let [domain (get opts :domain)
+         nice (get opts :nice true)
+         scale-config (cond-> {:type "pow" :exponent exponent}
+                        domain (assoc :domain domain)
+                        nice (assoc :nice nice))
+         scale-key (keyword (str (name axis) "-scale"))]
+     (ir/layer nil nil [] {scale-key scale-config}))))
+
+(defn sqrt-scale
+  "Create a square root scale specification.
+
+  Args:
+  - axis: :x or :y
+  - opts: Optional map with :domain, :nice
+
+  Example:
+  (sqrt-scale :y)"
+  ([axis]
+   (sqrt-scale axis {}))
+  ([axis opts]
+   (let [domain (get opts :domain)
+         nice (get opts :nice true)
+         scale-config (cond-> {:type "sqrt"}
+                        domain (assoc :domain domain)
+                        nice (assoc :nice nice))
+         scale-key (keyword (str (name axis) "-scale"))]
+     (ir/layer nil nil [] {scale-key scale-config}))))
+
+(defn scale-domain
+  "Set a custom domain for a scale.
+
+  Args:
+  - axis: :x or :y
+  - domain: Domain vector [min max] or list of categorical values
+  - opts: Optional map with :zero (include zero), :nice (round to nice values)
+
+  Example:
+  (scale-domain :y [0 100] {:zero true :nice true})"
+  ([axis domain]
+   (scale-domain axis domain {}))
+  ([axis domain opts]
+   (let [zero (get opts :zero)
+         nice (get opts :nice)
+         scale-config (cond-> {:domain domain}
+                        (some? zero) (assoc :zero zero)
+                        (some? nice) (assoc :nice nice))
+         scale-key (keyword (str (name axis) "-scale"))]
+     (ir/layer nil nil [] {scale-key scale-config}))))
+
+;;; =============================================================================
 ;;; Faceting
 
 (defn facet

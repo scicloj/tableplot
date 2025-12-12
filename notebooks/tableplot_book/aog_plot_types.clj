@@ -16,8 +16,7 @@
   {:x (vec (repeatedly 50 rand))
    :y (vec (repeatedly 50 rand))})
 
-^kind/md
-["**Scatter Plot** - Individual points"]
+;; **Scatter Plot** - Individual points
 
 (aog/draw
  (aog/* (aog/data scatter-data)
@@ -33,8 +32,7 @@
     {:x x
      :y (vec (map #(Math/sin %) x))}))
 
-^kind/md
-["**Line Plot** - Connected points (sine wave)"]
+;; **Line Plot** - Connected points (sine wave)
 
 (aog/draw
  (aog/* (aog/data line-data)
@@ -49,8 +47,7 @@
   {:category ["A" "B" "C" "D" "E"]
    :value [15 28 12 35 22]})
 
-^kind/md
-["**Bar Chart** - Categorical values"]
+;; **Bar Chart** - Categorical values
 
 (aog/draw
  (aog/* (aog/data bar-data)
@@ -66,8 +63,7 @@
    :product (vec (take 12 (cycle ["Product A" "Product B" "Product C"])))
    :sales (vec (repeatedly 12 #(+ 50 (rand-int 100))))})
 
-^kind/md
-["**Grouped Bar Chart** - Multiple series per category"]
+;; **Grouped Bar Chart** - Multiple series per category
 
 (aog/draw
  (aog/* (aog/data grouped-bar-data)
@@ -83,8 +79,7 @@
 (def hist-data
   {:values (vec (repeatedly 1000 #(* (- (rand) 0.5) 6)))})
 
-^kind/md
-["**Histogram** - Distribution of values (20 bins)"]
+;; **Histogram** - Distribution of values (20 bins)
 
 (aog/draw
  (aog/* (aog/data hist-data)
@@ -98,8 +93,7 @@
 (def density-data
   {:values (vec (repeatedly 500 #(+ 5 (* 2 (- (rand) 0.5)))))})
 
-^kind/md
-["**Density Plot** - Kernel density estimation (Gaussian kernel)"]
+;; **Density Plot** - Kernel density estimation (Gaussian kernel)
 
 (aog/draw
  (aog/* (aog/data density-data)
@@ -117,8 +111,7 @@
                 (repeatedly 30 #(+ 70 (* 15 (- (rand) 0.5))))
                 (repeatedly 30 #(+ 60 (* 8 (- (rand) 0.5))))))})
 
-^kind/md
-["**Box Plot** - Distribution quartiles and outliers"]
+;; **Box Plot** - Distribution quartiles and outliers
 
 (aog/draw
  (aog/* (aog/data boxplot-data)
@@ -129,8 +122,7 @@
 ;;
 ;; Distribution shape using kernel density, mirrored vertically.
 
-^kind/md
-["**Violin Plot** - Distribution density visualization"]
+;; **Violin Plot** - Distribution density visualization
 
 (aog/draw
  (aog/* (aog/data boxplot-data)
@@ -148,8 +140,7 @@
         y (vec (map #(+ (* 3 %) 2 (* 0.5 (- (rand) 0.5))) x))]
     {:x x :y y}))
 
-^kind/md
-["**Linear Regression** - Scatter with fitted line"]
+;; **Linear Regression** - Scatter with fitted line
 
 (aog/draw
  (aog/* (aog/data regression-data)
@@ -166,8 +157,7 @@
         y (vec (map #(+ (rand) (* 5 % %)) x))]
     {:x x :y y}))
 
-^kind/md
-["**LOESS Smoothing** - Scatter with smooth curve (quadratic data)"]
+;; **LOESS Smoothing** - Scatter with smooth curve (quadratic data)
 
 (aog/draw
  (aog/* (aog/data smooth-data)
@@ -186,8 +176,7 @@
      :y (vec (for [xi x yi y] yi))
      :value (vec (for [xi x yi y] (+ (* xi yi) (* 0.5 (rand)))))}))
 
-^kind/md
-["**Heatmap** - 2D grid with color-encoded values"]
+;; **Heatmap** - 2D grid with color-encoded values
 
 (aog/draw
  (aog/* (aog/data heatmap-data)
@@ -205,8 +194,7 @@
         y (vec (map #(+ (Math/sin %) (* 0.3 (- (rand) 0.5))) x))]
     {:x x :y y}))
 
-^kind/md
-["**Multi-layer Plot** - Three plot types combined: scatter (α=0.3) + line (α=0.5) + smooth (α=0.8)"]
+;; **Multi-layer Plot** - Three plot types combined: scatter (α=0.3) + line (α=0.5) + smooth (α=0.8)
 
 (aog/draw
  (aog/* (aog/data multi-layer-data)
@@ -229,8 +217,7 @@
      :y (vec (concat y-a y-b))
      :group (vec (concat (repeat n "Positive Trend") (repeat n "Negative Trend")))}))
 
-^kind/md
-["**Grouped Regression** - Separate regression lines per group"]
+;; **Grouped Regression** - Separate regression lines per group
 
 (aog/draw
  (aog/* (aog/data grouped-regression-data)
@@ -249,8 +236,7 @@
     {:values (vec (concat vals-a vals-b))
      :distribution (vec (concat (repeat n "Distribution A") (repeat n "Distribution B")))}))
 
-^kind/md
-["**Grouped Density** - Multiple distributions compared"]
+;; **Grouped Density** - Multiple distributions compared
 
 (aog/draw
  (aog/* (aog/data grouped-density-data)
@@ -267,8 +253,7 @@
   {:category (vec (repeatedly 100 #(rand-nth ["Product A" "Product B" "Product C" "Product D"])))
    :region (vec (repeatedly 100 #(rand-nth ["North" "South" "East" "West"])))})
 
-^kind/md
-["**Frequency** - Count occurrences per category"]
+;; **Frequency** - Count occurrences per category
 
 (aog/draw
  (aog/* (aog/data frequency-data)
@@ -285,14 +270,89 @@
         y (vec (map #(+ (* 10 %) (* 5 (- (rand) 0.5))) x))]
     {:x x :y y}))
 
-^kind/md
-["**Expectation** - Mean y value for each x (with scatter overlay)"]
+;; **Expectation** - Mean y value for each x (with scatter overlay)
 
 (aog/draw
  (aog/* (aog/data expectation-data)
         (aog/mapping :x :y)
         (aog/+ (aog/scatter {:alpha 0.3})
                (aog/expectation))))
+
+;; ## Scale Transformations
+;;
+;; Tableplot supports various scale transformations to adjust axis scaling.
+
+;; ### Log Scale
+;;
+;; Logarithmic scaling is useful for data spanning multiple orders of magnitude.
+
+(def log-scale-data
+  {:x [1 2 3 4 5]
+   :y [10 100 1000 10000 100000]})
+
+(aog/draw
+ (aog/* (aog/data log-scale-data)
+        (aog/mapping :x :y)
+        (aog/log-scale :y)
+        (aog/line)))
+
+;; Log scale with custom base:
+
+(aog/draw
+ (aog/* (aog/data log-scale-data)
+        (aog/mapping :x :y)
+        (aog/log-scale :y {:base 2})
+        (aog/scatter)))
+
+;; ### Square Root Scale
+;;
+;; Sqrt scaling reduces the visual impact of large outliers.
+
+(def sqrt-data
+  {:x [1 2 3 4 5]
+   :y [1 4 9 16 25]})
+
+(aog/draw
+ (aog/* (aog/data sqrt-data)
+        (aog/mapping :x :y)
+        (aog/sqrt-scale :y)
+        (aog/line)))
+
+;; ### Power Scale
+;;
+;; Power scaling with custom exponents.
+
+(aog/draw
+ (aog/* (aog/data sqrt-data)
+        (aog/mapping :x :y)
+        (aog/pow-scale :y {:exponent 3})
+        (aog/line)))
+
+;; ### Custom Domain
+;;
+;; Control axis ranges explicitly.
+
+(aog/draw
+ (aog/* (aog/data {:x [1 2 3] :y [10 20 30]})
+        (aog/mapping :x :y)
+        (aog/scale-domain :x [0 5])
+        (aog/scale-domain :y [0 50])
+        (aog/scatter)))
+
+;; ### Multiple Scale Transformations
+;;
+;; Combine different scales on different axes.
+
+(def multi-scale-data
+  {:x [1 10 100 1000]
+   :y [1 4 9 16]})
+
+(aog/draw
+ (aog/* (aog/data multi-scale-data)
+        (aog/mapping :x :y)
+        (aog/log-scale :x)
+        (aog/sqrt-scale :y)
+        (aog/line)))
 
 ;; ## Summary
 ;;
@@ -316,17 +376,20 @@
 ;; - `frequency` - Count aggregation
 ;; - `expectation` - Mean/conditional expectation
 ;;
+;; **Scale Transformations:**
+;; - `log-scale` - Logarithmic axis scaling
+;; - `sqrt-scale` - Square root axis scaling
+;; - `pow-scale` - Power function axis scaling
+;; - `scale-domain` - Custom axis domain/range
+;;
 ;; **Composition:**
 ;; - `+` - Layer overlay
 ;; - `*` - Specification merge
 ;; - `{:color ...}` - Grouping by aesthetics
 
-^kind/md
-["
-## Next Steps
-
-See also:
-- `theme_showcase.clj` - Theme variants and styling
-- `aog_tutorial.clj` - Comprehensive AoG tutorial
-- `THEMES_GUIDE.md` - Theme documentation
-"]
+;; ## Next Steps
+;;
+;; See also:
+;; - `theme_showcase.clj` - Theme variants and styling
+;; - `aog_tutorial.clj` - Comprehensive AoG tutorial
+;; - `THEMES_GUIDE.md` - Theme documentation

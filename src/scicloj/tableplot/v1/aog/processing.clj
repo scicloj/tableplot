@@ -131,7 +131,11 @@
   [layer data]
   (into {}
         (for [[aesthetic col-key] (:named layer)]
-          [aesthetic (extract-column data col-key)])))
+          ;; Scale configs (:x-scale, :y-scale) are already in the correct format (maps)
+          ;; Pass them through unchanged instead of trying to extract as columns
+          (if (#{:x-scale :y-scale} aesthetic)
+            [aesthetic col-key]  ; col-key is already the scale config map
+            [aesthetic (extract-column data col-key)]))))
 
 (defn- infer-plottype
   "Infer plot type from layer if not explicitly set.

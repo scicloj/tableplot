@@ -80,9 +80,11 @@
                              (map #(keyword (str "pos" %)) (range (- (count non-empty-positional) 3)))))
 
         ;; Extract data arrays from named attributes (for color, size, etc.)
+        ;; Exclude scale configs (:x-scale, :y-scale) and faceting (:col, :row, :facet)
         named-data-keys (filter #(let [v (get named %)]
                                    (and (sequential? v)
-                                        (not (string? v))))
+                                        (not (string? v))
+                                        (not (#{:x-scale :y-scale :col :row :facet} %))))
                                 (keys named))
 
         ;; Create row maps
@@ -120,12 +122,26 @@
         x-type (infer-type x-data)
         y-type (infer-type y-data)
 
+        ;; Extract scale options from named attributes (if present)
+        ;; These are maps like {:type "log", :domain [1 100]}
+        x-scale-opts (get named :x-scale)
+        y-scale-opts (get named :y-scale)
+
+        ;; Build scale configs - merge with defaults
+        ;; Only merge if opts exist, otherwise just use defaults
+        x-scale (if x-scale-opts
+                  (merge {:zero false} x-scale-opts)
+                  {:zero false})
+        y-scale (if y-scale-opts
+                  (merge {:zero false} y-scale-opts)
+                  {:zero false})
+
         base-encoding {:x {:field :x
                            :type x-type
-                           :scale {:zero false}}
+                           :scale x-scale}
                        :y {:field :y
                            :type y-type
-                           :scale {:zero false}}}
+                           :scale y-scale}}
 
         encoding-with-color (if color-data
                               (assoc base-encoding :color {:field :color
