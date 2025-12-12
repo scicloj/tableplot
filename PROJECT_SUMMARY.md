@@ -705,14 +705,17 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 4. **Vega-Lite/Plotly.js**: Final rendered specification
 
 **Key Features**:
+- ✅ **8 core plot types** - scatter, line, bar, histogram, density, box, violin, heatmap
+- ✅ **6 statistical transformations** - linear, smooth, density, histogram, frequency, expectation
+- ✅ **4 scale transformations** - log, sqrt, power, custom domains
 - ✅ Grouped transformations (linear, smooth respect categorical aesthetics)
 - ✅ Automatic scale inference (categorical colors, continuous sizes)
-- ✅ Statistical transformations (linear regression, smoothing, density, histogram)
 - ✅ Multiple data formats (maps, vectors, tablecloth datasets)
 - ✅ Malli schema validation throughout pipeline
 - ✅ **Faceting (small multiples)** - column, row, and wrapped layouts
 - ✅ **Vega-Lite backend** - production-ready for web-standard visualizations
 - ✅ Color consistency across facets (automatic shared scales)
+- ✅ **Theme system** - 3 polished variants (subtle, balanced, bold)
 
 ### Available Functions
 
@@ -724,6 +727,9 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 (aog/scatter {:alpha 0.5})   ; Scatter plot
 (aog/line {:width 2})        ; Line plot
 (aog/bar)                    ; Bar plot
+(aog/boxplot)                ; Box plot
+(aog/violin)                 ; Violin plot
+(aog/heatmap)                ; Heatmap (2D grid with color encoding)
 ```
 
 **Faceting Aesthetics**:
@@ -736,9 +742,27 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 **Statistical Transformations**:
 ```clojure
 (aog/linear)                 ; Linear regression (grouped by aesthetics)
-(aog/smooth)                 ; Smoothing (moving average)
+(aog/smooth)                 ; LOESS smoothing
 (aog/density)                ; Kernel density estimation
 (aog/histogram {:bins 20})   ; Histogram with configurable bins
+(aog/frequency)              ; Count aggregation (frequency table)
+(aog/expectation)            ; Conditional mean (E[Y|X])
+```
+
+**Scale Transformations**:
+```clojure
+(aog/log-scale :y)                        ; Logarithmic scale (default base 10)
+(aog/log-scale :y {:base 2})              ; Log scale with custom base
+(aog/sqrt-scale :y)                       ; Square root scale
+(aog/pow-scale :y {:exponent 3})          ; Power scale with custom exponent
+(aog/scale-domain :x [0 10])              ; Custom axis domain/range
+
+;; Multiple scales on different axes
+(aog/* (aog/data dataset)
+       (aog/mapping :x :y)
+       (aog/log-scale :x)
+       (aog/sqrt-scale :y)
+       (aog/line))
 ```
 
 **Composition**:
@@ -770,7 +794,12 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 - Scatter plots: colors in `:color` encoding
 - Line plots: colors in `:color` encoding
 - Implicit y-columns for density (`:density`) and histogram (`:count`)
-- Scale configuration (`zero: false` to prevent forcing origin)
+- Scale configuration with transformations:
+  - Default: `{zero: false}` to prevent forcing origin
+  - Log scale: `{type: "log", base: 10, nice: true}`
+  - Sqrt scale: `{type: "sqrt", nice: true}`
+  - Power scale: `{type: "pow", exponent: N, nice: true}`
+  - Custom domain: `{domain: [min max]}`
 
 **Malli Validation**:
 - All IR structures validated with schemas
@@ -781,18 +810,21 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 
 1. **Clay rendering issue**: Faceted Vega-Lite specs generate correctly but only show one facet in Clay notebooks (appears to be Clay container sizing bug). Specs render correctly in standalone HTML with vega-embed.
 2. **No legend generation testing**: Relying on Vega-Lite/Plotly.js defaults
-3. **Simple smoothing**: Uses moving average, not true loess
-4. **Limited plot types**: Only scatter, line, bar, histogram currently
-5. **Plotly backend lacks faceting**: Faceting only implemented for Vega-Lite backend
+3. **Plotly backend lacks faceting**: Faceting only implemented for Vega-Lite backend
+4. **Color scale transformations**: Scale transformations only apply to positional axes (x/y), not color encoding
 
 ### Next Steps for AoG
 
 **Completed**:
+- ✅ All 8 core plot types (scatter, line, bar, histogram, density, box, violin, heatmap)
+- ✅ All 6 statistical transformations (linear, smooth, density, histogram, frequency, expectation)
+- ✅ All 4 scale transformations (log, sqrt, power, custom domains)
 - ✅ Faceting implementation (column, row, wrapped layouts)
 - ✅ Real-world dataset testing (iris, penguins, diamonds, flights, gapminder)
 - ✅ Color consistency across facets (automatic shared scales)
 - ✅ Vega-Lite backend with proper sizing and autosize
-- ✅ Comprehensive examples notebook (`rdatasets_examples.clj`)
+- ✅ Theme system with 3 polished variants
+- ✅ Comprehensive examples notebook (`aog_plot_types.clj`, `rdatasets_examples.clj`)
 
 **Immediate (next session)**:
 - Fix Clay rendering issue for faceted plots (container sizing)
@@ -800,17 +832,21 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 - Visual validation of all faceting examples in browser
 
 **Future enhancements**:
-- Add more plot types (box, violin, heatmap)
-- Improve smoothing algorithm (true loess)
 - Custom color palettes
-- Scale customization (log scales, custom domains)
-- Better data transformation helpers
+- Color scale transformations (log/sqrt scales for color encoding)
+- Better data transformation helpers (renamer, sorter, etc.)
+- Legend customization
+- Axis customization (labels, limits, ticks)
 - Integration with main Tableplot API
 
 **Reference**: 
+- `notebooks/tableplot_book/aog_plot_types.clj` - All 8 plot types + scale transformations + multi-layer examples
 - `notebooks/tableplot_book/aog_demo.clj` - 20+ working examples
 - `notebooks/tableplot_book/rdatasets_examples.clj` - Real-world datasets with faceting
 - `FACETING_IMPLEMENTATION.md` - Complete faceting implementation details
+- `STATISTICAL_TRANSFORMS_COMPLETE.md` - Statistical transformation documentation
+- `SCALE_TRANSFORMATIONS_COMPLETE.md` - Scale transformation documentation
+- `AOG_PROGRESS_SUMMARY.md` - Comprehensive AoG implementation status
 
 ## Reference Documentation
 
