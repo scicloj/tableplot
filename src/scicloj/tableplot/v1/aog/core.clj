@@ -118,6 +118,31 @@
          :transformation :linear
          :plottype :line))
 
+(defn frequency
+  "Create a frequency (count) transformation layer.
+
+  Computes counts for each unique combination of input variables.
+  The result will have a :count column.
+
+  Example:
+  (frequency)"
+  []
+  (assoc (ir/layer)
+         :transformation :frequency
+         :plottype :bar))
+
+(defn expectation
+  "Create an expectation (mean) transformation layer.
+
+  Computes the mean of y conditioned on x (and optionally grouping variables).
+
+  Example:
+  (expectation)"
+  []
+  (assoc (ir/layer)
+         :transformation :expectation
+         :plottype :scatter))
+
 (defn smooth
   "Create a smoothing transformation layer (loess-like).
 
@@ -200,6 +225,57 @@
    (bar {}))
   ([attrs]
    (visual :bar attrs)))
+
+(defn boxplot
+  "Create a box plot layer.
+
+  Box plots show the distribution of quantitative data using quartiles.
+  Requires one categorical and one quantitative variable.
+
+  Args:
+  - attrs: Optional map of visual attributes
+
+  Example:
+  (boxplot)
+  (boxplot {:extent 1.5})"
+  ([]
+   (boxplot {}))
+  ([attrs]
+   (visual :box attrs)))
+
+(defn violin
+  "Create a violin plot layer.
+
+  Violin plots show the distribution using kernel density estimation.
+  Requires one categorical and one quantitative variable.
+
+  Args:
+  - attrs: Optional map of visual attributes
+
+  Example:
+  (violin)
+  (violin {:bandwidth 0.5})"
+  ([]
+   (violin {}))
+  ([attrs]
+   (visual :violin attrs)))
+
+(defn heatmap
+  "Create a heatmap layer.
+
+  Heatmaps show values using color on a 2D grid.
+  Requires two categorical/ordinal variables and one quantitative variable for color.
+
+  Args:
+  - attrs: Optional map of visual attributes
+
+  Example:
+  (heatmap)
+  (heatmap {:scheme \"viridis\"})"
+  ([]
+   (heatmap {}))
+  ([attrs]
+   (visual :heatmap attrs)))
 
 ;;; =============================================================================
 ;;; Algebraic operations

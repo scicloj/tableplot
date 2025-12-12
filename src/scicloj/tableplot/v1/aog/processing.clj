@@ -105,6 +105,16 @@
         (conj base-positional (extract-column data :count))
         base-positional)
 
+      ;; Frequency creates a :count column that should be y
+      (= transformation :frequency)
+      (if (= 1 (count base-positional))
+        (conj base-positional (extract-column data :count))
+        base-positional)
+
+      ;; Expectation keeps the same positional structure (x, y)
+      (= transformation :expectation)
+      base-positional
+
       ;; Default: use base positional
       :else
       base-positional)))

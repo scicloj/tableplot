@@ -336,6 +336,65 @@
       ds)))
 
 ;;; =============================================================================
+;;; Frequency transformation
+
+(defn frequency-transform
+  "Compute frequency (count) table of the arguments.
+
+  This groups by all input columns and counts occurrences.
+
+  Args:
+  - dataset: The data to transform
+  - x-col: X column key (for grouping)
+  - y-col: Y column key (ignored, but kept for API consistency)
+  - group-cols: Vector of additional grouping column keys
+
+  Returns:
+  - Dataset with unique combinations and counts"
+  [dataset x-col y-col group-cols]
+  (let [ds (ensure-dataset dataset)]
+    (if (and ds x-col)
+      (let [;; Combine all grouping columns (x-col + group-cols)
+            all-group-cols (if (and group-cols (seq group-cols))
+                             (vec (cons x-col group-cols))
+                             [x-col])
+            ;; Group by all columns and count
+            grouped (tc/group-by ds all-group-cols)
+            counts (tc/aggregate grouped {:count tc/row-count})]
+        counts)
+      ds)))
+
+;;; =============================================================================
+;;; Expectation transformation
+
+(defn expectation-transform
+  "Compute expected value (mean) of the last argument conditioned on preceding ones.
+
+  This computes the mean of y-col for each unique value (or combination) of x-col
+  and group-cols.
+
+  Args:
+  - dataset: The data to transform
+  - x-col: X column key (for grouping)
+  - y-col: Y column key (value to average)
+  - group-cols: Vector of additional grouping column keys
+
+  Returns:
+  - Dataset with unique x values and mean y values"
+  [dataset x-col y-col group-cols]
+  (let [ds (ensure-dataset dataset)]
+    (if (and ds x-col y-col)
+      (let [;; Combine all grouping columns
+            all-group-cols (if (and group-cols (seq group-cols))
+                             (vec (cons x-col group-cols))
+                             [x-col])
+            ;; Group and compute mean
+            grouped (tc/group-by ds all-group-cols)
+            means (tc/aggregate grouped {y-col #(stats/mean (get % y-col))})]
+        means)
+      ds)))
+
+;;; =============================================================================
 ;;; Transformation dispatcher
 
 (defn apply-transform
@@ -371,6 +430,8 @@
       :smooth (smooth-transform dataset x-col y-col group-cols)
       :density (density-transform dataset x-col y-col group-cols)
       :histogram (histogram-transform dataset x-col y-col group-cols {})
+      :frequency (frequency-transform dataset x-col y-col group-cols)
+      :expectation (expectation-transform dataset x-col y-col group-cols)
       :identity (identity-transform dataset x-col y-col group-cols)
       ;; Default: identity
       (identity-transform dataset x-col y-col group-cols))
