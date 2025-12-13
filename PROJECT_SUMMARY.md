@@ -12,12 +12,13 @@ Tableplot is a Clojure data visualization library inspired by ggplot2's layered 
 
 - Layered grammar of graphics similar to ggplot2
 - Integration with Tablecloth for data processing
-- Support for Plotly.js and Vega-Lite backends
+- Support for Plotly.js, Vega-Lite, and thi.ng/geom backends
 - Kindly-compatible visualizations
 - Composable plotting functions with pipeline-friendly API
 - Statistical transformations (smoothing, histograms, density plots)
 - Multiple plot types (scatter, line, bar, heatmap, 3D surfaces, etc.)
 - **Dataflow system with term rewriting and explicit dependency tracking**
+- **Native polar coordinate support** via thi.ng/geom backend
 
 ## Project Structure
 
@@ -40,7 +41,8 @@ src/scicloj/tableplot/v1/
     ├── transforms.clj  # Statistical transformations (linear, smooth, density, histogram)
     ├── scales.clj      # Automatic scale inference (categorical & continuous)
     ├── plotly.clj      # Plotly.js backend for AoG
-    └── vegalite.clj    # Vega-Lite backend with faceting support
+    ├── vegalite.clj    # Vega-Lite backend with faceting support
+    └── thing_geom.clj  # thi.ng/geom backend with native polar coordinates
 ```
 
 ### Documentation and Examples
@@ -48,14 +50,16 @@ src/scicloj/tableplot/v1/
 ```
 docs/                   # Quarto-generated documentation
 notebooks/tableplot_book/  # Example notebooks and tutorials
-├── plotly_walkthrough.clj       # Plotly API examples
-├── hanami_walkthrough.clj       # Hanami/Vega-Lite examples
-├── plotly_reference.clj         # Complete Plotly reference
-├── transpile_reference.clj      # Cross-backend examples
-├── dataflow_walkthrough.clj     # Complete dataflow system documentation
-├── dataflow_design_analysis.md  # Deep analysis for future GG systems
-├── aog_demo.clj                 # AlgebraOfGraphics API examples (20+ plots)
-└── rdatasets_examples.clj       # Real-world dataset examples with faceting
+├── plotly_walkthrough.clj            # Plotly API examples
+├── hanami_walkthrough.clj            # Hanami/Vega-Lite examples
+├── plotly_reference.clj              # Complete Plotly reference
+├── transpile_reference.clj           # Cross-backend examples
+├── dataflow_walkthrough.clj          # Complete dataflow system documentation
+├── dataflow_design_analysis.md       # Deep analysis for future GG systems
+├── aog_demo.clj                      # AlgebraOfGraphics API examples (20+ plots)
+├── rdatasets_examples.clj            # Real-world dataset examples with faceting
+└── aog_thing_geom_architecture.clj   # thi.ng/geom backend deep-dive (10 interactive parts)
+AOG_THING_GEOM_REFERENCE.md  # Comprehensive 4-layer architecture guide (28K)
 ```
 
 ## Core Dependencies
@@ -69,6 +73,7 @@ notebooks/tableplot_book/  # Example notebooks and tutorials
 - **tempfiles** (1-beta1) - Temporary file management
 - **std.lang** (4.0.10) - Language utilities
 - **com.rpl/specter** - Recursive tree transformation in xform
+- **thi.ng/geom** (1.0.1) - Pure Clojure SVG generation with native polar coordinates
 
 ### Development Dependencies
 - **noj** (2-beta18) - Data science stack (dev/test)
@@ -659,6 +664,11 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 
 **Namespace**: `scicloj.tableplot.v1.aog.*`
 
+**Supported Backends**:
+- **Plotly.js** - Interactive web visualizations
+- **Vega-Lite** - Declarative visualizations with faceting support
+- **thi.ng/geom** - Pure Clojure SVG generation with native polar coordinate support
+
 ### Core Concepts
 
 **Algebraic Operations**:
@@ -697,12 +707,22 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 
 ### Architecture
 
-**Pipeline**: Layer → ProcessedLayer → Entry → Vega-Lite/Plotly.js
+**Pipeline**: Layer → ProcessedLayer → Entry → Vega-Lite/Plotly.js/SVG
 
-1. **Layer** (user-facing): Data + mappings + transformation + plottype
-2. **ProcessedLayer**: After transformations, with scale information
-3. **Entry** (IR): Backend-agnostic specification
-4. **Vega-Lite/Plotly.js**: Final rendered specification
+**Four-Layer Architecture**:
+1. **Layer 1 (User API)**: Data + mappings + transformation + plottype
+2. **Layer 2 (IR Schemas)**: 7 Malli schemas - Layer, ProcessedLayer, Entry, AxisConfig, CategoricalScale, ContinuousScale, AxisEntries
+3. **Layer 3 (Processing)**: `layer->processed-layer`, `processed-layer->entry`, statistical transforms
+4. **Layer 4 (Backend Rendering)**: Vega-Lite/Plotly.js/thi.ng/geom SVG generation
+
+**Intermediate Representation (Entry)**:
+The Entry IR is backend-agnostic, containing:
+- `:x-data`, `:y-data` - Resolved data vectors
+- `:x-scale`, `:y-scale` - Scale configurations (categorical/continuous)
+- `:axes` - Axis specifications with domains/ranges
+- `:plottype` - Visual mark type
+- `:attributes` - Styling (colors, sizes, opacity, etc.)
+- `:coord-system` - `:cartesian` or `:polar` (native polar support via thi.ng/geom)
 
 **Key Features**:
 - ✅ **8 core plot types** - scatter, line, bar, histogram, density, box, violin, heatmap
@@ -850,7 +870,7 @@ A new experimental API inspired by Julia's AlgebraOfGraphics.jl, providing algeb
 
 ## Reference Documentation
 
-For deep dives into the dataflow system:
+### Dataflow System Documentation
 
 - **`notebooks/tableplot_book/dataflow_walkthrough.clj`**: Complete tutorial on the six rules, dependency tracking, caching, and practical examples
 - **`notebooks/tableplot_book/dataflow_design_analysis.md`**: Comprehensive analysis for future grammar-of-graphics work, including:
@@ -861,6 +881,22 @@ For deep dives into the dataflow system:
   - Alternative design considerations
   - Open questions and limitations
   - Future directions for research
+
+### AlgebraOfGraphics Documentation
+
 - **`notebooks/tableplot_book/aog_demo.clj`**: AlgebraOfGraphics API examples and comprehensive feature showcase
+- **`AOG_THING_GEOM_REFERENCE.md`**: Comprehensive 4-layer architecture guide (28K) covering:
+  - Complete architecture: Layer 1 (User API) → Layer 2 (IR) → Layer 3 (Processing) → Layer 4 (Rendering)
+  - All 7 IR schemas with examples (Layer, ProcessedLayer, Entry, AxisConfig, CategoricalScale, ContinuousScale, AxisEntries)
+  - Processing pipeline details (`layer->processed-layer`, `processed-layer->entry`)
+  - Backend rendering internals (thi.ng/geom SVG generation)
+  - 5 complete worked examples showing full pipeline
+  - Best practices and patterns
+- **`notebooks/tableplot_book/aog_thing_geom_architecture.clj`**: Interactive executable notebook with 10 parts:
+  - Live schema validation examples
+  - Statistical transforms (linear, smooth, histogram, density)
+  - Native polar coordinate support
+  - Multi-layer compositions
+  - Complete pipeline demonstrations
 
 This summary provides the essential information needed for an LLM to understand and work effectively with the Tableplot codebase, including its architecture, APIs, patterns, and extension points.
