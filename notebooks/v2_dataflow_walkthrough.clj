@@ -34,7 +34,7 @@
 
 ;; ## Core Concepts
 
-(ns vt-dataflow-walkthrough
+(ns v2-dataflow-walkthrough
   (:require [tableplot.v2.dataflow :as df]
             [tableplot.v2.inference :as infer]
             [tableplot.v2.api :as api]
