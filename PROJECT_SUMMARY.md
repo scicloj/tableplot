@@ -4,8 +4,8 @@
 
 Tableplot is a Clojure data visualization library inspired by ggplot2's layered grammar of graphics. It provides easy layered graphics by composing Hanami templates with Tablecloth datasets. The library enables creation of interactive visualizations that work with any tool supporting the Kindly data visualization standard, such as Clay and Clojupyter.
 
-**Current Version:** 1-beta14  
-**Maven Coordinates:** `org.scicloj/tableplot`  
+**Current Version:** 1-beta14
+**Maven Coordinates:** `org.scicloj/tableplot`
 **License:** Eclipse Public License v2.0
 
 ## Key Features
@@ -43,6 +43,11 @@ src/scicloj/tableplot/v1/
     ├── plotly.clj      # Plotly.js backend for AoG
     ├── vegalite.clj    # Vega-Lite backend with faceting support
     └── thing_geom.clj  # thi.ng/geom backend with native polar coordinates
+
+src/tableplot/v2/
+├── dataflow.clj        # Experimental unified dataflow model
+├── inference.clj       # Inference rules for automatic plot generation
+└── api.clj             # High-level plotting API
 ```
 
 ### Documentation and Examples
@@ -58,8 +63,11 @@ notebooks/tableplot_book/  # Example notebooks and tutorials
 ├── dataflow_design_analysis.md       # Deep analysis for future GG systems
 ├── aog_demo.clj                      # AlgebraOfGraphics API examples (20+ plots)
 ├── rdatasets_examples.clj            # Real-world dataset examples with faceting
-└── aog_thing_geom_architecture.clj   # thi.ng/geom backend deep-dive (10 interactive parts)
+├── aog_thing_geom_architecture.clj   # thi.ng/geom backend deep-dive (10 interactive parts)
+└── v2_dataflow_walkthrough.clj       # V2 unified dataflow tutorial
 AOG_THING_GEOM_REFERENCE.md  # Comprehensive 4-layer architecture guide (28K)
+docs/v2_dataflow_design.md   # V2 design philosophy
+docs/v2_refactoring_summary.md  # V2 refactoring changes
 ```
 
 ## Core Dependencies
@@ -381,6 +389,265 @@ The `transpile.clj` namespace enables cross-backend functionality:
 - Statistical computations cached separately via `dag/cached-xform-k`
 - Cache invalidation via `cache/with-clean-cache` macro
 - Palette assignments cached for visual consistency
+
+## V2 Unified Dataflow Model (Experimental)
+
+### Overview
+
+An experimental unified dataflow model that combines the best aspects of template-based (Hanami/Tableplot) and compositional (AlgebraOfGraphics) approaches. This V2 system provides a cleaner, more idiomatic Clojure design that serves as a foundation for future plotting grammars.
+
+**Status**: Experimental - proof of concept with core functionality working
+**Namespace**: `tableplot.v2.*`
+
+### Design Philosophy
+
+**Key Principles**:
+- **Convention-agnostic**: Templates declare subkeys via metadata, not syntax assumptions
+- **Metadata-driven**: Uses `:tableplot/subkeys` to explicitly declare what's substitutable
+- **Idiomatic Clojure**: No special syntax requirements in code
+- **Functional API as sugar**: High-level functions compile down to data transformations
+- **Single inference pass**: One generic `infer` function resolves all subkeys using a rule registry
+- **Flexible conventions**: `:=` prefix recommended but not required—any convention works
+
+### Core Concepts
+
+**Subkeys (Substitution Keys)**:
+Placeholders for values that can be automatically inferred or user-supplied. Templates declare their subkeys via metadata:
+
+```clojure
+(def base-plot-template
+  ^{:tableplot/subkeys #{:=data :=layers :=x-scale :=y-scale ...}}
+  {:data :=data
+   :layers :=layers
+   :scales {:x :=x-scale :y :=y-scale}
+   :guides {:x :=x-guide :y :=y-guide}})
+```
+
+**Convention Flexibility**:
+```clojure
+;; := prefix (recommended)
+^{:tableplot/subkeys #{:=data :=layers}}
+{:data :=data :layers :=layers}
+
+;; UPPER-CASE (Hanami style)
+^{:tableplot/subkeys #{:DATA :LAYERS}}
+{:data :DATA :layers :LAYERS}
+
+;; Namespaced
+^{:tableplot/subkeys #{:sub/data :sub/layers}}
+{:data :sub/data :layers :sub/layers}
+
+;; Or anything else!
+```
+
+**Generic Inference Engine**:
+Single `infer` function resolves all subkeys by consulting a registry of inference rules:
+
+```clojure
+(defn infer
+  "Resolve all subkeys in spec by applying inference rules"
+  [spec]
+  (let [subkeys (get-subkeys spec)
+        substitutions (::substitutions spec)]
+    (loop [current-subs (or substitutions {})
+           remaining-keys subkeys]
+      (if (empty? remaining-keys)
+        (assoc spec ::substitutions current-subs)
+        ;; Apply inference rules and iterate
+        (recur updated-subs updated-keys)))))
+```
+
+**Dependency Tracking**:
+Inference rules can declare dependencies via metadata:
+
+```clojure
+(def infer-x-scale
+  ^{:tableplot/depends-on #{:=data :=x-field}}
+  (fn [spec subs]
+    (when (and (:=data subs) (:=x-field subs))
+      (create-scale ...))))
+```
+
+### API Design
+
+**Functional API** (compiles to data transformations):
+
+```clojure
+(require '[tableplot.v2.api :as api])
+
+;; Simple scatter plot
+(-> (api/plot data)
+    (api/point :x :sepal-width :y :sepal-length)
+    (api/finalize))
+
+;; With color aesthetic
+(-> (api/plot data)
+    (api/point :x :sepal-width :y :sepal-length :color :species)
+    (api/finalize))
+
+;; Layered: scatter + smooth
+(-> (api/plot data)
+    (api/point :x :x :y :y :color :species)
+    (api/smooth :x :x :y :y :color :species)
+    (api/finalize))
+
+;; Quick functions with smart defaults
+(api/scatter data :sepal-width :sepal-length :color :species)
+```
+
+**Data-Driven Approach** (equivalent low-level):
+
+```clojure
+(require '[tableplot.v2.dataflow :as df])
+
+;; Direct template + substitutions
+{:data :=data
+ :layers [{:mark :point, :x :=x-field, :y :=y-field}]
+ :tableplot/substitutions {:=data my-dataset
+                          :=x-field :sepal-width
+                          :=y-field :sepal-length}}
+
+;; Infer missing values
+(df/infer spec)
+;; => Automatically creates :=x-scale, :=y-scale, :=x-guide, :=y-guide, etc.
+```
+
+### Architecture
+
+**Three-Layer Design**:
+
+1. **User API Layer** (`api.clj`):
+   - Functions like `plot`, `point`, `scatter`, `smooth`
+   - Compile to template + substitutions
+   - Provide ergonomic defaults and validation
+
+2. **Dataflow Layer** (`dataflow.clj`):
+   - Core functions: `infer`, `substitute`, `get-subkeys`
+   - Template metadata system (`:tableplot/subkeys`)
+   - Convention detection with fallback
+   - Dataset/column safe handling
+
+3. **Inference Layer** (`inference.clj`):
+   - Registry of inference rules
+   - Rules for scales, guides, fields, titles
+   - Dependency-aware rule application
+   - Type-based inference (quantitative/nominal)
+
+**Data Flow**:
+```
+User API Call → Template + Substitutions → Inference → Final Spec
+```
+
+### Key Differences from V1
+
+| Aspect | V1 (Hanami-based) | V2 (Unified) |
+|--------|-------------------|--------------|
+| **Syntax** | `:=` required in code | Convention-agnostic via metadata |
+| **Passes** | Multiple (stat, scale, guide) | Single generic `infer` pass |
+| **Flexibility** | Hard-coded assumptions | Any naming convention works |
+| **Inference** | Backend-specific | Unified rule registry |
+| **API** | Template composition | Data transformations + sugar |
+
+### Implementation Details
+
+**Subkey Detection** (metadata-first with fallback):
+
+```clojure
+(defn get-subkeys
+  "Get the set of subkeys for a template/spec.
+  Checks metadata first (:tableplot/subkeys), falls back to convention."
+  [template-or-spec]
+  (or (::subkeys (meta template-or-spec))
+      ;; Fall back to inferring from convention
+      (infer-from-convention template-or-spec)))
+```
+
+**Safe Dataset Handling** (no hard dependencies):
+
+```clojure
+(defn dataset-or-column?
+  "Check if x is a tech.v3.dataset or column (without hard dependency)"
+  [x]
+  (and (some? x)
+       (let [class-name (.getName (class x))]
+         (or (.contains class-name "dataset.Dataset")
+             (.contains class-name "dataset.impl")
+             (.contains class-name "Column")))))
+```
+
+**Inference Rules** (type-aware):
+
+```clojure
+(defn column-type
+  "Determine the type of a column: :quantitative, :ordinal, or :nominal"
+  [dataset col-name]
+  (when dataset
+    (let [col (ds/column dataset col-name)
+          dtype (:datatype (meta col))]
+      (cond
+        (#{:int16 :int32 :int64 :float32 :float64} dtype) :quantitative
+        (#{:string :keyword} dtype) :nominal
+        :else :nominal))))
+```
+
+### Benefits
+
+1. **Idiomatic Clojure**: No special syntax assumptions in code
+2. **Flexible**: Any naming convention works (`:=`, `UPPER`, namespaced, etc.)
+3. **Explicit**: Metadata declares what's substitutable
+4. **Compatible**: Can work with Hanami templates (with metadata addition)
+5. **Convention-friendly**: `:=` still works as recommended style
+6. **Robust**: Handles datasets and columns safely without hard dependencies
+7. **Simple**: Single inference pass instead of multiple specialized passes
+8. **Extensible**: Easy to add new inference rules to registry
+
+### Current Status
+
+**Completed**:
+- ✅ Core dataflow engine with convention-agnostic design
+- ✅ Metadata-based subkey declaration system
+- ✅ Generic inference engine with rule registry
+- ✅ Basic inference rules (scales, guides, fields, title)
+- ✅ High-level API functions (plot, point, scatter, smooth, finalize)
+- ✅ Safe dataset/column handling without hard dependencies
+- ✅ Complete test suite
+- ✅ Interactive walkthrough notebook
+
+**Documentation**:
+- `notebooks/v2_dataflow_walkthrough.clj` - Complete interactive tutorial
+- `docs/v2_dataflow_design.md` - Design philosophy and motivation
+- `docs/v2_refactoring_summary.md` - Refactoring changes and verification
+
+**Verification**:
+The V2 system loads successfully and all core functionality works:
+```clojure
+;; Loads without errors
+(load-file "notebooks/v2_dataflow_walkthrough.clj")
+
+;; Subkey detection works
+(df/subkey-by-convention? :=data) ;; => true
+(df/subkey? df/base-plot-template :=data) ;; => true
+
+;; Full flow works
+(def spec (api/scatter data :x :y))
+(def plot (api/finalize spec))
+;; => Complete plot with inferred scales, guides, etc.
+```
+
+### Next Steps for V2
+
+**Immediate**:
+- Integrate with visualization backends (Plotly.js, Vega-Lite)
+- Add more sophisticated inference rules
+- Implement faceting support
+- Add validation layer
+
+**Future**:
+- Multiple API frontends (AoG-style, ggplot-style, etc.)
+- Advanced statistical transformations
+- Custom theme system
+- Integration with V1 Tableplot features
+- Production readiness evaluation
 
 ## Development Workflow
 
@@ -859,7 +1126,7 @@ The Entry IR is backend-agnostic, containing:
 - Axis customization (labels, limits, ticks)
 - Integration with main Tableplot API
 
-**Reference**: 
+**Reference**:
 - `notebooks/tableplot_book/aog_plot_types.clj` - All 8 plot types + scale transformations + multi-layer examples
 - `notebooks/tableplot_book/aog_demo.clj` - 20+ working examples
 - `notebooks/tableplot_book/rdatasets_examples.clj` - Real-world datasets with faceting
@@ -881,6 +1148,12 @@ The Entry IR is backend-agnostic, containing:
   - Alternative design considerations
   - Open questions and limitations
   - Future directions for research
+
+### V2 Unified Dataflow Documentation
+
+- **`notebooks/v2_dataflow_walkthrough.clj`**: Complete interactive tutorial on V2 unified dataflow model
+- **`docs/v2_dataflow_design.md`**: Design philosophy, motivation, and comparison with V1
+- **`docs/v2_refactoring_summary.md`**: Refactoring changes, verification, and benefits
 
 ### AlgebraOfGraphics Documentation
 
