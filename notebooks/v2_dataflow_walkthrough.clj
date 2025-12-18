@@ -47,12 +47,12 @@
 ;; By convention (not requirement), we prefix them with `=`:
 
 ;; Regular keyword (literal value):
-:x           ; The column named :x
+:x ; The column named :x
 
 ;; Subkey (placeholder to be filled):
-:=x          ; A value to be inferred/substituted
+:=x ; A value to be inferred/substituted
 
-;; The `:=` prefix is just a convention - templates declare their subkeys via metadata.
+;; The `:=` prefix is just a convention - templates declare their subkeys via :sub/keys.
 ;; This makes the dataflow **explicit** and **flexible**:
 
 (df/subkey-by-convention? :x)
@@ -76,23 +76,23 @@
 ;; A plot spec is just a map with two parts:
 
 ;; **Part 1: The Template** (structure with placeholders)
-{:data :=data                    ; Data to be filled in
- :layers :=layers                ; Layers to be filled in
- :scales {:x :=x-scale           ; Scale definitions
+{:data :=data ; Data to be filled in
+ :layers :=layers ; Layers to be filled in
+ :scales {:x :=x-scale ; Scale definitions
           :y :=y-scale}
- :guides {:x :=x-guide           ; Axes, legends
+ :guides {:x :=x-guide ; Axes, legends
           :y :=y-guide}}
 
 ;; **Part 2: The Substitutions** (concrete values)
-{:=substitutions {:=data nil        ; placeholder for dataset
-                  :=layers []}}     ; placeholder for layers
+{:sub/map {:=data nil ; placeholder for dataset
+           :=layers []}} ; placeholder for layers
 
 ;; They live together in one map:
 {:data :=data
  :layers :=layers
  :scales {:x :=x-scale :y :=y-scale}
- :=substitutions {:=data nil
-                  :=layers []}}
+ :sub/map {:=data nil
+           :=layers []}}
 
 ;; ### Concept 3: Inference Rules
 ;;
@@ -104,7 +104,7 @@
 
 ;; Each rule is a function: (spec, context) -> value
 ;;
-;; Rules can declare dependencies via metadata
+;; Rules can declare dependencies via metadata on the rule function
 
 ;; ### Concept 4: Single Generic Inference
 ;;
@@ -165,13 +165,13 @@ spec-1
 
 (df/apply-substitutions {:data :=data
                          :title :=title
-                         :=substitutions {:=data "my-dataset"
-                                          :=title "My Plot"}})
+                         :sub/map {:=data "my-dataset"
+                                   :=title "My Plot"}})
 
 ^kind/test-last
 {:test #(and (= "my-dataset" (:data %))
              (= "My Plot" (:title %))
-             (nil? (:=substitutions %)))}
+             (nil? (:sub/map %)))}
 
 ;; ### Dependency Tracking
 ;;
@@ -193,7 +193,7 @@ spec-1
 ;; Let's see it in action with a simple example:
 
 (df/infer {:value :=value
-           :=substitutions {:=value 42}})
+           :sub/map {:=value 42}})
 
 ^kind/test-last
 {:test #(= 42 (:value %))}
@@ -207,14 +207,14 @@ spec-1
 ;; Extract which fields are mapped to aesthetics by looking at the layer
 
 (infer/infer-x-field
- {:=substitutions {:=layers [{:mark :point :x :sepal-width :y :sepal-length}]}}
+ {:sub/map {:=layers [{:mark :point :x :sepal-width :y :sepal-length}]}}
  {})
 
 ^kind/test-last
 {:test :sepal-width}
 
 (infer/infer-y-field
- {:=substitutions {:=layers [{:mark :point :x :sepal-width :y :sepal-length}]}}
+ {:sub/map {:=layers [{:mark :point :x :sepal-width :y :sepal-length}]}}
  {})
 
 ^kind/test-last
@@ -229,8 +229,8 @@ spec-1
                  :y [10 20 30 40 50]}))
 
 ;; Infer a scale for the x aesthetic:
-(infer/infer-x-scale {:=substitutions {:=data test-data
-                                       :=x-field :x}}
+(infer/infer-x-scale {:sub/map {:=data test-data
+                                :=x-field :x}}
                      {})
 
 ^kind/test-last
@@ -240,9 +240,9 @@ spec-1
 
 ;; ### Rule 3: Infer Guide from Scale
 
-(infer/infer-x-guide {:=substitutions {:=x-scale {:type :linear
-                                                   :field :sepal-width
-                                                   :domain [2.0 4.5]}}}
+(infer/infer-x-guide {:sub/map {:=x-scale {:type :linear
+                                           :field :sepal-width
+                                           :domain [2.0 4.5]}}}
                      {})
 
 ^kind/test-last
@@ -252,8 +252,8 @@ spec-1
 
 ;; ### Rule 4: Infer Title
 
-(infer/infer-title {:=substitutions {:=x-field :sepal-width
-                                     :=y-field :sepal-length}}
+(infer/infer-title {:sub/map {:=x-field :sepal-width
+                              :=y-field :sepal-length}}
                    {})
 
 ^kind/test-last
@@ -328,7 +328,7 @@ spec-1
 (keys quick-scatter)
 
 ^kind/test-last
-{:test #(some #{:=substitutions} %)}
+{:test #(some #{:sub/map} %)}
 
 ;; Check the layers:
 (df/get-substitution quick-scatter :=layers)
@@ -375,10 +375,10 @@ iris
 (keys my-spec)
 
 ;; The template part shows all the :=placeholder keys
-(keys (dissoc my-spec :=substitutions))
+(keys (dissoc my-spec :sub/map))
 
 ;; The substitutions show what we've filled in so far:
-(keys (:=substitutions my-spec))
+(keys (:sub/map my-spec))
 
 ^kind/test-last
 {:test #(some #{:=data :=layers} %)}
@@ -391,7 +391,7 @@ iris
 (count all-keys)
 
 ;; Which ones do we already have?
-(def existing-keys (set (keys (:=substitutions my-spec))))
+(def existing-keys (set (keys (:sub/map my-spec))))
 
 existing-keys
 
@@ -444,7 +444,7 @@ existing-keys
 {:test :axis}
 
 ;; No more :=substitutions key in the final plot:
-(:=substitutions finalized-plot)
+(:sub/map finalized-plot)
 
 ^kind/test-last
 {:test nil}
@@ -459,7 +459,7 @@ existing-keys
 ;; Find what needs inference:
 (def trace-missing
   (let [all (df/find-subkeys trace-spec)
-        existing (set (keys (:=substitutions trace-spec)))]
+        existing (set (keys (:sub/map trace-spec)))]
     (remove existing all)))
 
 (count trace-missing)
@@ -468,8 +468,8 @@ existing-keys
 (def trace-inferred (df/infer-missing-keys trace-spec))
 
 ;; Check that substitutions were added:
-(> (count (keys (:=substitutions trace-inferred)))
-   (count (keys (:=substitutions trace-spec))))
+(> (count (keys (:sub/map trace-inferred)))
+   (count (keys (:sub/map trace-spec))))
 
 ^kind/test-last
 {:test true}
@@ -500,15 +500,15 @@ existing-keys
         clojure.string/capitalize)))
 
 ;; Test it:
-(infer-nice-x-label {:=substitutions {:=x-field :sepal-width}} {})
+(infer-nice-x-label {:sub/map {:=x-field :sepal-width}} {})
 
 ^kind/test-last
 {:test "Sepal width"}
 
 ;; To use it in the system, you would:
 ;; 1. Register it: (df/register-inference-rule! :=x-label infer-nice-x-label)
-;; 2. Declare dependencies if needed
-;; 3. Add :=x-label to the template's metadata and structure
+;; 2. Declare dependencies if needed (via metadata on the rule function)
+;; 3. Add :=x-label to the template's :sub/keys and structure
 
 ;; ### Example: Custom API Function
 ;;
@@ -582,7 +582,7 @@ existing-keys
 ;; You can inspect at every stage:
 
 ;; Before inference:
-(keys (:=substitutions my-spec))
+(keys (:sub/map my-spec))
 
 ;; After inference:
 (keys finalized-plot)
@@ -590,8 +590,8 @@ existing-keys
 ;; The difference:
 (def inferred-keys
   (clojure.set/difference
-    (set (keys finalized-plot))
-    (set (keys my-spec))))
+   (set (keys finalized-plot))
+   (set (keys my-spec))))
 
 (seq inferred-keys)
 
@@ -616,11 +616,11 @@ existing-keys
 ;;
 ;; 1. **Simplicity**: Everything is data transformation
 ;; 2. **Power**: Generic inference mechanism
-;; 3. **Clarity**: Subkeys show what's happening, metadata declares them
+;; 3. **Clarity**: Subkeys show what's happening, :sub/keys declares them
 ;; 4. **Flexibility**: Multiple APIs can share the core, any convention works
 ;; 5. **Extensibility**: Add rules and functions easily
 ;; 6. **Debuggability**: Inspect at every stage
-;; 7. **Idiomatic**: Convention-agnostic, metadata-driven
+;; 7. **Idiomatic**: Convention-agnostic, inline declaration of subkeys via :sub/keys
 
 ;; It combines the best aspects of template-based and compositional
 ;; approaches while maintaining clarity, simplicity, and Clojure idioms.
