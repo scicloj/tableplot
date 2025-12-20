@@ -1,7 +1,7 @@
 ;; # AlgebraOfGraphics: Backend Comparison & Demo
 ;;
-;; This notebook demonstrates the AlgebraOfGraphics (AoG) API across different backends,
-;; showing how the same grammar works with Plotly.js and thi.ng/geom.
+;; This notebook demonstrates the AlgebraOfGraphics (AoG) API across three backends,
+;; showing how the same grammar works with Plotly.js, Vega-Lite, and thi.ng/geom.
 ;;
 ;; **Key Features:**
 ;; - Algebraic composition with `*` (merge) and `+` (overlay)
@@ -14,6 +14,7 @@
             [scicloj.tableplot.v1.aog.processing :as proc]
             [scicloj.tableplot.v1.aog.thing-geom :as thing-geom]
             [scicloj.tableplot.v1.aog.plotly :as aog-plotly]
+            [scicloj.tableplot.v1.aog.vegalite :as aog-vegalite]
             [scicloj.tableplot.v1.aog.ir :as ir]
             [scicloj.tableplot.v1.aog.scales :as scales]
             [tablecloth.api :as tc]
@@ -199,12 +200,21 @@ processed-layer
 
 my-entry
 
-;; ## Plotly Trace Specification
+;; ## Backend-Specific Specs
+
+;; ### Plotly Trace Specification
 
 (def my-trace
   (aog-plotly/entry->plotly-trace my-entry))
 
 my-trace
+
+;; ### Vega-Lite Specification
+
+(def my-vegalite-spec
+  (aog-vegalite/entry->vegalite-spec my-entry))
+
+my-vegalite-spec
 
 ;; ## Scale Inference
 
@@ -218,9 +228,155 @@ my-trace
 ;; View the inferred categorical scales:
 (:categorical-scales axis-entries)
 
-;; # Part 6: thi.ng/geom Backend
+;; # Part 6: Backend Comparison
 
-(md "## Why thi.ng/geom?
+(md "## Three Rendering Backends
+
+tableplot's AlgebraOfGraphics supports **three backends**, each with unique strengths:
+
+### 1. **Plotly.js** (Default)
+- ✅ **Interactive** - Zoom, pan, hover tooltips
+- ✅ **3D plots** - Surface, contour, 3D scatter
+- ✅ **Rich features** - Wide plot type coverage
+- 📦 **Output**: HTML + JavaScript
+- 🎯 **Best for**: Dashboards, exploration, web apps
+
+### 2. **Vega-Lite**
+- ✅ **Faceting** - Small multiples (column/row/facet)
+- ✅ **Themes** - Publication-ready styling
+- ✅ **Static SVG** - Embeddable, print-ready
+- ✅ **Server-side** - No browser required
+- 📦 **Output**: SVG
+- 🎯 **Best for**: Publications, faceted plots, reports
+
+### 3. **thi.ng/geom**
+- ✅ **Polar coordinates** - Native rose diagrams, radar charts
+- ✅ **Pure Clojure** - No JavaScript dependencies
+- ✅ **ggplot2 themes** - Full theme system
+- ✅ **Server-side** - No browser required
+- 📦 **Output**: SVG
+- 🎯 **Best for**: Polar plots, pure Clojure environments, PDFs")
+
+;; # Part 7: Vega-Lite Backend
+
+(md "## Vega-Lite Backend
+
+Vega-Lite provides **static SVG output** with excellent **faceting support**.")
+
+;; ## Basic Vega-Lite Plots
+
+;; ### Scatter Plot
+
+(aog-vegalite/vegalite
+ {:plottype :scatter
+  :positional [[1 2 3 4 5]
+               [2 4 3 5 6]]
+  :named {}})
+
+;; ### Line Plot (Sine Wave)
+
+(let [x (range 0 10 0.2)
+      y (map #(Math/sin %) x)]
+  (aog-vegalite/vegalite
+   {:plottype :line
+    :positional [(vec x) (vec y)]
+    :named {}}
+   {:width 500 :height 300}))
+
+;; ### Bar Chart
+
+(aog-vegalite/vegalite
+ {:plottype :bar
+  :positional [[1 2 3 4 5]
+               [23 45 34 56 42]]
+  :named {}}
+ {:width 500 :height 300})
+
+;; ## Vega-Lite's Unique Feature: Faceting
+
+(md "### Faceting (Small Multiples)
+
+Vega-Lite excels at **faceted plots** - creating small multiples by splitting data across panels.
+
+This is **only available in Vega-Lite**, not in Plotly or thi.ng/geom backends!")
+
+;; Create faceted data
+(def facet-data
+  (let [species ["Adelie" "Chinstrap" "Gentoo"]
+        n-per-species 8]
+    {:bill-length (vec (concat
+                        (repeatedly n-per-species #(+ 38 (rand 4)))
+                        (repeatedly n-per-species #(+ 48 (rand 4)))
+                        (repeatedly n-per-species #(+ 45 (rand 4)))))
+     :bill-depth (vec (concat
+                       (repeatedly n-per-species #(+ 18 (rand 3)))
+                       (repeatedly n-per-species #(+ 17 (rand 3)))
+                       (repeatedly n-per-species #(+ 14 (rand 3)))))
+     :species (vec (mapcat #(repeat n-per-species %) species))}))
+
+;; Faceted scatter plot (one panel per species)
+(aog-vegalite/vegalite
+ {:plottype :scatter
+  :positional [(:bill-length facet-data) (:bill-depth facet-data)]
+  :named {:col (:species facet-data)}} ; Split by column
+ {:width 600 :height 400})
+
+;; ## Vega-Lite Themes
+
+(md "### Vega-Lite Theme Support
+
+Vega-Lite supports multiple themes for publication-ready graphics:")
+
+;; Same plot with different themes
+
+;; tableplot-balanced theme (default)
+(aog-vegalite/vegalite
+ {:plottype :scatter
+  :positional [[1 2 3 4 5]
+               [2 4 3 5 6]]
+  :named {}}
+ {:theme :tableplot-balanced :width 400 :height 300})
+
+;; ggplot2 theme
+(aog-vegalite/vegalite
+ {:plottype :scatter
+  :positional [[1 2 3 4 5]
+               [2 4 3 5 6]]
+  :named {}}
+ {:theme :ggplot2 :width 400 :height 300})
+
+;; vega theme (minimal)
+(aog-vegalite/vegalite
+ {:plottype :scatter
+  :positional [[1 2 3 4 5]
+               [2 4 3 5 6]]
+  :named {}}
+ {:theme :vega :width 400 :height 300})
+
+;; ## AoG Integration with Vega-Lite
+
+(let [layer (aog/* (aog/data simple-data)
+                   (aog/mapping :x :y)
+                   (aog/scatter))
+      entries (proc/layers->entries [layer])]
+  (aog-vegalite/vegalite entries))
+
+;; ## Multi-layer Vega-Lite
+
+(let [data {:x [1 2 3 4 5]
+            :y [2 4 3 5 6]}
+      layers [(aog/* (aog/data data)
+                     (aog/mapping :x :y)
+                     (aog/scatter))
+              (aog/* (aog/data data)
+                     (aog/mapping :x :y)
+                     (aog/line))]
+      entries (proc/layers->entries layers)]
+  (aog-vegalite/vegalite entries))
+
+;; # Part 8: thi.ng/geom Backend
+
+(md "## thi.ng/geom Backend
 
 The thi.ng/geom backend offers unique advantages:
 
@@ -228,6 +384,7 @@ The thi.ng/geom backend offers unique advantages:
 - ✅ **Native polar coordinates** - True polar rendering (not simulated)
 - ✅ **SVG output** - Static, embeddable graphics for papers/reports
 - ✅ **Server-side rendering** - Generate visualizations without a browser
+- ✅ **ggplot2-compatible themes** - Full theme system
 
 **Best for**: Scientific papers, polar plots, embedded SVGs, server-side rendering")
 
@@ -284,13 +441,15 @@ The thi.ng/geom backend offers unique advantages:
       entries (proc/layers->entries layers)]
   (thing-geom/entries->svg entries))
 
-;; # Part 7: Polar Coordinates
+;; # Part 9: Polar Coordinates (thi.ng/geom Only)
 ;;
 ;; This is where thi.ng/geom truly shines!
 
 (md "## Polar Coordinate Excellence
 
-Native polar coordinate support with automatic polar axes.")
+Native polar coordinate support with automatic polar axes.
+
+**Note**: Polar coordinates are **only available in thi.ng/geom**, not in Plotly or Vega-Lite.")
 
 ;; ## Rose Diagram (3-petaled)
 
@@ -360,71 +519,111 @@ Native polar coordinate support with automatic polar axes.")
     :width 600
     :height 600}))
 
-;; # Part 8: Backend Comparison
+;; # Part 10: Complete Backend Comparison
 
-(md "## Backend Comparison Table
+(md "## Complete Backend Comparison Table
 
-| Feature | Plotly.js | thi.ng/geom |
-|---------|-----------|-------------|
-| **Interactivity** | ✅ Excellent (zoom, pan, hover) | ❌ Static SVG only |
-| **Polar coordinates** | ⚠️ Limited | ✅ **Excellent** ✨ |
-| **3D plots** | ✅ Full support | ❌ 2D only |
-| **Dependencies** | cljplotly (JS) | Pure Clojure |
-| **Output format** | HTML + JS | SVG |
-| **Server-side** | ⚠️ Requires browser | ✅ **Pure Clojure** ✨ |
-| **File size** | Large (JS libs) | Small (SVG) |
-| **Best for** | Dashboards, exploration | Papers, reports, polar plots |
+| Feature | Plotly.js | Vega-Lite | thi.ng/geom |
+|---------|-----------|-----------|-------------|
+| **Interactivity** | ✅ Excellent (zoom, pan, hover) | ❌ Static | ❌ Static |
+| **Faceting** | ❌ Not in AoG wrapper | ✅ **Excellent** ✨ | ❌ Not supported |
+| **Polar coordinates** | ❌ Not in AoG wrapper | ❌ Not supported | ✅ **Excellent** ✨ |
+| **3D plots** | ✅ Full support | ❌ 2D only | ❌ 2D only |
+| **Themes** | ⚠️ Limited | ✅ Multiple themes | ✅ **ggplot2-compatible** ✨ |
+| **Dependencies** | cljplotly (JS) | darkstar (JS) | Pure Clojure |
+| **Output format** | HTML + JS | SVG | SVG |
+| **Server-side** | ⚠️ Requires browser | ✅ Via darkstar | ✅ **Pure Clojure** ✨ |
+| **File size** | Large (JS libs) | Medium (SVG) | Small (SVG) |
+| **Plot types** | Very wide | Wide (2D) | Moderate (2D) |
+| **Best for** | Dashboards, exploration, 3D | Publications, faceting, themes | Polar plots, pure Clojure, PDFs |
 
-## When to Use Which Backend
+## When to Use Each Backend
 
 ### Use **Plotly** for:
-- Interactive dashboards
-- Data exploration
-- 3D visualizations
-- Web applications
-- Real-time updates
+- Interactive dashboards and data exploration
+- 3D visualizations (surface, contour plots)
+- Web applications with hover/click interactions
+- Real-time data updates
+- Maximum plot type variety
+
+### Use **Vega-Lite** for:
+- **Faceted plots** (small multiples, trellis plots)
+- Static SVG for publications and reports
+- Themed, publication-ready graphics
+- Server-side rendering with darkstar
+- When you want declarative Vega-Lite specs
 
 ### Use **thi.ng/geom** for:
-- Scientific papers (static SVG)
-- **Polar coordinate plots** (rose diagrams, radar charts)
-- Server-side rendering (no JS)
-- Embedded graphics
-- PDF generation
-- Mathematical visualizations")
+- **Polar coordinate plots** (rose diagrams, radar charts, spirals)
+- Pure Clojure environments (no JS dependencies)
+- **ggplot2-style themed graphics**
+- PDF generation and embedded SVGs
+- Server-side rendering with zero JavaScript
+- Mathematical visualizations
 
-;; # Part 9: Design Validation
+## Feature Matrix
+
+**Unique to Plotly:**
+- 3D plots
+- Full interactivity
+
+**Unique to Vega-Lite:**
+- Faceting (column/row/facet)
+- Declarative Vega-Lite specs
+
+**Unique to thi.ng/geom:**
+- Native polar coordinates
+- Pure Clojure (zero JavaScript)
+- ggplot2-compatible themes
+
+**Common to all three:**
+- Backend-agnostic Entry IR
+- 2D plot types (scatter, line, bar, etc.)
+- Categorical color mapping
+- Grouped transformations (via AoG)")
+
+;; # Part 11: Design Validation
 
 (md "## Key Design Principles
 
 This demo validates the following design principles:
 
 1. **Plain maps + Malli validation** - Flexible and type-checked
-2. **Backend-agnostic IR** - Entry format works with any backend
+2. **Backend-agnostic IR** - Entry format works with **all three backends**
 3. **Algebraic composition** - `*` distributes over `+`
 4. **Multi-format data support** - Works with maps and tablecloth
 5. **Pipeline transparency** - Can inspect each stage
 6. **Grouped transformations** - Statistical transforms respect aesthetics
-7. **Automatic scale inference** - Categorical and continuous scales")
+7. **Automatic scale inference** - Categorical and continuous scales
+8. **Backend specialization** - Each backend has unique strengths")
 
 ;; # Summary
 ;;
-;; This notebook demonstrates the AlgebraOfGraphics API across two backends:
+;; This notebook demonstrates the AlgebraOfGraphics API across **three backends**:
 ;;
 ;; **Plotly Backend:**
 ;; - Interactive visualizations
-;; - Full feature support (scatter, line, bar, regression, density, etc.)
-;; - Grouped transformations
-;; - Automatic scale inference
-;; - Best for dashboards and exploration
+;; - 3D support (surface, contour)
+;; - Full feature support for exploration
+;; - Best for dashboards and web applications
+;;
+;; **Vega-Lite Backend:**
+;; - **Faceting support** (unique to Vega-Lite)
+;; - Multiple themes (tableplot, ggplot2, vega)
+;; - Static SVG for publications
+;; - Server-side rendering via darkstar
+;; - Best for publications and faceted plots
 ;;
 ;; **thi.ng/geom Backend:**
+;; - **Excellent polar coordinate support** (unique to thi.ng/geom)
+;; - **ggplot2-compatible themes** (9 themes)
 ;; - Pure Clojure SVG generation
-;; - **Excellent polar coordinate support** (rose diagrams, radar charts, spirals)
-;; - Static output for papers/reports
-;; - Server-side rendering
-;; - Best for scientific papers and polar plots
+;; - Server-side rendering with zero JavaScript
+;; - Best for polar plots and pure Clojure environments
 ;;
-;; Both backends use the same AoG grammar and Entry IR, demonstrating true
-;; backend independence!
+;; All three backends use the same AoG grammar and Entry IR, demonstrating true
+;; backend independence with specialized strengths!
 
-(kind/md "**Demo Complete!** ✅")
+(kind/md "**Demo Complete!** ✅
+
+All three backends - **Plotly**, **Vega-Lite**, and **thi.ng/geom** - are fully supported and production-ready!")

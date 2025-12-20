@@ -6,7 +6,7 @@
 ;; and its thi.ng/geom backend, focusing on the four-layer pipeline and internal
 ;; representation layers.
 
-(ns tableplot-book.aog-thing-geom-architecture
+(ns tableplot-book.aog-architecture
   (:require [scicloj.tableplot.v1.aog.core :as aog]
             [scicloj.tableplot.v1.aog.ir :as ir]
             [scicloj.tableplot.v1.aog.processing :as processing]

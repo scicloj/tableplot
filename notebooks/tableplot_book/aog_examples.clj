@@ -4,7 +4,7 @@
 ;; This notebook explores larger, real-world datasets from the RDatasets collection
 ;; using the Vega-Lite backend for visualization.
 
-(ns tableplot-book.rdatasets-examples
+(ns tableplot-book.aog-examples
   (:require [scicloj.tableplot.v1.aog.core :as aog]
             [scicloj.metamorph.ml.rdatasets :as rdatasets]
             [tablecloth.api :as tc]))
