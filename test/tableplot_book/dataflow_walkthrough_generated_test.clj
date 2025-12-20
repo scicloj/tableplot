@@ -16,7 +16,7 @@
 
 (deftest
  t4_l51
- (is ((fn* [p1__88975#] (= p1__88975# {:a 10, :c 20})) v3_l44)))
+ (is ((fn* [p1__71766#] (= p1__71766# {:a 10, :c 20})) v3_l44)))
 
 
 (def
@@ -28,7 +28,7 @@
 
 (deftest
  t7_l64
- (is ((fn* [p1__88976#] (= p1__88976# {:title "Resolved!"})) v6_l59)))
+ (is ((fn* [p1__71767#] (= p1__71767# {:title "Resolved!"})) v6_l59)))
 
 
 (def
@@ -40,8 +40,8 @@
  t11_l74
  (is
   ((fn*
-    [p1__88977#]
-    (= p1__88977# {:self-ref :X, :not-found :Missing}))
+    [p1__71768#]
+    (= p1__71768# {:self-ref :X, :not-found :Missing}))
    v9_l68)))
 
 
@@ -56,10 +56,10 @@
  t14_l85
  (is
   ((fn*
-    [p1__88978#]
+    [p1__71769#]
     (and
-     (= (-> p1__88978# :data tc/column-names) [:x :y])
-     (= (-> p1__88978# :nested :deep :data tc/column-names) [:x :y])))
+     (= (-> p1__71769# :data tc/column-names) [:x :y])
+     (= (-> p1__71769# :nested :deep :data tc/column-names) [:x :y])))
    v13_l80)))
 
 
@@ -74,7 +74,7 @@
 (deftest
  t17_l98
  (is
-  ((fn* [p1__88979#] (= p1__88979# {:greeting "Hello, Alice!"}))
+  ((fn* [p1__71770#] (= p1__71770# {:greeting "Hello, Alice!"}))
    v16_l92)))
 
 
@@ -90,7 +90,7 @@
 (deftest
  t20_l110
  (is
-  ((fn* [p1__88980#] (= p1__88980# {:message "Hello, World!"}))
+  ((fn* [p1__71771#] (= p1__71771# {:message "Hello, World!"}))
    v19_l104)))
 
 
@@ -108,7 +108,7 @@
 (deftest
  t23_l121
  (is
-  ((fn* [p1__88981#] (= p1__88981# {:message "Hello, Clojure!"}))
+  ((fn* [p1__71772#] (= p1__71772# {:message "Hello, Clojure!"}))
    v22_l114)))
 
 
@@ -126,9 +126,9 @@
  t26_l133
  (is
   ((fn*
-    [p1__88982#]
+    [p1__71773#]
     (=
-     p1__88982#
+     p1__71773#
      {:title "Default Title", :section {:heading "Default Heading"}}))
    v25_l127)))
 
@@ -148,8 +148,8 @@
  t29_l144
  (is
   ((fn*
-    [p1__88983#]
-    (= p1__88983# {:outer {:inner "Inner uses: Parent Value"}}))
+    [p1__71774#]
+    (= p1__71774# {:outer {:inner "Inner uses: Parent Value"}}))
    v28_l138)))
 
 
@@ -167,8 +167,8 @@
  t32_l153
  (is
   ((fn*
-    [p1__88984#]
-    (= p1__88984# {:section {:heading "User Heading"}}))
+    [p1__71775#]
+    (= p1__71775# {:section {:heading "User Heading"}}))
    v31_l148)))
 
 
@@ -198,9 +198,9 @@
  t35_l169
  (is
   ((fn*
-    [p1__88985#]
+    [p1__71776#]
     (=
-     p1__88985#
+     p1__71776#
      {:config
       {:database
        {:url "postgresql://localhost:5432/mydb", :pool-size 50}}}))
@@ -218,9 +218,9 @@
  t38_l183
  (is
   ((fn*
-    [p1__88986#]
+    [p1__71777#]
     (=
-     p1__88986#
+     p1__71777#
      {:user {:name "Bob", :age 30}, :items [{:x 10} {:y 20}]}))
    v37_l174)))
 
@@ -228,7 +228,7 @@
 (def v40_l190 (xform/xform {:outer {:middle {:inner []}}}))
 
 
-(deftest t41_l193 (is ((fn* [p1__88987#] (= p1__88987# {})) v40_l190)))
+(deftest t41_l193 (is ((fn* [p1__71778#] (= p1__71778# {})) v40_l190)))
 
 
 (def
@@ -240,7 +240,7 @@
 
 (deftest
  t44_l205
- (is ((fn* [p1__88988#] (= p1__88988# {:title "My Chart"})) v43_l197)))
+ (is ((fn* [p1__71779#] (= p1__71779# {:title "My Chart"})) v43_l197)))
 
 
 (def
@@ -295,9 +295,9 @@
  t47_l247
  (is
   ((fn*
-    [p1__88989#]
+    [p1__71780#]
     (=
-     p1__88989#
+     p1__71780#
      {:plot
       {:data [{:x [1 2 3], :y [4 5 6], :type "scatter"}],
        :layout {:title {:text "Simple Chart"}}}}))
@@ -322,8 +322,8 @@
  t50_l264
  (is
   ((fn*
-    [p1__88990#]
-    (= p1__88990# {:title "My Chart", :subtitle "A subtitle"}))
+    [p1__71781#]
+    (= p1__71781# {:title "My Chart", :subtitle "A subtitle"}))
    v49_l256)))
 
 
@@ -345,7 +345,7 @@
 
 (deftest
  t52_l275
- (is ((fn* [p1__88991#] (= p1__88991# {:title "My Chart"})) v51_l266)))
+ (is ((fn* [p1__71782#] (= p1__71782# {:title "My Chart"})) v51_l266)))
 
 
 (def
@@ -361,7 +361,7 @@
 
 (deftest
  t55_l297
- (is ((fn* [p1__88992#] (= p1__88992# {:b 20, :c 25})) v54_l285)))
+ (is ((fn* [p1__71783#] (= p1__71783# {:b 20, :c 25})) v54_l285)))
 
 
 (def
@@ -378,7 +378,7 @@
 
 (deftest
  t58_l312
- (is ((fn* [p1__88993#] (= p1__88993# {:result 180})) v57_l303)))
+ (is ((fn* [p1__71784#] (= p1__71784# {:result 180})) v57_l303)))
 
 
 (def
@@ -413,10 +413,10 @@
  t63_l335
  (is
   ((fn*
-    [p1__88994#]
+    [p1__71785#]
     (let
      [expected (* 2 Math/PI (Math/sqrt (/ 100 Math/PI)))]
-     (< (Math/abs (- (:circumference p1__88994#) expected)) 0.001)))
+     (< (Math/abs (- (:circumference p1__71785#) expected)) 0.001)))
    v62_l328)))
 
 
@@ -425,7 +425,7 @@
 
 (deftest
  t66_l342
- (is ((fn* [p1__88995#] (= p1__88995# [:Area])) v65_l340)))
+ (is ((fn* [p1__71786#] (= p1__71786# [:Area])) v65_l340)))
 
 
 (def
@@ -435,7 +435,7 @@
 
 (deftest
  t68_l346
- (is ((fn* [p1__88996#] (= p1__88996# [:Radius])) v67_l344)))
+ (is ((fn* [p1__71787#] (= p1__71787# [:Radius])) v67_l344)))
 
 
 (def
@@ -450,7 +450,7 @@
 
 (deftest
  t71_l355
- (is ((fn* [p1__88997#] (= p1__88997# [:A :B :C])) v70_l353)))
+ (is ((fn* [p1__71788#] (= p1__71788# [:A :B :C])) v70_l353)))
 
 
 (def
@@ -470,7 +470,7 @@
     @call-count))))
 
 
-(deftest t74_l372 (is ((fn* [p1__88998#] (= p1__88998# 1)) v73_l361)))
+(deftest t74_l372 (is ((fn* [p1__71789#] (= p1__71789# 1)) v73_l361)))
 
 
 (def v76_l376 (def computation-log (atom [])))
@@ -506,8 +506,8 @@
  t79_l396
  (is
   ((fn*
-    [p1__88999#]
-    (= p1__88999# [:computing-A :computing-B :computing-C]))
+    [p1__71790#]
+    (= p1__71790# [:computing-A :computing-B :computing-C]))
    v78_l380)))
 
 
@@ -550,9 +550,9 @@
  t84_l423
  (is
   ((fn*
-    [p1__89000#]
+    [p1__71791#]
     (=
-     p1__89000#
+     p1__71791#
      [[:computing :A]
       [:computing :B :with-A 100]
       [:computing :C :with-A 100]
@@ -573,7 +573,7 @@
 
 (deftest
  t87_l436
- (is ((fn* [p1__89001#] (= p1__89001# [25 49])) v86_l432)))
+ (is ((fn* [p1__71792#] (= p1__71792# [25 49])) v86_l432)))
 
 
 (def
@@ -612,7 +612,7 @@
       [RawData MinValue]
       (tc/select-rows
        RawData
-       (fn* [p1__89002#] (> (:y p1__89002#) MinValue)))),
+       (fn* [p1__71793#] (> (:y p1__71793#) MinValue)))),
      :TitleColor
      (dag/fn-with-deps
       nil
@@ -637,7 +637,7 @@
        FilteredData
        :y
        [:y]
-       (fn* [p1__89003#] (* p1__89003# ScaleFactor)))),
+       (fn* [p1__71794#] (* p1__71794# ScaleFactor)))),
      :ScaleFactor 2,
      :GridColor
      (dag/fn-with-deps
@@ -655,18 +655,18 @@
  t91_l486
  (is
   ((fn*
-    [p1__89004#]
+    [p1__71795#]
     (and
      (=
-      (get-in p1__89004# [:visualization :layout :title :text])
+      (get-in p1__71795# [:visualization :layout :title :text])
       "Filtered & Scaled Data (threshold=12, scale=2)")
      (=
-      (get-in p1__89004# [:visualization :layout :xaxis :title])
+      (get-in p1__71795# [:visualization :layout :xaxis :title])
       "X Values (n=5)")
      (=
-      (get-in p1__89004# [:visualization :layout :yaxis :title])
+      (get-in p1__71795# [:visualization :layout :yaxis :title])
       "Y Values (scaled ×2)")
-     (= (tc/row-count (get-in p1__89004# [:visualization :data])) 4)))
+     (= (tc/row-count (get-in p1__71795# [:visualization :data])) 4)))
    v90_l482)))
 
 
@@ -680,15 +680,15 @@
  t93_l501
  (is
   ((fn*
-    [p1__89005#]
+    [p1__71796#]
     (and
      (=
-      (get-in p1__89005# [:visualization :layout :title :text])
+      (get-in p1__71796# [:visualization :layout :title :text])
       "Filtered & Scaled Data (threshold=14, scale=2)")
      (=
-      (get-in p1__89005# [:visualization :layout :title :font :size])
+      (get-in p1__71796# [:visualization :layout :title :font :size])
       24)
-     (= (tc/row-count (get-in p1__89005# [:visualization :data])) 3)))
+     (= (tc/row-count (get-in p1__71796# [:visualization :data])) 3)))
    v92_l495)))
 
 
@@ -734,9 +734,9 @@
  t97_l535
  (is
   ((fn*
-    [p1__89006#]
+    [p1__71797#]
     (=
-     p1__89006#
+     p1__71797#
      {:db-url "postgresql://db.example.com:5432/myapp",
       :log-level "WARN",
       :max-conn 50}))
@@ -756,9 +756,9 @@
  t99_l545
  (is
   ((fn*
-    [p1__89007#]
+    [p1__71798#]
     (=
-     p1__89007#
+     p1__71798#
      {:db-url "postgresql://db.example.com:5432/myapp",
       :log-level "DEBUG",
       :max-conn 10}))
@@ -783,7 +783,7 @@
 (def v104_l565 (deref lazy-counter))
 
 
-(deftest t105_l567 (is ((fn* [p1__89008#] (= p1__89008# 1)) v104_l565)))
+(deftest t105_l567 (is ((fn* [p1__71799#] (= p1__71799# 1)) v104_l565)))
 
 
 (def
@@ -803,4 +803,4 @@
       [=x-data =y-data =mark]
       {:type (name =mark), :x =x-data, :y =y-data})}
     options),
-   :kindly/f (fn* [p1__89009#] (xform/xform p1__89009#))}))
+   :kindly/f (fn* [p1__71800#] (xform/xform p1__71800#))}))

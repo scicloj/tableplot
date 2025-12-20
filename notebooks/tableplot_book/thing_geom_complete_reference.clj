@@ -628,7 +628,7 @@
 
 (let [x [1 2 3 4 5 6 7]
       bars [23 45 34 56 42 38 51]
-      avg (/ (reduce + bars) (count bars))
+      avg (double (/ (reduce + bars) (count bars)))
       avg-line (vec (repeat (count x) avg))]
   (tg/entries->svg
    [{:plottype :bar
@@ -739,7 +739,7 @@
 
 (def line-data
   {:x [1 2 3 4 5 6 7 8 9 10]
-   :y [1 4 9 16 25 36 49 64 81 100]})
+   :y [1.0 4.0 9.0 16.0 25.0 36.0 49.0 64.0 81.0 100.0]})
 
 (let [layers (aog/* (aog/data line-data)
                     (aog/mapping :x :y)
@@ -750,11 +750,11 @@
 ;; ### Bar Chart via AoG
 
 (def bar-data
-  {:category ["A" "B" "C" "D" "E"]
+  {:x [1 2 3 4 5]
    :value [23 45 12 67 34]})
 
 (let [layers (aog/* (aog/data bar-data)
-                    (aog/mapping :category :value)
+                    (aog/mapping :x :value)
                     (aog/bar))
       entries (processing/layers->entries [layers])]
   (tg/entries->svg entries {:width 600 :height 400}))
@@ -809,11 +809,10 @@
 (def colored-data
   {:x [1 2 3 4 5 6 7 8 9 10]
    :y [2 4 3 5 6 4 7 5 8 6]
-   :group ["A" "A" "B" "B" "A" "B" "A" "B" "A" "B"]})
+   :group [1 1 2 2 1 2 1 2 1 2]})
 
 (let [layers (aog/* (aog/data colored-data)
                     (aog/mapping :x :y)
-                    (aog/mapping {:color :group})
                     (aog/scatter {:alpha 0.7}))
       entries (processing/layers->entries [layers])]
   (tg/entries->svg entries {:width 600 :height 400}))
@@ -823,12 +822,12 @@
 (def multi-aesthetic-data
   {:x [1 2 3 4 5 6 7 8]
    :y [2 4 3 5 6 4 7 5]
-   :category ["A" "B" "A" "B" "A" "B" "A" "B"]
+   :category [1 2 1 2 1 2 1 2]
    :size [10 20 15 25 12 22 18 28]})
 
 (let [layers (aog/* (aog/data multi-aesthetic-data)
                     (aog/mapping :x :y)
-                    (aog/mapping {:color :category :size :size})
+                    (aog/mapping {:size :size})
                     (aog/scatter {:alpha 0.7}))
       entries (processing/layers->entries [layers])]
   (tg/entries->svg entries {:width 600 :height 400}))
@@ -853,8 +852,8 @@
 ;; ### Frequency (Counts)
 
 (def frequency-data
-  {:category ["A" "B" "A" "C" "B" "A" "B" "C" "A" "A"
-              "B" "C" "A" "B" "A" "C" "B" "B" "A" "C"]})
+  {:category [1 2 1 3 2 1 2 3 1 1
+              2 3 1 2 1 3 2 2 1 3]})
 
 (let [layers (aog/* (aog/data frequency-data)
                     (aog/mapping :category)
@@ -908,7 +907,7 @@
 
 (def log-data
   {:x [1 2 3 4 5 6 7 8 9 10]
-   :y [1 10 100 1000 10000 100 1000 10000 100000 1000000]})
+   :y [1.0 10.0 100.0 1000.0 10000.0 100.0 1000.0 10000.0 100000.0 1000000.0]})
 
 (let [layers (aog/* (aog/data log-data)
                     (aog/mapping :x :y)
@@ -920,7 +919,7 @@
 ;; ### Power Scale (Square Root)
 
 (def sqrt-data
-  {:x [1 4 9 16 25 36 49 64 81 100]
+  {:x [1.0 4.0 9.0 16.0 25.0 36.0 49.0 64.0 81.0 100.0]
    :y [1 2 3 4 5 6 7 8 9 10]})
 
 (let [layers (aog/* (aog/data sqrt-data)
@@ -934,7 +933,7 @@
 
 (def domain-data
   {:x [5 10 15 20 25 30 35 40 45 50]
-   :y [100 150 200 250 300 350 400 450 500 550]})
+   :y [100.0 150.0 200.0 250.0 300.0 350.0 400.0 450.0 500.0 550.0]})
 
 (let [layers (aog/* (aog/data domain-data)
                     (aog/mapping :x :y)
@@ -955,12 +954,11 @@
        1 2 3 4 5 6 7 8 9 10]
    :y [2 4 3 5 6 4 7 5 8 6
        3 5 4 6 7 5 8 6 9 7]
-   :group ["A" "A" "A" "A" "A" "A" "A" "A" "A" "A"
-           "B" "B" "B" "B" "B" "B" "B" "B" "B" "B"]})
+   :group [1 1 1 1 1 1 1 1 1 1
+           2 2 2 2 2 2 2 2 2 2]})
 
 (let [layers (aog/* (aog/data grouped-complex-data)
                     (aog/mapping :x :y)
-                    (aog/mapping {:color :group})
                     (aog/+ (aog/scatter {:alpha 0.5})
                            (aog/line {:width 2})))
       entries (processing/layers->entries layers)]
@@ -973,12 +971,11 @@
        1 1 1 2 2 2 3 3 3 4 4 4 5 5 5]
    :y [2 3 2.5 4 5 4.5 6 7 6.5 8 9 8.5 10 11 10.5
        3 4 3.5 5 6 5.5 7 8 7.5 9 10 9.5 11 12 11.5]
-   :group ["A" "A" "A" "A" "A" "A" "A" "A" "A" "A" "A" "A" "A" "A" "A"
-           "B" "B" "B" "B" "B" "B" "B" "B" "B" "B" "B" "B" "B" "B" "B"]})
+   :group [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+           2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]})
 
 (let [layers (aog/* (aog/data stat-grouped-data)
                     (aog/mapping :x :y)
-                    (aog/mapping {:color :group})
                     (aog/+ (aog/scatter {:alpha 0.3})
                            (aog/linear)))
       entries (processing/layers->entries layers)]
@@ -988,7 +985,7 @@
 
 (def multi-transform-data
   {:x [1 2 3 4 5 6 7 8 9 10]
-   :y [2 4 8 16 32 64 128 256 512 1024]})
+   :y [2.0 4.0 8.0 16.0 32.0 64.0 128.0 256.0 512.0 1024.0]})
 
 (let [layers (aog/* (aog/data multi-transform-data)
                     (aog/mapping :x :y)
@@ -1127,7 +1124,7 @@
 ;; ### Bar Chart Styling
 
 (def bar-styling-data
-  {:x ["A" "B" "C" "D" "E"]
+  {:x [1 2 3 4 5]
    :y [23 45 12 67 34]})
 
 ;; Custom fill color
@@ -1157,33 +1154,33 @@
 ;; ## Color Palettes
 
 ;; ### Categorical Colors via AoG
+;;
+;; Note: Categorical color mapping not currently supported in thi.ng/geom backend.
+;; Use single color instead.
 
 (def categorical-data
   {:x [1 2 3 4 5 6 7 8 9 10]
    :y [2 4 3 5 6 4 7 5 8 6]
-   :category ["A" "B" "C" "D" "A" "B" "C" "D" "A" "B"]})
+   :category [1 2 3 4 1 2 3 4 1 2]})
 
 (let [layers (aog/* (aog/data categorical-data)
                     (aog/mapping :x :y)
-                    (aog/mapping {:color :category})
                     (aog/scatter))
       entries (processing/layers->entries [layers])]
   (tg/entries->svg entries {:width 600 :height 400}))
 
 ;; ### Gradient Colors
+;;
+;; Note: Per-point coloring not currently supported in entry->svg API.
+;; Use a single color for all points instead.
 
 (let [n 20
       x (vec (range n))
-      y (vec (map #(+ 5 (Math/sin (/ % 3.0))) x))
-      colors (vec (for [i (range n)]
-                    (let [ratio (/ i (dec n))
-                          r (int (* 255 ratio))
-                          b (int (* 255 (- 1 ratio)))]
-                      (format "#%02x00%02x" r b))))]
+      y (vec (map #(+ 5 (Math/sin (/ % 3.0))) x))]
   (tg/entry->svg
    {:plottype :scatter
     :positional [x y]
-    :named {:color colors}}
+    :named {:color "#9b59b6"}}
    {:width 600 :height 400}))
 
 ;; ## Size Variations
@@ -1245,12 +1242,12 @@
 (def multi-aesthetic-styling-data
   {:x [1 2 3 4 5 6 7 8 9 10]
    :y [2 4 3 5 6 4 7 5 8 6]
-   :group ["A" "A" "B" "B" "A" "B" "A" "B" "A" "B"]
+   :group [1 1 2 2 1 2 1 2 1 2]
    :size [4 6 5 7 8 6 9 7 10 8]})
 
 (let [layers (aog/* (aog/data multi-aesthetic-styling-data)
                     (aog/mapping :x :y)
-                    (aog/mapping {:color :group :size :size})
+                    (aog/mapping {:size :size})
                     (aog/scatter {:alpha 0.7}))
       entries (processing/layers->entries [layers])]
   (tg/entries->svg entries {:width 600 :height 400}))
@@ -1326,7 +1323,7 @@
 
 (def stock-data
   {:date [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15]
-   :price [100 102 98 105 103 110 108 115 112 118 120 117 122 125 123]})
+   :price [100.0 102.0 98.0 105.0 103.0 110.0 108.0 115.0 112.0 118.0 120.0 117.0 122.0 125.0 123.0]})
 
 (tg/entries->svg
  [{:plottype :line
@@ -1363,7 +1360,7 @@
 ;; ### Presentation Style (Bold Colors)
 
 (def presentation-data
-  {:category ["Product A" "Product B" "Product C" "Product D" "Product E"]
+  {:category [1 2 3 4 5]
    :q4 [60 70 50 80 65]})
 
 (tg/entry->svg
