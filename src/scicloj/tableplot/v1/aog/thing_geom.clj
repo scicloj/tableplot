@@ -8,6 +8,7 @@
   - Excellent polar coordinate support (svg-plot2d-polar)
   - Full control over rendering
   - Static SVG output (no interactivity)
+  - ggplot2-compatible themes
   
   This backend is ideal for:
   - Scientific papers (static SVG/PDF)
@@ -15,6 +16,7 @@
   - Print reports
   - Polar coordinate visualizations (radar charts, rose diagrams)"
   (:require [scicloj.tableplot.v1.aog.ir :as ir]
+            [scicloj.tableplot.v1.aog.thing-geom-themes :as themes]
             [thi.ng.geom.viz.core :as viz]
             [thi.ng.geom.svg.core :as svg]
             [thi.ng.geom.vector :as v]
@@ -99,14 +101,22 @@
           ;; For Y axis: X position (left of plot area = 50)
           pos (case axis-type
                 :x 350 ; X axis at bottom
-                :y 50)] ; Y axis at left
+                :y 50) ; Y axis at left
+
+          ;; Calculate major tick spacing (~4-5 major ticks)
+          domain-range (- (second domain) (first domain))
+          major-spacing (/ domain-range 4)
+
+          ;; Minor ticks: place 1 minor tick between each major tick
+          ;; So minor spacing is major/2
+          minor-spacing (/ major-spacing 2)]
+
       (axis-fn
        {:domain domain
         :range range
         :pos pos
-        :major (/ (- (second domain) (first domain)) 5) ; ~5 major ticks
-        :minor (/ (- (second domain) (first domain)) 20) ; ~20 minor ticks
-        }))))
+        :major major-spacing
+        :minor minor-spacing}))))
 
 ;;; =============================================================================
 ;;; Entry conversion
@@ -116,12 +126,16 @@
   
   Args:
   - entry: Entry map {:plottype, :positional, :named}
+  - theme: Theme keyword or map (default :grey)
   
   Returns:
   - thi.ng/geom-viz spec map ready for svg-plot2d-cartesian or svg-plot2d-polar"
-  [entry]
+  [entry & [theme]]
   (let [{:keys [plottype positional named]} entry
         layout-fn (plottype->layout plottype)
+
+        ;; Get theme config
+        theme-config (themes/get-theme (or theme :grey))
 
         ;; Convert data format
         values (positional->thing-values positional)
@@ -151,19 +165,22 @@
                                      :major 0.2
                                      :minor 0.1}))
 
-        ;; Extract visual attributes
-        ;; Map common AoG attributes to thi.ng SVG attributes
+        ;; Extract visual attributes (user-specified take precedence over theme defaults)
+        default-color (themes/get-default-data-color theme-config)
+        default-stroke-width (themes/get-default-stroke-width theme-config)
+        default-opacity (themes/get-default-opacity theme-config)
+
         stroke (or (:stroke named)
                    (:color named)
-                   "#0af") ; Default blue
+                   default-color)
         fill (or (:fill named)
                  (when (#{:area :bar} plottype) stroke)
                  (when (= :scatter plottype) stroke)
                  "none")
-        opacity (or (:alpha named) (:opacity named) 1.0)
+        opacity (or (:alpha named) (:opacity named) default-opacity)
         stroke-width (or (:stroke-width named)
                          (:linewidth named)
-                         2)
+                         default-stroke-width)
 
         ;; Build attribute map for thi.ng
         attribs {:stroke stroke
@@ -181,12 +198,13 @@
                     (assoc data-spec :bar-width (or (:bar-width named) 20))
                     data-spec)
 
-        ;; Build complete spec
+        ;; Apply theme to grid
+        grid-spec (themes/apply-theme-to-grid theme-config)
+
+        ;; Build complete spec with themed grid
         spec {:x-axis x-axis
               :y-axis y-axis
-              :grid {:attribs {:stroke "#ccc" :stroke-width 0.5}
-                     :minor-x true
-                     :minor-y true}
+              :grid grid-spec
               :data [data-spec]}]
 
     spec))
@@ -197,17 +215,24 @@
   Args:
   - entry: Entry map {:plottype, :positional, :named}
   - opts: Optional map with:
-    - :width (default 600)
-    - :height (default 400)
+    - :width (default from theme or 600)
+    - :height (default from theme or 400)
     - :polar (default false) - use polar coordinates
+    - :theme (default :grey) - theme keyword or map
   
   Returns:
   - Kindly-wrapped SVG for Clay rendering"
   [entry & [opts]]
-  (let [spec (entry->thing-spec entry)
-        width (or (:width opts) 600)
-        height (or (:height opts) 400)
+  (let [theme (or (:theme opts) :grey)
+        theme-config (themes/get-theme theme)
+
+        ;; Merge theme defaults with opts
+        width (or (:width opts) (get-in theme-config [:plot :width]) 600)
+        height (or (:height opts) (get-in theme-config [:plot :height]) 400)
         polar? (or (:polar opts) false)
+
+        ;; Generate spec with theme
+        spec (entry->thing-spec entry theme)
 
         ;; Choose plot function
         plot-fn (if polar?
@@ -220,9 +245,34 @@
                       :circle true)
                spec)
 
-        ;; Generate SVG
+        ;; Get panel background from theme
+        panel-bg (get-in theme-config [:panel :background] "white")
+        plot-bg (get-in theme-config [:plot :background] "white")
+
+        ;; Extract axis ranges from spec to calculate panel dimensions
+        x-range (get-in spec [:x-axis :range])
+        y-range (get-in spec [:y-axis :range])
+
+        ;; Calculate panel background position and dimensions from axis ranges
+        ;; x-range is [x-min x-max], y-range is [y-max y-min] (SVG y is inverted)
+        panel-x (first x-range)
+        panel-y (second y-range)
+        panel-width (- (second x-range) (first x-range))
+        panel-height (- (first y-range) (second y-range))
+
+        ;; Generate SVG plot
         plot (plot-fn spec)
-        svg-doc (svg/svg {:width width :height height} plot)
+
+        ;; Add background rectangles (plot background, then panel background, then plot)
+        svg-doc (svg/svg {:width width :height height}
+                  ;; Plot background (full area)
+                         (svg/rect [0 0] width height {:fill plot-bg})
+                  ;; Panel background (plot area defined by axis ranges)
+                         (when (not= panel-bg plot-bg)
+                           (svg/rect [panel-x panel-y] panel-width panel-height {:fill panel-bg}))
+                  ;; The actual plot
+                         plot)
+
         svg-string (svg/serialize svg-doc)]
 
     ;; Wrap with kind/html for proper Clay rendering
@@ -245,7 +295,11 @@
     (entry->svg (first entries) opts)
 
     ;; Multiple entries - combine data specs
-    (let [specs (map entry->thing-spec entries)
+    (let [theme (or (:theme opts) :grey)
+          theme-config (themes/get-theme theme)
+
+          ;; Generate specs with theme
+          specs (map #(entry->thing-spec % theme) entries)
 
           ;; Use axes from first entry (assumes same domain)
           ;; In a more sophisticated version, we'd merge domains
@@ -255,16 +309,18 @@
           ;; Combine all data specs
           all-data (vec (mapcat :data specs))
 
-          ;; Build combined spec
+          ;; Apply theme to grid
+          grid-spec (themes/apply-theme-to-grid theme-config)
+
+          ;; Build combined spec with themed grid
           combined-spec {:x-axis x-axis
                          :y-axis y-axis
-                         :grid {:attribs {:stroke "#ccc" :stroke-width 0.5}
-                                :minor-x true
-                                :minor-y true}
+                         :grid grid-spec
                          :data all-data}
 
-          width (or (:width opts) 600)
-          height (or (:height opts) 400)
+          ;; Merge theme defaults with opts
+          width (or (:width opts) (get-in theme-config [:plot :width]) 600)
+          height (or (:height opts) (get-in theme-config [:plot :height]) 400)
           polar? (or (:polar opts) false)
 
           ;; Choose plot function
@@ -278,9 +334,34 @@
                                  :circle true)
                           combined-spec)
 
-          ;; Generate SVG
+          ;; Get panel background from theme
+          panel-bg (get-in theme-config [:panel :background] "white")
+          plot-bg (get-in theme-config [:plot :background] "white")
+
+          ;; Extract axis ranges from spec to calculate panel dimensions
+          x-range (get-in combined-spec [:x-axis :range])
+          y-range (get-in combined-spec [:y-axis :range])
+
+          ;; Calculate panel background position and dimensions from axis ranges
+          ;; x-range is [x-min x-max], y-range is [y-max y-min] (SVG y is inverted)
+          panel-x (first x-range)
+          panel-y (second y-range)
+          panel-width (- (second x-range) (first x-range))
+          panel-height (- (first y-range) (second y-range))
+
+          ;; Generate SVG plot
           plot (plot-fn combined-spec)
-          svg-doc (svg/svg {:width width :height height} plot)
+
+          ;; Add background rectangles (plot background, then panel background, then plot)
+          svg-doc (svg/svg {:width width :height height}
+                    ;; Plot background (full area)
+                           (svg/rect [0 0] width height {:fill plot-bg})
+                    ;; Panel background (plot area defined by axis ranges)
+                           (when (not= panel-bg plot-bg)
+                             (svg/rect [panel-x panel-y] panel-width panel-height {:fill panel-bg}))
+                    ;; The actual plot
+                           plot)
+
           svg-string (svg/serialize svg-doc)]
 
       ;; Wrap with kind/html for proper Clay rendering
