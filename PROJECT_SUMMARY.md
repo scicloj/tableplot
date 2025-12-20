@@ -7,8 +7,16 @@ Tableplot is a Clojure library for declarative data visualization, implementing 
 
 ```
 tableplot/
-├── src/tableplot/
-│   ├── v1/                          # Legacy implementation
+├── src/scicloj/tableplot/
+│   ├── v1/
+│   │   └── aog/                     # AlgebraOfGraphics implementation
+│   │       ├── core.clj             # AoG API (*, +, data, mapping, etc.)
+│   │       ├── processing.clj       # Layer → Entry pipeline
+│   │       ├── ir.clj               # Intermediate representation specs
+│   │       ├── plotly.clj           # Plotly backend
+│   │       ├── vegalite.clj         # Vega-Lite backend
+│   │       ├── thing-geom.clj       # thi.ng/geom backend
+│   │       └── thing-geom-themes.clj # ggplot2 themes for thi.ng/geom
 │   └── v2/
 │       ├── api.clj                  # Public API functions
 │       ├── dataflow.clj             # Core dataflow engine
@@ -18,11 +26,30 @@ tableplot/
 │       ├── ggplot.clj               # ggplot2-compatible API
 │       └── ggplot/
 │           └── themes.clj           # Complete ggplot2 theme system (8 themes)
-├── notebooks/
+├── notebooks/tableplot_book/
+│   ├── # V2 (ggplot2-style) notebooks
 │   ├── ggplot2_walkthrough.clj      # Complete ggplot2 API tutorial
-│   ├── v2_dataflow_from_scratch.clj # Educational notebook building dataflow from scratch
+│   ├── v2_dataflow_from_scratch.clj # Educational: building dataflow from scratch
 │   ├── v2_dataflow_walkthrough.clj  # V2 dataflow tutorial
-│   └── plotly_backend_dev.clj       # Plotly backend development
+│   ├── plotly_backend_dev.clj       # Plotly backend development
+│   │
+│   ├── # V1 (AlgebraOfGraphics) notebooks
+│   ├── # Learning Path (4 notebooks):
+│   ├── aog_tutorial.clj             # AoG introduction
+│   ├── aog_plot_types.clj           # Comprehensive plot type reference
+│   ├── aog_backends_demo.clj        # Backend comparison (Plotly/Vega/thi.ng)
+│   ├── aog_examples.clj             # Real-world dataset examples
+│   │
+│   ├── # Backend Guides (3 notebooks - Equal Depth):
+│   ├── backend_plotly.clj           # Plotly backend complete guide
+│   ├── backend_vegalite.clj         # Vega-Lite backend complete guide
+│   ├── backend_thing_geom.clj       # thi.ng/geom backend complete guide
+│   │
+│   ├── # Technical (2 notebooks):
+│   ├── aog_architecture.clj         # Architecture and pipeline
+│   └── theme_showcase.clj           # Theme examples
+│   │
+│   └── archive/                     # Archived/old notebooks
 ├── test/
 │   └── tableplot/v2/                # V2 test suite
 └── docs/
@@ -565,6 +592,150 @@ The project is under active development. Key areas for contribution:
 - Theme designs
 - Documentation improvements
 - Performance optimizations
+
+## V1: AlgebraOfGraphics Implementation
+
+### Overview
+
+V1 implements an AlgebraOfGraphics (AoG) API inspired by Julia's AlgebraOfGraphics.jl, providing a composable visualization grammar with three production-ready backends.
+
+### Core Concepts
+
+**Algebraic Operators**:
+- `*` (multiplication) - Merge layer specifications
+- `+` (addition) - Overlay multiple layers
+
+**Pipeline**: `Layer → ProcessedLayer → Entry → Backend`
+
+**Key Functions** (`src/scicloj/tableplot/v1/aog/core.clj`):
+```clojure
+(aog/data dataset)              ; Attach data to layer
+(aog/mapping :x :y)             ; Map data columns to aesthetics
+(aog/mapping :x :y {:color :species})  ; With additional aesthetics
+(aog/scatter)                   ; Point geometry
+(aog/line)                      ; Line geometry
+(aog/bar)                       ; Bar geometry
+(aog/linear)                    ; Linear regression transform
+(aog/smooth)                    ; LOESS smoothing
+(aog/histogram)                 ; Histogram
+(aog/density)                   ; Kernel density estimation
+(aog/draw spec opts)            ; Render visualization
+```
+
+**Example**:
+```clojure
+(require '[scicloj.tableplot.v1.aog.core :as aog])
+
+;; Basic scatter plot
+(aog/draw
+ (aog/* (aog/data {:x [1 2 3] :y [4 5 6]})
+        (aog/mapping :x :y)
+        (aog/scatter)))
+
+;; Multi-layer with grouping
+(aog/draw
+ (aog/* (aog/data penguins)
+        (aog/mapping :bill-length :bill-depth {:color :species})
+        (aog/+ (aog/scatter {:alpha 0.5})
+               (aog/linear))))
+```
+
+### Three Production-Ready Backends
+
+All three backends have **equal status** with comprehensive documentation:
+
+#### 1. Plotly Backend (Default)
+- **Superpower**: 3D visualizations + Rich interactivity
+- **Output**: HTML + JavaScript
+- **Best for**: Dashboards, exploratory data analysis, web apps
+- **Features**: Pan, zoom, hover tooltips, 3D scatter/surface/mesh
+- **Guide**: `notebooks/tableplot_book/backend_plotly.clj` (656 lines)
+
+#### 2. Vega-Lite Backend
+- **Superpower**: Faceting (small multiples)
+- **Output**: SVG (via Vega-Lite spec)
+- **Best for**: Publications, reports, faceted plots
+- **Features**: Column/row/facet layouts, 5 themes, declarative specs
+- **Guide**: `notebooks/tableplot_book/backend_vegalite.clj` (577 lines)
+
+#### 3. thi.ng/geom Backend
+- **Superpower**: Native polar coordinates + Pure Clojure
+- **Output**: SVG (native)
+- **Best for**: Radar charts, rose diagrams, print-ready graphics
+- **Features**: True polar rendering, 9 ggplot2 themes, no JavaScript
+- **Guide**: `notebooks/tableplot_book/backend_thing_geom.clj` (835 lines)
+
+### Backend Usage
+
+```clojure
+;; Plotly (default via aog/draw)
+(aog/draw spec)
+
+;; Vega-Lite (explicit)
+(require '[scicloj.tableplot.v1.aog.vegalite :as vegalite])
+(vegalite/vegalite entry {:width 600 :height 400})
+
+;; thi.ng/geom (explicit)
+(require '[scicloj.tableplot.v1.aog.thing-geom :as tg])
+(tg/entry->svg entry {:width 600 :height 400 :theme :grey})
+```
+
+### Backend Comparison Table
+
+| Feature | **Plotly** | **Vega-Lite** | **thi.ng/geom** |
+|---------|-----------|--------------|----------------|
+| **Output Format** | HTML + JS | SVG (via spec) | SVG (native) |
+| **Interactivity** | ✅ Full (pan, zoom, hover) | ⚠️ Limited (tooltips) | ❌ None (static) |
+| **3D Support** | ✅ Native | ❌ None | ❌ None |
+| **Polar Coordinates** | ⚠️ Manual | ❌ None | ✅ Native |
+| **Faceting** | ⚠️ Manual subplots | ✅ Built-in (`col`, `row`) | ❌ None |
+| **Themes** | ✅ 7+ built-in | ✅ 5 built-in | ✅ 9 ggplot2 themes |
+| **File Size** | ~3MB (plotly.js) | ~100KB (spec) | ~10KB (SVG) |
+| **Performance** | ⚠️ Slower (100k+) | ✅ Fast | ✅ Very fast |
+| **Customization** | ✅ Extensive | ✅ Good | ✅ Full |
+| **Dependencies** | Plotly.js (browser) | Vega-Lite (JVM) | Pure Clojure |
+| **Use Cases** | Dashboards, 3D, EDA | Reports, facets | Polar, print, pure SVG |
+
+### Entry IR (Intermediate Representation)
+
+The backend-agnostic format that all backends consume:
+
+```clojure
+{:plottype :scatter           ; :scatter, :line, :bar, etc.
+ :positional [[1 2 3]         ; x values
+              [4 5 6]]        ; y values
+ :named {:alpha 0.5           ; Optional styling
+         :color "#0af"}}
+```
+
+### thi.ng/geom Themes
+
+9 ggplot2-compatible themes (`src/scicloj/tableplot/v1/aog/thing-geom-themes.clj`):
+
+- `:grey` (default) - Grey panel, white grid (ggplot2 default)
+- `:bw` - Black & white
+- `:minimal` - Minimal non-data ink
+- `:classic` - Classic with axis lines
+- `:dark` - Dark background
+- `:light` - Light grey lines
+- `:void` - Completely empty
+- `:linedraw` - Black lines only
+- `:tableplot` - tableplot default
+
+**Usage**:
+```clojure
+(tg/entry->svg entry {:theme :minimal :width 600 :height 400})
+```
+
+### Documentation Philosophy
+
+The V1 AoG documentation follows a clear structure:
+
+1. **Learning Path** (4 notebooks): Tutorial → Plot Types → Backends → Examples
+2. **Backend Equality** (3 guides): Equal depth, equal structure, clear unique strengths
+3. **Technical Deep Dive** (2 notebooks): Architecture + specialized topics
+
+**Key Feature**: Identical comparison tables across all three backend guides ensure objective decision-making based on actual needs rather than implicit recommendations.
 
 ## License
 
