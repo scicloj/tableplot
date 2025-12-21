@@ -1,4 +1,4 @@
-;; # Building an Algebra of Graphics in Clojure
+;; # Building a Composable Graphics API in Clojure
 ;; **A Design Exploration for Tableplot**
 ;;
 ;; *This notebook explores a fresh approach to composable plot specifications
@@ -55,7 +55,8 @@
 ;;   - Data layer (tech.ml.dataset) tightly coupled to API
 ;;
 ;; **5. Confusing Intermediate Representation**
-;; - Hanami templates serve as the IR between API and renderers
+;; - Hanami templates serve as the IR (intermediate representation - the data
+;;   structure between user API and renderer) between API and renderers
 ;; - Template substitution is powerful but often confusing in debugging
 ;; - Unclear which substitution parameters can be used when
 ;; - Error messages reference template internals, not user code
@@ -68,13 +69,13 @@
 ;; ### The Opportunity
 ;;
 ;; A fresh design exploration allows us to:
-;; - **Separate concerns**: Clean separation between algebra, IR, and rendering
+;; - **Separate concerns**: Clean separation between API, IR, and rendering
 ;; - **Support multiple backends**: One API, many rendering targets
 ;; - **Use standard Clojure**: Layers as plain maps, standard lib operations
 ;; - **Make debugging clear**: Transparent IR that's easy to inspect
 ;; - **Accept any data**: Plain maps, datasets, or custom structures
 ;;
-;; This notebook explores whether an Algebra of Graphics approach can
+;; This notebook explores whether this compositional approach can
 ;; deliver these benefits while maintaining a coherent, learnable API.
 ;;
 ;; ## Scope of This Exploration
@@ -83,17 +84,18 @@
 ;; - **Non-goal**: Replace existing Tableplot APIs immediately
 ;; - **Outcome**: This may become an additional namespace in Tableplot v1,
 ;;   coexisting with `hanami` and `plotly` APIs
-;; - **Audience**: Tableplot maintainers and contributors evaluating design options
+;; - **Audience**: Tableplot maintainers, contributors, and curious users
+;;   who want to provide early feedback on this approach
 
 ;; # 2. Inspiration: AlgebraOfGraphics.jl
 ;;
 ;; This design is inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/),
 ;; a visualization library that builds on decades of experience from systems
-;; like ggplot2 while introducing clearer algebraic principles.
+;; like ggplot2 while introducing clearer compositional principles.
 ;;
-;; ## Core Insight: Layers + Algebra
+;; ## Core Insight: Layers + Operations
 ;;
-;; AlgebraOfGraphics.jl treats visualization as an algebra with:
+;; AlgebraOfGraphics.jl treats visualization with two key operations on layers:
 ;;
 ;; **1. Uniform abstraction**: Everything is a "layer"
 ;; - Data sources
@@ -115,7 +117,7 @@
 ;;   # → Two separate visual marks on same plot
 ;;   ```
 ;;
-;; **3. Distributive law**: `a * (b + c) = (a * b) + (a * c)`
+;; **3. Distributive property**: `a * (b + c) = (a * b) + (a * c)`
 ;;   ```julia
 ;;   data * mapping(x, y) * (scatter + line)
 ;;   # ↓ expands to
@@ -146,19 +148,18 @@
 ;;
 ;; ## Translating to Clojure
 ;;
-;; Julia's algebraic approach relies on:
+;; Julia's approach relies on:
 ;; - Custom `*` and `+` operators defined on Layer types
 ;; - Multiple dispatch to handle type combinations
 ;; - Object-oriented layer representations
 ;;
-;; **Key challenge**: How do we bring this algebraic elegance to Clojure while:
+;; **Key challenge**: How do we bring this compositional elegance to Clojure while:
 ;; - Using plain data structures (maps, not objects)
 ;; - Enabling standard library operations (merge, assoc, filter)
 ;; - Maintaining the compositional benefits
-;; - Making the IR transparent and inspectable
+;; - Making the intermediate representation transparent and inspectable
 ;;
-;; The answer: **Layers as flat maps with namespaced keys**, combined with
-;; operators that work on map collections.
+;; The next section explores different approaches to solving this challenge.
 
 ;; # 3. Design Exploration
 ;;
@@ -261,9 +262,7 @@
 ;; - Plain: `:color` (6 chars)
 ;; - Namespaced: `:aog/color` (11 chars), or `#:aog{:color ...}` in map context
 ;;
-;; **This is our chosen approach.**
-;;
-;; ## Why This Matters: Julia's Algebraic Culture → Clojure Data Structures
+;; ## Why This Matters: Julia's Compositional Approach → Clojure Data Structures
 ;;
 ;; Julia's AlgebraOfGraphics.jl uses:
 ;; - Custom Layer types with specialized `*` and `+` operators
@@ -275,7 +274,7 @@
 ;; - `*` and `+` are **functions** that work on map collections
 ;; - Composition uses **standard merge**, not custom logic
 ;;
-;; **Result**: The same algebraic elegance, but layers are transparent data
+;; **Result**: The same compositional power, but layers are transparent data
 ;; that work with Clojure's entire standard library:
 ;; - `merge` - Combine layers
 ;; - `assoc` - Add properties
@@ -284,7 +283,7 @@
 ;; - `filterv` - Select specific layers
 ;; - `into` - Accumulate layers
 ;;
-;; This is a fundamental design advantage: **algebraic operations on plain data**.
+;; This is a fundamental design advantage: **compositional operations on plain data**.
 
 ;; # 4. Proposed Design
 ;;
@@ -292,7 +291,7 @@
 ;;
 ;; The API consists of three parts:
 ;; 1. **Constructors** - Build partial layer specifications
-;; 2. **Operators** - Compose layers (`*`) and overlay them (`+`)
+;; 2. **Composition operators** - Merge layers (`*`) and overlay them (`+`)
 ;; 3. **Renderers** - Convert layers to visualizations
 ;;
 ;; Implementation details are in Section 6. Here we show signatures and usage.
@@ -401,10 +400,10 @@
   ([] [{:aog/plottype :bar}])
   ([opts] [(merge {:aog/plottype :bar} opts)]))
 
-;; ## Algebraic Operators
+;; ## Composition Operators
 
 (defn *
-  "Merge layer specifications (product/composition).
+  "Merge layer specifications (composition).
   
   The `*` operator combines layer properties through merge.
   It handles multiple input types to enable flexible composition:
@@ -413,7 +412,7 @@
   - Map × Vec → Vec - Merge map into each vector element  
   - Vec × Vec → Vec - Cartesian product with merge
   
-  The distributive law holds:
+  The distributive property holds:
   (* a (+ b c)) = (+ (* a b) (* a c))
   
   Examples:
@@ -470,7 +469,7 @@
 ;; # 5. Examples
 ;;
 ;; These examples demonstrate the design in practice, showing how the
-;; algebraic approach and data-oriented representation work together.
+;; compositional approach and data-oriented representation work together.
 
 ;; ## Setup: Load Datasets
 
@@ -514,7 +513,7 @@
 ;; 3. Result: Two complete layers with same data/mapping, different plot types
 ;; 4. Both rendered on same plot
 ;;
-;; This is the distributive law in action:
+;; This uses the distributive property (from Section 2):
 ;; (* a (+ b c)) = (+ (* a b) (* a c))
 ;;
 ;; Notice: Linear regression computed separately for each species (by :color grouping)
@@ -522,7 +521,6 @@
 ;; ## Example 3: Standard Clojure Operations Work
 ;;
 ;; Because layers are plain maps, all standard library operations work.
-;; This example demonstrates merge, assoc, update, and mapv.
 
 ;; Build with standard merge
 (def layer-with-merge
@@ -545,33 +543,11 @@ layer-with-merge ;; Inspect - it's just a map!
 
 (plot [with-color])
 
-;; Modify with standard update
-(def with-alpha
-  (merge (data penguins)
-         (mapping :bill-length-mm :bill-depth-mm)
-         (scatter {:alpha 0.3})))
-
-(def doubled-alpha
-  (update with-alpha :aog/alpha * 2))
-
-(:aog/alpha doubled-alpha) ;; => 0.6
-
-(plot [doubled-alpha])
-
-;; Transform all layers with mapv
-(def multi-layer
-  (* (data penguins)
-     (mapping :bill-length-mm :bill-depth-mm)
-     (+ (scatter) (line))))
-
-;; Add alpha to all layers
-(def all-with-alpha
-  (mapv #(assoc % :aog/alpha 0.6) multi-layer))
-
-(plot all-with-alpha)
-
 ;; **Key insight**: No custom functions needed. Standard Clojure operations
 ;; work because layers are just maps with namespaced keys.
+;;
+;; Other standard operations work too: `update`, `mapv`, `filter`, `into`.
+;; Example 4 shows conditional building with `into`.
 
 ;; ## Example 4: Conditional Layer Building
 ;;
@@ -652,6 +628,11 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; This section reveals how the API works under the hood.
 ;; The implementation is surprisingly simple because the design leverages
 ;; standard Clojure operations rather than custom logic.
+;;
+;; We'll cover:
+;; - **Helper functions** for data extraction and transformation
+;; - **Primary rendering backend** (thi.ng/geom-viz for static SVG)
+;; - **Alternative backend** (Vega-Lite for interactive visualizations)
 
 ;; ## Helper Functions
 
@@ -1149,7 +1130,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; - No forced conversion step
 ;;
 ;; **5. Clear Separation of Concerns**
-;; - Algebra (operators) separate from IR (layer maps)
+;; - Composition operators separate from IR (layer maps)
 ;; - IR separate from rendering (backends)
 ;; - Each layer can be understood independently
 ;;
@@ -1163,7 +1144,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; **2. Novel Operators**
 ;; - `*` and `+` shadow arithmetic operators
 ;; - Need `clojure.core/*` for multiplication in implementation
-;; - Users must learn algebraic interpretation
+;; - Users must learn non-standard interpretation of familiar operators
 ;;
 ;; **3. Incomplete Feature Set (Currently)**
 ;; - Some statistical transforms defined but not implemented (smooth, density)
@@ -1177,9 +1158,9 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; - Prevents collisions with data columns
 ;; - Aligns with modern Clojure practices (Ring 2.0, clojure.spec)
 ;;
-;; **Algebraic Operators (`*` and `+`)**
+;; **Composition Operators (`*` and `+`)**
 ;; - Directly translates AlgebraOfGraphics.jl concepts
-;; - Distributive law enables factoring common properties
+;; - Distributive property enables factoring common properties
 ;; - Clear distinction: `*` = merge, `+` = overlay
 ;;
 ;; **Multiple Backends from Start**
@@ -1220,7 +1201,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; ;; Users choose based on their needs:
 ;; ;; - hanami: Rich Vega-Lite features, Hanami template power
 ;; ;; - plotly: Interactive Plotly.js visualizations
-;; ;; - aog: Compositional algebra, backend flexibility
+;; ;; - aog: Compositional API, backend flexibility
 ;; ```
 ;;
 ;; ## Migration & Compatibility
@@ -1282,7 +1263,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; **Alternatives**:
 ;; - `compose` and `overlay`
 ;; - `merge-layers` and `concat-layers`
-;; - Keep `*` and `+` for algebraic elegance
+;; - Keep `*` and `+` for conciseness and mathematical elegance
 ;;
 ;; **Question**: Are symbolic operators worth the potential confusion?
 ;;
@@ -1360,12 +1341,12 @@ layer-with-merge ;; Inspect - it's just a map!
 ;;
 ;; ## What We've Explored
 ;;
-;; This notebook demonstrates a complete Algebra of Graphics implementation
+;; This notebook demonstrates a complete composable graphics API
 ;; for Clojure in ~600 lines of code.
 ;;
 ;; **Core Design**:
 ;; - Layers as **flat maps** with `:aog/*` namespaced keys
-;; - Algebraic composition using `*` (merge) and `+` (overlay)
+;; - Composition using `*` (merge) and `+` (overlay)
 ;; - Standard library operations work natively (merge, assoc, mapv, filter)
 ;; - Backend-agnostic IR enables multiple rendering targets
 ;;
@@ -1373,10 +1354,10 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; 1. **Flat structure enables standard merge** - No custom layer-merge needed
 ;; 2. **Namespacing prevents collisions** - Can coexist with any data columns
 ;; 3. **Transparent IR** - Layers are inspectable plain maps, not templates
-;; 4. **Julia's algebraic culture translates to Clojure data** - Same concepts, different substrate
+;; 4. **Julia's compositional approach translates to Clojure data** - Same concepts, different substrate
 ;;
 ;; **Implementation Status**:
-;; - ✅ Core algebra (`*`, `+`, layer composition)
+;; - ✅ Core composition (`*`, `+`, layer composition)
 ;; - ✅ Two rendering backends (geom-viz, Vega-Lite)
 ;; - ✅ Plot types: scatter, line, area, bar
 ;; - ✅ Statistical transform: linear regression
