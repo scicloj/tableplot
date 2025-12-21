@@ -2,9 +2,9 @@
 ;; **A Design Exploration for Tableplot**
 ;;
 ;; *This notebook explores a fresh approach to composable plot specifications
-;; in Clojure, inspired by Julia's AlgebraOfGraphics.jl. It's a working prototype
-;; demonstrating an alternative compositional API that addresses limitations in
-;; Tableplot's current APIs.*
+;; in Clojure, inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/). 
+;; It's a working prototype demonstrating an alternative compositional API that addresses 
+;; limitations in [Tableplot](https://scicloj.github.io/tableplot)'s current APIs.*
 ;;
 ;; ## A Bit of Context: Tableplot's Journey
 ;;
@@ -16,9 +16,11 @@
 ;; needed it soon. The goal was to complete an important piece of Noj's offering:
 ;; a way to visualize data without leaving Clojure or reaching for external tools.
 ;;
-;; And it worked! Tableplot's current APIs (`scicloj.tableplot.v1.hanami` and
-;; `scicloj.tableplot.v1.plotly`) have been used in quite a few serious projects
-;; since then. People are actually using it to get real work done.
+;; And it worked! Tableplot's current APIs 
+;; ([`scicloj.tableplot.v1.hanami`](https://scicloj.github.io/tableplot/tableplot_book.hanami_walkthrough.html) and
+;; [`scicloj.tableplot.v1.plotly`](https://scicloj.github.io/tableplot/tableplot_book.plotly_walkthrough.html)) 
+;; have been used in quite a few serious projects since then. People are actually using it 
+;; to get real work done.
 ;;
 ;; But here's the thing: **We never intended these APIs to be the final word on
 ;; plotting in Clojure.** They were a decent compromise—pragmatic, functional,
@@ -41,87 +43,102 @@
 ;;
 ;; With that context in mind, let's explore what we're building.
 
-(ns building-aog-in-clojure
-  (:require [tablecloth.api :as tc]
-            [scicloj.kindly.v4.kind :as kind]
-            [thi.ng.geom.viz.core :as viz]
-            [thi.ng.geom.svg.core :as svg]
-            [fastmath.ml.regression :as regr]
-            [fastmath.stats :as stats]
-            [scicloj.metamorph.ml.rdatasets :as rdatasets]))
-
-;; # 1. Context & Motivation
+;; # Context & Motivation
 ;;
 ;; ## Why Explore a New Approach?
 ;;
-;; Tableplot currently provides two visualization APIs:
-;; - `scicloj.tableplot.v1.hanami` - Vega-Lite via Hanami templates
-;; - `scicloj.tableplot.v1.plotly` - Plotly.js visualizations
+;; Tableplot currently provides two visualization APIs: `scicloj.tableplot.v1.hanami`
+;; for [Vega-Lite](https://vega.github.io/vega-lite/) visualizations, and 
+;; `scicloj.tableplot.v1.plotly` for [Plotly.js](https://plotly.com/javascript/).
+;; Both have proven useful in real projects, but they've also revealed some constraints
+;; that are worth thinking about fresh.
 ;;
-;; While these APIs are pragmatic and functional, they have accumulated
-;; several limitations that are difficult to address incrementally:
+;; The `hanami` API extends the original Hanami library, inheriting its template
+;; substitution system with uppercase keywords like `:X` and `:Y`. This brings
+;; backwards compatibility requirements that affect both APIs, since `plotly`
+;; shares some infrastructure with `hanami`. When you want to change something
+;; fundamental, you have to consider the impact across multiple layers.
 ;;
-;; ### Current Limitations
+;; Each API is also tied to a specific rendering backend. If you choose `hanami`,
+;; you get Vega-Lite—which is excellent for many use cases but has limitations
+;; with certain coordinate systems. If you choose `plotly`, you get rich interactivity
+;; but rendering static images programmatically becomes tricky. When you hit a
+;; limitation of your chosen backend, switching means learning a different API.
 ;;
-;; **1. Backwards Compatibility Burden**
-;; - The `hanami` API extends the original Hanami library API, including
-;;   its substitution key conventions (uppercase keywords like `:X`, `:Y`)
-;; - The `plotly` API shares infrastructure with `hanami`, inheriting
-;;   these backwards compatibility constraints
-;; - Changes to the core abstraction affect both APIs
+;; The intermediate representation between the API and the renderers uses Hanami
+;; templates. Template substitution is powerful and flexible, but it can be
+;; open-ended and difficult to understand when debugging. Error messages sometimes
+;; reference template internals rather than your code, and it's not always clear
+;; which substitution parameters are valid in which contexts.
 ;;
-;; **2. Rendering Target Lock-in**
-;; - Each API supports exactly one rendering target (Vega-Lite or Plotly.js)
-;; - The target's concepts and jargon leak into the API
-;; - Users must learn target-specific vocabulary
-;; - Switching backends requires learning a different API
+;; The APIs also currently expect [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) 
+;; datasets. If you have a simple Clojure map or vector, you need to convert it 
+;; first—even for trivial visualizations.
 ;;
-;; **3. Rendering Target Limitations**
-;; - Vega-Lite: Limited support for coordinate systems (polar, geographic)
-;; - Plotly.js: Difficult to programmatically render as static images
-;; - No single backend handles all use cases
-;; - Users must switch APIs when hitting backend limitations
+;; ## What We're Exploring
 ;;
-;; **4. Pragmatic Compromises**
-;; - APIs optimized for common cases, not theoretical elegance
-;; - Design decisions leak between layers:
-;;   - Backend specifics (rendering layer) affect user-facing API
-;;   - Data layer (tech.ml.dataset) tightly coupled to API
+;; Some of these limitations will be addressed within the current APIs themselves—
+;; we're actively working on improvements. But as we always intended, it's valuable
+;; to explore fresh solutions in parallel. A clean-slate design lets us ask questions
+;; that are harder to answer incrementally: Can we separate concerns more cleanly 
+;; between the API layer, the intermediate representation, and the rendering?
+;; Can one API work with multiple backends? Can we use plain Clojure data structures
+;; and standard library operations throughout? Can we make the intermediate
+;; representation easier to inspect and debug?
 ;;
-;; **5. Confusing Intermediate Representation**
-;; - Hanami templates serve as the IR (intermediate representation - the data
-;;   structure between user API and renderer) between API and renderers
-;; - Template substitution is powerful but often confusing in debugging
-;; - Unclear which substitution parameters can be used when
-;; - Error messages reference template internals, not user code
-;;
-;; **6. Inflexible Data Handling**
-;; - Only accepts tech.ml.dataset datasets
-;; - Cannot directly visualize plain Clojure maps/vectors
-;; - Requires conversion step for simple data
-;;
-;; ### The Opportunity
-;;
-;; A fresh design exploration allows us to:
-;; - **Separate concerns**: Clean separation between API, IR, and rendering
-;; - **Support multiple backends**: One API, many rendering targets
-;; - **Use standard Clojure**: Layers as plain maps, standard lib operations
-;; - **Make debugging clear**: Transparent IR that's easy to inspect
-;; - **Accept any data**: Plain maps, datasets, or custom structures
-;;
-;; This notebook explores whether this compositional approach can
-;; deliver these benefits while maintaining a coherent, learnable API.
-;;
-;; ## Scope of This Exploration
-;;
-;; - **Goal**: Design and prototype an alternative compositional API
-;; - **Non-goal**: Replace existing Tableplot APIs immediately
-;; - **Outcome**: This may become an additional namespace in Tableplot v1,
-;;   coexisting with `hanami` and `plotly` APIs
-;; - **Audience**: Tableplot maintainers, contributors, and curious users
-;;   who want to provide early feedback on this approach
+;; This notebook prototypes an alternative compositional API to explore these ideas.
+;; It's not meant to replace the existing Tableplot APIs—it might become an additional
+;; namespace coexisting with `hanami` and `plotly`, or it might inform future design
+;; decisions. This is for Tableplot maintainers, contributors, and curious users who
+;; want to provide early feedback on the approach.
 
-;; # 2. Inspiration: AlgebraOfGraphics.jl
+;; # Setup
+;;
+;; This notebook relies on several libraries from the Clojure data science ecosystem.
+;; Here's what we use and why:
+
+(ns building-aog-in-clojure
+  (:require
+   ;; Tablecloth - Dataset manipulation
+   ;; https://scicloj.github.io/tablecloth/
+   [tablecloth.api :as tc]
+
+   ;; Kindly - Notebook visualization protocol
+   ;; https://scicloj.github.io/kindly-noted/
+   [scicloj.kindly.v4.kind :as kind]
+
+   ;; thi.ng/geom-viz - Static SVG visualization
+   ;; https://github.com/thi-ng/geom
+   [thi.ng.geom.viz.core :as viz]
+   [thi.ng.geom.svg.core :as svg]
+
+   ;; Fastmath - Statistical computations
+   ;; https://github.com/generateme/fastmath
+   [fastmath.ml.regression :as regr]
+   [fastmath.stats :as stats]
+
+   ;; RDatasets - Example datasets
+   ;; https://github.com/scicloj/metamorph.ml
+   [scicloj.metamorph.ml.rdatasets :as rdatasets]))
+
+;; **Tablecloth** provides our dataset API, wrapping 
+;; [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) with a
+;; friendly interface. We use it to manipulate data and access column types.
+;;
+;; **Kindly** is the visualization protocol that lets this notebook render
+;; plots in different environments (Clay, Portal, etc.). Each backend returns
+;; a Kindly-wrapped spec.
+;;
+;; **thi.ng/geom** gives us the static SVG backend. It's excellent for
+;; ggplot2-style visualizations that can be saved as publication-quality images.
+;;
+;; **Fastmath** handles our statistical computations, particularly linear
+;; regression. It's a comprehensive math library for Clojure.
+;;
+;; **RDatasets** provides classic datasets (penguins, mtcars, iris) for examples.
+;; These are the same datasets you'd find in R or Python data science tutorials.
+
+;; # Inspiration: AlgebraOfGraphics.jl
 ;;
 ;; This design is inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/),
 ;; a visualization library that builds on decades of experience from systems
@@ -195,7 +212,7 @@
 ;;
 ;; The next section explores different approaches to solving this challenge.
 
-;; # 3. Design Exploration
+;; # Design Exploration
 ;;
 ;; Let's explore three different approaches to structuring layer specifications,
 ;; showing the evolution toward a design that works naturally with Clojure's
@@ -319,7 +336,7 @@
 ;;
 ;; This is a fundamental design advantage: **compositional operations on plain data**.
 
-;; # 4. Proposed Design
+;; # Proposed Design
 ;;
 ;; ## API Overview
 ;;
@@ -500,7 +517,7 @@
 ;; plot-vega : layers → Vega-Lite spec
 ;; draw : layers + opts → dispatch to backend
 
-;; # 5. Examples
+;; # Examples
 ;;
 ;; These examples demonstrate the design in practice, showing how the
 ;; compositional approach and data-oriented representation work together.
@@ -657,7 +674,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; **Key insight**: Same layer specification, different renderers.
 ;; The IR is truly backend-agnostic.
 
-;; # 6. Implementation
+;; # Implementation
 ;;
 ;; This section reveals how the API works under the hood.
 ;; The implementation is surprisingly simple because the design leverages
@@ -978,7 +995,8 @@ layer-with-merge ;; Inspect - it's just a map!
 
 ;; ## Alternative Backend: Vega-Lite
 ;;
-;; Interactive visualizations with additional features.
+;; [Vega-Lite](https://vega.github.io/vega-lite/) provides interactive visualizations 
+;; with additional features.
 
 (defn- layer->vega-data
   "Convert layer dataset to Vega-Lite data format."
@@ -1114,10 +1132,12 @@ layer-with-merge ;; Inspect - it's just a map!
 
 ;; ## Plotly.js Backend
 ;;
-;; Plotly.js is a JavaScript library for interactive, publication-quality graphs.
-;; It provides hover tooltips, zooming, panning, and other interactive features.
+;; [Plotly.js](https://plotly.com/javascript/) is a JavaScript library for interactive, 
+;; publication-quality graphs. It provides hover tooltips, zooming, panning, and other 
+;; interactive features.
 ;;
-;; The Plotly.js spec is JSON-based, similar to Vega-Lite but with different structure.
+;; The Plotly.js spec is JSON-based, similar to [Vega-Lite](https://vega.github.io/vega-lite/) 
+;; but with different structure.
 
 (defn- layer->plotly-trace
   "Convert a layer to a Plotly.js trace (data series).
@@ -1308,7 +1328,7 @@ layer-with-merge ;; Inspect - it's just a map!
        :plotly (plot-plotly layers opts)
        (plot layers opts)))))
 
-;; # 7. Multiple Backends & Specs as Data
+;; # Multiple Backends & Specs as Data
 ;;
 ;; One of the key design goals is backend independence: the same layer
 ;; specification should work with multiple rendering targets. Let's demonstrate
@@ -1500,7 +1520,7 @@ plotly-spec
 ;;
 ;; This aligns perfectly with Clojure's philosophy: data > functions > macros.
 
-;; # 8. Trade-offs & Design Decisions
+;; # Trade-offs & Design Decisions
 ;;
 ;; ## What We Gain
 ;;
@@ -1575,7 +1595,7 @@ plotly-spec
 ;; | Operations | Custom functions | Standard library |
 ;; | Jargon | Backend-specific | Backend-agnostic |
 
-;; # 9. Integration Path
+;; # Integration Path
 ;;
 ;; ## Coexistence with Tableplot v1
 ;;
@@ -1623,7 +1643,7 @@ plotly-spec
 ;; 6. **Testing** - Comprehensive test suite
 ;; 7. **Release** - Alpha release for early adopters
 
-;; # 10. Decision Points
+;; # Decision Points
 ;;
 ;; These are open questions where community input would be valuable.
 ;;
