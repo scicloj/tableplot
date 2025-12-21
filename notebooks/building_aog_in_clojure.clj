@@ -100,43 +100,40 @@
 (ns building-aog-in-clojure
   (:require
    ;; Tablecloth - Dataset manipulation
-   ;; https://scicloj.github.io/tablecloth/
    [tablecloth.api :as tc]
 
    ;; Kindly - Notebook visualization protocol
-   ;; https://scicloj.github.io/kindly-noted/
    [scicloj.kindly.v4.kind :as kind]
 
    ;; thi.ng/geom-viz - Static SVG visualization
-   ;; https://github.com/thi-ng/geom
    [thi.ng.geom.viz.core :as viz]
    [thi.ng.geom.svg.core :as svg]
 
    ;; Fastmath - Statistical computations
-   ;; https://github.com/generateme/fastmath
    [fastmath.ml.regression :as regr]
    [fastmath.stats :as stats]
 
    ;; RDatasets - Example datasets
-   ;; https://github.com/scicloj/metamorph.ml
    [scicloj.metamorph.ml.rdatasets :as rdatasets]))
 
-;; **Tablecloth** provides our dataset API, wrapping 
+;; [**Tablecloth**](https://scicloj.github.io/tablecloth/) provides our dataset API, wrapping 
 ;; [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) with a
 ;; friendly interface. We use it to manipulate data and access column types.
 ;;
-;; **Kindly** is the visualization protocol that lets this notebook render
-;; plots in different environments (Clay, Portal, etc.). Each backend returns
+;; [**Kindly**](https://scicloj.github.io/kindly-noted/) is the visualization protocol that lets this notebook render
+;; plots in different environments ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.). Each backend returns
 ;; a Kindly-wrapped spec.
 ;;
-;; **thi.ng/geom** gives us the static SVG backend. It's excellent for
-;; ggplot2-style visualizations that can be saved as publication-quality images.
+;; [**thi.ng/geom**](https://github.com/thi-ng/geom) gives us the static SVG backend. It's excellent for
+;; ggplot2-style visualizations that can be saved as publication-quality images. We specifically use
+;; [geom.viz](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/viz/demos.org) for data visualization.
 ;;
-;; **Fastmath** handles our statistical computations, particularly linear
+;; [**Fastmath**](https://github.com/generateme/fastmath) handles our statistical computations, particularly linear
 ;; regression. It's a comprehensive math library for Clojure.
 ;;
-;; **RDatasets** provides classic datasets (penguins, mtcars, iris) for examples.
-;; These are the same datasets you'd find in R or Python data science tutorials.
+;; [**RDatasets**](https://vincentarelbundock.github.io/Rdatasets/articles/data.html) provides classic datasets (penguins, mtcars, iris) for examples.
+;; These are the same datasets you'd find in R or Python data science tutorials, made available
+;; in Clojure through [metamorph.ml](https://github.com/scicloj/metamorph.ml).
 
 ;; # Inspiration: AlgebraOfGraphics.jl
 ;;
@@ -144,39 +141,57 @@
 ;; a visualization library that builds on decades of experience from systems
 ;; like ggplot2 while introducing clearer compositional principles.
 ;;
+;; As the [AoG philosophy](https://aog.makie.org/stable/philosophy) states:
+;; > "In a declarative framework, the user needs to express the _question_, and the 
+;; > library will take care of creating the visualization."
+;;
+;; The key innovation is moving from imperative drawing to 
+;; ["describing a higher-level 'intent' how your tabular data should be transformed"](https://aog.makie.org/dev/tutorials/intro-i).
+;;
 ;; ## Core Insight: Layers + Operations
 ;;
-;; AlgebraOfGraphics.jl treats visualization with two key operations on layers:
+;; AlgebraOfGraphics.jl treats visualization with two key ideas:
 ;;
-;; **1. Uniform abstraction**: Everything is a "layer"
+;; **1. Everything is a [layer](https://aog.makie.org/dev/tutorials/intro-i#Layers:-data,-mapping,-visual-and-transformation)**: 
+;; Data, mappings, visuals, and transformations all compose the same way
 ;; - Data sources
 ;; - Aesthetic mappings (x → column, color → column)
 ;; - Visual marks (scatter, line, bar)
 ;; - Statistical transformations (regression, smoothing)
 ;;
+;; *(Note: This is a different notion from "layers" in ggplot2 and Vega-Lite's 
+;; [layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html), 
+;; where layers specifically refer to overlaid visual marks. In AoG, "layer" is the fundamental 
+;; compositional unit containing data, mappings, visuals, and transformations.)*
+;;
 ;; **2. Two operations**: `*` (product) and `+` (sum)
 ;;
 ;; - `*` **merges** layers together (composition)
 ;;   ```julia
-;;   data * mapping(x, y) * scatter
+;;   data(penguins) * mapping(:bill_length, :bill_depth) * visual(Scatter)
 ;;   # → Single layer with all properties combined
 ;;   ```
 ;;
 ;; - `+` **overlays** layers (overlay)
 ;;   ```julia
-;;   scatter + line
+;;   visual(Scatter) + visual(Lines)
 ;;   # → Two separate visual marks on same plot
 ;;   ```
 ;;
 ;; **3. Distributive property**: `a * (b + c) = (a * b) + (a * c)`
+;;
 ;;   ```julia
-;;   data * mapping(x, y) * (scatter + line)
+;;   data(penguins) * mapping(:bill_length, :bill_depth) * 
+;;       (visual(Scatter) + linear())
 ;;   # ↓ expands to
-;;   (data * mapping * scatter) + (data * mapping * line)
+;;   (data(penguins) * mapping(:bill_length, :bill_depth) * visual(Scatter)) + 
+;;   (data(penguins) * mapping(:bill_length, :bill_depth) * linear())
 ;;   ```
 ;;
 ;; This allows factoring out common properties and applying them to
-;; multiple plot types without repetition.
+;; multiple plot types without repetition. As the [philosophy doc](https://aog.makie.org/stable/philosophy) 
+;; explains, the package achieves its goal of "distinguish[ing] settings that are private to a layer from 
+;; those that are shared across layers" using "the distributive properties of addition and multiplication."
 ;;
 ;; ## Comparison to ggplot2
 ;;
@@ -189,7 +204,7 @@
 ;;
 ;; AlgebraOfGraphics separates concerns:
 ;; ```julia
-;; data * mapping(x, y) * (scatter + smooth)
+;; data(df) * mapping(:x, :y) * (visual(Scatter) + smooth())
 ;; ```
 ;;
 ;; **Why two operators?**
