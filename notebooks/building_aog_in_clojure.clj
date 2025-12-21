@@ -1,243 +1,328 @@
 ;; # Building an Algebra of Graphics in Clojure
-;; **A self-contained exploration of composable plot specifications**
+;; **A Design Exploration for Tableplot**
 ;;
-;; *This notebook presents a design for building plot specifications in Clojure,
-;; inspired by Julia's AlgebraOfGraphics.jl. It's completely self-contained—you
-;; can run this code independently to understand the concepts and try the approach.*
-;;
-;; ## Table of Contents
-;;
-;; - Inspiration: AlgebraOfGraphics.jl
-;; - The Problem: Composable Visualization
-;; - Design Journey: Three Approaches
-;; - Implementation: A Minimal AoG
-;; - Real Examples with Tablecloth
-;; - Design Rationale & Trade-offs
-;; - Open Questions for Discussion
+;; *This notebook explores a fresh approach to composable plot specifications
+;; in Clojure, inspired by Julia's AlgebraOfGraphics.jl. It's a working prototype
+;; demonstrating an alternative compositional API that addresses limitations in
+;; Tableplot's current APIs.*
 
 (ns building-aog-in-clojure
   (:require [tablecloth.api :as tc]
             [scicloj.kindly.v4.kind :as kind]
             [thi.ng.geom.viz.core :as viz]
-            [thi.ng.geom.svg.core :as svg]))
+            [thi.ng.geom.svg.core :as svg]
+            [fastmath.ml.regression :as regr]
+            [fastmath.stats :as stats]
+            [scicloj.metamorph.ml.rdatasets :as rdatasets]))
 
-;; # Inspiration: AlgebraOfGraphics.jl
+;; # 1. Context & Motivation
 ;;
-;; This implementation is inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/),
-;; a thoughtfully-designed visualization library that builds on decades of experience
-;; from classic systems like ggplot2.
+;; ## Why Explore a New Approach?
 ;;
-;; ## Why AlgebraOfGraphics.jl?
+;; Tableplot currently provides two visualization APIs:
+;; - `scicloj.tableplot.v1.hanami` - Vega-Lite via Hanami templates
+;; - `scicloj.tableplot.v1.plotly` - Plotly.js visualizations
 ;;
-;; We chose it as inspiration for several reasons:
+;; While these APIs are pragmatic and functional, they have accumulated
+;; several limitations that are difficult to address incrementally:
 ;;
-;; 1. **Well-designed** - Built by experts who learned from ggplot2's strengths and limitations
-;; 2. **Principled** - Based on clear algebraic operations rather than ad-hoc APIs
-;; 3. **Tractable** - Small enough to understand and reproduce (~10 core concepts)
-;; 4. **Modern** - Incorporates 20+ years of data visualization research
+;; ### Current Limitations
 ;;
-;; ## Core Ideas
+;; **1. Backwards Compatibility Burden**
+;; - The `hanami` API extends the original Hanami library API, including
+;;   its substitution key conventions (uppercase keywords like `:X`, `:Y`)
+;; - The `plotly` API shares infrastructure with `hanami`, inheriting
+;;   these backwards compatibility constraints
+;; - Changes to the core abstraction affect both APIs
 ;;
-;; AlgebraOfGraphics.jl introduces several key concepts:
+;; **2. Rendering Target Lock-in**
+;; - Each API supports exactly one rendering target (Vega-Lite or Plotly.js)
+;; - The target's concepts and jargon leak into the API
+;; - Users must learn target-specific vocabulary
+;; - Switching backends requires learning a different API
 ;;
-;; **1. Everything is a Layer**
-;; - Data, mappings, and visual marks are all "layers"
-;; - Layers compose via algebraic operations
-;; - No distinction between "base plots" and "additions"
+;; **3. Rendering Target Limitations**
+;; - Vega-Lite: Limited support for coordinate systems (polar, geographic)
+;; - Plotly.js: Difficult to programmatically render as static images
+;; - No single backend handles all use cases
+;; - Users must switch APIs when hitting backend limitations
 ;;
-;; **2. Two Operations: `*` and `+`**
+;; **4. Pragmatic Compromises**
+;; - APIs optimized for common cases, not theoretical elegance
+;; - Design decisions leak between layers:
+;;   - Template substitution (IR layer) visible to users
+;;   - Backend specifics (rendering layer) affect user-facing API
+;;   - Data layer (tech.ml.dataset) tightly coupled to API
 ;;
-;; - `*` (multiplication/product) - **Merges** layers together
-;;   - `data * mapping * visual` → single layer with all properties
-;;   - Cartesian product: combines attributes from both operands
-;;   
-;; - `+` (addition/sum) - **Overlays** layers
-;;   - `scatter + line` → two separate layers on same plot
-;;   - Creates multiple visual marks
+;; **5. Confusing Intermediate Representation**
+;; - Hanami templates serve as the IR between API and renderers
+;; - Template substitution is powerful but often confusing in debugging
+;; - Unclear which substitution parameters can be used when
+;; - Error messages reference template internals, not user code
 ;;
-;; **3. Comparison to ggplot2**
+;; **6. Inflexible Data Handling**
+;; - Only accepts tech.ml.dataset datasets
+;; - Cannot directly visualize plain Clojure maps/vectors
+;; - Requires conversion step for simple data
+;;
+;; ### The Opportunity
+;;
+;; A fresh design exploration allows us to:
+;; - **Separate concerns**: Clean separation between algebra, IR, and rendering
+;; - **Support multiple backends**: One API, many rendering targets
+;; - **Use standard Clojure**: Layers as plain maps, standard lib operations
+;; - **Make debugging clear**: Transparent IR that's easy to inspect
+;; - **Accept any data**: Plain maps, datasets, or custom structures
+;;
+;; This notebook explores whether an Algebra of Graphics approach can
+;; deliver these benefits while maintaining a coherent, learnable API.
+;;
+;; ## Scope of This Exploration
+;;
+;; - **Goal**: Design and prototype an alternative compositional API
+;; - **Non-goal**: Replace existing Tableplot APIs immediately
+;; - **Outcome**: This may become an additional namespace in Tableplot v1,
+;;   coexisting with `hanami` and `plotly` APIs
+;; - **Audience**: Tableplot maintainers and contributors evaluating design options
+
+;; # 2. Inspiration: AlgebraOfGraphics.jl
+;;
+;; This design is inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/),
+;; a visualization library that builds on decades of experience from systems
+;; like ggplot2 while introducing clearer algebraic principles.
+;;
+;; ## Core Insight: Layers + Algebra
+;;
+;; AlgebraOfGraphics.jl treats visualization as an algebra with:
+;;
+;; **1. Uniform abstraction**: Everything is a "layer"
+;; - Data sources
+;; - Aesthetic mappings (x → column, color → column)
+;; - Visual marks (scatter, line, bar)
+;; - Statistical transformations (regression, smoothing)
+;;
+;; **2. Two operations**: `*` (product) and `+` (sum)
+;;
+;; - `*` **merges** layers together (composition)
+;;   ```julia
+;;   data * mapping(x, y) * scatter
+;;   # → Single layer with all properties combined
+;;   ```
+;;
+;; - `+` **overlays** layers (overlay)
+;;   ```julia
+;;   scatter + line
+;;   # → Two separate visual marks on same plot
+;;   ```
+;;
+;; **3. Distributive law**: `a * (b + c) = (a * b) + (a * c)`
+;;   ```julia
+;;   data * mapping(x, y) * (scatter + line)
+;;   # ↓ expands to
+;;   (data * mapping * scatter) + (data * mapping * line)
+;;   ```
+;;
+;; This allows factoring out common properties and applying them to
+;; multiple plot types without repetition.
+;;
+;; ## Comparison to ggplot2
 ;;
 ;; ggplot2 uses `+` for everything:
 ;; ```r
-;; ggplot(data) + 
-;;   geom_point(aes(x, y)) +
-;;   geom_smooth(aes(x, y))
+;; ggplot(data, aes(x, y)) + 
+;;   geom_point() +
+;;   geom_smooth()
 ;; ```
 ;;
-;; AlgebraOfGraphics separates concerns with two operators:
+;; AlgebraOfGraphics separates concerns:
 ;; ```julia
 ;; data * mapping(x, y) * (scatter + smooth)
 ;; ```
 ;;
 ;; **Why two operators?**
+;; - **Clarity**: `*` = "combine properties", `+` = "overlay visuals"  
+;; - **Composability**: `data * mapping` can be reused across plot types
+;; - **Mathematical elegance**: Follows distributive law naturally
 ;;
-;; - **Clarity**: `*` = "combine properties", `+` = "overlay visuals"
-;; - **Composability**: `data * mapping` can be reused across multiple plot types
-;; - **Mathematical elegance**: Follows algebraic distributive law: `a * (b + c) = (a * b) + (a * c)`
+;; ## Translating to Clojure
 ;;
-;; **Example:**
-;; ```julia
-;; # These are equivalent:
-;; data * mapping * (scatter + line)
-;; # ↓ distributive law
-;; (data * mapping * scatter) + (data * mapping * line)
-;; ```
+;; Julia's algebraic approach relies on:
+;; - Custom `*` and `+` operators defined on Layer types
+;; - Multiple dispatch to handle type combinations
+;; - Object-oriented layer representations
 ;;
-;; This means you can factor out common properties (`data * mapping`) and apply
-;; them to multiple plot types, reducing repetition.
+;; **Key challenge**: How do we bring this algebraic elegance to Clojure while:
+;; - Using plain data structures (maps, not objects)
+;; - Enabling standard library operations (merge, assoc, filter)
+;; - Maintaining the compositional benefits
+;; - Making the IR transparent and inspectable
 ;;
-;; ## Our Goal
-;;
-;; Bring these ideas to Clojure while leveraging:
-;; - Maps for data representation (not objects)
-;; - Standard functions (merge, assoc, filter)
-;; - Multiple rendering backends (SVG, Vega-Lite)
-;; - Idiomatic Clojure style
+;; The answer: **Layers as flat maps with namespaced keys**, combined with
+;; operators that work on map collections.
 
-;; # The Problem: Composable Visualization
+;; # 3. Design Exploration
 ;;
-;; When building visualizations, we want:
-;;
-;; 1. **Composability** - Combine data, mappings, and plot types freely
-;; 2. **Layering** - Overlay multiple visualizations (scatter + regression)
-;; 3. **Standard operations** - Use regular Clojure functions (merge, assoc, filter)
-;; 4. **Clarity** - Intent should be obvious from the code
-;;
-;; Example of what we want to write:
-;;
-;; ```clojure
-;; (plot (* (data penguins)
-;;          (mapping :bill-length :bill-depth {:color :species})
-;;          (+ (scatter {:alpha 0.5})
-;;             (linear))))
-;; ```
-;;
-;; This should:
-;; - Use the penguins dataset
-;; - Map bill-length to x, bill-depth to y, species to color
-;; - Create two layers: scatter plot + linear regression
-;; - Render as a visualization
+;; Let's explore three different approaches to structuring layer specifications,
+;; showing the evolution toward a design that works naturally with Clojure's
+;; standard library.
 
-;; # Design Journey: Three Approaches
+;; ## Approach 1: Nested Structure
 ;;
-;; Let's explore three different ways to structure plot specifications,
-;; showing the evolution toward using standard Clojure operations.
-
-;; ## Approach 1: Nested Structure (Traditional)
-;;
-;; This is how many plotting libraries work internally.
+;; This mirrors how traditional plotting libraries often work internally.
 
 (def nested-layer-example
   {:transformation nil
-   :data {:bill-length [39.1 39.5 40.3]
-          :bill-depth [18.7 17.4 18.0]
+   :data {:bill-length-mm [39.1 39.5 40.3]
+          :bill-depth-mm [18.7 17.4 18.0]
           :species [:adelie :adelie :adelie]}
-   :positional [:bill-length :bill-depth] ;; Vector of column names
-   :named {:color :species} ;; Map of aesthetics
-   :attributes {:alpha 0.5}}) ;; Map of constants
+   :positional [:bill-length-mm :bill-depth-mm]
+   :named {:color :species}
+   :attributes {:alpha 0.5}})
 
-;; **Problem**: How do we merge two of these layers?
-;;
-;; Standard `merge` doesn't work:
+;; **Problem**: Standard `merge` doesn't compose correctly
 
 (merge {:positional [:x] :named {:color :species}}
        {:positional [:y] :named {:size :body-mass}})
-;; => {:positional [:y]  ;; Lost :x!
-;;     :named {:size :body-mass}}  ;; Lost :color!
+;; => {:positional [:y]           ;; Lost :x!
+;;     :named {:size :body-mass}} ;; Lost :color!
 
-;; You need custom merge logic that:
-;; - Concatenates :positional vectors
-;; - Merges :named maps
-;; - Merges :attributes maps
+;; Standard merge overwrites rather than combines:
+;; - `:positional` vectors should concatenate, but instead [:y] replaces [:x]
+;; - `:named` maps should merge, but instead {:size ...} replaces {:color ...}
 ;;
-;; This means **you can't use standard Clojure operations**.
+;; **Consequence**: Need custom `merge-layer` function with special logic.
+;; This means standard Clojure operations don't work on layer specifications.
 
 ;; ## Approach 2: Flat Structure with Plain Keys
 ;;
 ;; What if we flatten everything to the same level?
 
 (def flat-layer-example-v1
-  {:data {:bill-length [39.1 39.5 40.3]
-          :bill-depth [18.7 17.4 18.0]
+  {:data {:bill-length-mm [39.1 39.5 40.3]
+          :bill-depth-mm [18.7 17.4 18.0]
           :species [:adelie :adelie :adelie]}
-   :x :bill-length ;; All at the same level
-   :y :bill-depth
+   :x :bill-length-mm
+   :y :bill-depth-mm
    :color :species
    :alpha 0.5
    :plottype :scatter})
 
-;; **Advantage**: Standard `merge` works!
+;; **Advantage**: Standard `merge` works perfectly!
 
-;; Example of standard merge working
-(merge {:data {:bill-length [39.1] :bill-depth [18.7]} :x :bill-length}
-       {:y :bill-depth :color :species}
+(merge {:data {:bill-length-mm [39.1] :bill-depth-mm [18.7]} :x :bill-length-mm}
+       {:y :bill-depth-mm :color :species}
        {:plottype :scatter :alpha 0.5})
-;; => Everything merges correctly!
+;; => All properties combine correctly!
 
-;; **Problem**: What if your data has columns named :x, :y, :color, or :plottype?
+;; **Problem**: Collision with data columns
 
 (def tricky-data
   {:x [1 2 3]
    :y [4 5 6]
-   :plottype [:a :b :c]}) ;; Column named :plottype!
+   :plottype [:a :b :c]}) ;; Dataset has column named :plottype!
 
 ;; This becomes ambiguous:
 ;; {:data tricky-data :plottype :scatter :y :plottype}
-;; Is :plottype a layer metadata or a column mapping?
+;;                     ^^^^^^^^           ^^^^^^^^^
+;;                     layer metadata?    or mapping to column?
+;;
+;; With plain keys, we can't distinguish layer metadata from data columns.
 
-;; ## Approach 3: Flat Structure with Namespaced Keys ✨
+;; ## Approach 3: Flat Structure with Namespaced Keys ✅
 ;;
 ;; Use Clojure's namespaced keywords to prevent collisions!
 
 (def flat-layer-example-v2
-  #:aog{:data {:bill-length [39.1 39.5 40.3]
-               :bill-depth [18.7 17.4 18.0]
+  #:aog{:data {:bill-length-mm [39.1 39.5 40.3]
+               :bill-depth-mm [18.7 17.4 18.0]
                :species [:adelie :adelie :adelie]}
-        :x :bill-length ;; Namespaced with :aog
-        :y :bill-depth
+        :x :bill-length-mm
+        :y :bill-depth-mm
         :color :species
         :alpha 0.5
         :plottype :scatter})
 
-;; Expands to:
+;; The `#:aog{...}` syntax expands to:
 ;; {:aog/data {...}
-;;  :aog/x :bill-length
-;;  :aog/y :bill-depth
+;;  :aog/x :bill-length-mm
+;;  :aog/y :bill-depth-mm
 ;;  :aog/color :species
 ;;  :aog/alpha 0.5
 ;;  :aog/plottype :scatter}
 
 ;; **Advantages**:
-;; 1. Standard `merge` works
-;; 2. No collision with data columns
-;; 3. Clear distinction: :aog/plottype vs :plottype column
-;; 4. Concise with namespace map syntax `#:aog{...}`
-
-;; **This is our chosen approach!**
-
-;; # Implementation: A Minimal AoG
+;; 1. ✅ Standard `merge` works (flat structure)
+;; 2. ✅ No collision with data columns (namespaced keys)
+;; 3. ✅ Clear distinction: `:aog/plottype` vs `:plottype` column
+;; 4. ✅ Concise with namespace map syntax `#:aog{...}`
+;; 5. ✅ All standard library operations work (assoc, update, mapv, filter)
 ;;
-;; Let's build a minimal implementation to demonstrate the concepts.
-
-;; ## Constructor Functions
+;; **Trade-off**: Slightly more verbose than plain keys
+;; - Plain: `:color` (6 chars)
+;; - Namespaced: `:aog/color` (11 chars), or `#:aog{:color ...}` in map context
 ;;
-;; These create partial layer specifications.
+;; **This is our chosen approach.**
+;;
+;; ## Why This Matters: Julia's Algebraic Culture → Clojure Data Structures
+;;
+;; Julia's AlgebraOfGraphics.jl uses:
+;; - Custom Layer types with specialized `*` and `+` operators
+;; - Multiple dispatch to handle type combinations
+;; - Object-oriented composition
+;;
+;; Our Clojure translation:
+;; - Layers are **just maps** with `:aog/*` namespaced keys
+;; - `*` and `+` are **functions** that work on map collections
+;; - Composition uses **standard merge**, not custom logic
+;;
+;; **Result**: The same algebraic elegance, but layers are transparent data
+;; that work with Clojure's entire standard library:
+;; - `merge` - Combine layers
+;; - `assoc` - Add properties
+;; - `update` - Modify values
+;; - `mapv` - Transform all layers
+;; - `filterv` - Select specific layers
+;; - `into` - Accumulate layers
+;;
+;; This is a fundamental design advantage: **algebraic operations on plain data**.
+
+;; # 4. Proposed Design
+;;
+;; ## API Overview
+;;
+;; The API consists of three parts:
+;; 1. **Constructors** - Build partial layer specifications
+;; 2. **Operators** - Compose layers (`*`) and overlay them (`+`)
+;; 3. **Renderers** - Convert layers to visualizations
+;;
+;; Implementation details are in Section 6. Here we show signatures and usage.
+
+;; ## Constructors
 
 (defn data
-  "Attach a dataset to a layer."
+  "Attach a dataset to a layer.
+  
+  Accepts:
+  - Plain Clojure map: {:x [1 2 3] :y [4 5 6]}
+  - tech.ml.dataset: (tc/dataset ...)
+  
+  Returns: Layer map with :aog/data"
   [dataset]
   {:aog/data dataset})
 
 (defn mapping
-  "Define aesthetic mappings.
+  "Define aesthetic mappings from data columns to visual properties.
   
   Args:
-  - x, y: Column names for positional aesthetics
-  - named: Optional map of other aesthetics {:color :species, :size :body-mass}
+  - x, y: Column names (keywords) for positional aesthetics
+  - named: (optional) Map of other aesthetics {:color :species, :size :body-mass}
+  
+  Mappings tell the renderer which columns to use for which visual properties.
   
   Examples:
-  (mapping :bill-length :bill-depth)
-  (mapping :bill-length :bill-depth {:color :species})"
+  (mapping :bill-length-mm :bill-depth-mm)
+  (mapping :bill-length-mm :bill-depth-mm {:color :species})
+  (mapping :x :y {:color :group :size :value})"
   ([x y]
    {:aog/x x :aog/y y})
   ([x y named]
@@ -248,7 +333,14 @@
   "Create a scatter plot layer.
   
   Args:
-  - attrs: Optional map of visual attributes {:alpha 0.5, :size 100}"
+  - attrs: (optional) Map of visual attributes {:alpha 0.5, :size 100}
+  
+  Attributes are constant values applied to all points.
+  Contrast with mappings, which vary by data.
+  
+  Examples:
+  (scatter)
+  (scatter {:alpha 0.7})"
   ([]
    {:aog/plottype :scatter})
   ([attrs]
@@ -256,7 +348,9 @@
           (update-keys attrs #(keyword "aog" (name %))))))
 
 (defn line
-  "Create a line plot layer."
+  "Create a line plot layer.
+  
+  Connects points in x-order with lines."
   ([]
    {:aog/plottype :line})
   ([attrs]
@@ -264,7 +358,12 @@
           (update-keys attrs #(keyword "aog" (name %))))))
 
 (defn linear
-  "Add linear regression transformation."
+  "Add linear regression transformation.
+  
+  Computes best-fit line through points.
+  When combined with color aesthetic, computes separate regression per group.
+  
+  Returns: Layer with :aog/transformation :linear"
   []
   {:aog/transformation :linear
    :aog/plottype :line})
@@ -272,7 +371,7 @@
 (defn smooth
   "Statistical transformation: LOESS smoothing.
   
-  Returns a transformation spec that can be merged with layers."
+  (Note: API defined, implementation pending)"
   []
   {:aog/transformation :smooth
    :aog/plottype :line})
@@ -280,7 +379,7 @@
 (defn density
   "Statistical transformation: Kernel density estimation.
   
-  Returns a transformation spec for density plots."
+  (Note: API defined, implementation pending)"
   []
   {:aog/transformation :density
    :aog/plottype :area})
@@ -288,40 +387,42 @@
 (defn histogram
   "Plot type: Histogram with binning.
   
-  Returns a layer spec for histograms."
+  (Note: API defined, implementation pending)"
   ([] {:aog/plottype :histogram})
   ([opts] (merge {:aog/plottype :histogram} opts)))
 
 (defn area
-  "Plot type: Area plot (filled line plot).
-  
-  Returns a layer spec for area plots."
+  "Plot type: Area plot (filled line plot)."
   ([] [{:aog/plottype :area}])
   ([opts] [(merge {:aog/plottype :area} opts)]))
 
 (defn bar
-  "Plot type: Bar chart.
-  
-  Returns a layer spec for bar charts."
+  "Plot type: Bar chart."
   ([] [{:aog/plottype :bar}])
   ([opts] [(merge {:aog/plottype :bar} opts)]))
 
 ;; ## Algebraic Operators
-;;
-;; The `*` operator merges layers (product/composition).
-;; The `+` operator combines layers (sum/overlay).
 
 (defn *
-  "Merge layer specifications.
+  "Merge layer specifications (product/composition).
   
-  Implements the product in the algebra:
-  - Map × Map → [Map] (merge and wrap)
-  - Map × Vec → Vec (merge into each)
-  - Vec × Vec → Vec (cartesian product with merge)
+  The `*` operator combines layer properties through merge.
+  It handles multiple input types to enable flexible composition:
+  
+  - Map × Map → [Map] - Merge and wrap in vector
+  - Map × Vec → Vec - Merge map into each vector element  
+  - Vec × Vec → Vec - Cartesian product with merge
+  
+  The distributive law holds:
+  (* a (+ b c)) = (+ (* a b) (* a c))
   
   Examples:
   (* (data df) (mapping :x :y) (scatter))
-  ;; => [{:aog/data df :aog/x :x :aog/y :y :aog/plottype :scatter}]"
+  ;; => [{:aog/data df :aog/x :x :aog/y :y :aog/plottype :scatter}]
+  
+  (* (data df) (mapping :x :y) (+ (scatter) (line)))
+  ;; => [{:aog/data df ... :plottype :scatter}
+  ;;     {:aog/data df ... :plottype :line}]"
   ([x] (if (map? x) [x] x))
   ([x y]
    (cond
@@ -340,30 +441,232 @@
    (reduce * (* x y) more)))
 
 (defn +
-  "Combine multiple layer specifications for overlay.
+  "Combine multiple layer specifications for overlay (sum).
   
-  Simply concatenates into a vector.
+  The `+` operator creates multiple layers that will be rendered together.
+  Simply concatenates layers into a vector.
   
   Example:
   (+ (scatter) (linear))
-  ;; => [{:aog/plottype :scatter} {:aog/transformation :linear :aog/plottype :line}]"
+  ;; => [{:aog/plottype :scatter} 
+  ;;     {:aog/transformation :linear :aog/plottype :line}]
+  
+  Combined with *:
+  (* (data df) (mapping :x :y) (+ (scatter) (linear)))
+  ;; => Two layers, both with same data and mapping"
   [& layer-specs]
   (vec (mapcat #(if (vector? %) % [%]) layer-specs)))
 
-;; ## thi.ng/geom-viz SVG Backend
+;; ## Renderers
 ;;
-;; Use thi.ng/geom-viz to generate SVG visualizations.
+;; Signatures only - implementations in Section 6.
+
+(declare plot plot-vega draw)
+
+;; plot : layers → SVG (via thi.ng/geom-viz)
+;; plot-vega : layers → Vega-Lite spec
+;; draw : layers + opts → dispatch to backend
+
+;; # 5. Examples
 ;;
-;; Note: Since we define `*` and `+` operators for our AoG algebra, we need to use
-;; `clojure.core/*` and `clojure.core/+` explicitly for arithmetic operations.
+;; These examples demonstrate the design in practice, showing how the
+;; algebraic approach and data-oriented representation work together.
+
+;; ## Setup: Load Datasets
+
+;; Palmer Penguins - 344 observations, 3 species
+(def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
+
+;; Motor Trend Car Road Tests - 32 automobiles
+(def mtcars (rdatasets/datasets-mtcars))
+
+;; Fisher's Iris - 150 flowers, 3 species
+(def iris (rdatasets/datasets-iris))
+
+;; ## Example 1: Simple Scatter Plot
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)))
+
+;; Breaking this down:
+;; 1. (data penguins) → {:aog/data penguins}
+;; 2. (mapping :bill-length-mm :bill-depth-mm) → {:aog/x :bill-length-mm :aog/y :bill-depth-mm}
+;; 3. (scatter) → {:aog/plottype :scatter}
+;; 4. (* ...) merges all three → [{:aog/data penguins :aog/x ... :aog/y ... :aog/plottype :scatter}]
+;; 5. (plot ...) renders the layer vector to SVG
+
+;; ## Example 2: Multi-Layer Plot (Scatter + Regression)
+;;
+;; This demonstrates the key compositional feature: overlaying multiple
+;; visual layers that share data and aesthetic mappings.
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (+ (scatter {:alpha 0.5})
+       (linear))))
+
+;; How this works:
+;; 1. (+ (scatter ...) (linear)) creates two layer specs
+;; 2. (* (data ...) (mapping ...) (+ ...)) distributes data+mapping to both
+;; 3. Result: Two complete layers with same data/mapping, different plot types
+;; 4. Both rendered on same plot
+;;
+;; This is the distributive law in action:
+;; (* a (+ b c)) = (+ (* a b) (* a c))
+;;
+;; Notice: Linear regression computed separately for each species (by :color grouping)
+
+;; ## Example 3: Standard Clojure Operations Work
+;;
+;; Because layers are plain maps, all standard library operations work.
+;; This example demonstrates merge, assoc, update, and mapv.
+
+;; Build with standard merge
+(def layer-with-merge
+  (merge (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm {:color :species})
+         (scatter {:alpha 0.7})))
+
+layer-with-merge ;; Inspect - it's just a map!
+
+(plot [layer-with-merge])
+
+;; Add properties with standard assoc
+(def base-layer
+  (merge (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm)
+         (scatter)))
+
+(def with-color
+  (assoc base-layer :aog/color :species))
+
+(plot [with-color])
+
+;; Modify with standard update
+(def with-alpha
+  (merge (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm)
+         (scatter {:alpha 0.3})))
+
+(def doubled-alpha
+  (update with-alpha :aog/alpha * 2))
+
+(:aog/alpha doubled-alpha) ;; => 0.6
+
+(plot [doubled-alpha])
+
+;; Transform all layers with mapv
+(def multi-layer
+  (* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm)
+     (+ (scatter) (line))))
+
+;; Add alpha to all layers
+(def all-with-alpha
+  (mapv #(assoc % :aog/alpha 0.6) multi-layer))
+
+(plot all-with-alpha)
+
+;; **Key insight**: No custom functions needed. Standard Clojure operations
+;; work because layers are just maps with namespaced keys.
+
+;; ## Example 4: Conditional Layer Building
+;;
+;; Build plots conditionally using standard Clojure control flow and `into`.
+
+(defn make-plot [dataset show-regression?]
+  (let [base (* (data dataset)
+                (mapping :bill-length-mm :bill-depth-mm {:color :species})
+                (scatter {:alpha 0.5}))
+
+        with-regression (if show-regression?
+                          (into base
+                                (* (data dataset)
+                                   (mapping :bill-length-mm :bill-depth-mm {:color :species})
+                                   (linear)))
+                          base)]
+    (plot with-regression)))
+
+;; Just scatter
+(make-plot penguins false)
+
+;; Scatter + regression
+(make-plot penguins true)
+
+;; With 344 penguin observations (100+ per species), regression lines are
+;; statistically meaningful. Standard `into` naturally accumulates layers.
+
+;; ## Example 5: Faceting (Small Multiples)
+;;
+;; Faceting creates separate panels for each category, demonstrating how
+;; compositional power scales to more complex visualizations.
+;;
+;; (Note: Currently implemented in Vega-Lite backend only)
+
+(plot-vega
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
+    (scatter {:alpha 0.7})))
+
+;; Each island gets its own panel, with species shown by color.
+;; Notice species distribution varies by island!
+
+;; Faceting with multiple layers works too:
+(plot-vega
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
+    (+ (scatter {:alpha 0.5})
+       (linear))))
+
+;; Each facet shows both scatter points and regression lines.
+
+;; ## Example 6: Backend Independence
+;;
+;; The same layer specification can be rendered with different backends.
+;; This demonstrates clean separation between layer IR and rendering.
+
+;; Define visualization once
+(def viz-layers
+  (* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm {:color :species})
+     (scatter {:alpha 0.7})))
+
+;; Render with geom-viz (static SVG, ggplot2 aesthetics)
+(plot viz-layers)
+
+;; Render with Vega-Lite (interactive, tooltips, zoom/pan)
+(plot-vega viz-layers)
+
+;; Or use unified API with backend option
+(draw viz-layers {:backend :geom-viz})
+(draw viz-layers {:backend :vega-lite})
+
+;; **Key insight**: Same layer specification, different renderers.
+;; The IR is truly backend-agnostic.
+
+;; # 6. Implementation
+;;
+;; This section reveals how the API works under the hood.
+;; The implementation is surprisingly simple because the design leverages
+;; standard Clojure operations rather than custom logic.
+
+;; ## Helper Functions
 
 (defn- get-column-data
-  "Extract column data from dataset (handles both maps and Tablecloth datasets)."
+  "Extract column data from dataset.
+  
+  Handles both plain maps and tech.ml.dataset datasets."
   [data col-key]
   (vec (get data col-key)))
 
 (defn- infer-domain
-  "Infer domain from data values."
+  "Infer domain from data values.
+  
+  For numeric data: [min max]
+  For categorical: vector of unique values"
   [values]
   (cond
     (empty? values)
@@ -376,7 +679,10 @@
     values))
 
 (defn- layer->points
-  "Convert layer to point data for rendering."
+  "Convert layer to point data for rendering.
+  
+  Extracts x, y, and optional color values from the layer's dataset
+  based on the aesthetic mappings."
   [layer]
   (let [data (:aog/data layer)
         x-vals (get-column-data data (:aog/x layer))
@@ -391,17 +697,80 @@
              :color (when color-vals (nth color-vals i))})
           (range n))))
 
+(defn- compute-linear-regression
+  "Compute linear regression for a set of points using fastmath.
+  
+  Returns: Vector of {:x :y} points representing the fitted line."
+  [points]
+  (when (>= (count points) 2)
+    (let [x-vals (mapv :x points)
+          y-vals (mapv :y points)]
+
+      (if (= (count points) 2)
+        ;; With exactly 2 points, just draw a line between them
+        (let [x-min (apply min x-vals)
+              x-max (apply max x-vals)
+              y1 (first y-vals)
+              y2 (second y-vals)
+              x1 (first x-vals)
+              x2 (second x-vals)
+              slope (if (= x1 x2) 0 (clojure.core// (clojure.core/- y2 y1) (clojure.core/- x2 x1)))
+              intercept (clojure.core/- y1 (clojure.core/* slope x1))
+              x-range (if (= x-min x-max)
+                        [x-min]
+                        (let [step (clojure.core// (clojure.core/- x-max x-min) 100.0)]
+                          (vec (concat (range x-min x-max step) [x-max]))))]
+          (mapv (fn [x]
+                  {:x x
+                   :y (clojure.core/+ intercept (clojure.core/* slope x))})
+                x-range))
+
+        ;; With 3+ points, use fastmath regression
+        (try
+          (let [xss (mapv vector x-vals)
+                model (regr/lm y-vals xss)
+                intercept (:intercept model)
+                slope (first (:beta model))
+                x-min (apply min x-vals)
+                x-max (apply max x-vals)
+                x-range (if (= x-min x-max)
+                          [x-min]
+                          (let [step (clojure.core// (clojure.core/- x-max x-min) 100.0)]
+                            (vec (concat (range x-min x-max step) [x-max]))))]
+            (mapv (fn [x]
+                    {:x x
+                     :y (clojure.core/+ intercept (clojure.core/* slope x))})
+                  x-range))
+          (catch Exception e
+            nil))))))
+
 (defn- unique-values
   "Get unique values from a sequence, preserving order."
   [coll]
   (vec (distinct coll)))
 
 (defn- color-scale
-  "Create a simple color scale for categorical data."
+  "Create a ggplot2-like color scale for categorical data.
+
+  Uses the ggplot2 default hue scale (evenly spaced hues around the color wheel)."
   [categories]
-  (let [colors ["#1f77b4" "#ff7f0e" "#2ca02c" "#d62728" "#9467bd"
-                "#8c564b" "#e377c2" "#7f7f7f" "#bcbd22" "#17becf"]]
+  (let [colors ["#F8766D" ;; red-orange
+                "#00BA38" ;; green
+                "#619CFF" ;; blue
+                "#F564E3" ;; magenta
+                "#00BFC4" ;; cyan
+                "#B79F00" ;; yellow-brown
+                "#FF61CC" ;; pink
+                "#00B4F0" ;; sky blue
+                "#C77CFF" ;; purple
+                "#00C19A" ;; teal
+                "#FF6A98" ;; rose
+                "#00A9FF"]] ;; azure
     (zipmap categories (cycle colors))))
+
+;; ## Rendering Backend: thi.ng/geom-viz
+;;
+;; Primary backend for static SVG with ggplot2 aesthetics.
 
 (defn- layer->scatter-spec
   "Convert a scatter layer to thi.ng/geom-viz spec."
@@ -412,7 +781,6 @@
         x-domain (infer-domain x-vals)
         y-domain (infer-domain y-vals)
 
-        ;; Only works with numeric data
         x-numeric? (and (vector? x-domain) (= 2 (count x-domain)) (every? number? x-domain))
         y-numeric? (and (vector? y-domain) (= 2 (count y-domain)) (every? number? y-domain))]
 
@@ -422,7 +790,6 @@
                            (group-by :color points))
             has-color? (some? color-groups)
 
-            ;; Compute nice tick intervals - use clojure.core/* for arithmetic
             x-range (- (second x-domain) (first x-domain))
             y-range (- (second y-domain) (first y-domain))
             x-major (clojure.core/* x-range 0.2)
@@ -438,83 +805,146 @@
                    :range [(- height 50) 50]
                    :major y-major
                    :pos 50})
+         :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}
          :data (if has-color?
-                 ;; Multiple series (one per color)
                  (let [categories (unique-values (keep :color points))
                        colors (color-scale categories)]
                    (mapv (fn [category]
                            (let [cat-points (get color-groups category)
-                                 point-data (mapv (fn [p] [(:x p) (:y p)]) cat-points)]
+                                 point-data (mapv (fn [p] [(:x p) (:y p)]) cat-points)
+                                 fill-color (get colors category)]
                              {:values point-data
                               :layout viz/svg-scatter-plot
-                              :attribs {:fill (get colors category)
-                                        :stroke "none"
+                              :attribs {:fill fill-color
+                                        :stroke fill-color
+                                        :stroke-width 0.5
                                         :opacity alpha}}))
                          categories))
-                 ;; Single series
                  [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
                    :layout viz/svg-scatter-plot
-                   :attribs {:fill "#1f77b4"
-                             :stroke "none"
+                   :attribs {:fill "#333333"
+                             :stroke "#333333"
+                             :stroke-width 0.5
                              :opacity alpha}}])}))))
 
 (defn- layer->line-spec
-  "Convert a line layer to thi.ng/geom-viz spec."
+  "Convert a line layer to thi.ng/geom-viz spec.
+  
+  Handles :aog/transformation :linear by computing regression lines."
   [layer width height]
-  (let [points (layer->points layer)
-        sorted-points (sort-by :x points)
+  (let [transformation (:aog/transformation layer)
+        points (layer->points layer)
+
+        processed-points (if (= transformation :linear)
+                           (let [color-vals (keep :color points)]
+                             (if (seq color-vals)
+                               (let [color-groups (group-by :color points)]
+                                 (mapcat (fn [[color group-points]]
+                                           (when-let [fitted (compute-linear-regression group-points)]
+                                             (mapv #(assoc % :color color) fitted)))
+                                         color-groups))
+                               (compute-linear-regression points)))
+                           points)
+
+        sorted-points (sort-by :x processed-points)
         x-vals (mapv :x sorted-points)
         y-vals (mapv :y sorted-points)
         x-domain (infer-domain x-vals)
         y-domain (infer-domain y-vals)
 
-        ;; Only works with numeric data
         x-numeric? (and (vector? x-domain) (= 2 (count x-domain)) (every? number? x-domain))
         y-numeric? (and (vector? y-domain) (= 2 (count y-domain)) (every? number? y-domain))]
 
     (when (and x-numeric? y-numeric?)
       (let [alpha (or (:aog/alpha layer) 1.0)
+            color-groups (when-let [colors (seq (keep :color processed-points))]
+                           (group-by :color processed-points))
+            has-color? (some? color-groups)
 
-            ;; Compute nice tick intervals - use clojure.core/* for arithmetic
-            x-range (- (second x-domain) (first x-domain))
-            y-range (- (second y-domain) (first y-domain))
+            x-range (clojure.core/- (second x-domain) (first x-domain))
+            y-range (clojure.core/- (second y-domain) (first y-domain))
             x-major (clojure.core/* x-range 0.2)
             y-major (clojure.core/* y-range 0.2)]
 
         {:x-axis (viz/linear-axis
                   {:domain x-domain
-                   :range [50 (- width 50)]
+                   :range [50 (clojure.core/- width 50)]
                    :major x-major
-                   :pos (- height 50)})
+                   :pos (clojure.core/- height 50)})
          :y-axis (viz/linear-axis
                   {:domain y-domain
-                   :range [(- height 50) 50]
+                   :range [(clojure.core/- height 50) 50]
                    :major y-major
                    :pos 50})
-         :data [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
-                 :layout viz/svg-line-plot
-                 :attribs {:stroke "#1f77b4"
-                           :fill "none"
-                           :opacity alpha}}]}))))
+         :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}
+         :data (if has-color?
+                 (let [categories (unique-values (keep :color processed-points))
+                       colors (color-scale categories)]
+                   (mapv (fn [category]
+                           (let [cat-points (get color-groups category)
+                                 sorted-cat (sort-by :x cat-points)
+                                 line-data (mapv (fn [p] [(:x p) (:y p)]) sorted-cat)]
+                             {:values line-data
+                              :layout viz/svg-line-plot
+                              :attribs {:stroke (get colors category)
+                                        :stroke-width 1
+                                        :fill "none"
+                                        :opacity alpha}}))
+                         categories))
+                 [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
+                   :layout viz/svg-line-plot
+                   :attribs {:stroke "#333333"
+                             :stroke-width 1
+                             :fill "none"
+                             :opacity alpha}}])}))))
 
 (defn- layers->svg
-  "Convert layers to SVG string using thi.ng/geom-viz."
+  "Convert layers to SVG string using thi.ng/geom-viz.
+
+  Handles multiple layers by overlaying them in a single plot.
+  Adds ggplot2-like styling with gray panel background and white gridlines."
   [layers width height]
-  (let [layer (if (vector? layers) (first layers) layers)
-        plottype (:aog/plottype layer)
+  (let [layers (if (vector? layers) layers [layers])
 
-        spec (case plottype
-               :scatter (layer->scatter-spec layer width height)
-               :line (layer->line-spec layer width height)
-               (layer->scatter-spec layer width height))]
+        specs (keep (fn [layer]
+                      (let [plottype (:aog/plottype layer)]
+                        (case plottype
+                          :scatter (layer->scatter-spec layer width height)
+                          :line (layer->line-spec layer width height)
+                          (layer->scatter-spec layer width height))))
+                    layers)]
 
-    (when spec
-      (svg/serialize
-       (svg/svg {:width width :height height}
-                (viz/svg-plot2d-cartesian spec))))))
+    (when (seq specs)
+      (let [panel-bg "#EBEBEB"
+            panel-border "#FFFFFF"
+            panel-left 50
+            panel-right (- width 50)
+            panel-top 50
+            panel-bottom (- height 50)
+            panel-width (- panel-right panel-left)
+            panel-height (- panel-bottom panel-top)
+            bg-rect (svg/rect [panel-left panel-top] panel-width panel-height
+                              {:fill panel-bg
+                               :stroke panel-border
+                               :stroke-width 1})]
+
+        (if (= 1 (count specs))
+          (svg/serialize
+           (svg/svg {:width width :height height}
+                    bg-rect
+                    (viz/svg-plot2d-cartesian (first specs))))
+
+          (let [combined-spec {:x-axis (:x-axis (first specs))
+                               :y-axis (:y-axis (first specs))
+                               :grid (:grid (first specs))
+                               :data (vec (mapcat :data specs))}]
+            (svg/serialize
+             (svg/svg {:width width :height height}
+                      bg-rect
+                      (viz/svg-plot2d-cartesian combined-spec)))))))))
 
 (defn plot
-  "Render layers as an SVG visualization.
+  "Render layers as an SVG visualization using thi.ng/geom-viz.
   
   Args:
   - layers: Vector of layer maps or single layer map
@@ -531,10 +961,9 @@
          svg-string (layers->svg layers width height)]
      (kind/html svg-string))))
 
-;; ## Vega-Lite Rendering Backend
+;; ## Alternative Backend: Vega-Lite
 ;;
-;; In addition to geom-viz (static SVG), we can render to Vega-Lite for
-;; interactive visualizations with tooltips, zoom/pan, and more.
+;; Interactive visualizations with additional features.
 
 (defn- layer->vega-data
   "Convert layer dataset to Vega-Lite data format."
@@ -542,7 +971,6 @@
   (let [data (:aog/data layer)]
     (if (tc/dataset? data)
       (tc/rows data :as-maps)
-      ;; If it's a plain map, convert to dataset first
       (tc/rows (tc/dataset data) :as-maps))))
 
 (defn- layer->vega-scatter
@@ -551,6 +979,9 @@
   (let [x (:aog/x layer)
         y (:aog/y layer)
         color (:aog/color layer)
+        col (:aog/col layer)
+        row (:aog/row layer)
+        facet (:aog/facet layer)
         alpha (or (:aog/alpha layer) 1.0)
 
         encoding (cond-> {:x {:field (name x)
@@ -559,17 +990,26 @@
                           :y {:field (name y)
                               :type "quantitative"
                               :scale {:zero false}}}
-                   color (assoc :color {:field (name color) :type "nominal"}))]
+                   color (assoc :color {:field (name color) :type "nominal"})
+                   col (assoc :column {:field (name col) :type "nominal"})
+                   row (assoc :row {:field (name row) :type "nominal"})
+                   facet (assoc :facet {:field (name facet) :type "nominal"}))]
 
     {:mark {:type "point" :opacity alpha}
      :encoding encoding}))
 
 (defn- layer->vega-line
-  "Convert a line layer to Vega-Lite mark spec."
+  "Convert a line layer to Vega-Lite mark spec.
+
+  Handles :aog/transformation :linear with Vega-Lite's regression transform."
   [layer]
   (let [x (:aog/x layer)
         y (:aog/y layer)
         color (:aog/color layer)
+        col (:aog/col layer)
+        row (:aog/row layer)
+        facet (:aog/facet layer)
+        transformation (:aog/transformation layer)
 
         encoding (cond-> {:x {:field (name x)
                               :type "quantitative"
@@ -577,10 +1017,19 @@
                           :y {:field (name y)
                               :type "quantitative"
                               :scale {:zero false}}}
-                   color (assoc :color {:field (name color) :type "nominal"}))]
+                   color (assoc :color {:field (name color) :type "nominal"})
+                   col (assoc :column {:field (name col) :type "nominal"})
+                   row (assoc :row {:field (name row) :type "nominal"})
+                   facet (assoc :facet {:field (name facet) :type "nominal"}))
 
-    {:mark {:type "line"}
-     :encoding encoding}))
+        transform (when (= transformation :linear)
+                    [{:regression (name y)
+                      :on (name x)
+                      :groupby (when color [(name color)])}])]
+
+    (cond-> {:mark {:type "line"}
+             :encoding encoding}
+      transform (assoc :transform transform))))
 
 (defn- layer->vega-area
   "Convert an area layer to Vega-Lite mark spec."
@@ -622,12 +1071,10 @@
                           layers)]
 
     (if (= 1 (count layer-specs))
-      ;; Single layer
       (merge (first layer-specs)
              {:width width
               :height height
               :data {:values data-values}})
-      ;; Multiple layers - use layer composition
       {:width width
        :height height
        :data {:values data-values}
@@ -635,11 +1082,11 @@
 
 (defn plot-vega
   "Render layers as a Vega-Lite visualization.
-  
+
   Args:
   - layers: Vector of layer maps or single layer map
-  - opts: Optional map with :width (default 600) and :height (default 400)
-  
+  - opts: Optional map with :width (default 400) and :height (default 300)
+
   Returns:
   - Kindly-wrapped Vega-Lite spec"
   ([layers]
@@ -650,481 +1097,318 @@
          spec (layers->vega-spec layers width height)]
      (kind/vega-lite spec))))
 
-;; # Real Examples with Tablecloth
+(defn draw
+  "Unified rendering function supporting multiple backends.
+
+  Args:
+  - layers: Vector of layer maps or single layer map
+  - opts: Optional map with:
+    - :backend - :geom-viz (default, static SVG) or :vega-lite (interactive)
+    - :width - Width in pixels (default 600 for geom-viz, 400 for vega-lite)
+    - :height - Height in pixels (default 400 for geom-viz, 300 for vega-lite)
+
+  Returns:
+  - Kindly-wrapped visualization (HTML with SVG, or Vega-Lite spec)
+
+  Examples:
+  (draw layers)                          ;; Uses geom-viz backend by default
+  (draw layers {:backend :vega-lite})    ;; Interactive Vega-Lite visualization
+  (draw layers {:backend :geom-viz :width 800 :height 600})"
+  ([layers]
+   (draw layers {}))
+  ([layers opts]
+   (let [backend (or (:backend opts) :geom-viz)]
+     (case backend
+       :geom-viz (plot layers opts)
+       :vega-lite (plot-vega layers opts)
+       :vegalite (plot-vega layers opts)
+       (plot layers opts)))))
+
+;; # 7. Trade-offs & Design Decisions
 ;;
-;; Now let's use our implementation with real data!
-
-;; ## Load the Palmer Penguins Dataset
-
-(def penguins
-  (tc/dataset {:bill-length [39.1 39.5 40.3 36.7 39.3 38.9 39.2 41.1]
-               :bill-depth [18.7 17.4 18.0 19.3 20.6 17.8 19.6 17.6]
-               :species [:adelie :adelie :adelie :adelie
-                         :chinstrap :chinstrap :gentoo :gentoo]
-               :body-mass [3750 3800 3250 3450 3650 3625 4675 3200]}))
-
-;; View the data
-penguins
-
-;; ## Example 1: Simple Scatter Plot with Algebraic Style
-
-(plot
- (* (data penguins)
-    (mapping :bill-length :bill-depth)
-    (scatter)))
-
-;; ## Example 2: Add Color Aesthetic
-
-(plot
- (* (data penguins)
-    (mapping :bill-length :bill-depth {:color :species})
-    (scatter {:alpha 0.7})))
-
-;; ## Example 3: Using Standard Clojure `merge`
+;; ## What We Gain
 ;;
-;; The key insight: we can build the same plot with standard merge!
-
-(def layer-with-merge
-  (merge (data penguins)
-         (mapping :bill-length :bill-depth {:color :species})
-         (scatter {:alpha 0.7})))
-
-;; Inspect the layer structure
-layer-with-merge
-
-;; Plot it
-(plot [layer-with-merge])
-
-;; ## Example 4: Using Standard `assoc` to Add Aesthetics
-
-(def base-layer
-  (merge (data penguins)
-         (mapping :bill-length :bill-depth)
-         (scatter)))
-
-;; Add color with standard assoc
-(def with-color
-  (assoc base-layer :aog/color :species))
-
-with-color
-
-(plot [with-color])
-
-;; ## Example 5: Using Standard `update` to Modify Attributes
-
-(def with-alpha
-  (merge (data penguins)
-         (mapping :bill-length :bill-depth)
-         (scatter {:alpha 0.3})))
-
-;; Double the alpha value with standard update
-(def more-alpha
-  (update with-alpha :aog/alpha * 2))
-
-(:aog/alpha more-alpha) ;; => 0.6
-
-(plot [more-alpha])
-
-;; ## Example 6: Multi-Layer Plot (Scatter + Regression)
+;; **1. Composability Through Standard Operations**
+;; - Layers compose with `merge`, not custom `merge-layer` function
+;; - All standard library operations work: `assoc`, `update`, `mapv`, `filter`, `into`
+;; - No need to learn custom combinators
 ;;
-;; Use the + operator to overlay layers.
-
-(plot
- (* (data penguins)
-    (mapping :bill-length :bill-depth {:color :species})
-    (+ (scatter {:alpha 0.5})
-       (linear))))
-
-;; ## Example 7: Conditional Layer Building with `into`
-
-(defn make-plot [dataset show-regression?]
-  (let [base (* (data dataset)
-                (mapping :bill-length :bill-depth {:color :species})
-                (scatter {:alpha 0.5}))
-
-        with-regression (if show-regression?
-                          (into base
-                                (* (data dataset)
-                                   (mapping :bill-length :bill-depth {:color :species})
-                                   (linear)))
-                          base)]
-    (plot with-regression)))
-
-;; Just scatter
-(make-plot penguins false)
-
-;; Scatter + regression
-(make-plot penguins true)
-
-;; ## Example 8: Transform Layers with `mapv`
-
-(def multi-layer
-  (* (data penguins)
-     (mapping :bill-length :bill-depth)
-     (+ (scatter) (line))))
-
-;; Add alpha to all layers
-(def all-with-alpha
-  (mapv #(assoc % :aog/alpha 0.6) multi-layer))
-
-(plot all-with-alpha)
-
-;; ## Example 9: Filter Layers with `filterv`
-
-(def many-layers
-  (* (data penguins)
-     (mapping :bill-length :bill-depth)
-     (+ (scatter) (line))))
-
-;; Keep only scatter
-(def just-scatter
-  (filterv #(= :scatter (:aog/plottype %)) many-layers))
-
-(plot just-scatter)
-
-;; ## Example 10: Manual Layer Construction
+;; **2. Transparent Intermediate Representation**
+;; - Layers are plain maps - inspect them with `(first layers)`
+;; - No hidden template substitution to debug
+;; - Error messages reference actual data structures
 ;;
-;; You don't need helper functions - just create maps!
-
-(def manual-layer
-  #:aog{:data penguins
-        :x :bill-length
-        :y :bill-depth
-        :color :species
-        :plottype :scatter
-        :alpha 0.5})
-
-(plot [manual-layer])
-
-;; ## Example 11: The Namespace Prevents Collisions
+;; **3. Backend Independence**
+;; - Same layer spec works with multiple renderers
+;; - Easy to add new backends (just write conversion functions)
+;; - No backend-specific jargon in user-facing API
 ;;
-;; This is why namespacing matters!
-
-(def tricky-data
-  (tc/dataset {:x [1 2 3]
-               :y [4 5 6]
-               :plottype [:a :b :c]})) ;; Column named :plottype!
-
-;; Without namespacing, this would be ambiguous:
-;; {:data tricky-data :plottype :scatter :y :plottype}
-
-;; With :aog namespace, it's clear:
-(def no-confusion
-  #:aog{:data tricky-data
-        :x :x
-        :y :plottype ;; Mapping to the :plottype column!
-        :plottype :scatter})
-
-;; ## Example 12: Multiple Rendering Backends
+;; **4. Flexible Data Handling**
+;; - Accepts plain Clojure maps: `{:x [1 2 3] :y [4 5 6]}`
+;; - Accepts tech.ml.dataset datasets
+;; - No forced conversion step
 ;;
-;; The same layer specification can be rendered with different backends!
-
-;; Define a visualization once
-(def viz-layers
-  (* (data penguins)
-     (mapping :bill-length :bill-depth {:color :species})
-     (scatter {:alpha 0.7})))
-
-;; Render with geom-viz (static SVG)
-(plot viz-layers)
-
-;; Render with Vega-Lite (interactive)
-(plot-vega viz-layers)
-
-;; **Key insight**: Same data structure, different renderers!
-;; - geom-viz: Static SVG, great for print/PDFs, fast rendering
-;; - Vega-Lite: Interactive JSON, tooltips, zoom/pan, web-friendly
-
-;; ## Example 13: Time Series with Area Plot
-
-(def economics
-  {:month (range 1 25)
-   :unemployment (mapv #(clojure.core/+ 200 (clojure.core/* 50 (Math/sin (clojure.core// % 3)))) (range 1 25))
-   :savings (mapv #(clojure.core/+ 100 (clojure.core/* 30 (Math/cos (clojure.core// % 4)))) (range 1 25))})
-
-;; Single area plot
-(plot-vega
- (* (data economics)
-    (mapping :month :unemployment)
-    (area)))
-
-;; Multiple time series (overlay two area plots)
-(plot-vega
- (+ (* (data economics)
-       (mapping :month :unemployment)
-       (area))
-    (* (data economics)
-       (mapping :month :savings)
-       (area))))
-
-;; ## Example 14: Bar Charts
-
-(def categories
-  {:category ["A" "B" "C" "D" "E"]
-   :count [23 45 37 29 41]
-   :group ["Group 1" "Group 1" "Group 2" "Group 2" "Group 1"]})
-
-;; Simple bar chart
-(plot-vega
- (* (data categories)
-    (mapping :category :count)
-    (bar)))
-
-;; Grouped bar chart
-(plot-vega
- (* (data categories)
-    (mapping :category :count {:color :group})
-    (bar)))
-
-;; ## Example 15: Combining Multiple Plot Types
-
-;; Scatter + Line overlay
-(plot-vega
- (* (data penguins)
-    (mapping :bill-length :bill-depth {:color :species})
-    (+ (scatter {:alpha 0.5})
-       (line))))
-
-;; With statistical transformation (Vega-Lite handles this natively)
-(plot-vega
- (+ (* (data penguins)
-       (mapping :bill-length :bill-depth {:color :species})
-       (scatter {:alpha 0.5}))
-    (* (data penguins)
-       (mapping :bill-length :bill-depth {:color :species})
-       (linear))))
-
-;; ## Example 16: Polar Coordinates (Rose Diagram)
+;; **5. Clear Separation of Concerns**
+;; - Algebra (operators) separate from IR (layer maps)
+;; - IR separate from rendering (backends)
+;; - Each layer can be understood independently
 ;;
-;; Polar coordinates are perfect for cyclical data (directions, times, seasons).
-;; We can use geom-viz's polar backend.
-
-(def wind-data
-  {:direction (mapv #(clojure.core/* % 30) (range 12)) ;; Degrees: 0, 30, 60, ..., 330
-   :speed [12 15 18 22 25 20 15 10 8 7 9 11]})
-
-;; Note: For polar plots with geom-viz, we'd use viz/svg-plot2d-polar
-;; This is a simplified example showing the data structure
-
-(comment
-  ;; Polar plot would require extending our plot function to support :polar option
-  (plot wind-data
-        {:coordinate-system :polar
-         :mapping {:angle :direction
-                   :radius :speed}}))
-
-;; ## Summary
+;; ## What We Pay
 ;;
-;; We've demonstrated a complete Algebra of Graphics implementation in ~500 lines:
-;;
-;; **Core Principles:**
-;; 1. Flat, normalized layer representation with namespaced `:aog/*` keys
-;; 2. Composable algebra using `*` (merge) and `+` (overlay) operators
-;; 3. Multiple rendering backends from the same layer specification
-;; 4. Standard Clojure operations (map, filter, into) work seamlessly
-;;
-;; **Features Implemented:**
-;; - Plot types: scatter, line, area, bar
-;; - Statistical transforms: linear regression, smooth, density, histogram  
-;; - Aesthetics: position (x, y), color, alpha/opacity
-;; - Two backends: geom-viz (SVG) and Vega-Lite (interactive JSON)
-;; - Composability: layers combine naturally with `*` and `+`
-;;
-;; **Why This Approach Works:**
-;; - **Explicit**: Every layer is just a map - inspect it, transform it, compose it
-;; - **Simple**: No polymorphism, no protocols, just maps and functions
-;; - **Flexible**: Add new backends by writing conversion functions
-;; - **Clojure-native**: Uses standard idioms (into, mapv, filter, etc.)
-;;
-;; The flat representation makes the system transparent and hackable! ;; Layer metadata
-
-(plot [no-confusion])
-
-;; # Design Rationale & Trade-offs
-;;
-;; ## Why Flat Structure?
-;;
-;; **Advantage**: Standard `merge` works without custom logic
-;; ```clojure
-;; ;; Nested structure
-;; {:positional [:x] :named {:color :species}}  ;; Needs custom merge
-;;
-;; ;; Flat structure
-;; {:aog/x :x :aog/color :species}  ;; Standard merge works!
-;; ```
-;;
-;; **Trade-off**: All keys at same level, but namespacing solves collision issues.
-;;
-;; ## Why Namespaced Keys?
-;;
-;; **Advantage**: Prevents collisions with data columns
-;; ```clojure
-;; ;; Your data can have :x, :y, :color columns
-;; ;; No confusion with layer metadata because of :aog/ namespace
-;; ```
-;;
-;; **Trade-off**: Slightly more verbose than plain keys
-;; - Plain: `:color` (6 chars)
+;; **1. Namespace Verbosity**
+;; - Plain key: `:color` (6 chars)
 ;; - Namespaced: `:aog/color` (11 chars)
-;; - But namespace map syntax helps: `#:aog{:color ...}`
+;; - Mitigated by namespace map syntax: `#:aog{:color ...}`
 ;;
-;; ## Why `:aog` Instead of `:aog.mapping`, `:aog.attr`, etc.?
+;; **2. Novel Operators**
+;; - `*` and `+` shadow arithmetic operators
+;; - Need `clojure.core/*` for multiplication in implementation
+;; - Users must learn algebraic interpretation
 ;;
-;; **Advantage**: Better ergonomics
-;; ```clojure
-;; ;; With grouped namespaces
-;; (assoc layer :aog.mapping/color :species)  ;; 18 chars
+;; **3. Incomplete Feature Set (Currently)**
+;; - Some statistical transforms defined but not implemented (smooth, density)
+;; - Polar coordinates not yet supported
+;; - Fewer plot types than mature libraries
 ;;
-;; ;; With single namespace
-;; (assoc layer :aog/color :species)  ;; 11 chars
-;; ```
+;; ## Why These Choices?
 ;;
-;; **Trade-off**: Less semantic grouping, but namespacing provides enough distinction.
+;; **Flat + Namespaced Structure**
+;; - Enables standard `merge` (the core composability win)
+;; - Prevents collisions with data columns
+;; - Aligns with modern Clojure practices (Ring 2.0, clojure.spec)
 ;;
-;; ## Value Type Dispatch
+;; **Algebraic Operators (`*` and `+`)**
+;; - Directly translates AlgebraOfGraphics.jl concepts
+;; - Distributive law enables factoring common properties
+;; - Clear distinction: `*` = merge, `+` = overlay
 ;;
-;; We distinguish mappings from constants by value type:
-;; ```clojure
-;; {:aog/color :species}    ;; Keyword → mapping to :species column
-;; {:aog/color \"red\"}      ;; String → constant red color
-;; {:aog/alpha 0.5}         ;; Number → constant opacity
-;; ```
+;; **Multiple Backends from Start**
+;; - Validates that IR is truly backend-agnostic
+;; - geom-viz for static/print, Vega-Lite for interactive
+;; - Proves future extensibility
 ;;
-;; This is elegant but has edge cases:
-;; - What if you want to map to a numeric column vs set a constant?
-;; - Currently solved: keywords always map, numbers/strings are always constants
+;; ## Comparison to Current Tableplot APIs
+;;
+;; | Aspect | Current (Hanami/Plotly) | This Design |
+;; |--------|------------------------|-------------|
+;; | IR | Hanami templates | Flat maps with `:aog/*` keys |
+;; | Composition | Template substitution | Standard `merge` |
+;; | Debugging | Template internals leak | Inspect plain maps |
+;; | Backends | One per API | Multiple via same API |
+;; | Data formats | tech.ml.dataset only | Maps or datasets |
+;; | Operations | Custom functions | Standard library |
+;; | Jargon | Backend-specific | Backend-agnostic |
 
-;; # Open Questions for Discussion
+;; # 8. Integration Path
 ;;
-;; ## Question 1: Namespace Convention
+;; ## Coexistence with Tableplot v1
+;;
+;; This design is **not a replacement** for existing Tableplot APIs.
+;; It's an exploration of an alternative approach that could coexist as
+;; an additional namespace.
+;;
+;; **Possible integration:**
+;;
+;; ```clojure
+;; ;; Existing APIs continue as-is
+;; (require '[scicloj.tableplot.v1.hanami :as hanami])
+;; (require '[scicloj.tableplot.v1.plotly :as plotly])
+;;
+;; ;; New AoG API as additional namespace
+;; (require '[scicloj.tableplot.v1.aog :as aog])
+;;
+;; ;; Users choose based on their needs:
+;; ;; - hanami: Rich Vega-Lite features, Hanami template power
+;; ;; - plotly: Interactive Plotly.js visualizations
+;; ;; - aog: Compositional algebra, backend flexibility
+;; ```
+;;
+;; ## Migration & Compatibility
+;;
+;; **No migration required**:
+;; - Existing code continues to work unchanged
+;; - Users can adopt AoG API incrementally for new code
+;; - APIs can interoperate through shared rendering targets
+;;
+;; **Potential bridges**:
+;; - AoG layers → Vega-Lite spec → render with Hanami
+;; - Share color scales, themes between APIs
+;; - Common dataset handling utilities
+;;
+;; ## Next Steps
+;;
+;; **If pursuing this design:**
+;;
+;; 1. **Community feedback** - Gather input on design decisions
+;; 2. **Complete implementation** - Finish statistical transforms
+;; 3. **Performance testing** - Validate with large datasets
+;; 4. **Documentation** - User guide and API reference
+;; 5. **Integration planning** - Decide namespace structure
+;; 6. **Testing** - Comprehensive test suite
+;; 7. **Release** - Alpha release for early adopters
+
+;; # 9. Decision Points
+;;
+;; These are open questions where community input would be valuable.
+;;
+;; ## 1. Namespace Convention
 ;;
 ;; **Current**: `:aog/*` (e.g., `:aog/color`, `:aog/x`)
 ;;
-;; **Alternative**: Use `:=` prefix like Tableplot's current API
+;; **Alternative**: Use `:=*` prefix similar to Tableplot's current style
 ;; ```clojure
 ;; {:=data penguins
-;;  :=x :bill-length
-;;  :=y :bill-depth
+;;  :=x :bill-length-mm
+;;  :=y :bill-depth-mm
 ;;  :=color :species
-;;  :=alpha 0.5
 ;;  :=plottype :scatter}
 ;; ```
 ;;
-;; **Pros**: More concise (`:=color` = 7 chars vs `:aog/color` = 11 chars)
-;; **Cons**: Not a standard namespace, less discoverable
+;; **Comparison**:
+;; - `:aog/color` (11 chars) - Standard namespace, discoverable
+;; - `:=color` (7 chars) - More concise, less conventional
 ;;
-;; **Your thoughts?** Which feels more natural in Clojure?
+;; **Question**: Which feels more natural for Clojure users?
 ;;
-;; ## Question 2: Operator Names
+;; ## 2. Operator Names
 ;;
 ;; **Current**: `*` for merge/product, `+` for overlay/sum
 ;;
-;; Following AlgebraOfGraphics.jl, but in Clojure:
-;; - `*` shadows multiplication (though namespaced access works)
-;; - Are there better names? `merge-layers`? `compose`?
+;; **Concerns**:
+;; - Shadow arithmetic operators
+;; - Require `clojure.core/*` for multiplication internally
+;; - Novel interpretation for Clojure users (familiar to Julia users)
 ;;
-;; ## Question 3: Transformation Handling
+;; **Alternatives**:
+;; - `compose` and `overlay`
+;; - `merge-layers` and `concat-layers`
+;; - Keep `*` and `+` for algebraic elegance
 ;;
-;; **Current**: Linear regression as `{:aog/transformation :linear}`
+;; **Question**: Are symbolic operators worth the potential confusion?
 ;;
-;; **Question**: How to pass parameters to transformations?
+;; ## 3. Statistical Transformation Parameters
+;;
+;; **Current**: Transformations have no parameters
 ;; ```clojure
-;; (smooth {:bandwidth 0.5})  ;; How should this work?
+;; (linear)  ;; Returns {:aog/transformation :linear}
+;; ```
+;;
+;; **Future need**: Parameters for transformations
+;; ```clojure
+;; (smooth {:bandwidth 0.5})
 ;; (bins {:n 20})
 ;; ```
 ;;
-;; Should transformation parameters be:
-;; - Part of the layer map?
-;; - Separate transformation specification?
+;; **Options**:
+;; - Store params in layer map: `{:aog/transformation :smooth :aog/bandwidth 0.5}`
+;; - Nested transformation spec: `{:aog/transformation {:type :smooth :bandwidth 0.5}}`
+;; - Separate transform constructor: `(transform :smooth {:bandwidth 0.5})`
 ;;
-;; ## Question 4: Backend Abstraction
+;; **Question**: What's the cleanest approach for transformation configuration?
 ;;
-;; **Current**: Simple SVG hiccup rendering
+;; ## 4. Spec Integration
 ;;
-;; **Question**: How to support multiple backends (Vega-Lite, Plotly, thi.ng/geom, etc.)?
-;; - Should layer spec be backend-agnostic?
-;; - How to handle backend-specific features?
-;;
-;; ## Question 5: Spec Integration
-;;
-;; With namespaced keys, we can use clojure.spec:
+;; With namespaced keys, we could provide clojure.spec validation:
 ;; ```clojure
 ;; (s/def :aog/plottype #{:scatter :line :bar :area})
-;; (s/def :aog/data map?)
+;; (s/def :aog/data (s/or :map map? :dataset tc/dataset?))
 ;; (s/def :aog/x keyword?)
 ;; (s/def :aog/alpha (s/and number? #(<= 0 % 1)))
+;; (s/def ::layer (s/keys :opt [:aog/data :aog/x :aog/y :aog/color :aog/plottype ...]))
 ;; ```
 ;;
-;; Should we provide specs for validation?
+;; **Benefits**: Validation, generative testing, documentation
+;; **Costs**: Spec dependency, maintenance burden
 ;;
-;; ## Question 6: Faceting
+;; **Question**: Should we provide official specs for layer maps?
 ;;
-;; How should faceting work in this model?
+;; ## 5. Backend Registration
+;;
+;; **Current**: Hardcoded backend dispatch in `draw`
 ;; ```clojure
-;; {:aog/data penguins
-;;  :aog/x :bill-length
-;;  :aog/y :bill-depth
-;;  :aog/col :species}  ;; Facet by column?
+;; (case backend
+;;   :geom-viz (plot layers opts)
+;;   :vega-lite (plot-vega layers opts))
 ;; ```
 ;;
-;; Or separate faceting layer/wrapper?
+;; **Alternative**: Extensible backend registry
+;; ```clojure
+;; (register-backend! :plotly layers->plotly-spec)
+;; (draw layers {:backend :plotly})
+;; ```
+;;
+;; **Question**: Should backends be extensible by users, or core-only?
+;;
+;; ## 6. Faceting Model
+;;
+;; **Current**: Faceting via aesthetics (`:col`, `:row`, `:facet`)
+;; ```clojure
+;; (mapping :x :y {:color :species :col :island})
+;; ```
+;;
+;; **Alternative**: Separate faceting layer
+;; ```clojure
+;; (* (data penguins)
+;;    (mapping :x :y {:color :species})
+;;    (facet :col :island)
+;;    (scatter))
+;; ```
+;;
+;; **Question**: Should faceting be an aesthetic or a separate operator?
 
-;; # Summary & Next Steps
+;; # Summary
 ;;
-;; ## What We've Built
+;; ## What We've Explored
 ;;
-;; A minimal Algebra of Graphics implementation showing:
-;; 1. **Flat layer structure** - All aesthetics at top level
-;; 2. **Namespaced keys** - `:aog/*` prevents collisions
-;; 3. **Standard operations** - `merge`, `assoc`, `update`, `mapv`, `filter` all work
-;; 4. **Algebraic operators** - `*` for composition, `+` for overlay
-;; 5. **Self-contained** - ~300 lines, no dependencies beyond Tablecloth
+;; This notebook demonstrates a complete Algebra of Graphics implementation
+;; for Clojure in ~600 lines of code.
 ;;
-;; ## Key Insights
+;; **Core Design**:
+;; - Layers as **flat maps** with `:aog/*` namespaced keys
+;; - Algebraic composition using `*` (merge) and `+` (overlay)
+;; - Standard library operations work natively (merge, assoc, mapv, filter)
+;; - Backend-agnostic IR enables multiple rendering targets
 ;;
-;; 1. **Flattening enables standard operations** - No custom merge needed
-;; 2. **Namespacing solves collisions** - Can coexist with any data columns
-;; 3. **Maps are data** - Layers are just Clojure maps, use any map operations
-;; 4. **Namespace map syntax** - `#:aog{...}` keeps it concise
+;; **Key Insights**:
+;; 1. **Flat structure enables standard merge** - No custom layer-merge needed
+;; 2. **Namespacing prevents collisions** - Can coexist with any data columns
+;; 3. **Transparent IR** - Layers are inspectable plain maps, not templates
+;; 4. **Julia's algebraic culture translates to Clojure data** - Same concepts, different substrate
 ;;
-;; ## Discussion Points
+;; **Implementation Status**:
+;; - ✅ Core algebra (`*`, `+`, layer composition)
+;; - ✅ Two rendering backends (geom-viz, Vega-Lite)
+;; - ✅ Plot types: scatter, line, area, bar
+;; - ✅ Statistical transform: linear regression
+;; - ✅ Aesthetics: position, color, alpha, faceting
+;; - ⚠️ Statistical transforms: smooth, density, histogram (API defined, implementation pending)
+;; - ⚠️ Additional coordinate systems (polar, geographic)
 ;;
-;; 1. Is `:aog/*` the right namespace choice, or would `:=*` be better?
-;; 2. Are `*` and `+` good operator names for Clojure?
-;; 3. How should we handle transformations with parameters?
-;; 4. Should we provide clojure.spec specs for validation?
-;; 5. What's the right approach for faceting?
+;; ## Relationship to Tableplot
 ;;
-;; ## Try It Yourself!
+;; This is **not a replacement** for current Tableplot APIs, but an exploration
+;; of an alternative approach that could coexist as an additional namespace.
 ;;
-;; This notebook is completely self-contained. You can:
-;; 1. Modify the examples
-;; 2. Add new plot types (just add to `layer->vegalite-mark`)
-;; 3. Try different data with Tablecloth
-;; 4. Experiment with the design
+;; It addresses several current limitations:
+;; - Backend independence (one API, multiple renderers)
+;; - Transparent IR (plain maps, not template substitution)
+;; - Flexible data handling (maps or datasets)
+;; - Composability through standard library
 ;;
-;; **We welcome your feedback!** What works? What doesn't? What would you change?
-
-;; # Appendix: Implementation Summary
+;; ## This is a Design Document
 ;;
-;; The complete implementation above consists of:
+;; The purpose is to:
+;; - Demonstrate feasibility of the approach
+;; - Explore design trade-offs
+;; - Gather community feedback
+;; - Inform decision-making about Tableplot's future
 ;;
-;; **Constructor functions** (~40 lines):
-;; - `data` - Attach dataset
-;; - `mapping` - Define aesthetic mappings
-;; - `scatter`, `line`, `linear` - Plot types
+;; ## Try It Yourself
 ;;
-;; **Algebraic operators** (~20 lines):
-;; - `*` - Merge/compose layers
-;; - `+` - Overlay/concatenate layers
+;; This notebook is fully functional and self-contained. You can:
+;; - Modify the examples to experiment with the API
+;; - Add new plot types (extend the backend conversion functions)
+;; - Test with your own datasets
+;; - Provide feedback on the design decisions
 ;;
-;; **thi.ng/geom-viz backend** (~100 lines):
-;; - `get-column-data` - Extract data from datasets
-;; - `infer-domain` - Domain inference
-;; - `layer->points` - Convert to point data
-;; - `layer->scatter-spec` - Build geom-viz scatter specs
-;; - `layer->line-spec` - Build geom-viz line specs
-;; - `layers->svg` - Render to SVG via geom-viz
-;; - `plot` - Render visualization
-;;
-;; **Total**: ~180 lines of core logic for a working AoG implementation!
+;; **Feedback welcome**: What works? What doesn't? What would you change?
