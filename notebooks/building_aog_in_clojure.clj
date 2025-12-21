@@ -10,7 +10,7 @@
 ;;
 ;; Before we dive into the technical details, let's talk about where we're coming from.
 ;;
-;; Tableplot was created in late 2024 as a pragmatic plotting solution for the
+;; Tableplot was created in mid-2024 as a pragmatic plotting solution for the
 ;; [Noj](https://scicloj.github.io/noj/) toolkit—Clojure's growing data science
 ;; and scientific computing ecosystem. We needed *something* that worked, and we
 ;; needed it soon. The goal was to complete an important piece of Noj's offering:
@@ -18,7 +18,7 @@
 ;;
 ;; And it worked! Tableplot's current APIs (`scicloj.tableplot.v1.hanami` and
 ;; `scicloj.tableplot.v1.plotly`) have been used in quite a few serious projects
-;; throughout 2024 and 2025. People are actually using it to get real work done.
+;; since then. People are actually using it to get real work done.
 ;;
 ;; But here's the thing: **We never intended these APIs to be the final word on
 ;; plotting in Clojure.** They were a decent compromise—pragmatic, functional,
@@ -32,30 +32,12 @@
 ;; library in directions we hadn't anticipated. Your patience with the rough edges
 ;; and your insights about what works (and what doesn't) have shaped this next iteration.
 ;;
-;; You told us about:
-;; - Confusing error messages that pointed to rendering internals, not your code
-;; - The frustration of being locked into a specific backend (Vega-Lite *or* Plotly, pick one)
-;; - The learning curve of Hanami template substitutions
-;; - The desire for something more composable, more "Clojure-like"
-;;
-;; We heard you.
-;;
 ;; ### The Real-World Data Dev Group
 ;;
-;; This work is also happening in the context of the renewed
+;; This work is also happening in the context of the
 ;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/),
-;; which now meets regularly to support and guide open-source data projects in the
-;; Clojure ecosystem. This isn't just one person hacking on a library in isolation—it's
-;; a community effort, with ongoing feedback, discussion, and collaborative design.
-;;
-;; The Real-World Data group is helping us think through:
-;; - What do actual data practitioners need from a plotting library?
-;; - How should errors be surfaced in a REPL-driven workflow?
-;; - What does "composable" really mean in practice?
-;; - How can we learn from other ecosystems while staying true to Clojure's philosophy?
-;;
-;; So this isn't just a technical exercise. It's an attempt to build something that
-;; serves real needs, informed by real usage, supported by a real community.
+;; recently initiated by Timothy Pratley with new spirit and a stronger focus on
+;; open-source collaboration.
 ;;
 ;; With that context in mind, let's explore what we're building.
 
@@ -103,7 +85,6 @@
 ;; **4. Pragmatic Compromises**
 ;; - APIs optimized for common cases, not theoretical elegance
 ;; - Design decisions leak between layers:
-;;   - Template substitution (IR layer) visible to users
 ;;   - Backend specifics (rendering layer) affect user-facing API
 ;;   - Data layer (tech.ml.dataset) tightly coupled to API
 ;;
@@ -1131,22 +1112,190 @@ layer-with-merge ;; Inspect - it's just a map!
          spec (layers->vega-spec layers width height)]
      (kind/vega-lite spec))))
 
+;; ## Plotly.js Backend
+;;
+;; Plotly.js is a JavaScript library for interactive, publication-quality graphs.
+;; It provides hover tooltips, zooming, panning, and other interactive features.
+;;
+;; The Plotly.js spec is JSON-based, similar to Vega-Lite but with different structure.
+
+(defn- layer->plotly-trace
+  "Convert a layer to a Plotly.js trace (data series).
+  
+  Returns a map representing a Plotly trace with:
+  - x, y: Arrays of values
+  - type: 'scatter', 'bar', etc.
+  - mode: 'markers', 'lines', 'lines+markers'
+  - marker: Style properties
+  - name: Legend name (for color grouping)"
+  [layer]
+  (let [data (:aog/data layer)
+        dataset (if (tc/dataset? data)
+                  data
+                  (tc/dataset data))
+
+        x-col (:aog/x layer)
+        y-col (:aog/y layer)
+        color-col (:aog/color layer)
+        plottype (:aog/plottype layer)
+        alpha (or (:aog/alpha layer) 1.0)
+        transformation (:aog/transformation layer)
+
+        x-data (vec (get-column-data dataset x-col))
+        y-data (vec (get-column-data dataset y-col))]
+
+    (cond
+      ;; Scatter plot with optional color grouping
+      (= plottype :scatter)
+      (if (and color-col (keyword? color-col))
+        ;; Group by color column
+        (let [color-data (vec (get-column-data dataset color-col))
+              groups (group-by identity color-data)
+              colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3" "#00BFC4"]]
+          (mapv (fn [[idx group-val]]
+                  (let [indices (keep-indexed (fn [i v] (when (= v group-val) i)) color-data)]
+                    {:x (mapv #(nth x-data %) indices)
+                     :y (mapv #(nth y-data %) indices)
+                     :type "scatter"
+                     :mode "markers"
+                     :name (str group-val)
+                     :marker {:size 8
+                              :opacity alpha
+                              :color (nth colors idx (first colors))}}))
+                (map-indexed vector (keys groups))))
+        ;; No grouping
+        [{:x x-data
+          :y y-data
+          :type "scatter"
+          :mode "markers"
+          :marker {:size 8
+                   :opacity alpha
+                   :color "#333333"}}])
+
+      ;; Line plot (or linear regression)
+      (or (= plottype :line)
+          (= transformation :linear))
+      (if (= transformation :linear)
+        ;; Linear regression
+        (if (and color-col (keyword? color-col))
+          ;; Grouped regression
+          (let [color-data (vec (get-column-data dataset color-col))
+                groups (group-by identity color-data)
+                colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3" "#00BFC4"]]
+            (mapv (fn [[idx group-val]]
+                    (let [indices (keep-indexed (fn [i v] (when (= v group-val) i)) color-data)
+                          group-points (mapv (fn [i] {:x (nth x-data i) :y (nth y-data i)}) indices)
+                          fitted (compute-linear-regression group-points)]
+                      {:x (mapv :x fitted)
+                       :y (mapv :y fitted)
+                       :type "scatter"
+                       :mode "lines"
+                       :name (str group-val " (regression)")
+                       :line {:color (nth colors idx (first colors))
+                              :width 2}}))
+                  (map-indexed vector (keys groups))))
+          ;; Single regression line
+          (let [points (mapv (fn [x y] {:x x :y y}) x-data y-data)
+                fitted (compute-linear-regression points)]
+            [{:x (mapv :x fitted)
+              :y (mapv :y fitted)
+              :type "scatter"
+              :mode "lines"
+              :line {:color "#333333" :width 2}}]))
+        ;; Regular line plot
+        (if (and color-col (keyword? color-col))
+          ;; Grouped lines
+          (let [color-data (vec (get-column-data dataset color-col))
+                groups (group-by identity color-data)
+                colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3" "#00BFC4"]]
+            (mapv (fn [[idx group-val]]
+                    (let [indices (keep-indexed (fn [i v] (when (= v group-val) i)) color-data)]
+                      {:x (mapv #(nth x-data %) indices)
+                       :y (mapv #(nth y-data %) indices)
+                       :type "scatter"
+                       :mode "lines"
+                       :name (str group-val)
+                       :line {:color (nth colors idx (first colors))
+                              :width 2}}))
+                  (map-indexed vector (keys groups))))
+          ;; Single line
+          [{:x x-data
+            :y y-data
+            :type "scatter"
+            :mode "lines"
+            :line {:color "#333333" :width 2}}]))
+
+      ;; Bar chart
+      (= plottype :bar)
+      [{:x x-data
+        :y y-data
+        :type "bar"
+        :marker {:opacity alpha}}]
+
+      ;; Default: treat as scatter
+      :else
+      [{:x x-data
+        :y y-data
+        :type "scatter"
+        :mode "markers"
+        :marker {:size 8 :opacity alpha}}])))
+
+(defn- layers->plotly-spec
+  "Convert layers to a Plotly.js specification.
+  
+  Returns a map with:
+  - :data - Vector of traces
+  - :layout - Layout configuration (title, axes, etc.)"
+  [layers width height]
+  (let [layers (if (vector? layers) layers [layers])
+        traces (vec (mapcat layer->plotly-trace layers))]
+    {:data traces
+     :layout {:width width
+              :height height
+              :hovermode "closest"
+              :xaxis {:title ""
+                      :zeroline false}
+              :yaxis {:title ""
+                      :zeroline false}}}))
+
+(defn plot-plotly
+  "Render layers as an interactive Plotly.js visualization.
+  
+  Args:
+  - layers: Vector of layer maps or single layer map
+  - opts: Optional map with :width (default 600) and :height (default 400)
+  
+  Returns:
+  - Kindly-wrapped Plotly spec
+  
+  Examples:
+  (plot-plotly layers)
+  (plot-plotly layers {:width 800 :height 500})"
+  ([layers]
+   (plot-plotly layers {}))
+  ([layers opts]
+   (let [width (or (:width opts) 600)
+         height (or (:height opts) 400)
+         spec (layers->plotly-spec layers width height)]
+     (kind/plotly spec))))
+
 (defn draw
   "Unified rendering function supporting multiple backends.
 
   Args:
   - layers: Vector of layer maps or single layer map
   - opts: Optional map with:
-    - :backend - :geom-viz (default, static SVG) or :vega-lite (interactive)
-    - :width - Width in pixels (default 600 for geom-viz, 400 for vega-lite)
-    - :height - Height in pixels (default 400 for geom-viz, 300 for vega-lite)
+    - :backend - :geom-viz (static SVG), :vega-lite (interactive), or :plotly (interactive)
+    - :width - Width in pixels (default 600)
+    - :height - Height in pixels (default 400)
 
   Returns:
-  - Kindly-wrapped visualization (HTML with SVG, or Vega-Lite spec)
+  - Kindly-wrapped visualization (HTML with SVG, Vega-Lite spec, or Plotly spec)
 
   Examples:
   (draw layers)                          ;; Uses geom-viz backend by default
   (draw layers {:backend :vega-lite})    ;; Interactive Vega-Lite visualization
+  (draw layers {:backend :plotly})       ;; Interactive Plotly.js visualization
   (draw layers {:backend :geom-viz :width 800 :height 600})"
   ([layers]
    (draw layers {}))
@@ -1156,9 +1305,202 @@ layer-with-merge ;; Inspect - it's just a map!
        :geom-viz (plot layers opts)
        :vega-lite (plot-vega layers opts)
        :vegalite (plot-vega layers opts)
+       :plotly (plot-plotly layers opts)
        (plot layers opts)))))
 
-;; # 7. Trade-offs & Design Decisions
+;; # 7. Multiple Backends & Specs as Data
+;;
+;; One of the key design goals is backend independence: the same layer
+;; specification should work with multiple rendering targets. Let's demonstrate
+;; this with all three backends, and then show that specs are just data that
+;; can be manipulated programmatically.
+
+;; ## Same Layers, Three Backends
+
+;; Define a single layer specification:
+(def example-layers
+  (* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm {:color :species})
+     (+ (scatter {:alpha 0.6})
+        (linear))))
+
+;; ### Backend 1: thi.ng/geom-viz (Static SVG)
+;;
+;; Great for: Static images, PDFs, publications
+
+(draw example-layers {:backend :geom-viz})
+
+;; ### Backend 2: Vega-Lite (Interactive, Declarative)
+;;
+;; Great for: Web dashboards, exploratory analysis
+;; Features: Hover tooltips, zooming, panning, responsive sizing
+
+(draw example-layers {:backend :vega-lite})
+
+;; ### Backend 3: Plotly.js (Interactive, Imperative)
+;;
+;; Great for: Complex interactions, custom behaviors
+;; Features: Hover tooltips, zooming, panning, 3D plots, animations
+
+(draw example-layers {:backend :plotly})
+
+;; **Key observation**: Same layer specification, three different renderers.
+;; No backend-specific code in the layers themselves.
+
+;; ## Specs Are Just Data
+;;
+;; The real power comes from the fact that backend specs are just Clojure
+;; data structures. You can inspect them, transform them, and enhance them
+;; using standard Clojure functions and your knowledge of the target library.
+
+;; ### Example: Inspecting a Vega-Lite Spec
+
+;; Let's see what a Vega-Lite spec actually looks like:
+(def vega-spec (layers->vega-spec example-layers 600 400))
+
+;; It's just a map!
+vega-spec
+
+;; The structure follows Vega-Lite's JSON schema:
+;; - :data - The data points
+;; - :layer - Array of mark specifications
+;; - :width, :height - Dimensions
+
+;; ### Example: Inspecting a Plotly Spec
+
+;; Similarly, Plotly specs are just data:
+(def plotly-spec (layers->plotly-spec example-layers 600 400))
+
+plotly-spec
+
+;; The structure follows Plotly.js conventions:
+;; - :data - Array of traces (one per series)
+;; - :layout - Global layout configuration
+
+;; ### Example: Programmatic Enhancement with Plotly Knowledge
+;;
+;; Because specs are data, you can use Plotly-specific features by
+;; directly manipulating the spec. This is useful when you need features
+;; not exposed by the high-level API.
+
+;; Let's add custom hover text to a Plotly spec:
+
+;; First, create a basic scatter plot
+(def basic-scatter
+  (* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm {:color :species})
+     (scatter {:alpha 0.7})))
+
+;; Get the Plotly spec
+(def basic-plotly-spec (layers->plotly-spec basic-scatter 600 400))
+
+;; Now enhance it with custom hover templates using Plotly.js knowledge
+(def enhanced-plotly-spec
+  (update basic-plotly-spec :data
+          (fn [traces]
+            (mapv (fn [trace]
+                    (assoc trace
+                           :hovertemplate
+                           "<b>%{fullData.name}</b><br>Bill Length: %{x:.1f}mm<br>Bill Depth: %{y:.1f}mm<extra></extra>"))
+                  traces))))
+
+;; Render the enhanced spec
+(kind/plotly enhanced-plotly-spec)
+
+;; **What we did**: Used `update` and `mapv` to add `:hovertemplate` to each trace.
+;; This is a Plotly.js-specific feature that our high-level API doesn't expose,
+;; but because specs are data, we can add it ourselves.
+
+;; ### Example: Custom Layout with Vega-Lite Knowledge
+
+;; Let's customize a Vega-Lite spec with features not in the high-level API:
+
+(def custom-vega-spec
+  (-> (layers->vega-spec example-layers 600 400)
+      ;; Add a custom title
+      (assoc :title {:text "Palmer Penguins: Bill Dimensions by Species"
+                     :fontSize 18
+                     :font "Arial"})
+      ;; Customize axes with Vega-Lite knowledge
+      (assoc-in [:encoding :x :axis] {:title "Bill Length (mm)"
+                                      :grid true
+                                      :gridColor "#e0e0e0"})
+      (assoc-in [:encoding :y :axis] {:title "Bill Depth (mm)"
+                                      :grid true
+                                      :gridColor "#e0e0e0"})
+      ;; Add selection for interactive filtering
+      (assoc :selection {:species_highlight
+                         {:type "multi"
+                          :fields ["species"]
+                          :bind "legend"}})
+      ;; Make opacity conditional on selection
+      (assoc-in [:layer 0 :encoding :opacity]
+                {:condition {:selection "species_highlight"
+                             :value 0.7}
+                 :value 0.1})))
+
+(kind/vega-lite custom-vega-spec)
+
+;; **What we did**: 
+;; - Added a title with custom styling
+;; - Enhanced axes with gridlines and labels
+;; - Added Vega-Lite's selection mechanism for interactive legend filtering
+;; All using standard Clojure functions (`assoc`, `assoc-in`) and knowledge
+;; of the Vega-Lite spec structure.
+
+;; ### Example: Combining High-Level API with Low-Level Tweaks
+
+;; The typical workflow:
+;; 1. Use the high-level API to get 90% of the way there
+;; 2. Inspect the generated spec
+;; 3. Enhance it with target-specific features for the last 10%
+
+;; Example: Add plotly-specific camera angle for 3D-like perspective effect
+
+(def scatter-with-plotly-enhancements
+  (-> (layers->plotly-spec
+       (* (data mtcars)
+          (mapping :wt :mpg {:color :cyl})
+          (scatter {:alpha 0.7}))
+       700 500)
+      ;; Add custom layout features
+      (assoc-in [:layout :title] {:text "Car Weight vs MPG"
+                                  :font {:size 20 :family "Arial"}})
+      (assoc-in [:layout :hovermode] "x unified")
+      ;; Add range slider (Plotly-specific)
+      (assoc-in [:layout :xaxis :rangeslider] {:visible true})
+      ;; Custom legend
+      (assoc-in [:layout :legend] {:x 1 :xanchor "right"
+                                   :y 1 :yanchor "top"
+                                   :bgcolor "rgba(255,255,255,0.8)"
+                                   :bordercolor "black"
+                                   :borderwidth 1})))
+
+(kind/plotly scatter-with-plotly-enhancements)
+
+;; **Key insight**: This is the "Clojure way" of building abstractions.
+;; - The high-level API handles common cases
+;; - Specs are transparent data structures
+;; - You can drop down to lower levels when needed
+;; - No "escape hatches" required - it's data all the way down
+
+;; ## Why This Matters
+;;
+;; Traditional plotting libraries often have:
+;; - Opaque objects you can't inspect
+;; - Limited extension points
+;; - "Escape hatches" that break the abstraction
+;;
+;; With specs as data:
+;; - ✅ Full transparency - inspect any spec
+;; - ✅ Composability - use standard library functions
+;; - ✅ Extensibility - add target-specific features
+;; - ✅ Debuggability - specs are readable data structures
+;; - ✅ Portability - serialize specs to EDN/JSON
+;;
+;; This aligns perfectly with Clojure's philosophy: data > functions > macros.
+
+;; # 8. Trade-offs & Design Decisions
 ;;
 ;; ## What We Gain
 ;;
@@ -1233,7 +1575,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; | Operations | Custom functions | Standard library |
 ;; | Jargon | Backend-specific | Backend-agnostic |
 
-;; # 8. Integration Path
+;; # 9. Integration Path
 ;;
 ;; ## Coexistence with Tableplot v1
 ;;
@@ -1281,7 +1623,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; 6. **Testing** - Comprehensive test suite
 ;; 7. **Release** - Alpha release for early adopters
 
-;; # 9. Decision Points
+;; # 10. Decision Points
 ;;
 ;; These are open questions where community input would be valuable.
 ;;
