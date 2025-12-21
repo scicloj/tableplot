@@ -5,6 +5,59 @@
 ;; in Clojure, inspired by Julia's AlgebraOfGraphics.jl. It's a working prototype
 ;; demonstrating an alternative compositional API that addresses limitations in
 ;; Tableplot's current APIs.*
+;;
+;; ## A Bit of Context: Tableplot's Journey
+;;
+;; Before we dive into the technical details, let's talk about where we're coming from.
+;;
+;; Tableplot was created in late 2024 as a pragmatic plotting solution for the
+;; [Noj](https://scicloj.github.io/noj/) toolkit—Clojure's growing data science
+;; and scientific computing ecosystem. We needed *something* that worked, and we
+;; needed it soon. The goal was to complete an important piece of Noj's offering:
+;; a way to visualize data without leaving Clojure or reaching for external tools.
+;;
+;; And it worked! Tableplot's current APIs (`scicloj.tableplot.v1.hanami` and
+;; `scicloj.tableplot.v1.plotly`) have been used in quite a few serious projects
+;; throughout 2024 and 2025. People are actually using it to get real work done.
+;;
+;; But here's the thing: **We never intended these APIs to be the final word on
+;; plotting in Clojure.** They were a decent compromise—pragmatic, functional,
+;; good enough to be useful. We knew they had problems. We knew there were
+;; better designs waiting to be explored.
+;;
+;; ### Learning from Our Users
+;;
+;; The feedback from Tableplot users has been invaluable. **Thank you** to everyone
+;; who took the time to file issues, ask questions, share use cases, and push the
+;; library in directions we hadn't anticipated. Your patience with the rough edges
+;; and your insights about what works (and what doesn't) have shaped this next iteration.
+;;
+;; You told us about:
+;; - Confusing error messages that pointed to rendering internals, not your code
+;; - The frustration of being locked into a specific backend (Vega-Lite *or* Plotly, pick one)
+;; - The learning curve of Hanami template substitutions
+;; - The desire for something more composable, more "Clojure-like"
+;;
+;; We heard you.
+;;
+;; ### The Real-World Data Dev Group
+;;
+;; This work is also happening in the context of the renewed
+;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/),
+;; which now meets regularly to support and guide open-source data projects in the
+;; Clojure ecosystem. This isn't just one person hacking on a library in isolation—it's
+;; a community effort, with ongoing feedback, discussion, and collaborative design.
+;;
+;; The Real-World Data group is helping us think through:
+;; - What do actual data practitioners need from a plotting library?
+;; - How should errors be surfaced in a REPL-driven workflow?
+;; - What does "composable" really mean in practice?
+;; - How can we learn from other ecosystems while staying true to Clojure's philosophy?
+;;
+;; So this isn't just a technical exercise. It's an attempt to build something that
+;; serves real needs, informed by real usage, supported by a real community.
+;;
+;; With that context in mind, let's explore what we're building.
 
 (ns building-aog-in-clojure
   (:require [tablecloth.api :as tc]
