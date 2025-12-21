@@ -155,6 +155,7 @@
 ;;
 ;; **1. Everything is a [layer](https://aog.makie.org/dev/tutorials/intro-i#Layers:-data,-mapping,-visual-and-transformation)**: 
 ;; Data, mappings, visuals, and transformations all compose the same way
+;;
 ;; - Data sources
 ;; - Aesthetic mappings (x → column, color → column)
 ;; - Visual marks (scatter, line, bar)
@@ -253,7 +254,7 @@
 (merge {:positional [:x] :named {:color :species}}
        {:positional [:y] :named {:size :body-mass}})
 
-;; Note we lost `:x` and `:color`.
+;; Notice that we lost the `:x` and `:color` keys in this merge.
 
 ;; Standard merge overwrites rather than combines.
 ;;
@@ -282,7 +283,7 @@
        {:y :bill-depth-mm :color :species}
        {:plottype :scatter :alpha 0.5})
 
-;; Here, all properties combine correctly!
+;; With this flat structure, all properties combine correctly.
 
 ;; **Problem**: Collision with data columns
 
@@ -305,7 +306,7 @@
 
 ;; ## Approach 3: Flat Structure with Namespaced Keys
 ;;
-;; Use Clojure's namespaced keywords to prevent collisions!
+;; We can use Clojure's namespaced keywords to prevent collisions with data column names.
 
 (def flat-layer-example-v2
   #:aog{:data {:bill-length-mm [39.1 39.5 40.3]
@@ -362,7 +363,7 @@
 ;; ## API Overview
 ;;
 ;; The API consists of three parts:
-
+;;
 ;; 1. **Constructors** - Build partial layer specifications
 ;; 2. **Composition operators** - Merge layers (`*`) and overlay them (`+`)
 ;; 3. **Renderers** - Convert layers to visualizations
@@ -566,12 +567,12 @@
     (scatter)))
 
 ;; Breaking this down:
-
-;; 1. (data penguins) → {:aog/data penguins}
-;; 2. (mapping :bill-length-mm :bill-depth-mm) → {:aog/x :bill-length-mm :aog/y :bill-depth-mm}
-;; 3. (scatter) → {:aog/plottype :scatter}
-;; 4. (* ...) merges all three → [{:aog/data penguins :aog/x ... :aog/y ... :aog/plottype :scatter}]
-;; 5. (plot ...) renders the layer vector to SVG
+;;
+;; 1. `(data penguins)` → `{:aog/data penguins}`
+;; 2. `(mapping :bill-length-mm :bill-depth-mm)` → `{:aog/x :bill-length-mm :aog/y :bill-depth-mm}`
+;; 3. `(scatter)` → `{:aog/plottype :scatter}`
+;; 4. `(* ...)` merges all three → `[{:aog/data penguins :aog/x ... :aog/y ... :aog/plottype :scatter}]`
+;; 5. `(plot ...)` renders the layer vector to SVG
 
 ;; ## Example 2: Multi-Layer Plot (Scatter + Regression)
 ;;
@@ -585,15 +586,19 @@
        (linear))))
 
 ;; How this works:
-;; 1. (+ (scatter ...) (linear)) creates two layer specs
-;; 2. (* (data ...) (mapping ...) (+ ...)) distributes data+mapping to both
+;;
+;; 1. `(+ (scatter ...) (linear))` creates two layer specs
+;; 2. `(* (data ...) (mapping ...) (+ ...))` distributes data+mapping to both
 ;; 3. Result: Two complete layers with same data/mapping, different plot types
 ;; 4. Both rendered on same plot
 ;;
 ;; This uses the distributive property (from Section 2):
+;; ```
 ;; (* a (+ b c)) = (+ (* a b) (* a c))
+;; ```
 ;;
-;; Notice: Linear regression computed separately for each species (by :color grouping)
+;; Notice that the linear regression is computed separately for each species, 
+;; since they are grouped by the `:color` aesthetic.
 
 ;; ## Example 3: Standard Clojure Operations Work
 ;;
@@ -657,7 +662,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; Faceting creates separate panels for each category, demonstrating how
 ;; compositional power scales to more complex visualizations.
 ;;
-;; (Note: Currently implemented in Vega-Lite target only)
+;; Note that faceting is currently implemented only in the Vega-Lite target.
 
 (plot-vl
  (* (data penguins)
@@ -665,7 +670,7 @@ layer-with-merge ;; Inspect - it's just a map!
     (scatter {:alpha 0.7})))
 
 ;; Each island gets its own panel, with species shown by color.
-;; Notice species distribution varies by island!
+;; Notice that the species distribution varies by island!
 
 ;; Faceting with multiple layers works too:
 (plot-vega
@@ -707,6 +712,7 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; standard Clojure operations rather than custom logic.
 ;;
 ;; We'll cover:
+;;
 ;; - **Helper functions** for data extraction and transformation
 ;; - **Primary rendering target** (thi.ng/geom for static SVG)
 ;; - **Alternative targets** (Vega-Lite and Plotly.js for interactive visualizations)
@@ -1403,13 +1409,14 @@ layer-with-merge ;; Inspect - it's just a map!
 ;; Let's see what a Vega-Lite spec actually looks like:
 (def vega-spec (layers->vega-spec example-layers 600 400))
 
-;; It's just a map!
+;; The result is just a plain Clojure map.
 vega-spec
 
 ;; The structure follows Vega-Lite's JSON schema:
-;; - :data - The data points
-;; - :layer - Array of mark specifications
-;; - :width, :height - Dimensions
+;;
+;; - `:data` - The data points
+;; - `:layer` - Array of mark specifications
+;; - `:width`, `:height` - Dimensions
 
 ;; ### Example: Inspecting a Plotly Spec
 
@@ -1419,8 +1426,9 @@ vega-spec
 plotly-spec
 
 ;; The structure follows Plotly.js conventions:
-;; - :data - Array of traces (one per series)
-;; - :layout - Global layout configuration
+;;
+;; - `:data` - Array of traces (one per series)
+;; - `:layout` - Global layout configuration
 
 ;; ### Example: Programmatic Enhancement with Plotly Knowledge
 ;;
@@ -1486,7 +1494,8 @@ plotly-spec
 
 (kind/vega-lite custom-vega-spec)
 
-;; **What we did**: 
+;; **What we did**:
+;;
 ;; - Added a title with custom styling
 ;; - Enhanced axes with gridlines and labels
 ;; - Added Vega-Lite's selection mechanism for interactive legend filtering
@@ -1496,6 +1505,7 @@ plotly-spec
 ;; ### Example: Combining High-Level API with Low-Level Tweaks
 
 ;; The typical workflow:
+;;
 ;; 1. Use the high-level API to get 90% of the way there
 ;; 2. Inspect the generated spec
 ;; 3. Enhance it with target-specific features for the last 10%
@@ -1524,6 +1534,7 @@ plotly-spec
 (kind/plotly scatter-with-plotly-enhancements)
 
 ;; **Key insight**: This is the "Clojure way" of building abstractions.
+;;
 ;; - The high-level API handles common cases
 ;; - Specs are transparent data structures
 ;; - You can drop down to lower levels when needed
@@ -1532,11 +1543,13 @@ plotly-spec
 ;; ## Why This Matters
 ;;
 ;; Traditional plotting libraries often have:
+;;
 ;; - Opaque objects you can't inspect
 ;; - Limited extension points
 ;; - "Escape hatches" that break the abstraction
 ;;
 ;; With specs as data:
+;;
 ;; - ✅ Full transparency - inspect any spec
 ;; - ✅ Composability - use standard library functions
 ;; - ✅ Extensibility - add target-specific features
@@ -1550,26 +1563,31 @@ plotly-spec
 ;; ## What We Gain
 ;;
 ;; **1. Composability Through Standard Operations**
+;;
 ;; - Layers compose with `merge`, not custom `merge-layer` function
 ;; - All standard library operations work: `assoc`, `update`, `mapv`, `filter`, `into`
 ;; - No need to learn custom combinators
 ;;
 ;; **2. Transparent Intermediate Representation**
+;;
 ;; - Layers are plain maps - inspect them with `(first layers)`
 ;; - No hidden template substitution to debug
 ;; - Error messages reference actual data structures
 ;;
 ;; **3. Backend Independence**
+;;
 ;; - Same layer spec works with multiple renderers
 ;; - Easy to add new targets (just write conversion functions)
 ;; - No target-specific jargon in user-facing API
 ;;
 ;; **4. Flexible Data Handling**
+;;
 ;; - Accepts plain Clojure maps: `{:x [1 2 3] :y [4 5 6]}`
 ;; - Accepts tech.ml.dataset datasets
 ;; - No forced conversion step
 ;;
 ;; **5. Clear Separation of Concerns**
+;;
 ;; - Composition operators separate from IR (layer maps)
 ;; - IR separate from rendering (backends)
 ;; - Each layer can be understood independently
@@ -1577,16 +1595,19 @@ plotly-spec
 ;; ## What We Pay
 ;;
 ;; **1. Namespace Verbosity**
+;;
 ;; - Plain key: `:color` (6 chars)
 ;; - Namespaced: `:aog/color` (11 chars)
 ;; - Mitigated by namespace map syntax: `#:aog{:color ...}`
 ;;
 ;; **2. Novel Operators**
+;;
 ;; - `*` and `+` shadow arithmetic operators
 ;; - Need `clojure.core/*` for multiplication in implementation
 ;; - Users must learn non-standard interpretation of familiar operators
 ;;
 ;; **3. Incomplete Feature Set (Currently)**
+;;
 ;; - Some statistical transforms defined but not implemented (smooth, density)
 ;; - Polar coordinates not yet supported
 ;; - Fewer plot types than mature libraries
@@ -1594,16 +1615,19 @@ plotly-spec
 ;; ## Why These Choices?
 ;;
 ;; **Flat + Namespaced Structure**
+;;
 ;; - Enables standard `merge` (the core composability win)
 ;; - Prevents collisions with data columns
 ;; - Aligns with modern Clojure practices (Ring 2.0, clojure.spec)
 ;;
 ;; **Composition Operators (`*` and `+`)**
+;;
 ;; - Directly translates AlgebraOfGraphics.jl concepts
 ;; - Distributive property enables factoring common properties
 ;; - Clear distinction: `*` = merge, `+` = overlay
 ;;
 ;; **Multiple Targets from Start**
+;;
 ;; - Validates that IR is truly target-agnostic
 ;; - geom for static/print, Vega-Lite for interactive, Plotly for rich interactions
 ;; - Proves future extensibility
@@ -1647,11 +1671,13 @@ plotly-spec
 ;; ## Migration & Compatibility
 ;;
 ;; **No migration required**:
+;;
 ;; - Existing code continues to work unchanged
 ;; - Users can adopt AoG API incrementally for new code
 ;; - APIs can interoperate through shared rendering targets
 ;;
 ;; **Potential bridges**:
+;;
 ;; - AoG layers → Vega-Lite spec → render with Hanami
 ;; - Share color scales, themes between APIs
 ;; - Common dataset handling utilities
@@ -1686,6 +1712,7 @@ plotly-spec
 ;; ```
 ;;
 ;; **Comparison**:
+;;
 ;; - `:aog/color` (11 chars) - Standard namespace, discoverable
 ;; - `:=color` (7 chars) - More concise, less conventional
 ;;
@@ -1696,11 +1723,13 @@ plotly-spec
 ;; **Current**: `*` for merge/product, `+` for overlay/sum
 ;;
 ;; **Concerns**:
+;;
 ;; - Shadow arithmetic operators
 ;; - Require `clojure.core/*` for multiplication internally
 ;; - Novel interpretation for Clojure users (familiar to Julia users)
 ;;
 ;; **Alternatives**:
+;;
 ;; - `compose` and `overlay`
 ;; - `merge-layers` and `concat-layers`
 ;; - Keep `*` and `+` for conciseness and mathematical elegance
@@ -1721,6 +1750,7 @@ plotly-spec
 ;; ```
 ;;
 ;; **Options**:
+;;
 ;; - Store params in layer map: `{:aog/transformation :smooth :aog/bandwidth 0.5}`
 ;; - Nested transformation spec: `{:aog/transformation {:type :smooth :bandwidth 0.5}}`
 ;; - Separate transform constructor: `(transform :smooth {:bandwidth 0.5})`
@@ -1739,6 +1769,7 @@ plotly-spec
 ;; ```
 ;;
 ;; **Benefits**: Validation, generative testing, documentation
+;;
 ;; **Costs**: Spec dependency, maintenance burden
 ;;
 ;; **Question**: Should we provide official specs for layer maps?
@@ -1785,18 +1816,21 @@ plotly-spec
 ;; for Clojure in ~600 lines of code.
 ;;
 ;; **Core Design**:
+;;
 ;; - Layers as **flat maps** with `:aog/*` namespaced keys
 ;; - Composition using `*` (merge) and `+` (overlay)
-;; - Standard library operations work natively (merge, assoc, mapv, filter)
+;; - Standard library operations work natively (`merge`, `assoc`, `mapv`, `filter`)
 ;; - Backend-agnostic IR enables multiple rendering targets
 ;;
 ;; **Key Insights**:
+;;
 ;; 1. **Flat structure enables standard merge** - No custom layer-merge needed
 ;; 2. **Namespacing prevents collisions** - Can coexist with any data columns
 ;; 3. **Transparent IR** - Layers are inspectable plain maps, not templates
 ;; 4. **Julia's compositional approach translates to Clojure data** - Same concepts, different substrate
 ;;
 ;; **Implementation Status**:
+;;
 ;; - ✅ Core composition (`*`, `+`, layer composition)
 ;; - ✅ Two rendering backends (geom-viz, Vega-Lite)
 ;; - ✅ Plot types: scatter, line, area, bar
@@ -1811,6 +1845,7 @@ plotly-spec
 ;; of an alternative approach that could coexist as an additional namespace.
 ;;
 ;; It addresses several current limitations:
+;;
 ;; - Backend independence (one API, multiple renderers)
 ;; - Transparent IR (plain maps, not template substitution)
 ;; - Flexible data handling (maps or datasets)
@@ -1819,6 +1854,7 @@ plotly-spec
 ;; ## This is a Design Document
 ;;
 ;; The purpose is to:
+;;
 ;; - Demonstrate feasibility of the approach
 ;; - Explore design trade-offs
 ;; - Gather community feedback
@@ -1827,6 +1863,7 @@ plotly-spec
 ;; ## Try It Yourself
 ;;
 ;; This notebook is fully functional and self-contained. You can:
+;;
 ;; - Modify the examples to experiment with the API
 ;; - Add new plot types (extend the target conversion functions)
 ;; - Test with your own datasets
