@@ -232,13 +232,10 @@
 
 ;; # Design Exploration
 ;;
-;; Let's explore three different approaches to structuring layer specifications,
-;; showing the evolution toward a design that works naturally with Clojure's
-;; standard library.
+;; The core design question: how should we structure layer specifications
+;; so they compose naturally with Clojure's standard library?
 
-;; ## Approach 1: Nested Structure
-;;
-;; This mirrors how traditional plotting libraries often work internally.
+;; ## The Problem: Nested Doesn't Merge
 
 (def nested-layer-example
   {:transformation nil
@@ -249,64 +246,19 @@
    :named {:color :species}
    :attributes {:alpha 0.5}})
 
-;; **Problem**: Standard `merge` doesn't compose correctly
+;; Standard `merge` doesn't compose nested structures:
 
 (merge {:positional [:x] :named {:color :species}}
        {:positional [:y] :named {:size :body-mass}})
+;; => {:positional [:y], :named {:size :body-mass}}
+;; Lost :x and :color!
 
-;; Notice that we lost the `:x` and `:color` keys in this merge.
+;; Nested structure requires custom `merge-layer` function. Not ideal.
 
-;; Standard merge overwrites rather than combines.
+;; ## The Solution: Flat Structure with Namespaced Keys
 ;;
-;; This means standard Clojure operations don't work on layer specifications, and
-;; we would need a custom `merge-layer` function with special logic.
-
-;; We want to make things simpler for the user.
-
-;; ## Approach 2: Flat Structure with Plain Keys
-;;
-;; What if we flatten everything to the same level?
-
-(def flat-layer-example-v1
-  {:data {:bill-length-mm [39.1 39.5 40.3]
-          :bill-depth-mm [18.7 17.4 18.0]
-          :species [:adelie :adelie :adelie]}
-   :x :bill-length-mm
-   :y :bill-depth-mm
-   :color :species
-   :alpha 0.5
-   :plottype :scatter})
-
-;; **Advantage**: Standard `merge` works perfectly!
-
-(merge {:data {:bill-length-mm [39.1] :bill-depth-mm [18.7]} :x :bill-length-mm}
-       {:y :bill-depth-mm :color :species}
-       {:plottype :scatter :alpha 0.5})
-
-;; With this flat structure, all properties combine correctly.
-
-;; **Problem**: Collision with data columns
-
-;; For example:
-
-;; Imagine a user dataset has column named `:plottype`.
-
-(def tricky-data
-  {:x [1 2 3]
-   :y [4 5 6]
-   :plottype [:a :b :c]})
-
-;; This becomes ambiguous:
-;; ```
-;; {:data tricky-data :plottype :scatter :y :plottype}
-;; ```
-;; Here, would `:plottype` mean the layer metadata? or mapping to a column?
-;;
-;; With plain keys, we can't distinguish layer metadata from data columns.
-
-;; ## Approach 3: Flat Structure with Namespaced Keys
-;;
-;; We can use Clojure's namespaced keywords to prevent collisions with data column names.
+;; Use flat maps with namespaced keywords to enable standard `merge` while
+;; preventing collisions with data column names:
 
 (def flat-layer-example-v2
   #:aog{:data {:bill-length-mm [39.1 39.5 40.3]
@@ -318,23 +270,18 @@
         :alpha 0.5
         :plottype :scatter})
 
-;; This approach gives us several advantages. Standard `merge` works correctly because
-;; of the flat structure, and there's no collision with data columns thanks to the
-;; namespaced keys. The distinction is clear: `:aog/plottype` is layer metadata while
-;; `:plottype` refers to a data column. The namespace map syntax `#:aog{...}` keeps
-;; things concise, and all standard library operations like `assoc`, `update`, `mapv`,
-;; and `filter` work without modification.
+;; **Why this works**:
 ;;
-;; The trade-off is slightly more verbosity than plain keys: `:color` becomes
-;; `:aog/color`, though the namespace map syntax helps in map contexts.
+;; - Standard `merge` composes correctly (flat structure)
+;; - No collision with data columns (`:aog/plottype` ≠ `:plottype`)
+;; - All standard library operations work: `assoc`, `update`, `mapv`, `filter`, `into`
+;; - Namespace map syntax `#:aog{...}` keeps things concise
 ;;
-;; ## Alternative: Keyword Convention
+;; **Trade-off**: Slightly more verbose than plain keys (`:aog/color` vs `:color`).
 ;;
-;; Another approach worth considering is using a keyword prefix convention like `:=color`
-;; for library keys, similar to how Tableplot's current APIs use `:=*` prefixes for
-;; substitution keys. This would be slightly more concise than namespaced keywords while
-;; still avoiding collisions. We may switch to this option later based on usage patterns
-;; and community feedback.
+;; *Note: An alternative approach using `:=*` prefix convention (like `:=color`) was
+;; considered for brevity, similar to Tableplot's current APIs. We may revisit based
+;; on usage patterns and community feedback.*
 
 ;; ## Why This Matters: Julia's Compositional Approach → Clojure Data Structures
 ;;
@@ -374,6 +321,17 @@
 ;; 3. **Renderer** - Single `plot` function that interprets layer specs
 ;;
 ;; Implementation details are in the Implementation section. Here we show signatures and usage.
+;;
+;; **Current Implementation Status**:
+;;
+;; - ✅ Core composition (`*`, `+`, layer merging with standard library)
+;; - ✅ Three rendering targets (:geom, :vl, :plotly)
+;; - ✅ Plot types: scatter, line, area, bar
+;; - ✅ Statistical transform: linear regression
+;; - ✅ Aesthetics: position (x, y), color, alpha
+;; - ✅ Faceting (Vega-Lite target only)
+;; - ⚠️ Statistical transforms: smooth, density, histogram (API defined, not yet implemented)
+;; - ⚠️ Additional coordinate systems (polar, geographic - planned)
 
 ;; ## Constructors
 
@@ -478,13 +436,13 @@
 
 (defn area
   "Plot type: Area plot (filled line plot)."
-  ([] [{:aog/plottype :area}])
-  ([opts] [(merge {:aog/plottype :area} opts)]))
+  ([] {:aog/plottype :area})
+  ([opts] (merge {:aog/plottype :area} opts)))
 
 (defn bar
   "Plot type: Bar chart."
-  ([] [{:aog/plottype :bar}])
-  ([opts] [(merge {:aog/plottype :bar} opts)]))
+  ([] {:aog/plottype :bar})
+  ([opts] (merge {:aog/plottype :bar} opts)))
 
 (defn target
   "Specify rendering target.
@@ -495,7 +453,7 @@
   Examples:
   (* (data penguins) (mapping :x :y) (scatter) (target :vl))"
   [t]
-  [{:aog/target t}])
+  {:aog/target t})
 
 ;; ## Composition Operators
 
@@ -542,6 +500,19 @@
 (+ (scatter) (linear))
 
 (* (data {:x [1 2] :y [3 4]}) (mapping :x :y) (+ (scatter) (linear)))
+
+;; **Design Note**: Why `*` and `+`?
+;;
+;; These operators shadow Clojure's arithmetic operators, which requires using
+;; `clojure.core/*` for multiplication in implementation code. The trade-off:
+;;
+;; - ✅ Mathematical elegance and familiarity (for Julia/AoG users)
+;; - ✅ Conciseness: `*` vs `compose`, `+` vs `overlay`
+;; - ✅ Algebraic properties (distributive law) are self-evident
+;; - ⚠️ Novel semantics for Clojure users
+;;
+;; Alternatives considered: `compose`/`overlay`, `merge-layers`/`concat-layers`.
+;; Feedback welcome on whether the conciseness is worth the non-standard interpretation.
 
 ;; ## Renderer
 ;;
@@ -606,6 +577,11 @@
 (def iris (rdatasets/datasets-iris))
 
 ;; ## Implementation: Helper Functions & :geom Target
+;;
+;; **Note**: This implementation section can be skipped on first reading.
+;; It's placed here to make the notebook fully self-contained and reproducible
+;; from top to bottom. Feel free to jump ahead to "Example 1" and return here
+;; if you're interested in the rendering details.
 ;;
 ;; Before we can use `plot` in examples, we need to implement at least one target.
 ;; We'll start with the :geom target (thi.ng/geom-viz) for static SVG visualizations.
@@ -941,10 +917,8 @@
 ;; 3. Result: Two complete layers with same data/mapping, different plot types
 ;; 4. Both rendered on same plot
 ;;
-;; This uses the distributive property (from Section 2):
-;; ```
-;; (* a (+ b c)) = (+ (* a b) (* a c))
-;; ```
+;; This uses the distributive property: `*` distributes over `+`, so common
+;; properties (data, mapping) are factored out and applied to multiple visuals.
 ;;
 ;; Notice that the linear regression is computed separately for each species, 
 ;; since they are grouped by the `:color` aesthetic.
@@ -1009,6 +983,8 @@
 ;; statistically meaningful. Standard `into` naturally accumulates layers.
 
 ;; ## Implementation: :vl Target (Vega-Lite)
+;;
+;; **Note**: Implementation interlude - can be skipped on first reading.
 ;;
 ;; Now we add support for the Vega-Lite target, which provides interactive
 ;; visualizations and built-in faceting support.
@@ -1233,6 +1209,8 @@
 
 ;; ## Implementation: :plotly Target (Plotly.js)
 ;;
+;; **Note**: Implementation interlude - can be skipped on first reading.
+;;
 ;; Finally, we add support for the Plotly.js target, which provides rich
 ;; interactive visualizations with advanced features.
 
@@ -1393,12 +1371,11 @@
         spec (layers->plotly-spec layers width height)]
     (kind/plotly spec)))
 
-;; # Multiple Targets & Specs as Data
+;; # Backend Independence
 ;;
 ;; One of the key design goals is target independence: the same layer
 ;; specification should work with multiple rendering targets. Let's demonstrate
-;; this with all three targets, and then show that specs are just data that
-;; can be manipulated programmatically.
+;; this with all three targets.
 
 ;; ## Same Layers, Three Targets
 
@@ -1432,11 +1409,15 @@
 ;; **Key observation**: Same layer specification, three different renderers.
 ;; No target-specific code in the layers themselves.
 
-;; ## Specs Are Just Data
+;; # Advanced: Direct Spec Manipulation
 ;;
-;; The real power comes from the fact that target specs are just Clojure
-;; data structures. You can inspect them, transform them, and enhance them
-;; using standard Clojure functions and your knowledge of the target library.
+;; The high-level API (`plot` with layers) handles most use cases. But sometimes
+;; you need target-specific features that aren't exposed by the API. Because specs
+;; are just Clojure data structures, you can manipulate them directly using standard
+;; library functions and your knowledge of the target library.
+;;
+;; This is the "escape hatch" for power users—except there's nothing to escape from,
+;; because it's data all the way down.
 
 ;; ### Understanding Specs as Data
 ;;
@@ -1566,16 +1547,13 @@
 ;; - Specs are transparent data structures
 ;; - You can drop down to lower levels when needed
 ;; - No "escape hatches" required - it's data all the way down
-
-;; ## Why This Matters
 ;;
-;; Traditional plotting libraries often have:
+;; ## Why Direct Spec Manipulation Matters
 ;;
-;; - Opaque objects you can't inspect
-;; - Limited extension points
-;; - "Escape hatches" that break the abstraction
+;; Traditional plotting libraries often have opaque objects you can't inspect,
+;; limited extension points, and "escape hatches" that break the abstraction.
 ;;
-;; With specs as data:
+;; With specs as data, you get:
 ;;
 ;; - ✅ Full transparency - inspect any spec
 ;; - ✅ Composability - use standard library functions
@@ -1721,119 +1699,32 @@
 ;; 6. **Testing** - Comprehensive test suite
 ;; 7. **Release** - Alpha release for early adopters
 
-;; # Decision Points
+;; # Open Questions
 ;;
-;; These are open questions where community input would be valuable.
+;; Feedback welcome on these design decisions:
 ;;
-;; ## 1. Namespace Convention
+;; **1. Namespace vs Prefix Convention**
 ;;
-;; **Current**: `:aog/*` (e.g., `:aog/color`, `:aog/x`)
+;; Current: `:aog/color` (standard namespace, discoverable)
+;; Alternative: `:=color` (more concise, like Tableplot v1)
+;; See Design Exploration section for discussion.
 ;;
-;; **Alternative**: Use `:=*` prefix similar to Tableplot's current style
-;; ```clojure
-;; {:=data penguins
-;;  :=x :bill-length-mm
-;;  :=y :bill-depth-mm
-;;  :=color :species
-;;  :=plottype :scatter}
-;; ```
+;; **2. Symbolic Operators**
 ;;
-;; **Comparison**:
+;; Current: `*` and `+` (concise, mathematical)
+;; Alternatives: `compose`/`overlay`, `merge-layers`/`concat-layers`
+;; See Composition Operators section for trade-offs.
 ;;
-;; - `:aog/color` (11 chars) - Standard namespace, discoverable
-;; - `:=color` (7 chars) - More concise, less conventional
+;; **3. clojure.spec Integration**
 ;;
-;; **Question**: Which feels more natural for Clojure users?
+;; Should we provide official specs for layer maps?
+;; Benefits: Validation, generative testing, documentation
+;; Costs: Spec dependency, maintenance burden
 ;;
-;; ## 2. Operator Names
+;; **4. Extensible Target Registry**
 ;;
-;; **Current**: `*` for merge/product, `+` for overlay/sum
-;;
-;; **Concerns**:
-;;
-;; - Shadow arithmetic operators
-;; - Require `clojure.core/*` for multiplication internally
-;; - Novel interpretation for Clojure users (familiar to Julia users)
-;;
-;; **Alternatives**:
-;;
-;; - `compose` and `overlay`
-;; - `merge-layers` and `concat-layers`
-;; - Keep `*` and `+` for conciseness and mathematical elegance
-;;
-;; **Question**: Are symbolic operators worth the potential confusion?
-;;
-;; ## 3. Statistical Transformation Parameters
-;;
-;; **Current**: Transformations have no parameters
-;; ```clojure
-;; (linear)  ;; Returns {:aog/transformation :linear}
-;; ```
-;;
-;; **Future need**: Parameters for transformations
-;; ```clojure
-;; (smooth {:bandwidth 0.5})
-;; (bins {:n 20})
-;; ```
-;;
-;; **Options**:
-;;
-;; - Store params in layer map: `{:aog/transformation :smooth :aog/bandwidth 0.5}`
-;; - Nested transformation spec: `{:aog/transformation {:type :smooth :bandwidth 0.5}}`
-;; - Separate transform constructor: `(transform :smooth {:bandwidth 0.5})`
-;;
-;; **Question**: What's the cleanest approach for transformation configuration?
-;;
-;; ## 4. Spec Integration
-;;
-;; With namespaced keys, we could provide clojure.spec validation:
-;; ```clojure
-;; (s/def :aog/plottype #{:scatter :line :bar :area})
-;; (s/def :aog/data (s/or :map map? :dataset tc/dataset?))
-;; (s/def :aog/x keyword?)
-;; (s/def :aog/alpha (s/and number? #(<= 0 % 1)))
-;; (s/def ::layer (s/keys :opt [:aog/data :aog/x :aog/y :aog/color :aog/plottype ...]))
-;; ```
-;;
-;; **Benefits**: Validation, generative testing, documentation
-;;
-;; **Costs**: Spec dependency, maintenance burden
-;;
-;; **Question**: Should we provide official specs for layer maps?
-;;
-;; ## 5. Target Registration
-;;
-;; **Current**: Hardcoded target dispatch in `plot`
-;; ```clojure
-;; (case target
-;;   :geom (plot-geom layers opts)
-;;   :vl (plot-vl layers opts))
-;; ```
-;;
-;; **Alternative**: Extensible target registry
-;; ```clojure
-;; (register-target! :plotly plot-plotly)
-;; (plot layers {:target :plotly})
-;; ```
-;;
-;; **Question**: Should targets be extensible by users, or core-only?
-;;
-;; ## 6. Faceting Model
-;;
-;; **Current**: Faceting via aesthetics (`:col`, `:row`, `:facet`)
-;; ```clojure
-;; (mapping :x :y {:color :species :col :island})
-;; ```
-;;
-;; **Alternative**: Separate faceting layer
-;; ```clojure
-;; (* (data penguins)
-;;    (mapping :x :y {:color :species})
-;;    (facet :col :island)
-;;    (scatter))
-;; ```
-;;
-;; **Question**: Should faceting be an aesthetic or a separate operator?
+;; Should users be able to register custom rendering targets,
+;; or should targets remain core-only?
 
 ;; # Summary
 ;;
