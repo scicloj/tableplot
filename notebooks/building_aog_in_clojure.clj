@@ -364,9 +364,9 @@
 ;;
 ;; The API consists of three parts:
 ;;
-;; 1. **Constructors** - Build partial layer specifications
+;; 1. **Constructors** - Build partial layer specifications (data, mapping, scatter, target, etc.)
 ;; 2. **Composition operators** - Merge layers (`*`) and overlay them (`+`)
-;; 3. **Renderers** - Convert layers to visualizations
+;; 3. **Renderer** - Single `plot` function that interprets layer specs
 ;;
 ;; Implementation details are in the Implementation section. Here we show signatures and usage.
 
@@ -481,6 +481,17 @@
   ([] [{:aog/plottype :bar}])
   ([opts] [(merge {:aog/plottype :bar} opts)]))
 
+(defn target
+  "Specify rendering target.
+  
+  Args:
+  - t: Target keyword - :geom (default), :vl (Vega-Lite), or :plotly
+  
+  Examples:
+  (* (data penguins) (mapping :x :y) (scatter) (target :vl))"
+  [t]
+  [{:aog/target t}])
+
 ;; ## Composition Operators
 
 (defn *
@@ -527,19 +538,17 @@
 
 (* (data {:x [1 2] :y [3 4]}) (mapping :x :y) (+ (scatter) (linear)))
 
-;; ## Renderers
+;; ## Renderer
 ;;
-;; Signatures only - implementations in the Implementation section.
+;; The `plot` function is the single user-facing renderer. It dispatches to
+;; target-specific implementations based on the `:aog/target` in layer specs
+;; or the `:target` option (options take precedence).
+;;
+;; Implementation in the Implementation section.
 
-(declare plot-geom plot-vl plot-plotly plot)
+(declare plot)
 
-;; `plot-geom` : layers → SVG (via thi.ng/geom-viz)
-
-;; `plot-vl` : layers → Vega-Lite spec
-
-;; `plot-plotly` : layers → Plotly.js spec
-
-;; `plot` : layers + opts → dispatch to target (`:geom` by default)
+;; `plot` : layers + opts → visualization (dispatches to appropriate target)
 
 ;; # Examples
 ;;
@@ -668,21 +677,23 @@
 ;; Note that faceting is currently implemented only in the Vega-Lite target.
 
 (delay
-  (plot-vl
+  (plot
    (* (data penguins)
       (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
-      (scatter {:alpha 0.7}))))
+      (scatter {:alpha 0.7})
+      (target :vl))))
 
 ;; Each island gets its own panel, with species shown by color.
 ;; Notice that the species distribution varies by island!
 
 ;; Faceting with multiple layers works too:
 (delay
-  (plot-vl
+  (plot
    (* (data penguins)
       (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
       (+ (scatter {:alpha 0.5})
-         (linear)))))
+         (linear))
+      (target :vl))))
 
 ;; Each facet shows both scatter points and regression lines.
 
@@ -700,14 +711,18 @@
 ;; Render with default target (geom - static SVG, ggplot2 aesthetics)
 (plot viz-layers)
 
-;; Render with Vega-Lite target (interactive, tooltips, zoom/pan)
+;; Specify target via options
 (plot viz-layers {:target :vl})
 
-;; Or explicitly specify geom target
-(plot viz-layers {:target :geom})
+;; Or specify target compositionally in the layer spec
+(plot (* viz-layers (target :vl)))
+
+;; Options take precedence over spec target
+(plot (* viz-layers (target :vl)) {:target :geom})
 
 ;; **Key insight**: Same layer specification, different renderers.
-;; The IR is truly target-agnostic.
+;; The IR is truly target-agnostic. Target can be specified compositionally
+;; or via options.
 
 ;; # Implementation
 ;;
@@ -1372,18 +1387,27 @@
     - :width - Width in pixels (default 600)
     - :height - Height in pixels (default 400)
 
+  The target can be specified in three ways (in order of precedence):
+  1. In opts: (plot layers {:target :vl})
+  2. In layer spec: (* ... (target :vl))
+  3. Default: :geom
+
   Returns:
   - Kindly-wrapped visualization specification
 
   Examples:
-  (plot layers)                     ;; Uses :geom target by default
-  (plot layers {:target :vl})       ;; Vega-Lite specification
-  (plot layers {:target :plotly})   ;; Plotly.js specification
-  (plot layers {:target :geom :width 800 :height 600})"
+  (plot layers)                              ;; Uses :geom target by default
+  (plot layers {:target :vl})                ;; Vega-Lite specification
+  (plot (* (data ...) (scatter) (target :vl))) ;; Target in layer spec
+  (plot layers {:target :plotly :width 800 :height 600})"
   ([layers]
    (plot layers {}))
   ([layers opts]
-   (let [target (or (:target opts) :geom)]
+   (let [layers-vec (if (vector? layers) layers [layers])
+         ;; Check for target in layer specs
+         spec-target (some :aog/target layers-vec)
+         ;; Opts take precedence over spec, default to :geom
+         target (or (:target opts) spec-target :geom)]
      (case target
        :geom (plot-geom layers opts)
        :vl (plot-vl layers opts)
