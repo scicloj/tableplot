@@ -637,45 +637,23 @@
   [points]
   (when (>= (count points) 2)
     (let [x-vals (mapv :x points)
-          y-vals (mapv :y points)]
-
-      (if (= (count points) 2)
-        ;; With exactly 2 points, just draw a line between them
-        (let [x-min (apply min x-vals)
-              x-max (apply max x-vals)
-              y1 (first y-vals)
-              y2 (second y-vals)
-              x1 (first x-vals)
-              x2 (second x-vals)
-              slope (if (= x1 x2) 0 (clojure.core// (clojure.core/- y2 y1) (clojure.core/- x2 x1)))
-              intercept (clojure.core/- y1 (clojure.core/* slope x1))
-              x-range (if (= x-min x-max)
-                        [x-min]
-                        (let [step (clojure.core// (clojure.core/- x-max x-min) 100.0)]
-                          (vec (concat (range x-min x-max step) [x-max]))))]
+          y-vals (mapv :y points)
+          x-min (apply min x-vals)
+          x-max (apply max x-vals)]
+      (try
+        (let [xss (mapv vector x-vals)
+              model (regr/lm y-vals xss)
+              intercept (:intercept model)
+              slope (first (:beta model))
+              ;; Generate 20 points for the line (simpler than 100)
+              step (clojure.core// (clojure.core/- x-max x-min) 20.0)
+              x-range (vec (concat (range x-min x-max step) [x-max]))]
           (mapv (fn [x]
                   {:x x
                    :y (clojure.core/+ intercept (clojure.core/* slope x))})
                 x-range))
-
-        ;; With 3+ points, use fastmath regression
-        (try
-          (let [xss (mapv vector x-vals)
-                model (regr/lm y-vals xss)
-                intercept (:intercept model)
-                slope (first (:beta model))
-                x-min (apply min x-vals)
-                x-max (apply max x-vals)
-                x-range (if (= x-min x-max)
-                          [x-min]
-                          (let [step (clojure.core// (clojure.core/- x-max x-min) 100.0)]
-                            (vec (concat (range x-min x-max step) [x-max]))))]
-            (mapv (fn [x]
-                    {:x x
-                     :y (clojure.core/+ intercept (clojure.core/* slope x))})
-                  x-range))
-          (catch Exception e
-            nil))))))
+        (catch Exception e
+          nil)))))
 
 (defn- unique-values
   "Get unique values from a sequence, preserving order."
@@ -683,23 +661,32 @@
   (vec (distinct coll)))
 
 (defn- color-scale
-  "Create a ggplot2-like color scale for categorical data.
-
-  Uses the ggplot2 default hue scale (evenly spaced hues around the color wheel)."
+  "Create a ggplot2-like color scale for categorical data."
   [categories]
-  (let [colors ["#F8766D" ;; red-orange
+  (let [colors ["#F8766D" ;; red-orange  
                 "#00BA38" ;; green
                 "#619CFF" ;; blue
-                "#F564E3" ;; magenta
-                "#00BFC4" ;; cyan
-                "#B79F00" ;; yellow-brown
-                "#FF61CC" ;; pink
-                "#00B4F0" ;; sky blue
-                "#C77CFF" ;; purple
-                "#00C19A" ;; teal
-                "#FF6A98" ;; rose
-                "#00A9FF"]] ;; azure
+                "#F564E3"]] ;; magenta
     (zipmap categories (cycle colors))))
+
+(defn- make-axes
+  "Create x and y axes for thi.ng/geom-viz plot."
+  [x-domain y-domain width height]
+  (let [x-range (clojure.core/- (second x-domain) (first x-domain))
+        y-range (clojure.core/- (second y-domain) (first y-domain))
+        x-major (clojure.core/* x-range 0.2)
+        y-major (clojure.core/* y-range 0.2)]
+    {:x-axis (viz/linear-axis
+              {:domain x-domain
+               :range [50 (clojure.core/- width 50)]
+               :major x-major
+               :pos (clojure.core/- height 50)})
+     :y-axis (viz/linear-axis
+              {:domain y-domain
+               :range [(clojure.core/- height 50) 50]
+               :major y-major
+               :pos 50})
+     :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}}))
 
 ;; ### thi.ng/geom-viz Implementation
 
@@ -710,53 +697,35 @@
         x-vals (mapv :x points)
         y-vals (mapv :y points)
         x-domain (infer-domain x-vals)
-        y-domain (infer-domain y-vals)
+        y-domain (infer-domain y-vals)]
 
-        x-numeric? (and (vector? x-domain) (= 2 (count x-domain)) (every? number? x-domain))
-        y-numeric? (and (vector? y-domain) (= 2 (count y-domain)) (every? number? y-domain))]
-
-    (when (and x-numeric? y-numeric?)
+    (when (and (vector? x-domain) (vector? y-domain)
+               (every? number? x-domain) (every? number? y-domain))
       (let [alpha (or (:aog/alpha layer) 1.0)
             color-groups (when-let [colors (seq (keep :color points))]
                            (group-by :color points))
-            has-color? (some? color-groups)
+            axes (make-axes x-domain y-domain width height)
 
-            x-range (- (second x-domain) (first x-domain))
-            y-range (- (second y-domain) (first y-domain))
-            x-major (clojure.core/* x-range 0.2)
-            y-major (clojure.core/* y-range 0.2)]
-
-        {:x-axis (viz/linear-axis
-                  {:domain x-domain
-                   :range [50 (- width 50)]
-                   :major x-major
-                   :pos (- height 50)})
-         :y-axis (viz/linear-axis
-                  {:domain y-domain
-                   :range [(- height 50) 50]
-                   :major y-major
-                   :pos 50})
-         :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}
-         :data (if has-color?
-                 (let [categories (unique-values (keep :color points))
-                       colors (color-scale categories)]
-                   (mapv (fn [category]
-                           (let [cat-points (get color-groups category)
-                                 point-data (mapv (fn [p] [(:x p) (:y p)]) cat-points)
-                                 fill-color (get colors category)]
-                             {:values point-data
-                              :layout viz/svg-scatter-plot
-                              :attribs {:fill fill-color
-                                        :stroke fill-color
-                                        :stroke-width 0.5
-                                        :opacity alpha}}))
-                         categories))
-                 [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
-                   :layout viz/svg-scatter-plot
-                   :attribs {:fill "#333333"
-                             :stroke "#333333"
-                             :stroke-width 0.5
-                             :opacity alpha}}])}))))
+            data (if color-groups
+                   (let [categories (vec (distinct (keep :color points)))
+                         colors (color-scale categories)]
+                     (mapv (fn [category]
+                             (let [cat-points (get color-groups category)
+                                   point-data (mapv (fn [p] [(:x p) (:y p)]) cat-points)]
+                               {:values point-data
+                                :layout viz/svg-scatter-plot
+                                :attribs {:fill (get colors category)
+                                          :stroke (get colors category)
+                                          :stroke-width 0.5
+                                          :opacity alpha}}))
+                           categories))
+                   [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
+                     :layout viz/svg-scatter-plot
+                     :attribs {:fill "#333333"
+                               :stroke "#333333"
+                               :stroke-width 0.5
+                               :opacity alpha}}])]
+        (assoc axes :data data)))))
 
 (defn- layer->line-spec
   "Convert a line layer to thi.ng/geom-viz spec.
@@ -766,14 +735,15 @@
   (let [transformation (:aog/transformation layer)
         points (layer->points layer)
 
+        ;; Apply linear regression if needed
         processed-points (if (= transformation :linear)
                            (let [color-vals (keep :color points)]
                              (if (seq color-vals)
-                               (let [color-groups (group-by :color points)]
-                                 (mapcat (fn [[color group-points]]
-                                           (when-let [fitted (compute-linear-regression group-points)]
-                                             (mapv #(assoc % :color color) fitted)))
-                                         color-groups))
+                               ;; Group by color and compute separate regressions
+                               (mapcat (fn [[color group-points]]
+                                         (when-let [fitted (compute-linear-regression group-points)]
+                                           (mapv #(assoc % :color color) fitted)))
+                                       (group-by :color points))
                                (compute-linear-regression points)))
                            points)
 
@@ -781,53 +751,35 @@
         x-vals (mapv :x sorted-points)
         y-vals (mapv :y sorted-points)
         x-domain (infer-domain x-vals)
-        y-domain (infer-domain y-vals)
+        y-domain (infer-domain y-vals)]
 
-        x-numeric? (and (vector? x-domain) (= 2 (count x-domain)) (every? number? x-domain))
-        y-numeric? (and (vector? y-domain) (= 2 (count y-domain)) (every? number? y-domain))]
-
-    (when (and x-numeric? y-numeric?)
+    (when (and (vector? x-domain) (vector? y-domain)
+               (every? number? x-domain) (every? number? y-domain))
       (let [alpha (or (:aog/alpha layer) 1.0)
             color-groups (when-let [colors (seq (keep :color processed-points))]
                            (group-by :color processed-points))
-            has-color? (some? color-groups)
+            axes (make-axes x-domain y-domain width height)
 
-            x-range (clojure.core/- (second x-domain) (first x-domain))
-            y-range (clojure.core/- (second y-domain) (first y-domain))
-            x-major (clojure.core/* x-range 0.2)
-            y-major (clojure.core/* y-range 0.2)]
-
-        {:x-axis (viz/linear-axis
-                  {:domain x-domain
-                   :range [50 (clojure.core/- width 50)]
-                   :major x-major
-                   :pos (clojure.core/- height 50)})
-         :y-axis (viz/linear-axis
-                  {:domain y-domain
-                   :range [(clojure.core/- height 50) 50]
-                   :major y-major
-                   :pos 50})
-         :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}
-         :data (if has-color?
-                 (let [categories (unique-values (keep :color processed-points))
-                       colors (color-scale categories)]
-                   (mapv (fn [category]
-                           (let [cat-points (get color-groups category)
-                                 sorted-cat (sort-by :x cat-points)
-                                 line-data (mapv (fn [p] [(:x p) (:y p)]) sorted-cat)]
-                             {:values line-data
-                              :layout viz/svg-line-plot
-                              :attribs {:stroke (get colors category)
-                                        :stroke-width 1
-                                        :fill "none"
-                                        :opacity alpha}}))
-                         categories))
-                 [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
-                   :layout viz/svg-line-plot
-                   :attribs {:stroke "#333333"
-                             :stroke-width 1
-                             :fill "none"
-                             :opacity alpha}}])}))))
+            data (if color-groups
+                   (let [categories (vec (distinct (keep :color processed-points)))
+                         colors (color-scale categories)]
+                     (mapv (fn [category]
+                             (let [cat-points (sort-by :x (get color-groups category))
+                                   line-data (mapv (fn [p] [(:x p) (:y p)]) cat-points)]
+                               {:values line-data
+                                :layout viz/svg-line-plot
+                                :attribs {:stroke (get colors category)
+                                          :stroke-width 1
+                                          :fill "none"
+                                          :opacity alpha}}))
+                           categories))
+                   [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
+                     :layout viz/svg-line-plot
+                     :attribs {:stroke "#333333"
+                               :stroke-width 1
+                               :fill "none"
+                               :opacity alpha}}])]
+        (assoc axes :data data)))))
 
 (defn- layers->svg
   "Convert layers to SVG string using thi.ng/geom-viz.
@@ -989,6 +941,26 @@
 ;; Now we add support for the Vega-Lite target, which provides interactive
 ;; visualizations and built-in faceting support.
 
+(defn- make-vega-encoding
+  "Build Vega-Lite encoding from layer aesthetics."
+  [layer]
+  (let [x (:aog/x layer)
+        y (:aog/y layer)
+        color (:aog/color layer)
+        col (:aog/col layer)
+        row (:aog/row layer)
+        facet (:aog/facet layer)]
+    (cond-> {:x {:field (name x)
+                 :type "quantitative"
+                 :scale {:zero false}}
+             :y {:field (name y)
+                 :type "quantitative"
+                 :scale {:zero false}}}
+      color (assoc :color {:field (name color) :type "nominal"})
+      col (assoc :column {:field (name col) :type "nominal"})
+      row (assoc :row {:field (name row) :type "nominal"})
+      facet (assoc :facet {:field (name facet) :type "nominal"}))))
+
 (defn- layer->vega-data
   "Convert layer dataset to Vega-Lite data format."
   [layer]
@@ -1000,59 +972,22 @@
 (defn- layer->vega-scatter
   "Convert a scatter layer to Vega-Lite mark spec."
   [layer]
-  (let [x (:aog/x layer)
-        y (:aog/y layer)
-        color (:aog/color layer)
-        col (:aog/col layer)
-        row (:aog/row layer)
-        facet (:aog/facet layer)
-        alpha (or (:aog/alpha layer) 1.0)
-
-        encoding (cond-> {:x {:field (name x)
-                              :type "quantitative"
-                              :scale {:zero false}}
-                          :y {:field (name y)
-                              :type "quantitative"
-                              :scale {:zero false}}}
-                   color (assoc :color {:field (name color) :type "nominal"})
-                   col (assoc :column {:field (name col) :type "nominal"})
-                   row (assoc :row {:field (name row) :type "nominal"})
-                   facet (assoc :facet {:field (name facet) :type "nominal"}))]
-
-    {:mark {:type "point" :opacity alpha}
-     :encoding encoding}))
+  {:mark {:type "point" :opacity (or (:aog/alpha layer) 1.0)}
+   :encoding (make-vega-encoding layer)})
 
 (defn- layer->vega-line
   "Convert a line layer to Vega-Lite mark spec.
 
   Handles :aog/transformation :linear with Vega-Lite's regression transform."
   [layer]
-  (let [x (:aog/x layer)
-        y (:aog/y layer)
-        color (:aog/color layer)
-        col (:aog/col layer)
-        row (:aog/row layer)
-        facet (:aog/facet layer)
-        transformation (:aog/transformation layer)
-
-        encoding (cond-> {:x {:field (name x)
-                              :type "quantitative"
-                              :scale {:zero false}}
-                          :y {:field (name y)
-                              :type "quantitative"
-                              :scale {:zero false}}}
-                   color (assoc :color {:field (name color) :type "nominal"})
-                   col (assoc :column {:field (name col) :type "nominal"})
-                   row (assoc :row {:field (name row) :type "nominal"})
-                   facet (assoc :facet {:field (name facet) :type "nominal"}))
-
+  (let [transformation (:aog/transformation layer)
         transform (when (= transformation :linear)
-                    [{:regression (name y)
-                      :on (name x)
-                      :groupby (when color [(name color)])}])]
-
+                    [{:regression (name (:aog/y layer))
+                      :on (name (:aog/x layer))
+                      :groupby (when-let [color (:aog/color layer)]
+                                 [(name color)])}])]
     (cond-> {:mark {:type "line"}
-             :encoding encoding}
+             :encoding (make-vega-encoding layer)}
       transform (assoc :transform transform))))
 
 (defn- layer->vega-area
@@ -1064,16 +999,12 @@
 (defn- layer->vega-bar
   "Convert a bar layer to Vega-Lite mark spec."
   [layer]
-  (let [x (:aog/x layer)
-        y (:aog/y layer)
-        color (:aog/color layer)
-
-        encoding (cond-> {:x {:field (name x) :type "nominal"}
-                          :y {:field (name y)
+  (let [encoding (cond-> {:x {:field (name (:aog/x layer)) :type "nominal"}
+                          :y {:field (name (:aog/y layer))
                               :type "quantitative"
                               :scale {:zero false}}}
-                   color (assoc :color {:field (name color) :type "nominal"}))]
-
+                   (:aog/color layer) (assoc :color {:field (name (:aog/color layer))
+                                                     :type "nominal"}))]
     {:mark {:type "bar"}
      :encoding encoding}))
 
@@ -1214,125 +1145,84 @@
 ;; Finally, we add support for the Plotly.js target, which provides rich
 ;; interactive visualizations with advanced features.
 
+(defn- group-by-color-plotly
+  "Helper to create Plotly traces grouped by color column."
+  [x-data y-data color-data trace-fn]
+  (let [groups (group-by identity color-data)
+        colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]]
+    (mapv (fn [[idx group-val]]
+            (let [indices (keep-indexed (fn [i v] (when (= v group-val) i)) color-data)]
+              (trace-fn group-val
+                        (mapv #(nth x-data %) indices)
+                        (mapv #(nth y-data %) indices)
+                        (nth colors idx (first colors)))))
+          (map-indexed vector (keys groups)))))
+
 (defn- layer->plotly-trace
   "Convert a layer to a Plotly.js trace (data series).
   
-  Returns a map representing a Plotly trace with:
-  - x, y: Arrays of values
-  - type: 'scatter', 'bar', etc.
-  - mode: 'markers', 'lines', 'lines+markers'
-  - marker: Style properties
-  - name: Legend name (for color grouping)"
+  Returns a vector of Plotly trace maps."
   [layer]
   (let [data (:aog/data layer)
-        dataset (if (tc/dataset? data)
-                  data
-                  (tc/dataset data))
-
-        x-col (:aog/x layer)
-        y-col (:aog/y layer)
+        dataset (if (tc/dataset? data) data (tc/dataset data))
+        x-data (vec (get-column-data dataset (:aog/x layer)))
+        y-data (vec (get-column-data dataset (:aog/y layer)))
         color-col (:aog/color layer)
         plottype (:aog/plottype layer)
         alpha (or (:aog/alpha layer) 1.0)
-        transformation (:aog/transformation layer)
-
-        x-data (vec (get-column-data dataset x-col))
-        y-data (vec (get-column-data dataset y-col))]
+        transformation (:aog/transformation layer)]
 
     (cond
-      ;; Scatter plot with optional color grouping
+      ;; Scatter plot
       (= plottype :scatter)
       (if (and color-col (keyword? color-col))
-        ;; Group by color column
-        (let [color-data (vec (get-column-data dataset color-col))
-              groups (group-by identity color-data)
-              colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3" "#00BFC4"]]
-          (mapv (fn [[idx group-val]]
-                  (let [indices (keep-indexed (fn [i v] (when (= v group-val) i)) color-data)]
-                    {:x (mapv #(nth x-data %) indices)
-                     :y (mapv #(nth y-data %) indices)
-                     :type "scatter"
-                     :mode "markers"
-                     :name (str group-val)
-                     :marker {:size 8
-                              :opacity alpha
-                              :color (nth colors idx (first colors))}}))
-                (map-indexed vector (keys groups))))
-        ;; No grouping
-        [{:x x-data
-          :y y-data
-          :type "scatter"
-          :mode "markers"
-          :marker {:size 8
-                   :opacity alpha
-                   :color "#333333"}}])
+        (group-by-color-plotly
+         x-data y-data (vec (get-column-data dataset color-col))
+         (fn [group-val x y color]
+           {:x x :y y :type "scatter" :mode "markers"
+            :name (str group-val)
+            :marker {:size 8 :opacity alpha :color color}}))
+        [{:x x-data :y y-data :type "scatter" :mode "markers"
+          :marker {:size 8 :opacity alpha :color "#333333"}}])
 
-      ;; Line plot (or linear regression)
-      (or (= plottype :line)
-          (= transformation :linear))
-      (if (= transformation :linear)
-        ;; Linear regression
-        (if (and color-col (keyword? color-col))
-          ;; Grouped regression
-          (let [color-data (vec (get-column-data dataset color-col))
-                groups (group-by identity color-data)
-                colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3" "#00BFC4"]]
-            (mapv (fn [[idx group-val]]
-                    (let [indices (keep-indexed (fn [i v] (when (= v group-val) i)) color-data)
-                          group-points (mapv (fn [i] {:x (nth x-data i) :y (nth y-data i)}) indices)
-                          fitted (compute-linear-regression group-points)]
-                      {:x (mapv :x fitted)
-                       :y (mapv :y fitted)
-                       :type "scatter"
-                       :mode "lines"
-                       :name (str group-val " (regression)")
-                       :line {:color (nth colors idx (first colors))
-                              :width 2}}))
-                  (map-indexed vector (keys groups))))
-          ;; Single regression line
-          (let [points (mapv (fn [x y] {:x x :y y}) x-data y-data)
-                fitted (compute-linear-regression points)]
-            [{:x (mapv :x fitted)
-              :y (mapv :y fitted)
-              :type "scatter"
-              :mode "lines"
-              :line {:color "#333333" :width 2}}]))
-        ;; Regular line plot
-        (if (and color-col (keyword? color-col))
-          ;; Grouped lines
-          (let [color-data (vec (get-column-data dataset color-col))
-                groups (group-by identity color-data)
-                colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3" "#00BFC4"]]
-            (mapv (fn [[idx group-val]]
-                    (let [indices (keep-indexed (fn [i v] (when (= v group-val) i)) color-data)]
-                      {:x (mapv #(nth x-data %) indices)
-                       :y (mapv #(nth y-data %) indices)
-                       :type "scatter"
-                       :mode "lines"
-                       :name (str group-val)
-                       :line {:color (nth colors idx (first colors))
-                              :width 2}}))
-                  (map-indexed vector (keys groups))))
-          ;; Single line
-          [{:x x-data
-            :y y-data
-            :type "scatter"
-            :mode "lines"
+      ;; Linear regression
+      (= transformation :linear)
+      (if (and color-col (keyword? color-col))
+        (let [color-data (vec (get-column-data dataset color-col))]
+          (group-by-color-plotly
+           x-data y-data color-data
+           (fn [group-val x y color]
+             (let [points (mapv (fn [xi yi] {:x xi :y yi}) x y)
+                   fitted (compute-linear-regression points)]
+               {:x (mapv :x fitted) :y (mapv :y fitted)
+                :type "scatter" :mode "lines"
+                :name (str group-val " (regression)")
+                :line {:color color :width 2}}))))
+        (let [points (mapv (fn [x y] {:x x :y y}) x-data y-data)
+              fitted (compute-linear-regression points)]
+          [{:x (mapv :x fitted) :y (mapv :y fitted)
+            :type "scatter" :mode "lines"
             :line {:color "#333333" :width 2}}]))
+
+      ;; Line plot
+      (= plottype :line)
+      (if (and color-col (keyword? color-col))
+        (group-by-color-plotly
+         x-data y-data (vec (get-column-data dataset color-col))
+         (fn [group-val x y color]
+           {:x x :y y :type "scatter" :mode "lines"
+            :name (str group-val)
+            :line {:color color :width 2}}))
+        [{:x x-data :y y-data :type "scatter" :mode "lines"
+          :line {:color "#333333" :width 2}}])
 
       ;; Bar chart
       (= plottype :bar)
-      [{:x x-data
-        :y y-data
-        :type "bar"
-        :marker {:opacity alpha}}]
+      [{:x x-data :y y-data :type "bar" :marker {:opacity alpha}}]
 
       ;; Default: treat as scatter
       :else
-      [{:x x-data
-        :y y-data
-        :type "scatter"
-        :mode "markers"
+      [{:x x-data :y y-data :type "scatter" :mode "markers"
         :marker {:size 8 :opacity alpha}}])))
 
 (defn- layers->plotly-spec
