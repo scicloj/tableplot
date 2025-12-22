@@ -514,8 +514,6 @@
 ;; Examples:
 (* (data {:x [1 2] :y [3 4]}) (mapping :x :y) (scatter))
 
-(* (data {:x [1 2]}) (+ (scatter) (line)))
-
 (defn +
   "Combine multiple layer specifications for overlay (sum).
   
@@ -561,10 +559,11 @@
 
 ;; ## Example 1: Simple Scatter Plot
 
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm)
-    (scatter)))
+(delay
+  (plot
+   (* (data penguins)
+      (mapping :bill-length-mm :bill-depth-mm)
+      (scatter))))
 
 ;; Breaking this down:
 ;;
@@ -579,11 +578,12 @@
 ;; This demonstrates the key compositional feature: overlaying multiple
 ;; visual layers that share data and aesthetic mappings.
 
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
-    (+ (scatter {:alpha 0.5})
-       (linear))))
+(delay
+  (plot
+   (* (data penguins)
+      (mapping :bill-length-mm :bill-depth-mm {:color :species})
+      (+ (scatter {:alpha 0.5})
+         (linear)))))
 
 ;; How this works:
 ;;
@@ -610,9 +610,11 @@
          (mapping :bill-length-mm :bill-depth-mm {:color :species})
          (scatter {:alpha 0.7})))
 
-layer-with-merge ;; Inspect - it's just a map!
+(kind/pprint
+ layer-with-merge)
 
-(plot [layer-with-merge])
+(delay
+  (plot [layer-with-merge]))
 
 ;; Add properties with standard assoc
 (def base-layer
@@ -623,7 +625,8 @@ layer-with-merge ;; Inspect - it's just a map!
 (def with-color
   (assoc base-layer :aog/color :species))
 
-(plot [with-color])
+(delay
+  (plot [with-color]))
 
 ;; **Key insight**: No custom functions needed. Standard Clojure operations
 ;; work because layers are just maps with namespaced keys.
@@ -664,20 +667,22 @@ layer-with-merge ;; Inspect - it's just a map!
 ;;
 ;; Note that faceting is currently implemented only in the Vega-Lite target.
 
-(plot-vl
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
-    (scatter {:alpha 0.7})))
+(delay
+  (plot-vl
+   (* (data penguins)
+      (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
+      (scatter {:alpha 0.7}))))
 
 ;; Each island gets its own panel, with species shown by color.
 ;; Notice that the species distribution varies by island!
 
 ;; Faceting with multiple layers works too:
-(plot-vega
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
-    (+ (scatter {:alpha 0.5})
-       (linear))))
+(delay
+  (plot-vl
+   (* (data penguins)
+      (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
+      (+ (scatter {:alpha 0.5})
+         (linear)))))
 
 ;; Each facet shows both scatter points and regression lines.
 
@@ -692,15 +697,14 @@ layer-with-merge ;; Inspect - it's just a map!
      (mapping :bill-length-mm :bill-depth-mm {:color :species})
      (scatter {:alpha 0.7})))
 
-;; Render with geom (static SVG, ggplot2 aesthetics)
+;; Render with default target (geom - static SVG, ggplot2 aesthetics)
 (plot viz-layers)
 
-;; Render with Vega-Lite (interactive, tooltips, zoom/pan)
-(plot-vl viz-layers)
-
-;; Or use unified API with target option
-(plot viz-layers {:target :geom})
+;; Render with Vega-Lite target (interactive, tooltips, zoom/pan)
 (plot viz-layers {:target :vl})
+
+;; Or explicitly specify geom target
+(plot viz-layers {:target :geom})
 
 ;; **Key insight**: Same layer specification, different renderers.
 ;; The IR is truly target-agnostic.
@@ -1125,6 +1129,12 @@ layer-with-merge ;; Inspect - it's just a map!
         first-layer (first layers)
         data-values (layer->vega-data first-layer)
 
+        ;; Check for faceting in any layer
+        col-field (:aog/col first-layer)
+        row-field (:aog/row first-layer)
+        facet-field (:aog/facet first-layer)
+        has-faceting? (or col-field row-field facet-field)
+
         layer-specs (mapv (fn [layer]
                             (let [plottype (:aog/plottype layer)]
                               (case plottype
@@ -1133,17 +1143,38 @@ layer-with-merge ;; Inspect - it's just a map!
                                 :area (layer->vega-area layer)
                                 :bar (layer->vega-bar layer)
                                 (layer->vega-scatter layer))))
-                          layers)]
+                          layers)
 
-    (if (= 1 (count layer-specs))
-      (merge (first layer-specs)
-             {:width width
-              :height height
-              :data {:values data-values}})
-      {:width width
-       :height height
-       :data {:values data-values}
-       :layer layer-specs})))
+        ;; For multi-layer with faceting, remove facet encodings from individual layers
+        layer-specs (if (and (> (count layer-specs) 1) has-faceting?)
+                      (mapv (fn [spec]
+                              (update spec :encoding dissoc :column :row :facet))
+                            layer-specs)
+                      layer-specs)
+
+        base-spec (if (= 1 (count layer-specs))
+                    (merge (first layer-specs)
+                           {:width width
+                            :height height
+                            :data {:values data-values}})
+                    {:width width
+                     :height height
+                     :data {:values data-values}
+                     :layer layer-specs})]
+
+    ;; Wrap in facet spec if we have multiple layers with faceting
+    (if (and (> (count layers) 1) has-faceting?)
+      (let [facet-encoding (cond-> {}
+                             col-field (assoc :column {:field (name col-field) :type "nominal"})
+                             row-field (assoc :row {:field (name row-field) :type "nominal"})
+                             facet-field (assoc :facet {:field (name facet-field) :type "nominal"}))]
+        {:data {:values data-values}
+         :facet facet-encoding
+         :spec (-> base-spec
+                   (dissoc :data)
+                   (assoc :width (/ width (if col-field 3 1)))
+                   (assoc :height (/ height (if row-field 3 1))))})
+      base-spec)))
 
 (defn plot-vl
   "Render layers as a Vega-Lite visualization.
