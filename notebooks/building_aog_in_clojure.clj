@@ -82,7 +82,7 @@
 ;; to explore fresh solutions in parallel. A clean-slate design lets us ask questions
 ;; that are harder to answer incrementally: Can we separate concerns more cleanly 
 ;; between the API layer, the intermediate representation, and the rendering?
-;; Can one API work with multiple backends? Can we use plain Clojure data structures
+;; Can one API work with multiple targets? Can we use plain Clojure data structures
 ;; and standard library operations throughout? Can we make the intermediate
 ;; representation easier to inspect and debug?
 ;;
@@ -364,7 +364,12 @@
 ;;
 ;; The API consists of three parts:
 ;;
-;; 1. **Constructors** - Build partial layer specifications (data, mapping, scatter, target, etc.)
+;; 1. **Constructors** - Build partial layer specifications
+;;    - Data: `data`
+;;    - Mappings: `mapping`
+;;    - Plot types: `scatter`, `line`, `bar`, `area`, etc.
+;;    - Transformations: `linear`, `smooth`, etc.
+;;    - Target: `target` (specify rendering target compositionally)
 ;; 2. **Composition operators** - Merge layers (`*`) and overlay them (`+`)
 ;; 3. **Renderer** - Single `plot` function that interprets layer specs
 ;;
@@ -700,7 +705,7 @@
 
 ;; ## Example 6: Backend Independence
 ;;
-;; The same layer specification can be rendered with different backends.
+;; The same layer specification can be rendered with different targets.
 ;; This demonstrates clean separation between layer IR and rendering.
 
 ;; Define visualization once
@@ -1645,7 +1650,7 @@ plotly-spec
 ;; **5. Clear Separation of Concerns**
 ;;
 ;; - Composition operators separate from IR (layer maps)
-;; - IR separate from rendering (backends)
+;; - IR separate from rendering (targets)
 ;; - Each layer can be understood independently
 ;;
 ;; ## What We Pay
@@ -1868,8 +1873,7 @@ plotly-spec
 ;;
 ;; ## What We've Explored
 ;;
-;; This notebook demonstrates a complete composable graphics API
-;; for Clojure in ~600 lines of code.
+;; This notebook demonstrates a complete composable graphics API for Clojure.
 ;;
 ;; **Core Design**:
 ;;
@@ -1883,12 +1887,13 @@ plotly-spec
 ;; 1. **Flat structure enables standard merge** - No custom layer-merge needed
 ;; 2. **Namespacing prevents collisions** - Can coexist with any data columns
 ;; 3. **Transparent IR** - Layers are inspectable plain maps, not templates
-;; 4. **Julia's compositional approach translates to Clojure data** - Same concepts, different substrate
+;; 4. **Target as data** - Rendering target specified compositionally via `(target :vl)` or options
+;; 5. **Julia's compositional approach translates to Clojure data** - Same concepts, different substrate
 ;;
 ;; **Implementation Status**:
 ;;
 ;; - ✅ Core composition (`*`, `+`, layer composition)
-;; - ✅ Two rendering backends (geom-viz, Vega-Lite)
+;; - ✅ Three rendering targets (geom, Vega-Lite, Plotly)
 ;; - ✅ Plot types: scatter, line, area, bar
 ;; - ✅ Statistical transform: linear regression
 ;; - ✅ Aesthetics: position, color, alpha, faceting
