@@ -329,8 +329,8 @@
 ;; - ✅ Plot types: scatter, line, area, bar
 ;; - ✅ Statistical transform: linear regression
 ;; - ✅ Aesthetics: position (x, y), color, alpha
-;; - ✅ Faceting (Vega-Lite target only)
 ;; - ⚠️ Statistical transforms: smooth, density, histogram (API defined, not yet implemented)
+;; - ✅ Faceting: Vega-Lite target supports `:facet`, `:col`, `:row` aesthetics for small multiples
 ;; - ⚠️ Additional coordinate systems (polar, geographic - planned)
 
 ;; ## Constructors
@@ -588,13 +588,6 @@
 
 ;; ### Helper Functions
 
-(defn- get-column-data
-  "Extract column data from dataset.
-  
-  Handles both plain maps and tech.ml.dataset datasets."
-  [data col-key]
-  (vec (get data col-key)))
-
 (defn- infer-domain
   "Infer domain from data values.
   
@@ -602,38 +595,27 @@
   For categorical: vector of unique values"
   [values]
   (cond
-    (empty? values)
-    [0 1]
-
-    (every? number? values)
-    [(apply min values) (apply max values)]
-
-    :else
-    values))
+    (empty? values) [0 1]
+    (every? number? values) [(apply min values) (apply max values)]
+    :else values))
 
 (defn- layer->points
-  "Convert layer to point data for rendering.
-  
-  Extracts x, y, and optional color values from the layer's dataset
-  based on the aesthetic mappings."
+  "Convert layer to point data for rendering."
   [layer]
   (let [data (:aog/data layer)
-        x-vals (get-column-data data (:aog/x layer))
-        y-vals (get-column-data data (:aog/y layer))
-        color-col (:aog/color layer)
-        color-vals (when (keyword? color-col)
-                     (get-column-data data color-col))
-        n (count x-vals)]
-    (mapv (fn [i]
-            {:x (nth x-vals i)
-             :y (nth y-vals i)
-             :color (when color-vals (nth color-vals i))})
-          (range n))))
+        x-vals (vec (get data (:aog/x layer)))
+        y-vals (vec (get data (:aog/y layer)))
+        color-vals (when-let [col (:aog/color layer)]
+                     (vec (get data col)))]
+    (map-indexed (fn [i _]
+                   (cond-> {:x (nth x-vals i) :y (nth y-vals i)}
+                     color-vals (assoc :color (nth color-vals i))))
+                 x-vals)))
 
 (defn- compute-linear-regression
   "Compute linear regression for a set of points using fastmath.
   
-  Returns: Vector of {:x :y} points representing the fitted line."
+  Returns: Vector of 2 points (start and end) representing the fitted line."
   [points]
   (when (>= (count points) 2)
     (let [x-vals (mapv :x points)
@@ -644,14 +626,10 @@
         (let [xss (mapv vector x-vals)
               model (regr/lm y-vals xss)
               intercept (:intercept model)
-              slope (first (:beta model))
-              ;; Generate 20 points for the line (simpler than 100)
-              step (clojure.core// (clojure.core/- x-max x-min) 20.0)
-              x-range (vec (concat (range x-min x-max step) [x-max]))]
-          (mapv (fn [x]
-                  {:x x
-                   :y (clojure.core/+ intercept (clojure.core/* slope x))})
-                x-range))
+              slope (first (:beta model))]
+          ;; A straight line only needs 2 points
+          [{:x x-min :y (clojure.core/+ intercept (clojure.core/* slope x-min))}
+           {:x x-max :y (clojure.core/+ intercept (clojure.core/* slope x-max))}])
         (catch Exception e
           nil)))))
 
@@ -788,43 +766,25 @@
   Adds ggplot2-like styling with gray panel background and white gridlines."
   [layers width height]
   (let [layers (if (vector? layers) layers [layers])
-
         specs (keep (fn [layer]
-                      (let [plottype (:aog/plottype layer)]
-                        (case plottype
-                          :scatter (layer->scatter-spec layer width height)
-                          :line (layer->line-spec layer width height)
-                          (layer->scatter-spec layer width height))))
+                      (case (:aog/plottype layer)
+                        :scatter (layer->scatter-spec layer width height)
+                        :line (layer->line-spec layer width height)
+                        (layer->scatter-spec layer width height)))
                     layers)]
-
     (when (seq specs)
-      (let [panel-bg "#EBEBEB"
-            panel-border "#FFFFFF"
-            panel-left 50
-            panel-right (- width 50)
-            panel-top 50
-            panel-bottom (- height 50)
-            panel-width (- panel-right panel-left)
-            panel-height (- panel-bottom panel-top)
-            bg-rect (svg/rect [panel-left panel-top] panel-width panel-height
-                              {:fill panel-bg
-                               :stroke panel-border
+      (let [combined-spec {:x-axis (:x-axis (first specs))
+                           :y-axis (:y-axis (first specs))
+                           :grid (:grid (first specs))
+                           :data (vec (mapcat :data specs))}
+            bg-rect (svg/rect [50 50] (- width 100) (- height 100)
+                              {:fill "#EBEBEB"
+                               :stroke "#FFFFFF"
                                :stroke-width 1})]
-
-        (if (= 1 (count specs))
-          (svg/serialize
-           (svg/svg {:width width :height height}
-                    bg-rect
-                    (viz/svg-plot2d-cartesian (first specs))))
-
-          (let [combined-spec {:x-axis (:x-axis (first specs))
-                               :y-axis (:y-axis (first specs))
-                               :grid (:grid (first specs))
-                               :data (vec (mapcat :data specs))}]
-            (svg/serialize
-             (svg/svg {:width width :height height}
-                      bg-rect
-                      (viz/svg-plot2d-cartesian combined-spec)))))))))
+        (svg/serialize
+         (svg/svg {:width width :height height}
+                  bg-rect
+                  (viz/svg-plot2d-cartesian combined-spec)))))))
 
 ;; ### :geom Target Method
 
@@ -947,9 +907,9 @@
   (let [x (:aog/x layer)
         y (:aog/y layer)
         color (:aog/color layer)
+        facet (:aog/facet layer)
         col (:aog/col layer)
-        row (:aog/row layer)
-        facet (:aog/facet layer)]
+        row (:aog/row layer)]
     (cond-> {:x {:field (name x)
                  :type "quantitative"
                  :scale {:zero false}}
@@ -957,9 +917,9 @@
                  :type "quantitative"
                  :scale {:zero false}}}
       color (assoc :color {:field (name color) :type "nominal"})
+      facet (assoc :facet {:field (name facet) :type "nominal"})
       col (assoc :column {:field (name col) :type "nominal"})
-      row (assoc :row {:field (name row) :type "nominal"})
-      facet (assoc :facet {:field (name facet) :type "nominal"}))))
+      row (assoc :row {:field (name row) :type "nominal"}))))
 
 (defn- layer->vega-data
   "Convert layer dataset to Vega-Lite data format."
@@ -1015,51 +975,35 @@
         first-layer (first layers)
         data-values (layer->vega-data first-layer)
 
-        ;; Check for faceting in any layer
-        col-field (:aog/col first-layer)
-        row-field (:aog/row first-layer)
-        facet-field (:aog/facet first-layer)
-        has-faceting? (or col-field row-field facet-field)
-
         layer-specs (mapv (fn [layer]
-                            (let [plottype (:aog/plottype layer)]
-                              (case plottype
-                                :scatter (layer->vega-scatter layer)
-                                :line (layer->vega-line layer)
-                                :area (layer->vega-area layer)
-                                :bar (layer->vega-bar layer)
-                                (layer->vega-scatter layer))))
+                            (case (:aog/plottype layer)
+                              :scatter (layer->vega-scatter layer)
+                              :line (layer->vega-line layer)
+                              :area (layer->vega-area layer)
+                              :bar (layer->vega-bar layer)
+                              (layer->vega-scatter layer)))
                           layers)
 
-        ;; For multi-layer with faceting, remove facet encodings from individual layers
-        layer-specs (if (and (> (count layer-specs) 1) has-faceting?)
-                      (mapv (fn [spec]
-                              (update spec :encoding dissoc :column :row :facet))
-                            layer-specs)
-                      layer-specs)
+        ;; Check if any layer has faceting
+        has-faceting? (some (fn [layer]
+                              (or (:aog/facet layer)
+                                  (:aog/col layer)
+                                  (:aog/row layer)))
+                            layers)
 
         base-spec (if (= 1 (count layer-specs))
                     (merge (first layer-specs)
-                           {:width width
-                            :height height
-                            :data {:values data-values}})
-                    {:width width
-                     :height height
+                           {:width width :height height :data {:values data-values}})
+                    {:width width :height height
                      :data {:values data-values}
                      :layer layer-specs})]
 
-    ;; Wrap in facet spec if we have multiple layers with faceting
-    (if (and (> (count layers) 1) has-faceting?)
-      (let [facet-encoding (cond-> {}
-                             col-field (assoc :column {:field (name col-field) :type "nominal"})
-                             row-field (assoc :row {:field (name row-field) :type "nominal"})
-                             facet-field (assoc :facet {:field (name facet-field) :type "nominal"}))]
-        {:data {:values data-values}
-         :facet facet-encoding
-         :spec (-> base-spec
-                   (dissoc :data)
-                   (assoc :width (/ width (if col-field 3 1)))
-                   (assoc :height (/ height (if row-field 3 1))))})
+    ;; Add faceting-specific properties
+    (if has-faceting?
+      (assoc base-spec
+             :width 200
+             :height 200
+             :autosize {:type "fit" :contains "padding"})
       base-spec)))
 
 ;; ### :vl Target Method
@@ -1085,33 +1029,7 @@
                                                "#00C19A" "#FF6A98" "#00A9FF"]}})]
     (kind/vega-lite themed-spec)))
 
-;; ## Example 5: Faceting (Small Multiples)
-;;
-;; Faceting creates separate panels for each category, demonstrating how
-;; compositional power scales to more complex visualizations.
-;;
-;; Note that faceting is currently implemented only in the Vega-Lite target.
-
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
-    (scatter {:alpha 0.7})
-    (target :vl)))
-
-;; Each island gets its own panel, with species shown by color.
-;; Notice that the species distribution varies by island!
-
-;; Faceting with multiple layers works too:
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
-    (+ (scatter {:alpha 0.5})
-       (linear))
-    (target :vl)))
-
-;; Each facet shows both scatter points and regression lines.
-
-;; ## Example 6: Backend Independence
+;; ## Example 5: Backend Independence
 ;;
 ;; The same layer specification can be rendered with different targets.
 ;; This demonstrates clean separation between layer IR and rendering.
@@ -1137,6 +1055,33 @@
 ;; **Key insight**: Same layer specification, different renderers.
 ;; The IR is truly target-agnostic. Target can be specified compositionally
 ;; or via options.
+
+;; ## Example 6: Faceting (Small Multiples)
+;;
+;; Faceting creates separate panels for different subsets of data.
+;; This is supported by the Vega-Lite target through `:facet`, `:col`, or `:row` aesthetics.
+
+;; Create scatter plots faceted by species (columns)
+(plot (* (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm {:col :species})
+         (scatter {:alpha 0.7}))
+      {:target :vl})
+
+;; Faceting by rows instead
+(plot (* (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm {:row :species})
+         (scatter {:alpha 0.7}))
+      {:target :vl})
+
+;; You can combine color with faceting for richer visualizations
+(plot (* (data mtcars)
+         (mapping :wt :mpg {:col :cyl :color :gear})
+         (scatter))
+      {:target :vl})
+
+;; **Note**: Faceting is currently only supported by the `:vl` (Vega-Lite) target.
+;; For other targets, you can achieve similar results by filtering the data and
+;; creating separate plots.
 
 ;; ## Implementation: :plotly Target (Plotly.js)
 ;;
@@ -1165,8 +1110,8 @@
   [layer]
   (let [data (:aog/data layer)
         dataset (if (tc/dataset? data) data (tc/dataset data))
-        x-data (vec (get-column-data dataset (:aog/x layer)))
-        y-data (vec (get-column-data dataset (:aog/y layer)))
+        x-data (vec (get dataset (:aog/x layer)))
+        y-data (vec (get dataset (:aog/y layer)))
         color-col (:aog/color layer)
         plottype (:aog/plottype layer)
         alpha (or (:aog/alpha layer) 1.0)
@@ -1177,7 +1122,7 @@
       (= plottype :scatter)
       (if (and color-col (keyword? color-col))
         (group-by-color-plotly
-         x-data y-data (vec (get-column-data dataset color-col))
+         x-data y-data (vec (get dataset color-col))
          (fn [group-val x y color]
            {:x x :y y :type "scatter" :mode "markers"
             :name (str group-val)
@@ -1188,7 +1133,7 @@
       ;; Linear regression
       (= transformation :linear)
       (if (and color-col (keyword? color-col))
-        (let [color-data (vec (get-column-data dataset color-col))]
+        (let [color-data (vec (get dataset color-col))]
           (group-by-color-plotly
            x-data y-data color-data
            (fn [group-val x y color]
@@ -1208,7 +1153,7 @@
       (= plottype :line)
       (if (and color-col (keyword? color-col))
         (group-by-color-plotly
-         x-data y-data (vec (get-column-data dataset color-col))
+         x-data y-data (vec (get dataset color-col))
          (fn [group-val x y color]
            {:x x :y y :type "scatter" :mode "lines"
             :name (str group-val)
