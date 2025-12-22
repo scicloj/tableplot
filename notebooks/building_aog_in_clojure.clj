@@ -613,11 +613,11 @@
 ;;
 ;; Because layers are plain maps, all standard library operations work.
 
-;; Build with standard merge
+;; Build with standard merge  
 (def layer-with-merge
-  (merge (data penguins)
-         (mapping :bill-length-mm :bill-depth-mm {:color :species})
-         (scatter {:alpha 0.7})))
+  (-> (data penguins)
+      (merge (mapping :bill-length-mm :bill-depth-mm {:color :species}))
+      (merge (scatter {:alpha 0.7}))))
 
 (kind/pprint
  layer-with-merge)
@@ -627,12 +627,13 @@
 
 ;; Add properties with standard assoc
 (def base-layer
-  (merge (data penguins)
-         (mapping :bill-length-mm :bill-depth-mm)
-         (scatter)))
+  (-> (data penguins)
+      (merge (mapping :bill-length-mm :bill-depth-mm))
+      (merge (scatter))))
 
 (def with-color
-  (assoc base-layer :aog/color :species))
+  (-> base-layer
+      (assoc :aog/color :species)))
 
 (delay
   (plot [with-color]))
