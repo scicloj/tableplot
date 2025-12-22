@@ -1483,31 +1483,14 @@
 ;; data structures. You can inspect them, transform them, and enhance them
 ;; using standard Clojure functions and your knowledge of the target library.
 
-;; ### Example: Inspecting a Vega-Lite Spec
-
-;; Let's see what a Vega-Lite spec actually looks like:
-(def vega-spec (layers->vega-spec example-layers 600 400))
-
-;; The result is just a plain Clojure map.
-vega-spec
-
-;; The structure follows Vega-Lite's JSON schema:
+;; ### Understanding Specs as Data
 ;;
-;; - `:data` - The data points
-;; - `:layer` - Array of mark specifications
-;; - `:width`, `:height` - Dimensions
-
-;; ### Example: Inspecting a Plotly Spec
-
-;; Similarly, Plotly specs are just data:
-(def plotly-spec (layers->plotly-spec example-layers 600 400))
-
-plotly-spec
-
-;; The structure follows Plotly.js conventions:
+;; Under the hood, `plot` converts layers to target-specific specs (Vega-Lite JSON,
+;; Plotly.js JSON, or SVG). These specs are just Clojure data structures - plain maps
+;; and vectors that follow each target's schema.
 ;;
-;; - `:data` - Array of traces (one per series)
-;; - `:layout` - Global layout configuration
+;; This transparency means you can manipulate specs using standard Clojure functions
+;; when you need features beyond the high-level API.
 
 ;; ### Example: Programmatic Enhancement with Plotly Knowledge
 ;;
@@ -1515,15 +1498,17 @@ plotly-spec
 ;; directly manipulating the spec. This is useful when you need features
 ;; not exposed by the high-level API.
 
-;; Let's add custom hover text to a Plotly spec:
-
 ;; First, create a basic scatter plot
 (def basic-scatter
   (* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm {:color :species})
      (scatter {:alpha 0.7})))
 
-;; Get the Plotly spec
+;; Normal usage - just use plot:
+(plot basic-scatter {:target :plotly})
+
+;; But if you need to customize with Plotly-specific features,
+;; generate the raw spec for manipulation:
 (def basic-plotly-spec (layers->plotly-spec basic-scatter 600 400))
 
 ;; Now enhance it with custom hover templates using Plotly.js knowledge
@@ -1545,7 +1530,11 @@ plotly-spec
 
 ;; ### Example: Custom Layout with Vega-Lite Knowledge
 
-;; Let's customize a Vega-Lite spec with features not in the high-level API:
+;; Normal usage - just use plot:
+(plot example-layers {:target :vl})
+
+;; But if you need Vega-Lite-specific features like interactive selections,
+;; customize the spec directly:
 
 (def custom-vega-spec
   (-> (layers->vega-spec example-layers 600 400)
@@ -1585,18 +1574,22 @@ plotly-spec
 
 ;; The typical workflow:
 ;;
-;; 1. Use the high-level API to get 90% of the way there
-;; 2. Inspect the generated spec
-;; 3. Enhance it with target-specific features for the last 10%
+;; 1. Use `plot` to get 90% of the way there
+;; 2. For the last 10%, generate the raw spec and enhance it
+;; 3. Render with target-specific Kindly wrapper
 
-;; Example: Add plotly-specific camera angle for 3D-like perspective effect
+;; Create the layers
+(def mtcars-scatter
+  (* (data mtcars)
+     (mapping :wt :mpg {:color :cyl})
+     (scatter {:alpha 0.7})))
 
+;; Normal usage - just use plot:
+(plot mtcars-scatter {:target :plotly :width 700 :height 500})
+
+;; For advanced Plotly features, customize the spec:
 (def scatter-with-plotly-enhancements
-  (-> (layers->plotly-spec
-       (* (data mtcars)
-          (mapping :wt :mpg {:color :cyl})
-          (scatter {:alpha 0.7}))
-       700 500)
+  (-> (layers->plotly-spec mtcars-scatter 700 500)
       ;; Add custom layout features
       (assoc-in [:layout :title] {:text "Car Weight vs MPG"
                                   :font {:size 20 :family "Arial"}})
