@@ -548,12 +548,46 @@
 ;; The `plot` function is the single user-facing renderer. It dispatches to
 ;; target-specific implementations based on the `:aog/target` in layer specs
 ;; or the `:target` option (options take precedence).
-;;
-;; Implementation in the Implementation section.
 
-(declare plot)
+(defmulti plot-impl
+  "Internal multimethod for plot dispatch."
+  (fn [layers opts]
+    (let [layers-vec (if (vector? layers) layers [layers])
+          spec-target (some :aog/target layers-vec)]
+      (or (:target opts) spec-target :geom))))
 
-;; `plot` : layers + opts → visualization (dispatches to appropriate target)
+(defn plot
+  "Unified rendering function supporting multiple targets.
+
+  Args:
+  - layers: Vector of layer maps or single layer map
+  - opts: Optional map with:
+    - :target - :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
+    - :width - Width in pixels (default 600)
+    - :height - Height in pixels (default 400)
+
+  The target can be specified in three ways (in order of precedence):
+  1. In opts: (plot layers {:target :vl})
+  2. In layer spec: (* ... (target :vl))
+  3. Default: :geom
+
+  Returns:
+  - Kindly-wrapped visualization specification
+
+  Examples:
+  (plot layers)                              ;; Uses :geom target by default
+  (plot layers {:target :vl})                ;; Vega-Lite specification
+  (plot (* (data ...) (scatter) (target :vl))) ;; Target in layer spec
+  (plot layers {:target :plotly :width 800 :height 600})"
+  ([layers]
+   (plot-impl layers {}))
+  ([layers opts]
+   (plot-impl layers opts)))
+
+;; Target implementations are defined progressively throughout the notebook:
+;; - :geom target (thi.ng/geom) - defined before Example 1
+;; - :vl target (Vega-Lite) - defined before faceting examples
+;; - :plotly target (Plotly.js) - defined before Plotly-specific examples
 
 ;; # Examples
 ;;
@@ -571,178 +605,12 @@
 ;; Fisher's Iris - 150 flowers, 3 species
 (def iris (rdatasets/datasets-iris))
 
-;; ## Example 1: Simple Scatter Plot
-
-(delay
-  (plot
-   (* (data penguins)
-      (mapping :bill-length-mm :bill-depth-mm)
-      (scatter))))
-
-;; Breaking this down:
+;; ## Implementation: Helper Functions & :geom Target
 ;;
-;; 1. `(data penguins)` → `{:aog/data penguins}`
-;; 2. `(mapping :bill-length-mm :bill-depth-mm)` → `{:aog/x :bill-length-mm :aog/y :bill-depth-mm}`
-;; 3. `(scatter)` → `{:aog/plottype :scatter}`
-;; 4. `(* ...)` merges all three → `[{:aog/data penguins :aog/x ... :aog/y ... :aog/plottype :scatter}]`
-;; 5. `(plot ...)` renders the layer vector to SVG
+;; Before we can use `plot` in examples, we need to implement at least one target.
+;; We'll start with the :geom target (thi.ng/geom-viz) for static SVG visualizations.
 
-;; ## Example 2: Multi-Layer Plot (Scatter + Regression)
-;;
-;; This demonstrates the key compositional feature: overlaying multiple
-;; visual layers that share data and aesthetic mappings.
-
-(delay
-  (plot
-   (* (data penguins)
-      (mapping :bill-length-mm :bill-depth-mm {:color :species})
-      (+ (scatter {:alpha 0.5})
-         (linear)))))
-
-;; How this works:
-;;
-;; 1. `(+ (scatter ...) (linear))` creates two layer specs
-;; 2. `(* (data ...) (mapping ...) (+ ...))` distributes data+mapping to both
-;; 3. Result: Two complete layers with same data/mapping, different plot types
-;; 4. Both rendered on same plot
-;;
-;; This uses the distributive property (from Section 2):
-;; ```
-;; (* a (+ b c)) = (+ (* a b) (* a c))
-;; ```
-;;
-;; Notice that the linear regression is computed separately for each species, 
-;; since they are grouped by the `:color` aesthetic.
-
-;; ## Example 3: Standard Clojure Operations Work
-;;
-;; Because layers are plain maps, all standard library operations work.
-
-;; Build with standard merge  
-(def layer-with-merge
-  (-> (data penguins)
-      (merge (mapping :bill-length-mm :bill-depth-mm {:color :species}))
-      (merge (scatter {:alpha 0.7}))))
-
-(kind/pprint
- layer-with-merge)
-
-(delay
-  (plot [layer-with-merge]))
-
-;; Add properties with standard assoc
-(def base-layer
-  (-> (data penguins)
-      (merge (mapping :bill-length-mm :bill-depth-mm))
-      (merge (scatter))))
-
-(def with-color
-  (-> base-layer
-      (assoc :aog/color :species)))
-
-(delay
-  (plot [with-color]))
-
-;; **Key insight**: No custom functions needed. Standard Clojure operations
-;; work because layers are just maps with namespaced keys.
-;;
-;; Other standard operations work too: `update`, `mapv`, `filter`, `into`.
-;; Example 4 shows conditional building with `into`.
-
-;; ## Example 4: Conditional Layer Building
-;;
-;; Build plots conditionally using standard Clojure control flow and `into`.
-
-(defn make-plot [dataset show-regression?]
-  (let [base (* (data dataset)
-                (mapping :bill-length-mm :bill-depth-mm {:color :species})
-                (scatter {:alpha 0.5}))
-
-        with-regression (if show-regression?
-                          (into base
-                                (* (data dataset)
-                                   (mapping :bill-length-mm :bill-depth-mm {:color :species})
-                                   (linear)))
-                          base)]
-    (plot with-regression)))
-
-;; Just scatter
-(make-plot penguins false)
-
-;; Scatter + regression
-(make-plot penguins true)
-
-;; With 344 penguin observations (100+ per species), regression lines are
-;; statistically meaningful. Standard `into` naturally accumulates layers.
-
-;; ## Example 5: Faceting (Small Multiples)
-;;
-;; Faceting creates separate panels for each category, demonstrating how
-;; compositional power scales to more complex visualizations.
-;;
-;; Note that faceting is currently implemented only in the Vega-Lite target.
-
-(delay
-  (plot
-   (* (data penguins)
-      (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
-      (scatter {:alpha 0.7})
-      (target :vl))))
-
-;; Each island gets its own panel, with species shown by color.
-;; Notice that the species distribution varies by island!
-
-;; Faceting with multiple layers works too:
-(delay
-  (plot
-   (* (data penguins)
-      (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
-      (+ (scatter {:alpha 0.5})
-         (linear))
-      (target :vl))))
-
-;; Each facet shows both scatter points and regression lines.
-
-;; ## Example 6: Backend Independence
-;;
-;; The same layer specification can be rendered with different targets.
-;; This demonstrates clean separation between layer IR and rendering.
-
-;; Define visualization once
-(def viz-layers
-  (* (data penguins)
-     (mapping :bill-length-mm :bill-depth-mm {:color :species})
-     (scatter {:alpha 0.7})))
-
-;; Render with default target (geom - static SVG, ggplot2 aesthetics)
-(plot viz-layers)
-
-;; Specify target via options
-(plot viz-layers {:target :vl})
-
-;; Or specify target compositionally in the layer spec
-(plot (* viz-layers (target :vl)))
-
-;; Options take precedence over spec target
-(plot (* viz-layers (target :vl)) {:target :geom})
-
-;; **Key insight**: Same layer specification, different renderers.
-;; The IR is truly target-agnostic. Target can be specified compositionally
-;; or via options.
-
-;; # Implementation
-;;
-;; This section reveals how the API works under the hood.
-;; The implementation is surprisingly simple because the design leverages
-;; standard Clojure operations rather than custom logic.
-;;
-;; We'll cover:
-;;
-;; - **Helper functions** for data extraction and transformation
-;; - **Primary rendering target** (thi.ng/geom for static SVG)
-;; - **Alternative targets** (Vega-Lite and Plotly.js for interactive visualizations)
-
-;; ## Helper Functions
+;; ### Helper Functions
 
 (defn- get-column-data
   "Extract column data from dataset.
@@ -857,9 +725,7 @@
                 "#00A9FF"]] ;; azure
     (zipmap categories (cycle colors))))
 
-;; ## Rendering Backend: thi.ng/geom-viz
-;;
-;; Primary target for static SVG with ggplot2 aesthetics.
+;; ### thi.ng/geom-viz Implementation
 
 (defn- layer->scatter-spec
   "Convert a scatter layer to thi.ng/geom-viz spec."
@@ -1032,28 +898,120 @@
                       bg-rect
                       (viz/svg-plot2d-cartesian combined-spec)))))))))
 
-(defn plot-geom
-  "Render layers as an SVG visualization using thi.ng/geom-viz.
-  
-  Args:
-  - layers: Vector of layer maps or single layer map
-  - opts: Optional map with :width (default 600) and :height (default 400)
-  
-  Returns:
-  - Kindly-wrapped HTML containing SVG string"
-  ([layers]
-   (plot-geom layers {}))
-  ([layers opts]
-   (let [layers (if (vector? layers) layers [layers])
-         width (or (:width opts) 600)
-         height (or (:height opts) 400)
-         svg-string (layers->svg layers width height)]
-     (kind/html svg-string))))
+;; ### :geom Target Method
 
-;; ## Alternative Backend: Vega-Lite
+(defmethod plot-impl :geom
+  [layers opts]
+  (let [layers (if (vector? layers) layers [layers])
+        width (or (:width opts) 600)
+        height (or (:height opts) 400)
+        svg-string (layers->svg layers width height)]
+    (kind/html svg-string)))
+
+;; ## Example 1: Simple Scatter Plot
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)))
+
+;; Breaking this down:
 ;;
-;; [Vega-Lite](https://vega.github.io/vega-lite/) provides interactive visualizations 
-;; with additional features.
+;; 1. `(data penguins)` → `{:aog/data penguins}`
+;; 2. `(mapping :bill-length-mm :bill-depth-mm)` → `{:aog/x :bill-length-mm :aog/y :bill-depth-mm}`
+;; 3. `(scatter)` → `{:aog/plottype :scatter}`
+;; 4. `(* ...)` merges all three → `[{:aog/data penguins :aog/x ... :aog/y ... :aog/plottype :scatter}]`
+;; 5. `(plot ...)` renders the layer vector to SVG
+
+;; ## Example 2: Multi-Layer Plot (Scatter + Regression)
+;;
+;; This demonstrates the key compositional feature: overlaying multiple
+;; visual layers that share data and aesthetic mappings.
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (+ (scatter {:alpha 0.5})
+       (linear))))
+
+;; How this works:
+;;
+;; 1. `(+ (scatter ...) (linear))` creates two layer specs
+;; 2. `(* (data ...) (mapping ...) (+ ...))` distributes data+mapping to both
+;; 3. Result: Two complete layers with same data/mapping, different plot types
+;; 4. Both rendered on same plot
+;;
+;; This uses the distributive property (from Section 2):
+;; ```
+;; (* a (+ b c)) = (+ (* a b) (* a c))
+;; ```
+;;
+;; Notice that the linear regression is computed separately for each species, 
+;; since they are grouped by the `:color` aesthetic.
+
+;; ## Example 3: Standard Clojure Operations Work
+;;
+;; Because layers are plain maps, all standard library operations work.
+
+;; Build with standard merge  
+(def layer-with-merge
+  (-> (data penguins)
+      (merge (mapping :bill-length-mm :bill-depth-mm {:color :species}))
+      (merge (scatter {:alpha 0.7}))))
+
+(kind/pprint
+ layer-with-merge)
+
+(plot [layer-with-merge])
+
+;; Add properties with standard assoc
+(def base-layer
+  (-> (data penguins)
+      (merge (mapping :bill-length-mm :bill-depth-mm))
+      (merge (scatter))))
+
+(def with-color
+  (-> base-layer
+      (assoc :aog/color :species)))
+
+(plot [with-color])
+
+;; **Key insight**: No custom functions needed. Standard Clojure operations
+;; work because layers are just maps with namespaced keys.
+;;
+;; Other standard operations work too: `update`, `mapv`, `filter`, `into`.
+;; Example 4 shows conditional building with `into`.
+
+;; ## Example 4: Conditional Layer Building
+;;
+;; Build plots conditionally using standard Clojure control flow and `into`.
+
+(defn make-plot [dataset show-regression?]
+  (let [base (* (data dataset)
+                (mapping :bill-length-mm :bill-depth-mm {:color :species})
+                (scatter {:alpha 0.5}))
+
+        with-regression (if show-regression?
+                          (into base
+                                (* (data dataset)
+                                   (mapping :bill-length-mm :bill-depth-mm {:color :species})
+                                   (linear)))
+                          base)]
+    (plot with-regression)))
+
+;; Just scatter
+(make-plot penguins false)
+
+;; Scatter + regression
+(make-plot penguins true)
+
+;; With 344 penguin observations (100+ per species), regression lines are
+;; statistically meaningful. Standard `into` naturally accumulates layers.
+
+;; ## Implementation: :vl Target (Vega-Lite)
+;;
+;; Now we add support for the Vega-Lite target, which provides interactive
+;; visualizations and built-in faceting support.
 
 (defn- layer->vega-data
   "Convert layer dataset to Vega-Lite data format."
@@ -1197,45 +1155,86 @@
                    (assoc :height (/ height (if row-field 3 1))))})
       base-spec)))
 
-(defn plot-vl
-  "Render layers as a Vega-Lite visualization.
+;; ### :vl Target Method
 
-  Args:
-  - layers: Vector of layer maps or single layer map
-  - opts: Optional map with :width (default 400) and :height (default 300)
+(defmethod plot-impl :vl
+  [layers opts]
+  (let [width (or (:width opts) 400)
+        height (or (:height opts) 300)
+        spec (layers->vega-spec layers width height)
+        ;; Add ggplot2-like theme
+        themed-spec (assoc spec :config
+                           {:view {:stroke nil}
+                            :axis {:grid true
+                                   :gridColor "#FFFFFF"
+                                   :gridOpacity 1
+                                   :domain false
+                                   :tickColor "#FFFFFF"}
+                            :background "#EBEBEB"
+                            ;; ggplot2 color palette
+                            :range {:category ["#F8766D" "#00BA38" "#619CFF"
+                                               "#F564E3" "#00BFC4" "#B79F00"
+                                               "#FF61CC" "#00B4F0" "#C77CFF"
+                                               "#00C19A" "#FF6A98" "#00A9FF"]}})]
+    (kind/vega-lite themed-spec)))
 
-  Returns:
-  - Kindly-wrapped Vega-Lite spec"
-  ([layers]
-   (plot-vl layers {}))
-  ([layers opts]
-   (let [width (or (:width opts) 400)
-         height (or (:height opts) 300)
-         spec (layers->vega-spec layers width height)
-         ;; Add ggplot2-like theme
-         themed-spec (assoc spec :config
-                            {:view {:stroke nil}
-                             :axis {:grid true
-                                    :gridColor "#FFFFFF"
-                                    :gridOpacity 1
-                                    :domain false
-                                    :tickColor "#FFFFFF"}
-                             :background "#EBEBEB"
-                             ;; ggplot2 color palette
-                             :range {:category ["#F8766D" "#00BA38" "#619CFF"
-                                                "#F564E3" "#00BFC4" "#B79F00"
-                                                "#FF61CC" "#00B4F0" "#C77CFF"
-                                                "#00C19A" "#FF6A98" "#00A9FF"]}})]
-     (kind/vega-lite themed-spec))))
-
-;; ## Plotly.js Backend
+;; ## Example 5: Faceting (Small Multiples)
 ;;
-;; [Plotly.js](https://plotly.com/javascript/) is a JavaScript library for interactive, 
-;; publication-quality graphs. It provides hover tooltips, zooming, panning, and other 
-;; interactive features.
+;; Faceting creates separate panels for each category, demonstrating how
+;; compositional power scales to more complex visualizations.
 ;;
-;; The Plotly.js spec is JSON-based, similar to [Vega-Lite](https://vega.github.io/vega-lite/) 
-;; but with different structure.
+;; Note that faceting is currently implemented only in the Vega-Lite target.
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
+    (scatter {:alpha 0.7})
+    (target :vl)))
+
+;; Each island gets its own panel, with species shown by color.
+;; Notice that the species distribution varies by island!
+
+;; Faceting with multiple layers works too:
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm {:color :species :col :island})
+    (+ (scatter {:alpha 0.5})
+       (linear))
+    (target :vl)))
+
+;; Each facet shows both scatter points and regression lines.
+
+;; ## Example 6: Backend Independence
+;;
+;; The same layer specification can be rendered with different targets.
+;; This demonstrates clean separation between layer IR and rendering.
+
+;; Define visualization once
+(def viz-layers
+  (* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm {:color :species})
+     (scatter {:alpha 0.7})))
+
+;; Render with default target (geom - static SVG, ggplot2 aesthetics)
+(plot viz-layers)
+
+;; Specify target via options
+(plot viz-layers {:target :vl})
+
+;; Or specify target compositionally in the layer spec
+(plot (* viz-layers (target :vl)))
+
+;; Options take precedence over spec target
+(plot (* viz-layers (target :vl)) {:target :geom})
+
+;; **Key insight**: Same layer specification, different renderers.
+;; The IR is truly target-agnostic. Target can be specified compositionally
+;; or via options.
+
+;; ## Implementation: :plotly Target (Plotly.js)
+;;
+;; Finally, we add support for the Plotly.js target, which provides rich
+;; interactive visualizations with advanced features.
 
 (defn- layer->plotly-trace
   "Convert a layer to a Plotly.js trace (data series).
@@ -1385,63 +1384,14 @@
                       :gridcolor "#FFFFFF"
                       :gridwidth 1}}}))
 
-(defn plot-plotly
-  "Render layers as an interactive Plotly.js visualization.
-  
-  Args:
-  - layers: Vector of layer maps or single layer map
-  - opts: Optional map with :width (default 600) and :height (default 400)
-  
-  Returns:
-  - Kindly-wrapped Plotly spec
-  
-  Examples:
-  (plot-plotly layers)
-  (plot-plotly layers {:width 800 :height 500})"
-  ([layers]
-   (plot-plotly layers {}))
-  ([layers opts]
-   (let [width (or (:width opts) 600)
-         height (or (:height opts) 400)
-         spec (layers->plotly-spec layers width height)]
-     (kind/plotly spec))))
+;; ### :plotly Target Method
 
-(defn plot
-  "Unified rendering function supporting multiple targets.
-
-  Args:
-  - layers: Vector of layer maps or single layer map
-  - opts: Optional map with:
-    - :target - :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
-    - :width - Width in pixels (default 600)
-    - :height - Height in pixels (default 400)
-
-  The target can be specified in three ways (in order of precedence):
-  1. In opts: (plot layers {:target :vl})
-  2. In layer spec: (* ... (target :vl))
-  3. Default: :geom
-
-  Returns:
-  - Kindly-wrapped visualization specification
-
-  Examples:
-  (plot layers)                              ;; Uses :geom target by default
-  (plot layers {:target :vl})                ;; Vega-Lite specification
-  (plot (* (data ...) (scatter) (target :vl))) ;; Target in layer spec
-  (plot layers {:target :plotly :width 800 :height 600})"
-  ([layers]
-   (plot layers {}))
-  ([layers opts]
-   (let [layers-vec (if (vector? layers) layers [layers])
-         ;; Check for target in layer specs
-         spec-target (some :aog/target layers-vec)
-         ;; Opts take precedence over spec, default to :geom
-         target (or (:target opts) spec-target :geom)]
-     (case target
-       :geom (plot-geom layers opts)
-       :vl (plot-vl layers opts)
-       :plotly (plot-plotly layers opts)
-       (plot-geom layers opts)))))
+(defmethod plot-impl :plotly
+  [layers opts]
+  (let [width (or (:width opts) 600)
+        height (or (:height opts) 400)
+        spec (layers->plotly-spec layers width height)]
+    (kind/plotly spec)))
 
 ;; # Multiple Targets & Specs as Data
 ;;

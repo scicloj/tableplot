@@ -26,30 +26,33 @@ tableplot/
 │       ├── ggplot.clj               # ggplot2-compatible API
 │       └── ggplot/
 │           └── themes.clj           # Complete ggplot2 theme system (8 themes)
-├── notebooks/tableplot_book/
-│   ├── # V2 (ggplot2-style) notebooks
-│   ├── ggplot2_walkthrough.clj      # Complete ggplot2 API tutorial
-│   ├── v2_dataflow_from_scratch.clj # Educational: building dataflow from scratch
-│   ├── v2_dataflow_walkthrough.clj  # V2 dataflow tutorial
-│   ├── plotly_backend_dev.clj       # Plotly backend development
+├── notebooks/
+│   ├── building_aog_in_clojure.clj  # Design exploration: AoG v2 with normalized representation
 │   │
-│   ├── # V1 (AlgebraOfGraphics) notebooks
-│   ├── # Learning Path (4 notebooks):
-│   ├── aog_tutorial.clj             # AoG introduction
-│   ├── aog_plot_types.clj           # Comprehensive plot type reference
-│   ├── aog_backends_demo.clj        # Backend comparison (Plotly/Vega/thi.ng)
-│   ├── aog_examples.clj             # Real-world dataset examples
-│   │
-│   ├── # Backend Guides (3 notebooks - Equal Depth):
-│   ├── backend_plotly.clj           # Plotly backend complete guide
-│   ├── backend_vegalite.clj         # Vega-Lite backend complete guide
-│   ├── backend_thing_geom.clj       # thi.ng/geom backend complete guide
-│   │
-│   ├── # Technical (2 notebooks):
-│   ├── aog_architecture.clj         # Architecture and pipeline
-│   └── theme_showcase.clj           # Theme examples
-│   │
-│   └── archive/                     # Archived/old notebooks
+│   └── tableplot_book/
+│       ├── # V2 (ggplot2-style) notebooks
+│       ├── ggplot2_walkthrough.clj      # Complete ggplot2 API tutorial
+│       ├── v2_dataflow_from_scratch.clj # Educational: building dataflow from scratch
+│       ├── v2_dataflow_walkthrough.clj  # V2 dataflow tutorial
+│       ├── plotly_backend_dev.clj       # Plotly backend development
+│       │
+│       ├── # V1 (AlgebraOfGraphics) notebooks
+│       ├── # Learning Path (4 notebooks):
+│       ├── aog_tutorial.clj             # AoG introduction
+│       ├── aog_plot_types.clj           # Comprehensive plot type reference
+│       ├── aog_backends_demo.clj        # Backend comparison (Plotly/Vega/thi.ng)
+│       ├── aog_examples.clj             # Real-world dataset examples
+│       │
+│       ├── # Backend Guides (3 notebooks - Equal Depth):
+│       ├── backend_plotly.clj           # Plotly backend complete guide
+│       ├── backend_vegalite.clj         # Vega-Lite backend complete guide
+│       ├── backend_thing_geom.clj       # thi.ng/geom backend complete guide
+│       │
+│       ├── # Technical (2 notebooks):
+│       ├── aog_architecture.clj         # Architecture and pipeline
+│       └── theme_showcase.clj           # Theme examples
+│       │
+│       └── archive/                     # Archived/old notebooks
 ├── test/
 │   └── tableplot/v2/                # V2 test suite
 └── docs/
@@ -592,6 +595,187 @@ The project is under active development. Key areas for contribution:
 - Theme designs
 - Documentation improvements
 - Performance optimizations
+
+## AoG v2 Design Exploration: Normalized Representation
+
+### Overview
+
+**Location**: `notebooks/building_aog_in_clojure.clj` (~71,700 lines)
+
+A comprehensive design exploration of an alternative AoG API that uses **normalized layer representation** (always vectors) instead of context-dependent types. This is a working prototype demonstrating compositional graphics with clean separation between API, intermediate representation, and rendering.
+
+**Status**: Design exploration / prototype for feedback and decision-making about Tableplot's future
+
+### Core Design: Everything is Vectors
+
+**Key Innovation**: Normalize all layer operations to return vectors, enabling:
+- Standard library operations (`map`, `filter`, `into`, `mapv`)
+- Predictable composition (no type checking needed)
+- Transparent data flow
+
+**API Structure**:
+```clojure
+;; Constructors return vectors (single-element for most, multi-element for +)
+(data penguins)          ;; → [{:aog/data penguins}]
+(mapping :x :y)          ;; → [{:aog/x :x :aog/y :y}]
+(scatter {:alpha 0.7})   ;; → [{:aog/plottype :scatter :aog/alpha 0.7}]
+
+;; * merges layers
+(* (data penguins) (mapping :x :y) (scatter))
+;; → [{:aog/data penguins :aog/x :x :aog/y :y :aog/plottype :scatter}]
+
+;; + concatenates layers (overlay)
+(+ (scatter) (linear))
+;; → [{:aog/plottype :scatter} {:aog/transformation :linear}]
+
+;; Distributive property: a * (b + c) = (a * b) + (a * c)
+(* (data penguins) (mapping :x :y) (+ (scatter) (linear)))
+;; → Two layers with shared data/mapping
+
+;; Single plot function dispatches to targets
+(plot layers)                    ;; Default: :geom (static SVG)
+(plot layers {:target :vl})      ;; Vega-Lite (interactive)
+(plot layers {:target :plotly})  ;; Plotly (3D, rich interactions)
+
+;; Target can be compositional
+(plot (* (data penguins) (mapping :x :y) (scatter) (target :vl)))
+```
+
+### Three Rendering Targets
+
+All three targets use the **same layer specification**:
+
+1. **:geom** (thi.ng/geom) - Static SVG with ggplot2 aesthetics
+2. **:vl** (Vega-Lite) - Declarative interactive visualizations
+3. **:plotly** (Plotly.js) - Rich interactive visualizations
+
+**Target Independence**: `plot` function checks for `:aog/target` in layers or `:target` in options (options take precedence)
+
+**Consistent Theme**: ggplot2 color palette (#F8766D, #00BA38, #619CFF, etc.) and gray background (#EBEBEB) with white gridlines across all targets
+
+### Layer Representation
+
+**Flat maps with namespaced keys** (`:aog/*`) prevent collision with data columns:
+
+```clojure
+{:aog/data penguins
+ :aog/x :bill-length-mm
+ :aog/y :bill-depth-mm
+ :aog/color :species
+ :aog/plottype :scatter
+ :aog/alpha 0.7
+ :aog/target :vl}
+```
+
+**Advantage**: Standard `merge` works perfectly (no custom layer-merge needed)
+
+### Implementation Highlights
+
+**Simplified * operator** (73% smaller):
+```clojure
+(defn *
+  ([x] (if (map? x) [x] x))
+  ([x y]
+   (cond
+     (and (map? x) (map? y)) [(merge x y)]
+     (and (map? x) (vector? y)) (mapv #(merge x %) y)
+     (and (vector? x) (map? y)) (mapv #(merge % y) x)
+     (and (vector? x) (vector? y)) (vec (for [a x, b y] (merge a b)))))
+  ([x y & more] (reduce * (* x y) more)))
+```
+
+**Standard library operations**:
+```clojure
+;; Conditional building with into
+(if show-regression?
+  (into scatter-layers regression-layers)
+  scatter-layers)
+
+;; Transform layers with mapv
+(mapv #(assoc-in % [:aog/alpha] 0.8) layers)
+
+;; Filter layers
+(filterv #(= :scatter (:aog/plottype %)) layers)
+```
+
+**Specs as data** - All target specs are plain maps/vectors:
+```clojure
+;; Normal usage
+(plot layers {:target :vl})
+
+;; Advanced: Manipulate raw specs
+(def vega-spec (layers->vega-spec layers 600 400))
+(def customized-spec
+  (-> vega-spec
+      (assoc :title {...})
+      (assoc-in [:encoding :x :axis] {...})))
+(kind/vega-lite customized-spec)
+```
+
+### Vega-Lite Faceting Fix
+
+**Problem**: Multi-layer specs with faceting don't work in Vega-Lite when `:column` encoding is inside each layer
+
+**Solution**: Different faceting approaches based on layer count:
+- **Single layer**: Faceting in encoding (standard VL)
+- **Multi-layer**: Top-level `:facet` with `:spec` containing layers (VL composition)
+
+```clojure
+;; Multi-layer faceting
+{:data {:values [...]}
+ :facet {:column {:field "island" :type "nominal"}}
+ :spec {:layer [{...scatter...} {...regression...}]}}
+```
+
+### Key Insights from Notebook
+
+1. **Flat structure enables standard merge** - No custom layer-merge function needed
+2. **Namespacing prevents collisions** - `:aog/*` keys coexist with any data columns
+3. **Transparent IR** - Layers are inspectable plain maps, not opaque objects
+4. **Target as data** - Rendering target can be specified compositionally via `(target :vl)` or options
+5. **Julia's compositional approach translates to Clojure data** - Same algebraic concepts, different substrate
+
+### Trade-offs
+
+**Gains**:
+- Composability through standard operations (`merge`, `assoc`, `mapv`, `filter`, `into`)
+- Transparent intermediate representation (plain maps)
+- Target independence (one API, multiple renderers)
+- Flexible data handling (plain maps or datasets)
+- Clear separation of concerns
+
+**Costs**:
+- Namespace verbosity (`:aog/color` vs `:color` - 5 extra chars)
+- Novel operators (`*`, `+` shadow arithmetic)
+- Incomplete feature set (smooth, density, histogram defined but not implemented)
+
+### Relationship to V1 and V2
+
+This design exploration is **not a replacement** for current Tableplot APIs, but investigates an alternative approach that could:
+- Coexist as additional namespace (e.g., `scicloj.tableplot.v1.aog.normalized`)
+- Inform future design decisions for V2 or beyond
+- Provide a third compositional option alongside ggplot2-style (V2) and current AoG (V1)
+
+**Addresses different concerns than V2**:
+- V2 focuses on dataflow/inference for smart defaults
+- AoG v2 focuses on algebraic composition with explicit operations
+- Both can coexist serving different use cases
+
+### Documentation Structure
+
+The notebook follows a clear narrative (~71,700 lines):
+1. **Context & Motivation** - Why explore alternatives
+2. **Inspiration** - AlgebraOfGraphics.jl concepts
+3. **Design Exploration** - Evolution from nested → flat+plain → flat+namespaced
+4. **Proposed Design** - API overview and constructors
+5. **Examples** - Progressive complexity (scatter → multi-layer → faceting)
+6. **Implementation** - Helper functions and all three targets
+7. **Multiple Targets** - Demonstrating target independence
+8. **Specs as Data** - Programmatic manipulation examples
+9. **Trade-offs** - Honest assessment of gains and costs
+10. **Integration Path** - Coexistence with V1/V2
+11. **Decision Points** - Open questions for community feedback
+12. **Summary** - Key insights and implementation status
 
 ## V1: AlgebraOfGraphics Implementation
 
