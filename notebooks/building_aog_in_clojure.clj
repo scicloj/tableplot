@@ -1211,8 +1211,17 @@
   ([layers opts]
    (let [width (or (:width opts) 400)
          height (or (:height opts) 300)
-         spec (layers->vega-spec layers width height)]
-     (kind/vega-lite spec))))
+         spec (layers->vega-spec layers width height)
+         ;; Add ggplot2-like theme
+         themed-spec (assoc spec :config
+                            {:view {:stroke nil}
+                             :axis {:grid true
+                                    :gridColor "#FFFFFF"
+                                    :gridOpacity 1
+                                    :domain false
+                                    :tickColor "#FFFFFF"}
+                             :background "#EBEBEB"})]
+     (kind/vega-lite themed-spec))))
 
 ;; ## Plotly.js Backend
 ;;
@@ -1357,10 +1366,19 @@
      :layout {:width width
               :height height
               :hovermode "closest"
+              ;; ggplot2-like theme
+              :plot_bgcolor "#EBEBEB"
+              :paper_bgcolor "#EBEBEB"
               :xaxis {:title ""
-                      :zeroline false}
+                      :zeroline false
+                      :showgrid true
+                      :gridcolor "#FFFFFF"
+                      :gridwidth 1}
               :yaxis {:title ""
-                      :zeroline false}}}))
+                      :zeroline false
+                      :showgrid true
+                      :gridcolor "#FFFFFF"
+                      :gridwidth 1}}}))
 
 (defn plot-plotly
   "Render layers as an interactive Plotly.js visualization.
