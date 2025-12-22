@@ -1220,7 +1220,12 @@
                                     :gridOpacity 1
                                     :domain false
                                     :tickColor "#FFFFFF"}
-                             :background "#EBEBEB"})]
+                             :background "#EBEBEB"
+                             ;; ggplot2 color palette
+                             :range {:category ["#F8766D" "#00BA38" "#619CFF"
+                                                "#F564E3" "#00BFC4" "#B79F00"
+                                                "#FF61CC" "#00B4F0" "#C77CFF"
+                                                "#00C19A" "#FF6A98" "#00A9FF"]}})]
      (kind/vega-lite themed-spec))))
 
 ;; ## Plotly.js Backend
