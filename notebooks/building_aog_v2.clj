@@ -537,10 +537,7 @@
     (some #(instance? java.time.temporal.Temporal %) values) :temporal
     :else :categorical))
 
-;; Examples:
-(+ (scatter) (linear))
-
-(+ (scatter {:alpha 0.5}) (linear) (line))
+;; Examples moved to after function definitions
 
 ;; (Type Information section moved to just before example that demonstrates it)
 
@@ -797,6 +794,12 @@
                        (:bars transform-result))
     :raw (:points transform-result)))
 
+(defn- color-scale
+  "ggplot2-like color scale for categorical data."
+  [categories]
+  (let [colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]]
+    (zipmap categories (cycle colors))))
+
 (defn- render-scatter-viz
   "Render scatter plot visualization data."
   [points alpha]
@@ -906,12 +909,6 @@
       :line (render-line-viz (:points transform-result) alpha)
       [])))
 
-(defn- color-scale
-  "ggplot2-like color scale for categorical data."
-  [categories]
-  (let [colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]]
-    (zipmap categories (cycle colors))))
-
 ;; ### Simple :geom Target (Delegating Domain Computation)
 
 (defn- infer-domain
@@ -1004,6 +1001,12 @@
     {:background bg-rect
      :plot (viz/svg-plot2d-cartesian plot-spec)
      :hist-rects hist-rects}))
+
+(defn- get-scale-domain
+  "Extract custom domain for an aesthetic from layers, or return nil if not specified."
+  [layers-vec aesthetic]
+  (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
+    (some #(get-in % [scale-key :domain]) layers-vec)))
 
 ;; This is a placeholder - full implementation coming
 (defmethod plot-impl :geom
@@ -1128,8 +1131,171 @@
 ;; Placeholder implementations for other targets
 (defmethod plot-impl :vl
   [layers opts]
-  (kind/hiccup
-   [:div [:p "Vega-Lite target - Coming soon"]]))
+  (let [layers-vec (if (vector? layers) layers [layers])
+        width (or (:width opts) 600)
+        height (or (:height opts) 400)
+
+        ;; Check for faceting
+        facet-groups (organize-by-facets layers-vec)
+        is-faceted? (has-faceting? layers-vec)
+
+        ;; Get facet dimensions if faceted
+        row-var (when is-faceted? (some :aog/row layers-vec))
+        col-var (when is-faceted? (some :aog/col layers-vec))
+
+        ;; Check for custom scale domains
+        custom-x-domain (get-scale-domain layers-vec :x)
+        custom-y-domain (get-scale-domain layers-vec :y)
+
+        ;; Helper to convert layer to VL data format
+        layer->vl-data (fn [layer]
+                         (let [data (:aog/data layer)
+                               dataset (if (tc/dataset? data) data (tc/dataset data))
+                               x-col (:aog/x layer)
+                               y-col (:aog/y layer)
+                               color-col (:aog/color layer)
+                               row-col (:aog/row layer)
+                               col-col (:aog/col layer)
+                               rows (tc/rows dataset :as-maps)]
+                           (mapv (fn [row]
+                                   (cond-> {}
+                                     x-col (assoc (keyword (name x-col)) (get row x-col))
+                                     y-col (assoc (keyword (name y-col)) (get row y-col))
+                                     color-col (assoc (keyword (name color-col)) (get row color-col))
+                                     row-col (assoc (keyword (name row-col)) (get row row-col))
+                                     col-col (assoc (keyword (name col-col)) (get row col-col))))
+                                 rows)))
+
+        ;; Helper to create VL mark for a layer
+        layer->vl-mark (fn [layer]
+                         (let [plottype (:aog/plottype layer)
+                               transform (:aog/transformation layer)]
+                           (cond
+                             (= transform :linear) "line"
+                             (= transform :histogram) "bar"
+                             (= plottype :scatter) "circle"
+                             (= plottype :line) "line"
+                             :else "circle")))
+
+        ;; Helper to create encoding for a layer
+        layer->vl-encoding (fn [layer vl-data]
+                             (let [x-col (:aog/x layer)
+                                   y-col (:aog/y layer)
+                                   color-col (:aog/color layer)
+                                   alpha (:aog/alpha layer)
+                                   transform (:aog/transformation layer)]
+                               (cond-> {}
+                                 x-col (assoc :x (cond-> {:field (name x-col) :type "quantitative"}
+                                                   custom-x-domain (assoc :scale {:domain custom-x-domain})))
+                                 y-col (assoc :y (cond-> {:field (name y-col) :type "quantitative"}
+                                                   custom-y-domain (assoc :scale {:domain custom-y-domain})))
+                                 color-col (assoc :color {:field (name color-col)
+                                                          :type "nominal"
+                                                          :scale {:range ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]}})
+                                 alpha (assoc :opacity {:value alpha}))))
+
+        ;; Process each layer
+        vl-layers (mapcat (fn [layer]
+                            (let [points (layer->points layer)
+                                  transform-result (apply-transform layer points)]
+                              (case (:type transform-result)
+                                ;; Scatter/line - use raw data
+                                :raw
+                                [{:mark (layer->vl-mark layer)
+                                  :data {:values (layer->vl-data layer)}
+                                  :encoding (layer->vl-encoding layer (layer->vl-data layer))}]
+
+                                ;; Linear regression - send computed line
+                                :regression
+                                (let [fitted (:fitted transform-result)
+                                      fitted-data (mapv (fn [p]
+                                                          {(keyword (name (:aog/x layer))) (:x p)
+                                                           (keyword (name (:aog/y layer))) (:y p)})
+                                                        fitted)
+                                      ;; Handle color grouping
+                                      color-col (:aog/color layer)]
+                                  (if color-col
+                                    ;; Compute regression per color group
+                                    (let [color-groups (group-by :color points)]
+                                      (mapv (fn [[color-val group-points]]
+                                              (when-let [group-fitted (compute-linear-regression group-points)]
+                                                (let [group-fitted-data (mapv (fn [p]
+                                                                                {(keyword (name (:aog/x layer))) (:x p)
+                                                                                 (keyword (name (:aog/y layer))) (:y p)
+                                                                                 (keyword (name color-col)) color-val})
+                                                                              group-fitted)]
+                                                  {:mark "line"
+                                                   :data {:values group-fitted-data}
+                                                   :encoding (layer->vl-encoding layer group-fitted-data)})))
+                                            color-groups))
+                                    ;; Single regression line
+                                    [{:mark "line"
+                                      :data {:values fitted-data}
+                                      :encoding (layer->vl-encoding layer fitted-data)}]))
+
+                                ;; Histogram - send computed bars
+                                :histogram
+                                (let [bars (:bars transform-result)
+                                      bar-data (mapv (fn [bar]
+                                                       {:bin-start (:x-min bar)
+                                                        :bin-end (:x-max bar)
+                                                        :count (:height bar)})
+                                                     bars)]
+                                  [{:mark "bar"
+                                    :data {:values bar-data}
+                                    :encoding {:x {:field "bin-start"
+                                                   :type "quantitative"
+                                                   :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
+                                                   :axis {:title (name (:aog/x layer))}}
+                                               :x2 {:field "bin-end"}
+                                               :y {:field "count" :type "quantitative"}}}]))))
+                          layers-vec)
+
+        ;; Remove nils from nested regression per-group
+        vl-layers (remove nil? (flatten vl-layers))
+
+        ;; ggplot2-compatible theme config
+        ggplot2-config {:view {:stroke "transparent"}
+                        :background "#EBEBEB"
+                        :axis {:gridColor "#FFFFFF"
+                               :domainColor "#FFFFFF"
+                               :tickColor "#FFFFFF"}
+                        :mark {:color "#333333"}}
+
+        ;; Build final spec
+        spec (cond
+               ;; Faceted plot
+               is-faceted?
+               (let [;; For faceted plots, remove :data from individual layers
+                     ;; Data goes at TOP level for VL faceting, not inside spec
+                     layers-without-data (mapv #(dissoc % :data) vl-layers)
+                     all-data (mapcat layer->vl-data layers-vec)]
+                 (cond-> {:$schema "https://vega.github.io/schema/vega-lite/v5.json"
+                          :data {:values all-data}
+                          :width (int (/ width (if col-var 3 1)))
+                          :height (int (/ height (if row-var 3 1)))
+                          :config ggplot2-config
+                          :spec {:layer layers-without-data}}
+                   col-var (assoc :facet {:column {:field (name col-var) :type "nominal"}})
+                   row-var (assoc-in [:facet :row] {:field (name row-var) :type "nominal"})))
+
+               ;; Multi-layer plot
+               (> (count vl-layers) 1)
+               {:$schema "https://vega.github.io/schema/vega-lite/v5.json"
+                :width width
+                :height height
+                :config ggplot2-config
+                :layer vl-layers}
+
+               ;; Single layer plot
+               :else
+               (merge {:$schema "https://vega.github.io/schema/vega-lite/v5.json"
+                       :width width
+                       :height height
+                       :config ggplot2-config}
+                      (first vl-layers)))]
+
+    (kind/vega-lite spec)))
 
 (defmethod plot-impl :plotly
   [layers opts]
@@ -1182,28 +1348,17 @@
     :else :categorical))
 
 (defn infer-scale-type
-  "Get scale type from Tablecloth metadata or fallback to value inference.
-  
-  This is a KEY WIN from the delegation strategy: Tablecloth provides types,
-  so we don't need complex type inference!"
+  "Infer scale type from values in a layer."
   [layer aesthetic]
   (let [data (:aog/data layer)
-        column-key (get layer aesthetic)]
-    (if (tc/dataset? data)
-      ;; Use Tablecloth type information (O(1) lookup!)
-      (let [col-type (col/typeof (data column-key))]
-        (cond
-          (#{:int8 :int16 :int32 :int64 :float32 :float64} col-type)
-          :continuous
-
-          (#{:local-date :local-date-time :instant} col-type)
-          :temporal
-
-          (#{:string :keyword :boolean :object} col-type)
-          :categorical))
-
-      ;; Fallback for plain maps (simple inference)
-      (infer-from-values (get data column-key)))))
+        dataset (if (tc/dataset? data) data (tc/dataset data))
+        col-key (get layer (keyword "aog" (name aesthetic)))
+        values (when col-key (tc/column dataset col-key))]
+    (cond
+      (nil? values) nil
+      (every? number? values) :continuous
+      (some #(instance? java.time.temporal.Temporal %) values) :temporal
+      :else :categorical)))
 
 (kind/pprint
  (let [layer (* (data penguins)
@@ -1229,6 +1384,24 @@
   []
   {:aog/transformation :linear
    :aog/plottype :line})
+
+(defn inspect-layers
+  "Inspect what layers are created and what data they contain.
+  
+  Useful for debugging composition and understanding what gets passed to the renderer."
+  [layer-spec]
+  (let [layers-vec (if (vector? layer-spec) layer-spec [layer-spec])]
+    {:num-layers (count layers-vec)
+     :layers (mapv (fn [layer]
+                     {:plottype (:aog/plottype layer)
+                      :transformation (:aog/transformation layer)
+                      :aesthetics (select-keys layer [:aog/x :aog/y :aog/color])
+                      :faceting (select-keys layer [:aog/row :aog/col])
+                      :data-rows (when-let [data (:aog/data layer)]
+                                   (if (tc/dataset? data)
+                                     (tc/row-count data)
+                                     (count data)))})
+                   layers-vec)}))
 
 (plot
  (+ (* (data penguins)
@@ -1396,12 +1569,6 @@
   (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
     {scale-key opts}))
 
-(defn- get-scale-domain
-  "Extract custom domain for an aesthetic from layers, or return nil if not specified."
-  [layers-vec aesthetic]
-  (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
-    (some #(get-in % [scale-key :domain]) layers-vec)))
-
 ;; Test histogram computation in isolation
 
 (plot
@@ -1425,23 +1592,7 @@
 
 ;; ## Debugging & Inspection Utilities
 
-(defn inspect-layers
-  "Inspect what layers are created and what data they contain.
-  
-  Useful for debugging composition and understanding what gets passed to the renderer."
-  [layer-spec]
-  (let [layers-vec (if (vector? layer-spec) layer-spec [layer-spec])]
-    {:num-layers (count layers-vec)
-     :layers (mapv (fn [layer]
-                     {:plottype (:aog/plottype layer)
-                      :transformation (:aog/transformation layer)
-                      :aesthetics (select-keys layer [:aog/x :aog/y :aog/color])
-                      :faceting (select-keys layer [:aog/row :aog/col])
-                      :data-rows (when-let [data (:aog/data layer)]
-                                   (if (tc/dataset? data)
-                                     (tc/row-count data)
-                                     (count data)))})
-                   layers-vec)}))
+;; inspect-layers moved earlier to before its first use
 
 ;; # Faceting: Architectural Questions Revealed
 ;;
@@ -1621,6 +1772,141 @@
 ;; 1. Both axes use custom ranges
 ;; 2. Zooms into a specific region of the data
 ;; 3. Useful for focusing on areas of interest or ensuring consistent scales across multiple plots
+
+;; # Multiple Rendering Targets
+;;
+;; One of the key benefits of our API design is **backend agnosticism**. The same
+;; plot specification can be rendered by different visualization libraries.
+;;
+;; So far, all examples have used the `:geom` target (thi.ng/geom for static SVG).
+;; Now let's demonstrate the `:vl` target (Vega-Lite for interactive web visualizations).
+
+;; ## Example 14: Simple Scatter with Vega-Lite
+
+;; The exact same specification, just with `:target :vl`:
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter))
+ {:target :vl})
+
+;; **What's different**:
+;; 1. Interactive tooltips on hover
+;; 2. Pan and zoom capabilities
+;; 3. Vega-Lite's polished default styling
+;; 4. Same data, same API, different rendering
+
+;; ## Example 15: Multi-Layer with Vega-Lite
+
+;; Scatter + regression works too:
+
+(plot
+ (* (data mtcars)
+    (mapping :wt :mpg)
+    (+ (scatter)
+       (linear)))
+ {:target :vl})
+
+;; **What happens here**:
+;; 1. Scatter plot rendered as VL `point` mark
+;; 2. Regression computed on JVM (our delegation strategy!)
+;; 3. Fitted line sent to VL as `line` mark
+;; 4. VL layers them together
+
+;; ## Example 16: Color Mapping with Vega-Lite
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (+ (scatter)
+       (linear)))
+ {:target :vl})
+
+;; **What happens here**:
+;; 1. Color mapping becomes VL's color encoding
+;; 2. VL provides interactive legend
+;; 3. Regression computed per species (3 separate lines)
+;; 4. Click legend to filter interactively!
+
+;; ## Example 17: Histogram with Vega-Lite
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm nil)
+    (histogram))
+ {:target :vl})
+
+;; **What happens here**:
+;; 1. Histogram bins computed on JVM using fastmath
+;; 2. Bar data sent to VL
+;; 3. VL renders as bar chart
+;; 4. Interactive tooltips show bin ranges and counts
+
+;; ## Example 18: Faceting with Vega-Lite
+
+(plot
+ (facet (* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm)
+           (scatter))
+        {:col :species})
+ {:target :vl})
+
+;; **What happens here**:
+;; 1. Our API detects faceting specification
+;; 2. Delegates to VL's native column faceting
+;; 3. VL handles layout and labels
+;; 4. Each panel is independently interactive
+
+;; ## Example 19: Grid Faceting with Vega-Lite
+
+(plot
+ (facet (* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm)
+           (scatter))
+        {:row :island :col :sex})
+ {:target :vl :width 800 :height 600})
+
+;; **What happens here**:
+;; 1. 2D grid faceting using VL's row × column faceting
+;; 2. VL handles all layout computation
+;; 3. Shared scales across all panels
+;; 4. Interactive exploration across the grid
+
+;; ## Example 20: Custom Domains with Vega-Lite
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (scale :x {:domain [30 65]})
+    (scale :y {:domain [10 25]}))
+ {:target :vl})
+
+;; **What happens here**:
+;; 1. Custom domains passed to VL's scale specification
+;; 2. VL respects our domain constraints
+;; 3. Same composition semantics across targets
+
+;; ## The Power of Backend Agnosticism
+;;
+;; **Key insight**: Our flat map representation with `:aog/*` keys creates a clean
+;; separation between plot semantics and rendering implementation.
+;;
+;; **What we control** (across all targets):
+;; - Statistical transforms (regression, histogram)
+;; - Data transformations
+;; - Composition semantics
+;;
+;; **What targets handle** (differently):
+;; - `:geom` - Static SVG, manual layout, ggplot2-like styling
+;; - `:vl` - Interactive web viz, native faceting, Vega-Lite styling
+;; - `:plotly` - Rich interactivity, 3D support (coming soon)
+;;
+;; This is the payoff of our design choices:
+;; - Flat maps compose with standard library
+;; - Minimal delegation keeps implementation focused
+;; - Backend-agnostic IR enables multiple rendering strategies
 
 ;; # Summary
 ;;
