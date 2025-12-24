@@ -1149,7 +1149,26 @@
 ;; 3. Rendering target receives data and computes domain itself
 ;; 4. This is simpler - we delegate what rendering targets do well!
 
-;; ## Example 2: Type Information in Action
+;; ## Example 2: Plain Clojure Maps
+
+;; The API works with plain Clojure data structures, not just datasets!
+
+(plot
+ (* (data {:x [1 2 3 4 5]
+           :y [2 4 6 8 10]})
+    (mapping :x :y)
+    (scatter)))
+
+;; **What happens here**:
+;; 1. Simple Clojure map with vectors of data
+;; 2. No need to convert to tech.ml.dataset
+;; 3. Type inference falls back to examining values
+;; 4. Everything just works!
+
+;; This is particularly useful for quick exploration or when working with
+;; simple data that doesn't need the full power of tech.ml.dataset.
+
+;; ## Example 3: Type Information in Action
 
 ;; Now let's see how we can use Tablecloth's type information.
 ;; This is a KEY WIN: we get types for free, no complex inference needed!
@@ -1198,7 +1217,7 @@
 ;; Notice: Type inference is instant (O(1) lookup from Tablecloth metadata),
 ;; not O(n) value examination!
 
-;; ## Example 3: Multi-Layer Composition (Scatter + Linear Regression)
+;; ## Example 4: Multi-Layer Composition (Scatter + Linear Regression)
 
 ;; First, we need a way to add statistical transforms. Let's add [linear regression](https://en.wikipedia.org/wiki/Linear_regression):
 
@@ -1226,7 +1245,7 @@
 ;; 4. Both layers share same data and mapping
 ;; 5. Rendering target renders both with delegated domains
 
-;; ## Example 3b: Same Plot Using Distributivity
+;; ## Example 4b: Same Plot Using Distributivity
 
 (plot
  (* (data penguins)
@@ -1240,7 +1259,7 @@
 ;; 3. Result: same as Example 3, but more succinct!
 ;; 4. Factor out common parts (data, mapping), vary only what differs (plottype)
 
-;; ## Example 4: Color Mapping with Categorical Variable
+;; ## Example 5: Color Mapping with Categorical Variable
 
 (plot
  (* (data penguins)
@@ -1253,7 +1272,7 @@
 ;; 3. Rendering target creates color scale automatically
 ;; 4. Three species = three colors in the scatter plot
 
-;; ## Example 5: Multi-Layer with Color Groups
+;; ## Example 6: Multi-Layer with Color Groups
 
 (plot
  (* (data penguins)
@@ -1268,7 +1287,7 @@
 ;; 4. Demonstrates composition + grouping + statistical transforms
 ;; 5. Uses distributivity for succinctness!
 
-;; ## Example 6: Different Dataset (mtcars)
+;; ## Example 7: Different Dataset (mtcars)
 
 (plot
  (* (data mtcars)
@@ -1281,7 +1300,7 @@
 ;; 3. Type inference works the same way
 ;; 4. Rendering target handles domain computation
 
-;; ## Example 7: mtcars with Regression
+;; ## Example 8: mtcars with Regression
 
 (plot
  (* (data mtcars)
@@ -1295,7 +1314,33 @@
 ;; 3. Same delegation strategy works across datasets
 ;; 4. Uses distributivity for succinctness
 
-;; ## Example 8: Histogram
+;; ## Debugging & Inspection
+
+;; Before moving on to more complex features, let's look at a useful debugging tool
+;; that helps us understand what's happening inside our layer specifications.
+
+(kind/pprint
+ (inspect-layers
+  (* (data mtcars)
+     (mapping :wt :mpg)
+     (+ (scatter)
+        (linear)))))
+
+;; **What we see**:
+;; - Two layers created (scatter + linear regression)
+;; - Both share the same data and mappings
+;; - Different plottypes and transformations
+;; - Data row count shown for verification
+
+;; **An important insight from building this**:
+;;
+;; During development, we discovered that regression lines need careful domain handling.
+;; If we compute domains from raw scatter points, regression lines can extend beyond
+;; that range (e.g., mtcars regression endpoint y=8.296 falls below the scatter domain
+;; min y=10.4). This is why we compute domains AFTER applying statistical transforms—
+;; transforms can legitimately extend beyond the raw data range!
+
+;; ## Example 9: Histogram
 
 ;; Histograms are a key example of why we compute statistical transforms ourselves.
 ;; We need the domain to compute bin edges!
@@ -1500,7 +1545,7 @@
 ;; For :geom target - compute layout positions manually
 ;; For :vl/:plotly targets - could use their grid layout features
 
-;; ## Example 9: Simple Column Faceting
+;; ## Example 10: Simple Column Faceting
 ;;
 ;; Facet a scatter plot by species - this creates 3 side-by-side plots.
 
@@ -1518,7 +1563,7 @@
            (histogram))
         {:col :species}))
 
-;; ## Example 10: Row Faceting
+;; ## Example 11: Row Faceting
 ;;
 ;; Facet by rows creates vertically stacked panels
 
@@ -1529,7 +1574,7 @@
         {:row :species})
  {:height 600})
 
-;; ## Example 11: Row × Column Grid Faceting
+;; ## Example 12: Row × Column Grid Faceting
 ;;
 ;; Create a 2D grid of facets - the full power of faceting!
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
@@ -1548,7 +1593,7 @@
 ;; 4. Shared scales across all panels for easy comparison
 ;; 5. Per-panel rendering with proper x and y offsets
 
-;; ## Example 12: Custom Scale Domains
+;; ## Example 13: Custom Scale Domains
 ;;
 ;; Override auto-computed domains to control axis ranges
 
@@ -1577,27 +1622,6 @@
 ;; 2. Zooms into a specific region of the data
 ;; 3. Useful for focusing on areas of interest or ensuring consistent scales across multiple plots
 
-;; # Faceting Exploration
-;;
-;; Let's explore faceting to see what architectural questions emerge.
-
-(kind/pprint
- (inspect-layers
-  (* (data mtcars)
-     (mapping :wt :mpg)
-     (+ (scatter)
-        (linear)))))
-
-;; **What we discovered during debugging**:
-;; 
-;; Initial problem: Regression line was invisible (only 1 point rendered instead of 2)
-;; Root cause: Domain computed from raw scatter points, but regression extends beyond that range
-;; Example: mtcars regression line endpoint y=8.296 < scatter domain min y=10.4
-;; Solution: Compute domains AFTER applying statistical transforms
-;; 
-;; This highlights why statistical transforms need domain computation - they can
-;; extend beyond the raw data!
-
 ;; # Summary
 ;;
 ;; ## What We've Explored
@@ -1623,19 +1647,23 @@
 ;;
 ;; ## Implementation Status
 ;;
-;; - ✅ Core composition
+;; - ✅ Core composition (`*`, `+`, layer merging)
 ;; - ✅ Type inference via Tablecloth
-;; - ✅ Delegation strategy designed
-;; - ⚠️ Rendering target implementations (in progress)
-;; - ⚠️ Statistical transforms (linear done, others pending)
+;; - ✅ Statistical transforms (linear regression, histogram)
+;; - ✅ Faceting (column, row, and 2D grid)
+;; - ✅ Custom scale domains
+;; - ✅ :geom rendering target (thi.ng/geom with SVG output)
+;; - ⚠️ Additional rendering targets (:vl, :plotly - planned)
+;; - ⚠️ Additional transforms (smooth, density - planned)
 ;;
 ;; ## Next Steps
 ;;
-;; 1. Complete rendering target implementations with delegated domains
-;; 2. Implement histogram with domain computation
-;; 3. Add coordinate system support
-;; 4. Test across all three rendering targets
-;; 5. Gather community feedback
+;; 1. Implement :vl (Vega-Lite) rendering target
+;; 2. Implement :plotly rendering target
+;; 3. Add smooth and density transforms
+;; 4. Add free scales option for faceting
+;; 5. Test across all three rendering targets
+;; 6. Gather community feedback
 
 ;; ---
 ;; *This is a design exploration. Feedback welcome!*
