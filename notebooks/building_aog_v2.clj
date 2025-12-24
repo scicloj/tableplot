@@ -154,8 +154,45 @@
 ;; This approach of 
 ;; ["describing a higher-level 'intent' how your tabular data should be transformed"](https://aog.makie.org/dev/tutorials/intro-i)
 ;; aligns naturally with Clojure's functional and declarative tendencies—something
-;; we've seen in libraries like Hanami, Tableplot, and others in the ecosystem.
+;; we've seen in libraries like Hanami, Oz, and others in the ecosystem.
+
+;; ## Glossary: Visualization Terminology
 ;;
+;; Before diving deeper, let's clarify some key terms we'll use throughout:
+;;
+;; **Domain** - The range of input values from your data. For a column of bill lengths 
+;; `[32.1, 45.3, 59.6]`, the domain is `[32.1, 59.6]`. This is *data space*.
+;;
+;; **Range** - The range of output values in the visualization. For an x-axis that spans 
+;; from pixel 50 to pixel 550, the range is `[50, 550]`. This is *visual space*.
+;;
+;; **Scale** - The mapping function from domain to range. A [linear scale](https://en.wikipedia.org/wiki/Scale_(ratio))
+;; maps data value 32.1 → pixel 50, and 59.6 → pixel 550, with proportional mapping in between.
+;; Other scale types include logarithmic, time, and categorical.
+;;
+;; **Aesthetic** - A visual property that can encode data. Common aesthetics: `x` position, 
+;; `y` position, `color`, `size`, `shape`, `alpha` (transparency). Each aesthetic needs 
+;; a scale to map data to visual values.
+;;
+;; **Mapping** - The connection between a data column and an aesthetic. "Map `:bill-length` 
+;; to `x` aesthetic" means "use the bill-length values to determine x positions."
+;;
+;; **Coordinate System** - The spatial framework for positioning marks. [Cartesian](https://en.wikipedia.org/wiki/Cartesian_coordinate_system) 
+;; (standard x/y grid), [polar](https://en.wikipedia.org/wiki/Polar_coordinate_system) (angle/radius), 
+;; and [geographic](https://en.wikipedia.org/wiki/Geographic_coordinate_system) (latitude/longitude) 
+;; interpret positions differently and affect domain computation.
+;;
+;; **Statistical Transform** - A computation that derives new data from raw data. Examples: 
+;; [linear regression](https://en.wikipedia.org/wiki/Linear_regression) (fit line), 
+;; [histogram](https://en.wikipedia.org/wiki/Histogram) (bin and count), 
+;; [kernel density](https://en.wikipedia.org/wiki/Kernel_density_estimation) (smooth distribution).
+;;
+;; **Layer** (in AoG sense) - A composable unit containing data, mappings, visual marks, 
+;; and optional transforms. Different from ggplot2's "layer" (which means overlaid visuals).
+;;
+;; **Rendering Target** - The library that produces final output: thi.ng/geom (SVG), 
+;; Vega-Lite (JSON spec), or Plotly (JavaScript).
+
 ;; ## Core Insight: Layers + Operations
 ;;
 ;; AlgebraOfGraphics.jl treats visualization with two key ideas:
@@ -580,12 +617,14 @@
   (let [data (:aog/data layer)
         dataset (if (tc/dataset? data) data (tc/dataset data))
         x-vals (vec (get dataset (:aog/x layer)))
-        y-vals (vec (get dataset (:aog/y layer)))
+        y-col (:aog/y layer)
+        y-vals (when y-col (vec (get dataset y-col)))
         color-col (:aog/color layer)
         color-vals (when color-col
                      (vec (get dataset color-col)))]
     (map-indexed (fn [i _]
-                   (cond-> {:x (nth x-vals i) :y (nth y-vals i)}
+                   (cond-> {:x (nth x-vals i)}
+                     y-vals (assoc :y (nth y-vals i))
                      color-vals (assoc :color (nth color-vals i))))
                  x-vals)))
 
@@ -609,6 +648,24 @@
            {:x x-max :y (clojure.core/+ intercept (clojure.core/* slope x-max))}])
         (catch Exception e
           nil)))))
+
+(defn- compute-histogram
+  "Compute histogram bins using fastmath.stats/histogram.
+  
+  Returns: Vector of bar specifications with x-min, x-max, and height."
+  [points bins-method]
+  (when (seq points)
+    (let [x-vals (mapv :x points)]
+      (when (every? number? x-vals)
+        (let [hist-result (stats/histogram x-vals (or bins-method :sturges))]
+          (mapv (fn [bin]
+                  (let [x-min (:min bin)
+                        x-max (:max bin)]
+                    {:x-min x-min
+                     :x-max x-max
+                     :x-center (clojure.core// (clojure.core/+ x-min x-max) 2.0)
+                     :height (:count bin)}))
+                (:bins-maps hist-result)))))))
 
 (defn- color-scale
   "ggplot2-like color scale for categorical data."
@@ -644,16 +701,28 @@
         (mapcat (fn [layer]
                   (let [points (layer->points layer)
                         transformation (:aog/transformation layer)]
-                    (if (= transformation :linear)
+                    (cond
+                      (= transformation :linear)
                       ;; For linear regression, use fitted points for domain
                       (or (compute-linear-regression points) points)
+
+                      (= transformation :histogram)
+                      ;; For histogram, use bin data for domain
+                      (let [bins-method (:aog/bins layer)
+                            bars (compute-histogram points bins-method)]
+                        (mapcat (fn [bar]
+                                  [{:x (:x-min bar) :y 0}
+                                   {:x (:x-max bar) :y (:height bar)}])
+                                bars))
+
+                      :else
                       ;; Otherwise use raw points
                       points)))
                 layers-vec)
 
         ;; Now compute domain from ALL points (including transformed)
-        x-vals (mapv :x all-transformed-points)
-        y-vals (mapv :y all-transformed-points)
+        x-vals (keep :x all-transformed-points)
+        y-vals (keep :y all-transformed-points)
         x-domain (infer-domain x-vals)
         y-domain (infer-domain y-vals)
 
@@ -693,6 +762,23 @@
                                        transformation (:aog/transformation layer)]
 
                                    (cond
+                                     ;; Histogram transformation
+                                     (= transformation :histogram)
+                                     (let [bins-method (:aog/bins layer)
+                                           bars (compute-histogram points bins-method)]
+                                       (when bars
+                                         (mapv (fn [bar]
+                                                 ;; Create rectangle for each bar
+                                                 {:type :rect
+                                                  :x-min (:x-min bar)
+                                                  :x-max (:x-max bar)
+                                                  :height (:height bar)
+                                                  :attribs {:fill "#619CFF"
+                                                            :stroke "#FFFFFF"
+                                                            :stroke-width 1
+                                                            :opacity alpha}})
+                                               bars)))
+
                                      ;; Linear regression transformation
                                      (= transformation :linear)
                                      (let [color-groups (group-by :color points)]
@@ -767,11 +853,14 @@
                                      :else [])))
                                layers-vec)
 
-            ;; Create the plot spec
+            ;; Separate regular viz data from histogram rectangles
+            {viz-data true rect-data false} (group-by #(not= (:type %) :rect) layer-data)
+
+            ;; Create the plot spec for regular data
             plot-spec {:x-axis x-axis
                        :y-axis y-axis
                        :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}
-                       :data (vec layer-data)}
+                       :data (vec viz-data)}
 
             ;; Render to SVG with ggplot2-style background
             bg-rect (svg/rect [50 50]
@@ -781,9 +870,28 @@
                                :stroke "#FFFFFF"
                                :stroke-width 1})
 
-            svg-elem (svg/svg {:width width :height height}
-                              bg-rect
-                              (viz/svg-plot2d-cartesian plot-spec))]
+            ;; Convert histogram rectangles to SVG
+            ;; Need to map data coordinates to pixel coordinates
+            x-scale (fn [x] (clojure.core/+ 50 (clojure.core/* (/ (clojure.core/- x (first x-domain))
+                                                                  (clojure.core/- (second x-domain) (first x-domain)))
+                                                               (clojure.core/- width 100))))
+            y-scale (fn [y] (clojure.core/- (clojure.core/- height 50)
+                                            (clojure.core/* (/ (clojure.core/- y (first y-domain))
+                                                               (clojure.core/- (second y-domain) (first y-domain)))
+                                                            (clojure.core/- height 100))))
+
+            hist-rects (mapv (fn [r]
+                               (svg/rect [(x-scale (:x-min r)) (y-scale (:height r))]
+                                         (clojure.core/- (x-scale (:x-max r)) (x-scale (:x-min r)))
+                                         (clojure.core/- (y-scale 0) (y-scale (:height r)))
+                                         (:attribs r)))
+                             (or rect-data []))
+
+            svg-elem (apply svg/svg
+                            {:width width :height height}
+                            (concat [bg-rect]
+                                    [(viz/svg-plot2d-cartesian plot-spec)]
+                                    hist-rects))]
 
         (kind/html (svg/serialize svg-elem))))))
 
@@ -956,6 +1064,50 @@
 ;; 2. Regression line captures the trend
 ;; 3. Same delegation strategy works across datasets
 ;; 4. Uses distributivity for succinctness
+
+;; ## Example 8: Histogram
+
+;; Histograms are a key example of why we compute statistical transforms ourselves.
+;; We need the domain to compute bin edges!
+
+(defn histogram
+  "Add histogram transformation.
+  
+  Bins continuous data and counts occurrences. Requires domain computation
+  to determine bin edges.
+  
+  Options:
+  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number"
+  ([]
+   {:aog/transformation :histogram
+    :aog/plottype :bar
+    :aog/bins :sturges})
+  ([opts]
+   (merge {:aog/transformation :histogram
+           :aog/plottype :bar
+           :aog/bins :sturges}
+          (update-keys opts #(keyword "aog" (name %))))))
+
+;; Test histogram computation in isolation
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm nil)
+    (histogram)))
+
+;; **What happens here**:
+;; 1. We map only `:bill-length-mm` to x (no y mapping for histograms)
+;; 2. Histogram transform bins the data using Sturges' rule
+;; 3. We compute: domain → bin edges → bin counts
+;; 4. Rendering target receives bars (bin ranges + heights), not raw points
+;; 5. This shows why we can't fully delegate - we need domain BEFORE binning!
+
+;; Try different binning methods:
+
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm nil)
+    (histogram {:bins 15})))
 
 ;; ## Debugging & Inspection Utilities
 
