@@ -614,8 +614,9 @@
 (defn- split-by-facets
   "Split a layer's data by facet variables.
   
-  Returns: Vector of {:facet-label label, :layer layer-with-subset} maps
-  If no faceting, returns vector with single element containing original layer."
+  Returns: Vector of {:row-label r, :col-label c, :layer layer-with-subset} maps
+  If no faceting, returns vector with single element containing original layer.
+  Labels are nil for dimensions without faceting."
   [layer]
   (let [col-var (:aog/col layer)
         row-var (:aog/row layer)
@@ -623,27 +624,47 @@
 
     (if-not (or col-var row-var)
       ;; No faceting - return original layer
-      [{:facet-label nil :layer layer}]
+      [{:row-label nil :col-label nil :layer layer}]
 
-      ;; Has faceting - split data
+      ;; Has faceting
       (let [dataset (if (tc/dataset? data) data (tc/dataset data))
 
-            ;; For now, only handle column faceting
-            facet-var (or col-var row-var)
-            facet-vals (vec (get dataset facet-var))
-            facet-categories (distinct facet-vals)
+            ;; Get unique values for each facet dimension
+            col-categories (when col-var (sort (distinct (get dataset col-var))))
+            row-categories (when row-var (sort (distinct (get dataset row-var))))
 
-            ;; Group indices by facet value
-            grouped (group-by #(nth facet-vals %) (range (count facet-vals)))]
+            ;; Create all combinations
+            combinations (cond
+                           ;; Both row and col
+                           (and row-var col-var)
+                           (for [r row-categories
+                                 c col-categories]
+                             {:row-label r :col-label c})
 
-        ;; Create one layer per facet group
-        (mapv (fn [facet-cat]
-                (let [indices (get grouped facet-cat)
-                      subset (tc/select-rows dataset indices)
-                      new-layer (assoc layer :aog/data subset)]
-                  {:facet-label facet-cat
+                           ;; Only col
+                           col-var
+                           (for [c col-categories]
+                             {:row-label nil :col-label c})
+
+                           ;; Only row
+                           row-var
+                           (for [r row-categories]
+                             {:row-label r :col-label nil}))]
+
+        ;; For each combination, filter the data
+        (mapv (fn [{:keys [row-label col-label]}]
+                (let [filtered (cond-> dataset
+                                 row-var (tc/select-rows
+                                          (fn [row]
+                                            (= (get row row-var) row-label)))
+                                 col-var (tc/select-rows
+                                          (fn [row]
+                                            (= (get row col-var) col-label))))
+                      new-layer (assoc layer :aog/data filtered)]
+                  {:row-label row-label
+                   :col-label col-label
                    :layer new-layer}))
-              (sort facet-categories))))))
+              combinations)))))
 
 (defn- has-faceting?
   "Check if any layer has faceting."
@@ -653,28 +674,35 @@
 (defn- organize-by-facets
   "Organize multiple layers by their facet groups.
   
-  Returns: Vector of {:facet-label label, :layers [layers-for-this-facet]}
+  Returns: Vector of {:row-label r, :col-label c, :layers [layers-for-this-facet]}
   All layers must have the same facet specification (or no faceting)."
   [layers-vec]
   (if-not (has-faceting? layers-vec)
     ;; No faceting - return all layers in single group
-    [{:facet-label nil :layers layers-vec}]
+    [{:row-label nil :col-label nil :layers layers-vec}]
 
     ;; Has faceting - split each layer and group by facet
     (let [;; Split each layer by its facets
           all-split (mapcat split-by-facets layers-vec)
 
-          ;; Group by facet label
-          by-label (group-by :facet-label all-split)
+          ;; Group by row and col labels
+          by-labels (group-by (juxt :row-label :col-label) all-split)
 
-          ;; Get sorted facet labels
-          facet-labels (sort (keys by-label))]
+          ;; Get all unique combinations (sorted)
+          row-labels (sort (distinct (map :row-label all-split)))
+          col-labels (sort (distinct (map :col-label all-split)))
 
-      ;; For each facet label, collect all layers for that facet
-      (mapv (fn [label]
-              {:facet-label label
-               :layers (mapv :layer (get by-label label))})
-            facet-labels))))
+          ;; Create combinations in row-major order
+          combinations (for [r row-labels
+                             c col-labels]
+                         [r c])]
+
+      ;; For each combination, collect all layers
+      (mapv (fn [[r c]]
+              {:row-label r
+               :col-label c
+               :layers (mapv :layer (get by-labels [r c]))})
+            combinations))))
 
 (defn- layer->points
   "Convert layer to point data for rendering."
@@ -904,32 +932,34 @@
   - layers: Vector of layers to render in this panel
   - x-domain, y-domain: Domain for x and y axes
   - width, height: Panel dimensions
-  - x-offset: Horizontal offset for this panel (0 for non-faceted)
+  - x-offset, y-offset: Horizontal and vertical offsets for this panel
   
-  Returns: Vector of SVG elements [background plot-group hist-rects]"
-  [layers x-domain y-domain width height x-offset]
+  Returns: Map with :background, :plot, :hist-rects"
+  [layers x-domain y-domain width height x-offset y-offset]
   (let [x-range (clojure.core/- (second x-domain) (first x-domain))
         y-range (clojure.core/- (second y-domain) (first y-domain))
         x-major (max 1 (clojure.core/* x-range 0.2))
         y-major (max 1 (clojure.core/* y-range 0.2))
 
-        ;; Adjust x-axis range for panel offset
+        ;; Adjust panel boundaries for offsets
         panel-left (clojure.core/+ 50 x-offset)
         panel-right (clojure.core/+ panel-left (clojure.core/- width 100))
+        panel-top (clojure.core/+ 50 y-offset)
+        panel-bottom (clojure.core/+ panel-top (clojure.core/- height 100))
 
         ;; Create axes
         x-axis (viz/linear-axis
                 {:domain x-domain
                  :range [panel-left panel-right]
                  :major x-major
-                 :pos (clojure.core/- height 50)})
+                 :pos panel-bottom})
         y-axis (viz/linear-axis
                 {:domain y-domain
-                 :range [(clojure.core/- height 50) 50]
+                 :range [panel-bottom panel-top]
                  :major y-major
                  :pos panel-left})
 
-;; Process each layer to viz data
+        ;; Process each layer to viz data
         layer-data (mapcat (fn [layer]
                              (let [points (layer->points layer)
                                    alpha (or (:aog/alpha layer) 1.0)
@@ -947,7 +977,7 @@
                    :data (vec viz-data)}
 
         ;; Background rectangle for this panel
-        bg-rect (svg/rect [panel-left 50]
+        bg-rect (svg/rect [panel-left panel-top]
                           (clojure.core/- width 100)
                           (clojure.core/- height 100)
                           {:fill "#EBEBEB"
@@ -959,7 +989,7 @@
                                         (clojure.core/* (/ (clojure.core/- x (first x-domain))
                                                            (clojure.core/- (second x-domain) (first x-domain)))
                                                         (clojure.core/- width 100))))
-        y-scale (fn [y] (clojure.core/- (clojure.core/- height 50)
+        y-scale (fn [y] (clojure.core/- panel-bottom
                                         (clojure.core/* (/ (clojure.core/- y (first y-domain))
                                                            (clojure.core/- (second y-domain) (first y-domain)))
                                                         (clojure.core/- height 100))))
@@ -984,13 +1014,21 @@
 
         ;; Organize layers by facets
         facet-groups (organize-by-facets layers-vec)
-        num-facets (count facet-groups)
-        is-faceted? (> num-facets 1)
+
+        ;; Determine grid dimensions
+        row-labels (distinct (map :row-label facet-groups))
+        col-labels (distinct (map :col-label facet-groups))
+        num-rows (count row-labels)
+        num-cols (count col-labels)
+        is-faceted? (or (> num-rows 1) (> num-cols 1))
 
         ;; Calculate panel dimensions
-        panel-width (if is-faceted?
-                      (/ width num-facets)
-                      width)
+        panel-width (/ width num-cols)
+        panel-height (/ height num-rows)
+
+        ;; Check for custom scale domains
+        custom-x-domain (get-scale-domain layers-vec :x)
+        custom-y-domain (get-scale-domain layers-vec :y)
 
         ;; Compute transformed points for ALL facets (for shared domain)
         all-transformed-points
@@ -1002,11 +1040,11 @@
                           layers))
                 facet-groups)
 
-        ;; Compute shared domains
+        ;; Compute domains (use custom if provided, otherwise infer)
         x-vals (keep :x all-transformed-points)
         y-vals (keep :y all-transformed-points)
-        x-domain (infer-domain x-vals)
-        y-domain (infer-domain y-vals)
+        x-domain (or custom-x-domain (infer-domain x-vals))
+        y-domain (or custom-y-domain (infer-domain y-vals))
 
         ;; Validate domains
         valid? (and (vector? x-domain) (vector? y-domain)
@@ -1019,13 +1057,27 @@
         [:pre (pr-str {:x-domain x-domain :y-domain y-domain})]])
 
       ;; Render panels
-      (let [;; Render each facet panel
-            panels (map-indexed
-                    (fn [idx {:keys [facet-label layers]}]
-                      (let [x-offset (clojure.core/* idx panel-width)
+      (let [;; Create row/col position lookup
+            row-positions (zipmap row-labels (range num-rows))
+            col-positions (zipmap col-labels (range num-cols))
+
+            ;; Render each facet panel with grid position
+            panels (mapv
+                    (fn [{:keys [row-label col-label layers]}]
+                      (let [row-idx (get row-positions row-label 0)
+                            col-idx (get col-positions col-label 0)
+                            x-offset (clojure.core/* col-idx panel-width)
+                            y-offset (clojure.core/* row-idx panel-height)
                             panel (render-single-panel layers x-domain y-domain
-                                                       panel-width height x-offset)]
-                        (assoc panel :facet-label facet-label :x-offset x-offset)))
+                                                       panel-width panel-height
+                                                       x-offset y-offset)]
+                        (assoc panel
+                               :row-label row-label
+                               :col-label col-label
+                               :row-idx row-idx
+                               :col-idx col-idx
+                               :x-offset x-offset
+                               :y-offset y-offset)))
                     facet-groups)
 
             ;; Collect all elements
@@ -1035,15 +1087,33 @@
 
             ;; Add facet labels if faceted
             facet-labels (when is-faceted?
-                           (map-indexed
-                            (fn [idx {:keys [facet-label x-offset]}]
-                              (let [label-x (clojure.core/+ x-offset (/ panel-width 2))]
-                                (svg/text [label-x 30] (str facet-label)
-                                          {:text-anchor "middle"
-                                           :font-family "Arial, sans-serif"
-                                           :font-size 12
-                                           :font-weight "bold"})))
-                            panels))
+                           (concat
+                            ;; Column labels (top)
+                            (when (> num-cols 1)
+                              (map (fn [col-label]
+                                     (let [col-idx (get col-positions col-label)
+                                           label-x (clojure.core/+ (clojure.core/* col-idx panel-width)
+                                                                   (/ panel-width 2))]
+                                       (svg/text [label-x 30] (str col-label)
+                                                 {:text-anchor "middle"
+                                                  :font-family "Arial, sans-serif"
+                                                  :font-size 12
+                                                  :font-weight "bold"})))
+                                   col-labels))
+
+                            ;; Row labels (left side)
+                            (when (> num-rows 1)
+                              (map (fn [row-label]
+                                     (let [row-idx (get row-positions row-label)
+                                           label-y (clojure.core/+ (clojure.core/* row-idx panel-height)
+                                                                   (/ panel-height 2))]
+                                       (svg/text [20 label-y] (str row-label)
+                                                 {:text-anchor "middle"
+                                                  :font-family "Arial, sans-serif"
+                                                  :font-size 12
+                                                  :font-weight "bold"
+                                                  :transform (str "rotate(-90 20 " label-y ")")})))
+                                   row-labels))))
 
             ;; Combine into single SVG
             svg-elem (apply svg/svg
@@ -1264,6 +1334,29 @@
       (mapv #(merge % facet-keys) layer-spec)
       (merge layer-spec facet-keys))))
 
+(defn scale
+  "Specify scale properties for an aesthetic.
+  
+  Args:
+  - aesthetic: Keyword like :x, :y, :color
+  - opts: Map with scale options:
+    - :domain - [min max] for continuous, or vector of categories
+    - :transform - :log, :sqrt, :identity (default)
+  
+  Examples:
+  (scale :x {:domain [0 100]})
+  (scale :y {:transform :log})
+  (scale :color {:domain [:setosa :versicolor :virginica]})"
+  [aesthetic opts]
+  (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
+    {scale-key opts}))
+
+(defn- get-scale-domain
+  "Extract custom domain for an aesthetic from layers, or return nil if not specified."
+  [layers-vec aesthetic]
+  (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
+    (some #(get-in % [scale-key :domain]) layers-vec)))
+
 ;; Test histogram computation in isolation
 
 (plot
@@ -1409,7 +1502,7 @@
 
 ;; ## Example 9: Simple Column Faceting
 ;;
-;; Facet a scatter plot by species - this should create 3 side-by-side plots.
+;; Facet a scatter plot by species - this creates 3 side-by-side plots.
 
 ;; Test faceted scatter plot - 3 side-by-side plots
 (plot
@@ -1425,13 +1518,68 @@
            (histogram))
         {:col :species}))
 
+;; ## Example 10: Row Faceting
+;;
+;; Facet by rows creates vertically stacked panels
+
+(plot
+ (facet (* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm)
+           (scatter))
+        {:row :species})
+ {:height 600})
+
+;; ## Example 11: Row × Column Grid Faceting
+;;
+;; Create a 2D grid of facets - the full power of faceting!
+;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
+
+(plot
+ (facet (* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm)
+           (scatter))
+        {:row :island :col :sex})
+ {:width 800 :height 900})
+
+;; **What happens here**:
+;; 1. Data split by both `:island` (3 values) and `:sex` (2 values)
+;; 2. Creates 3×2 = 6 panels in a grid
+;; 3. Column labels at top, row labels on left (rotated)
+;; 4. Shared scales across all panels for easy comparison
+;; 5. Per-panel rendering with proper x and y offsets
+
+;; ## Example 12: Custom Scale Domains
+;;
+;; Override auto-computed domains to control axis ranges
+
+;; Force y-axis to start at 0
+(plot
+ (* (data mtcars)
+    (mapping :wt :mpg)
+    (scatter)
+    (scale :y {:domain [0 40]})))
+
+;; **What happens here**:
+;; 1. Y-axis forced to [0, 40] instead of auto-computed [10.4, 33.9]
+;; 2. Useful for starting axes at meaningful values (like 0)
+;; 3. Custom domains compose via `*` operator
+
+;; Custom domains on both axes
+(plot
+ (* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (scale :x {:domain [30 65]})
+    (scale :y {:domain [10 25]})))
+
+;; **What happens here**:
+;; 1. Both axes use custom ranges
+;; 2. Zooms into a specific region of the data
+;; 3. Useful for focusing on areas of interest or ensuring consistent scales across multiple plots
+
 ;; # Faceting Exploration
 ;;
 ;; Let's explore faceting to see what architectural questions emerge.
-
-;; ## Example 9: Simple Column Faceting
-;;
-;; Facet a scatter plot by species - this should create 3 side-by-side plots.
 
 (kind/pprint
  (inspect-layers
