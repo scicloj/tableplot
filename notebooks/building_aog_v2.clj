@@ -880,7 +880,7 @@
              :x-min (:x-min bar)
              :x-max (:x-max bar)
              :height (:height bar)
-             :attribs {:fill "#619CFF"
+             :attribs {:fill "#333333"
                        :stroke "#FFFFFF"
                        :stroke-width 1
                        :opacity alpha}})
