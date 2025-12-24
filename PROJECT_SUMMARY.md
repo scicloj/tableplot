@@ -763,7 +763,7 @@ This design exploration is **not a replacement** for current Tableplot APIs, but
 
 ### Documentation Structure
 
-The notebook follows a clear narrative (~71,700 lines):
+The notebook follows a clear narrative (~1,600 lines):
 1. **Context & Motivation** - Why explore alternatives
 2. **Inspiration** - AlgebraOfGraphics.jl concepts
 3. **Design Exploration** - Evolution from nested → flat+plain → flat+namespaced
@@ -776,6 +776,64 @@ The notebook follows a clear narrative (~71,700 lines):
 10. **Integration Path** - Coexistence with V1/V2
 11. **Decision Points** - Open questions for community feedback
 12. **Summary** - Key insights and implementation status
+
+### Recent Simplifications (2025-12-23)
+
+The notebook underwent code simplification to focus on demonstrating design directions:
+
+**Helper Functions Added** (~50 lines saved):
+- `make-axes` - Extract repeated axis logic for thi.ng/geom
+- `make-vega-encoding` - Build Vega-Lite encodings from layer aesthetics
+- `group-by-color-plotly` - Group data by color for Plotly traces
+
+**Code Reductions**:
+- `compute-linear-regression`: 50 → 4 lines (uses only 2 points for straight line)
+- `layer->scatter-spec`: 54 → 28 lines (using make-axes)
+- `layer->line-spec`: 54 → 32 lines (using make-axes)
+- `layer->vega-scatter`: 19 → 3 lines (using make-vega-encoding)
+- `layer->vega-line`: 27 → 10 lines (using make-vega-encoding)
+- `layer->plotly-trace`: 122 → 68 lines (using group-by-color-plotly)
+- `layers->svg`: Simplified panel calculation, removed branching
+
+**Restorations After Review**:
+1. **Empty domain check** - `infer-domain` handles empty arrays safely (returns [0 1])
+2. **2-point regression** - Linear regression uses exactly 2 points (start/end) since it's a straight line
+3. **Faceting support** - Vega-Lite target supports `:facet`, `:col`, `:row` aesthetics with proper dimensions
+
+**Total Reduction**: ~150-200 lines while maintaining full functionality
+
+### Faceting Architecture Research
+
+**Key Insight**: Proper faceting involves sophisticated architectural decisions beyond "render multiple times"
+
+**AlgebraOfGraphics.jl Hybrid Scale Strategy** (see `docs/faceting_architecture_research.md`):
+
+| Scale Type | Scope | Why |
+|------------|-------|-----|
+| Categorical (color groups) | Global | Consistency across facets |
+| Continuous positional (X, Y) | Per-facet | Each panel shows optimal range |
+| Continuous other (size, alpha) | Global | Maintains visual encoding |
+
+**Separation of Concerns**:
+- **Scale computation**: Determines domain/range
+- **Axis linking**: Visual alignment (`:all`, `:colwise`, `:rowwise`, `:none`)
+
+**Data Model**: Multi-dimensional arrays where dimensions = groupings, sliced via broadcast indexing
+
+**Pipeline**:
+1. Compute categorical scales globally
+2. Create grid positions from faceting aesthetics
+3. For each grid cell: slice data, compute per-facet X/Y scales, use global other scales
+4. Render each panel
+5. Apply axis linking, hide decorations, add labels
+
+**Current Status**: Faceting supported in Vega-Lite target only. For `:geom` target, would require ~150-200 lines implementing:
+- Data partitioning by faceting variable
+- Global scale inference (with per-facet option for X/Y)
+- Modified rendering to accept provided scales
+- SVG grid layout with viewBox positioning
+
+**Design Decision**: Keep Vega-Lite-only faceting for demo, acknowledge architectural complexity honestly
 
 ## V1: AlgebraOfGraphics Implementation
 
