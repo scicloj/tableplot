@@ -611,6 +611,40 @@
 
 ;; ### Helper Functions
 
+(defn- split-by-facets
+  "Split a layer's data by facet variables.
+  
+  Returns: Vector of {:facet-label label, :layer layer-with-subset} maps
+  If no faceting, returns vector with single element containing original layer."
+  [layer]
+  (let [col-var (:aog/col layer)
+        row-var (:aog/row layer)
+        data (:aog/data layer)]
+
+    (if-not (or col-var row-var)
+      ;; No faceting - return original layer
+      [{:facet-label nil :layer layer}]
+
+      ;; Has faceting - split data
+      (let [dataset (if (tc/dataset? data) data (tc/dataset data))
+
+            ;; For now, only handle column faceting
+            facet-var (or col-var row-var)
+            facet-vals (vec (get dataset facet-var))
+            facet-categories (distinct facet-vals)
+
+            ;; Group indices by facet value
+            grouped (group-by #(nth facet-vals %) (range (count facet-vals)))]
+
+        ;; Create one layer per facet group
+        (mapv (fn [facet-cat]
+                (let [indices (get grouped facet-cat)
+                      subset (tc/select-rows dataset indices)
+                      new-layer (assoc layer :aog/data subset)]
+                  {:facet-label facet-cat
+                   :layer new-layer}))
+              (sort facet-categories))))))
+
 (defn- layer->points
   "Convert layer to point data for rendering."
   [layer]
@@ -1088,6 +1122,22 @@
            :aog/bins :sturges}
           (update-keys opts #(keyword "aog" (name %))))))
 
+(defn facet
+  "Add faceting to a layer specification.
+  
+  Args:
+  - layer-spec: Layer or vector of layers
+  - facet-spec: Map with :row and/or :col keys specifying faceting variables
+  
+  Examples:
+  (facet layer {:col :species})
+  (facet layer {:row :sex :col :island})"
+  [layer-spec facet-spec]
+  (let [facet-keys (update-keys facet-spec #(keyword "aog" (name %)))]
+    (if (vector? layer-spec)
+      (mapv #(merge % facet-keys) layer-spec)
+      (merge layer-spec facet-keys))))
+
 ;; Test histogram computation in isolation
 
 (plot
@@ -1122,11 +1172,147 @@
                      {:plottype (:aog/plottype layer)
                       :transformation (:aog/transformation layer)
                       :aesthetics (select-keys layer [:aog/x :aog/y :aog/color])
+                      :faceting (select-keys layer [:aog/row :aog/col])
                       :data-rows (when-let [data (:aog/data layer)]
                                    (if (tc/dataset? data)
                                      (tc/row-count data)
                                      (count data)))})
                    layers-vec)}))
+
+;; # Faceting: Architectural Questions Revealed
+;;
+;; Implementing faceting has exposed several important design questions:
+;;
+;; ## 1. Statistical Transforms Must Be Per-Facet
+;;
+;; **Example**: Histogram of bill-length faceted by species
+;; - Semantically: User expects 3 separate histograms (one per species)
+;; - Implementation: Must split data by `:species` BEFORE computing histograms
+;; - Implication: Can't compute transforms before knowing about facets
+;;
+;; **Current architecture**: We apply transforms in `plot-impl` after extracting points
+;; **Needed**: Apply transforms to each facet group separately
+;;
+;; ## 2. Domain Computation: Shared vs Free Scales
+;;
+;; **Shared scales** (ggplot2 default):
+;; - All facets use same x/y domain
+;; - Pro: Easy to compare across facets
+;; - Con: Facets with fewer observations may have compressed ranges
+;;
+;; **Free scales**:
+;; - Each facet optimizes its own domain
+;; - Pro: Each facet uses full visual range
+;; - Con: Harder to compare magnitudes across facets
+;;
+;; **Decision**: Start with shared scales (simpler), add `:scales` option later
+;;
+;; ## 3. Delegation Strategy: Control vs Leverage
+;;
+;; **Our principle**: We control semantics, targets handle presentation
+;;
+;; **What we control**:
+;; - Data splitting by facet variable
+;; - Per-facet transform computation
+;; - Domain computation (shared or free)
+;; - Color scale consistency
+;;
+;; **What targets can handle**:
+;; - `:geom` - we compute layout positions manually
+;; - `:vl`/`:plotly` - could use their grid layout features
+;;
+;; ## 4. Rendering Architecture for :geom
+;;
+;; **Challenge**: thi.ng/geom-viz doesn't support multi-panel layouts
+;;
+;; **Needed**:
+;; 1. Calculate panel dimensions (width / num-facets)
+;; 2. Calculate panel positions (x-offsets)
+;; 3. Create mini-plot for each facet at its position
+;; 4. Add facet labels  
+;; 5. Combine into single SVG
+;;
+;; **Complexity**: Significant refactoring of plot-impl :geom
+;;
+;; ## 5. The Core Insight
+;;
+;; **Faceting reveals the same pattern as statistical transforms**:
+;; - We MUST control the semantics (data splitting, per-group computation)
+;; - But we CAN delegate presentation (layout, when targets support it)
+;; - This validates our minimal delegation strategy
+;;
+;; **For statistical transforms + faceting**:
+;; ```clojure
+;; (plot (facet (* (data penguins)
+;;                 (mapping :bill-length-mm nil)
+;;                 (histogram))
+;;              {:col :species}))
+;; ```
+;;
+;; This requires:
+;; 1. Split data by species (3 groups)
+;; 2. Compute histogram for EACH group (per-facet transforms)
+;; 3. Collect domains across all groups (shared scales)
+;; 4. Render 3 mini-histograms side-by-side
+;;
+;; **This is our value proposition**: Compute on JVM, send summaries to browser.
+;; With faceting, even more important!"
+
+;; # Faceting Exploration
+;;
+;; Let's explore faceting to see what architectural questions emerge.
+
+;; ## Faceting Design Decisions
+;;
+;; After prototyping, we've decided:
+;;
+;; 1. **We control semantics** - Split data, compute transforms per-facet, manage domains
+;; 2. **Targets handle presentation** - Layout and rendering (when they can)
+;; 3. **Shared scales by default** - All facets use same domain (easier comparison)
+;; 4. **Statistical transforms per-facet** - Histogram by species = 3 separate histograms
+;;
+;; ## Implementation Strategy
+;;
+;; 1. `split-by-facets` - Groups data by facet variable(s)
+;; 2. Apply transforms to each facet group separately
+;; 3. Compute domains across all facets (for shared scales)
+;; 4. Render each facet as mini-plot
+;;
+;; For :geom target - compute layout positions manually
+;; For :vl/:plotly targets - could use their grid layout features
+
+;; ## Example 9: Simple Column Faceting
+;;
+;; Facet a scatter plot by species - this should create 3 side-by-side plots.
+
+(comment
+  ;; Test facet data splitting
+  (def test-layer
+    (first (facet (* (data penguins)
+                     (mapping :bill-length-mm :bill-depth-mm)
+                     (scatter))
+                  {:col :species})))
+
+  (def groups (split-by-facets test-layer))
+
+  (kind/pprint {:num-groups (count groups)
+                :labels (mapv :facet-label groups)
+                :row-counts (mapv #(tc/row-count (get-in % [:layer :aog/data])) groups)})
+
+  ;; Should render 3 side-by-side scatter plots
+  (plot
+   (facet (* (data penguins)
+             (mapping :bill-length-mm :bill-depth-mm)
+             (scatter))
+          {:col :species})))
+
+;; # Faceting Exploration
+;;
+;; Let's explore faceting to see what architectural questions emerge.
+
+;; ## Example 9: Simple Column Faceting
+;;
+;; Facet a scatter plot by species - this should create 3 side-by-side plots.
 
 (kind/pprint
  (inspect-layers
