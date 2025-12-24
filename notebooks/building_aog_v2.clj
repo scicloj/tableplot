@@ -4,7 +4,8 @@
 ;; *This notebook explores a fresh approach to composable plot specifications
 ;; in Clojure, inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/). 
 ;; It implements a **minimal delegation strategy** where we compute statistical transforms
-;; and leverage target capabilities for rendering.*
+;; (like regression lines, histograms, smoothing) and leverage rendering target capabilities
+;; for rendering.*
 ;;
 ;; ## A Bit of Context: Tableplot's Journey
 ;;
@@ -63,7 +64,7 @@
 ;; you get Vega-Lite—which is excellent for many use cases but has limitations
 ;; with certain coordinate systems. If you choose `plotly`, you get rich interactivity
 ;; but rendering static images programmatically becomes tricky. When you hit a
-;; limitation of your chosen target, switching means learning a different API.
+;; limitation of your chosen rendering target, switching means learning a different API.
 ;;
 ;; The intermediate representation between the API and the renderers uses Hanami
 ;; templates. Template substitution is powerful and flexible, but it can be
@@ -82,7 +83,7 @@
 ;; to explore fresh solutions in parallel. A clean-slate design lets us ask questions
 ;; that are harder to answer incrementally: Can we separate concerns more cleanly 
 ;; between the API layer, the intermediate representation, and the rendering?
-;; Can one API work with multiple targets? Can we use plain Clojure data structures
+;; Can one API work with multiple rendering targets? Can we use plain Clojure data structures
 ;; and standard library operations throughout? Can we make the intermediate
 ;; representation easier to inspect and debug?
 ;;
@@ -125,7 +126,7 @@
 ;; which eliminates the need for complex type inference!
 ;;
 ;; [**Kindly**](https://scicloj.github.io/kindly-noted/) is the visualization protocol that lets this notebook render
-;; plots in different environments ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.). Each target returns
+;; plots in different environments ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.). Each rendering target returns
 ;; a Kindly-wrapped spec.
 ;;
 ;; [**thi.ng/geom**](https://github.com/thi-ng/geom) gives us the static SVG target. It's excellent for
@@ -150,8 +151,10 @@
 ;; > "In a declarative framework, the user needs to express the _question_, and the 
 ;; > library will take care of creating the visualization."
 ;;
-;; The key innovation is moving from imperative drawing to 
-;; ["describing a higher-level 'intent' how your tabular data should be transformed"](https://aog.makie.org/dev/tutorials/intro-i).
+;; This approach of 
+;; ["describing a higher-level 'intent' how your tabular data should be transformed"](https://aog.makie.org/dev/tutorials/intro-i)
+;; aligns naturally with Clojure's functional and declarative tendencies—something
+;; we've seen in libraries like Hanami, Tableplot, and others in the ecosystem.
 ;;
 ;; ## Core Insight: Layers + Operations
 ;;
@@ -247,9 +250,9 @@
 
 (merge {:positional [:x] :named {:color :species}}
        {:positional [:y] :named {:size :body-mass}})
-;; Lost :x and :color!
+;; Lost `:x` and `:color`!
 
-;; Nested structure requires custom `merge-layer` function. Not ideal.
+;; Nested structure requires a custom `merge-layer` function. Not ideal.
 
 ;; ## The Solution: Flat Structure with Namespaced Keys
 
@@ -270,17 +273,42 @@
 ;; - All standard library operations work: `assoc`, `update`, `mapv`, `filter`, `into`
 ;; - Namespace map syntax `#:aog{...}` keeps things concise
 
+;; # Rendering Targets
+;;
+;; This API is designed to work with multiple **rendering targets**—the actual
+;; visualization libraries that produce the final output. Each target has different
+;; strengths:
+;;
+;; - **`:geom`** ([thi.ng/geom](https://github.com/thi-ng/geom)) - Static SVG, ggplot2-style, publication-quality
+;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Declarative, interactive web visualizations
+;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Rich interactivity, 3D support
+;;
+;; Currently, `:geom` is implemented. The others are planned.
+;;
+;; The key idea: you write your plot specification once using our API, and it can be
+;; rendered by different targets. This separates **what** you want to visualize from
+;; **how** it gets rendered.
+
 ;; # The Delegation Strategy
 ;;
-;; A key architectural decision: **What do we compute vs. what do targets handle?**
+;; A key architectural decision: **What do we compute vs. what do rendering targets handle?**
 ;;
 ;; ## The Core Principle
 ;;
 ;; **Statistical transforms require domain computation. Everything else can delegate.**
 ;;
+;; **What are statistical transforms?** These are operations that compute derived data
+;; from your raw data points:
+;; - **Regression lines** - computing best-fit lines through points ([linear regression](https://en.wikipedia.org/wiki/Linear_regression))
+;; - **Smoothing** - [LOESS](https://en.wikipedia.org/wiki/Local_regression) or other smoothing curves
+;; - **Histograms** - binning continuous data and counting occurrences ([histogram](https://en.wikipedia.org/wiki/Histogram))
+;; - **Density estimation** - [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation) curves
+;;
+;; These differ from simple visual mappings (scatter, line) which just render raw data.
+;;
 ;; ### Why Statistical Transforms Drive Everything
 ;;
-;; Consider histogram computation:
+;; Consider [histogram](https://en.wikipedia.org/wiki/Histogram) computation:
 ;;
 ;; ```clojure
 ;; (* (data penguins) (mapping :bill-length) (histogram))
@@ -292,19 +320,25 @@
 ;; ;; 4. Create bar chart from computed bins
 ;; ```
 ;;
-;; **The dependency**: We can't delegate domain to the target because we need it
-;; BEFORE we can compute bins. Statistical transforms are our **core value proposition**,
-;; so we accept this dependency.
+;; **The dependency**: We can't delegate domain to the rendering target because we need it
+;; BEFORE we can compute bins. Statistical transforms are an **important part of a good
+;; plotting library**, so we accept this dependency.
+;;
+;; **Why compute on the JVM?** When working with large datasets, we want to compute
+;; statistical summaries on the JVM (where we have access to the full data) and send
+;; only the summarized results to the browser. For example, with a million points, we
+;; compute the histogram bins on the JVM and send ~20 bars to Vega-Lite or Plotly,
+;; not a million points. This keeps visualizations fast and responsive.
 ;;
 ;; ## What We Compute (Minimal Set)
 ;;
 ;; **1. Statistical Transforms**
 ;; - Histogram, density, smoothing, regression
-;; - Why: Core value, consistency across targets, inspectability
+;; - Why: Core value, consistency across rendering targets, inspectability
 ;;
 ;; **2. Domain Computation (Only When Needed)**
 ;; - Only for aesthetics involved in statistical transforms
-;; - Coordinate-aware (Cartesian, polar, geographic)
+;; - Coordinate-aware ([Cartesian](https://en.wikipedia.org/wiki/Cartesian_coordinate_system), [polar](https://en.wikipedia.org/wiki/Polar_coordinate_system), [geographic](https://en.wikipedia.org/wiki/Geographic_coordinate_system))
 ;; - Why: Required by statistical transforms
 ;;
 ;; **3. Type Information**
@@ -316,24 +350,24 @@
 ;;
 ;; **1. Axis Rendering**
 ;; - Tick placement, "nice numbers", label formatting
-;; - Why: Targets are polished, edge cases are many
+;; - Why: Rendering targets are polished, edge cases are many
 ;;
 ;; **2. Range Computation**
 ;; - Pixel/visual coordinates
 ;; - Why: Tightly coupled with layout
 ;;
 ;; **3. Domains for Simple Plots**
-;; - When no transforms, targets compute from data
-;; - Why: Targets already do this well
+;; - When no transforms, rendering targets compute from data
+;; - Why: Rendering targets already do this well
 ;;
 ;; **4. Scale Merging**
-;; - Multi-layer plots: targets handle shared domains
+;; - Multi-layer plots: rendering targets handle shared domains
 ;; - Why: Avoid complex conflict resolution
 ;;
 ;; **5. Color Palette Application**
 ;; - We provide preferences (`:palette-preference :ggplot2`)
-;; - Targets apply from their libraries
-;; - Why: Targets have palette expertise
+;; - Rendering targets apply from their libraries
+;; - Why: Rendering targets have palette expertise
 ;;
 ;; ## The Key Insight: Tablecloth Provides Types!
 ;;
@@ -415,52 +449,9 @@
 
 (scatter {:alpha 0.5 :size 10})
 
-(defn line
-  "Create a line plot layer."
-  ([]
-   {:aog/plottype :line})
-  ([attrs]
-   (merge {:aog/plottype :line}
-          (update-keys attrs #(keyword "aog" (name %))))))
+;; (Removed line, histogram, smooth, density, target - not yet implemented in examples)
 
-(defn linear
-  "Add linear regression transformation.
-  
-  Computes best-fit line through points.
-  When combined with color aesthetic, computes separate regression per group."
-  []
-  {:aog/transformation :linear
-   :aog/plottype :line})
-
-;; Example:
-(linear)
-
-(defn histogram
-  "Plot type: Histogram with binning.
-  
-  We compute bins using Sturges' formula, then pass to target as bar chart."
-  ([] {:aog/plottype :histogram})
-  ([opts] (merge {:aog/plottype :histogram} opts)))
-
-(defn smooth
-  "Statistical transformation: LOESS smoothing."
-  []
-  {:aog/transformation :smooth
-   :aog/plottype :line})
-
-(defn density
-  "Statistical transformation: Kernel density estimation."
-  []
-  {:aog/transformation :density
-   :aog/plottype :area})
-
-(defn target
-  "Specify rendering target.
-  
-  Args:
-  - t: Target keyword - :geom (default), :vl (Vega-Lite), or :plotly"
-  [t]
-  {:aog/target t})
+;; (linear moved to just before first regression example)
 
 ;; ## Composition Operators
 
@@ -514,97 +505,9 @@
 
 (+ (scatter {:alpha 0.5}) (linear) (line))
 
-;; ## Type Information (Using Tablecloth)
+;; (Type Information section moved to just before example that demonstrates it)
 
-(defn infer-scale-type
-  "Get scale type from Tablecloth metadata or fallback to value inference.
-  
-  This is a KEY WIN from the delegation strategy: Tablecloth provides types,
-  so we don't need complex type inference!"
-  [layer aesthetic]
-  (let [data (:aog/data layer)
-        column-key (get layer aesthetic)]
-    (if (tc/dataset? data)
-      ;; Use Tablecloth type information (O(1) lookup!)
-      (let [col-type (col/typeof (data column-key))]
-        (cond
-          (#{:int8 :int16 :int32 :int64 :float32 :float64} col-type)
-          :continuous
-
-          (#{:local-date :local-date-time :instant} col-type)
-          :temporal
-
-          (#{:string :keyword :boolean :object} col-type)
-          :categorical))
-
-      ;; Fallback for plain maps (simple inference)
-      (infer-from-values (get data column-key)))))
-
-;; Example with plain data:
-(let [layer (first (* (data {:x [1.0 2.0 3.0] :y [4.0 5.0 6.0] :group ["a" "b" "c"]})
-                      (mapping :x :y {:color :group})
-                      (scatter)))]
-  {:x-type (infer-scale-type layer :aog/x)
-   :y-type (infer-scale-type layer :aog/y)})
-
-;; With Tablecloth datasets, this is O(1) lookup from metadata!
-;; (Full example shown later after loading penguins dataset)
-
-(defn- infer-from-values
-  "Simple fallback type inference for plain Clojure data."
-  [values]
-  (cond
-    (every? number? values) :continuous
-    (some #(instance? java.time.temporal.Temporal %) values) :temporal
-    :else :categorical))
-
-;; ## Domain Computation (Only for Statistical Transforms)
-
-(defmulti compute-domain
-  "Compute domain for an aesthetic, coordinate-system aware.
-  
-  ONLY called when statistical transforms need it. For simple plots,
-  we delegate domain computation to targets."
-  (fn [data aesthetic coord-system] coord-system))
-
-(defmethod compute-domain :cartesian
-  [data aesthetic _]
-  (let [values (filter some? data)] ;; Handle nils
-    (when (seq values)
-      [(apply min values) (apply max values)])))
-
-(defmethod compute-domain :polar
-  [data aesthetic _]
-  (case aesthetic
-    :theta [0 360] ;; Angular (wrapping)
-    :r [0 (apply max (filter some? data))])) ;; Radial
-
-(defmethod compute-domain :geographic
-  [data aesthetic _]
-  (case aesthetic
-    :lon [-180 180]
-    :lat [-90 90]))
-
-(defmethod compute-domain :default
-  [data aesthetic coord]
-  (throw (ex-info "Unsupported coordinate system"
-                  {:coord coord :aesthetic aesthetic})))
-
-;; Examples (after all defmethods are defined):
-
-;; Cartesian coordinates - simple min/max
-(compute-domain [32.1 45.3 59.6] :x :cartesian)
-
-;; Polar coordinates - angular wrapping
-(compute-domain [10 350 270 90] :theta :polar)
-
-;; Polar radial - from center
-(compute-domain [5 10 15] :r :polar)
-
-;; Geographic - bounded domains
-(compute-domain [-122.4 -118.2 -73.9] :lon :geographic)
-
-(compute-domain [37.7 34.0 40.7] :lat :geographic)
+;; (Removed Domain Computation section - compute-domain was unused, we use infer-domain instead)
 
 ;; ## Renderer
 
@@ -905,10 +808,45 @@
 ;; **What happens here**:
 ;; 1. We create layer spec with data, mapping, plottype
 ;; 2. We DON'T compute X/Y domains
-;; 3. Target receives data and computes domain itself
-;; 4. This is simpler - we delegate what targets do well!
+;; 3. Rendering target receives data and computes domain itself
+;; 4. This is simpler - we delegate what rendering targets do well!
 
 ;; ## Example 2: Type Information in Action
+
+;; Now let's see how we can use Tablecloth's type information.
+;; This is a KEY WIN: we get types for free, no complex inference needed!
+
+(defn- infer-from-values
+  "Simple fallback type inference for plain Clojure data."
+  [values]
+  (cond
+    (every? number? values) :continuous
+    (some #(instance? java.time.temporal.Temporal %) values) :temporal
+    :else :categorical))
+
+(defn infer-scale-type
+  "Get scale type from Tablecloth metadata or fallback to value inference.
+  
+  This is a KEY WIN from the delegation strategy: Tablecloth provides types,
+  so we don't need complex type inference!"
+  [layer aesthetic]
+  (let [data (:aog/data layer)
+        column-key (get layer aesthetic)]
+    (if (tc/dataset? data)
+      ;; Use Tablecloth type information (O(1) lookup!)
+      (let [col-type (col/typeof (data column-key))]
+        (cond
+          (#{:int8 :int16 :int32 :int64 :float32 :float64} col-type)
+          :continuous
+
+          (#{:local-date :local-date-time :instant} col-type)
+          :temporal
+
+          (#{:string :keyword :boolean :object} col-type)
+          :categorical))
+
+      ;; Fallback for plain maps (simple inference)
+      (infer-from-values (get data column-key)))))
 
 (kind/pprint
  (let [layer (* (data penguins)
@@ -924,6 +862,17 @@
 
 ;; ## Example 3: Multi-Layer Composition (Scatter + Linear Regression)
 
+;; First, we need a way to add statistical transforms. Let's add [linear regression](https://en.wikipedia.org/wiki/Linear_regression):
+
+(defn linear
+  "Add linear regression transformation.
+  
+  Computes best-fit line through points.
+  When combined with color aesthetic, computes separate regression per group."
+  []
+  {:aog/transformation :linear
+   :aog/plottype :line})
+
 (plot
  (+ (* (data penguins)
        (mapping :bill-length-mm :bill-depth-mm)
@@ -937,7 +886,7 @@
 ;; 2. Second layer: linear regression line
 ;; 3. `+` operator overlays them
 ;; 4. Both layers share same data and mapping
-;; 5. Target renders both with delegated domains
+;; 5. Rendering target renders both with delegated domains
 
 ;; ## Example 3b: Same Plot Using Distributivity
 
@@ -963,7 +912,7 @@
 ;; **What happens here**:
 ;; 1. `:color :species` maps species to color aesthetic
 ;; 2. Type system recognizes :species as categorical (via Tablecloth)
-;; 3. Target creates color scale automatically
+;; 3. Rendering target creates color scale automatically
 ;; 4. Three species = three colors in the scatter plot
 
 ;; ## Example 5: Multi-Layer with Color Groups
@@ -992,7 +941,7 @@
 ;; 1. Works with any dataset
 ;; 2. Different column names (:wt, :mpg instead of bill-*)
 ;; 3. Type inference works the same way
-;; 4. Target handles domain computation
+;; 4. Rendering target handles domain computation
 
 ;; ## Example 7: mtcars with Regression
 
@@ -1064,7 +1013,7 @@
 ;; **Key Wins**:
 ;; - Type information from Tablecloth (free!)
 ;; - Domain computation only for statistical transforms
-;; - Leverage target polish for rendering
+;; - Leverage rendering target polish for rendering
 ;; - Simple, focused implementation
 ;;
 ;; ## Implementation Status
@@ -1072,15 +1021,15 @@
 ;; - ✅ Core composition
 ;; - ✅ Type inference via Tablecloth
 ;; - ✅ Delegation strategy designed
-;; - ⚠️ Target implementations (in progress)
+;; - ⚠️ Rendering target implementations (in progress)
 ;; - ⚠️ Statistical transforms (linear done, others pending)
 ;;
 ;; ## Next Steps
 ;;
-;; 1. Complete target implementations with delegated domains
+;; 1. Complete rendering target implementations with delegated domains
 ;; 2. Implement histogram with domain computation
 ;; 3. Add coordinate system support
-;; 4. Test across all three targets
+;; 4. Test across all three rendering targets
 ;; 5. Gather community feedback
 
 ;; ---
