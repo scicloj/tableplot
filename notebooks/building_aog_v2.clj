@@ -645,6 +645,37 @@
                    :layer new-layer}))
               (sort facet-categories))))))
 
+(defn- has-faceting?
+  "Check if any layer has faceting."
+  [layers-vec]
+  (some #(or (:aog/col %) (:aog/row %)) layers-vec))
+
+(defn- organize-by-facets
+  "Organize multiple layers by their facet groups.
+  
+  Returns: Vector of {:facet-label label, :layers [layers-for-this-facet]}
+  All layers must have the same facet specification (or no faceting)."
+  [layers-vec]
+  (if-not (has-faceting? layers-vec)
+    ;; No faceting - return all layers in single group
+    [{:facet-label nil :layers layers-vec}]
+
+    ;; Has faceting - split each layer and group by facet
+    (let [;; Split each layer by its facets
+          all-split (mapcat split-by-facets layers-vec)
+
+          ;; Group by facet label
+          by-label (group-by :facet-label all-split)
+
+          ;; Get sorted facet labels
+          facet-labels (sort (keys by-label))]
+
+      ;; For each facet label, collect all layers for that facet
+      (mapv (fn [label]
+              {:facet-label label
+               :layers (mapv :layer (get by-label label))})
+            facet-labels))))
+
 (defn- layer->points
   "Convert layer to point data for rendering."
   [layer]
@@ -701,6 +732,152 @@
                      :height (:count bin)}))
                 (:bins-maps hist-result)))))))
 
+(defn- apply-transform
+  "Apply statistical transform to layer points.
+  
+  Returns structured result based on transformation type:
+  - nil (no transform): {:type :raw :points points}
+  - :linear: {:type :regression :points points :fitted fitted-points}
+  - :histogram: {:type :histogram :points points :bars bar-specs}"
+  [layer points]
+  (case (:aog/transformation layer)
+    :linear
+    (let [fitted (compute-linear-regression points)]
+      {:type :regression
+       :points points
+       :fitted (or fitted points)})
+
+    :histogram
+    (let [bins-method (:aog/bins layer)
+          bars (compute-histogram points bins-method)]
+      {:type :histogram
+       :points points
+       :bars bars})
+
+    ;; Default: no transformation
+    {:type :raw
+     :points points}))
+
+(defn- transform->domain-points
+  "Convert transform result to points for domain computation."
+  [transform-result]
+  (case (:type transform-result)
+    :regression (:fitted transform-result)
+    :histogram (mapcat (fn [bar]
+                         [{:x (:x-min bar) :y 0}
+                          {:x (:x-max bar) :y (:height bar)}])
+                       (:bars transform-result))
+    :raw (:points transform-result)))
+
+(defn- render-scatter-viz
+  "Render scatter plot visualization data."
+  [points alpha]
+  (let [color-groups (group-by :color points)]
+    (if (> (count color-groups) 1)
+      ;; Colored scatter
+      (let [colors (color-scale (keys color-groups))]
+        (mapv (fn [[color group-points]]
+                {:values (mapv (fn [p] [(:x p) (:y p)]) group-points)
+                 :layout viz/svg-scatter-plot
+                 :attribs {:fill (get colors color)
+                           :stroke (get colors color)
+                           :stroke-width 0.5
+                           :opacity alpha}})
+              color-groups))
+      ;; Simple scatter
+      [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
+        :layout viz/svg-scatter-plot
+        :attribs {:fill "#333333"
+                  :stroke "#333333"
+                  :stroke-width 0.5
+                  :opacity alpha}}])))
+
+(defn- render-line-viz
+  "Render line plot visualization data."
+  [points alpha]
+  (let [sorted-points (sort-by :x points)
+        color-groups (group-by :color sorted-points)]
+    (if (> (count color-groups) 1)
+      ;; Colored lines
+      (let [colors (color-scale (keys color-groups))]
+        (mapv (fn [[color group-points]]
+                {:values (mapv (fn [p] [(:x p) (:y p)])
+                               (sort-by :x group-points))
+                 :layout viz/svg-line-plot
+                 :attribs {:stroke (get colors color)
+                           :stroke-width 1
+                           :fill "none"
+                           :opacity alpha}})
+              color-groups))
+      ;; Simple line
+      [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
+        :layout viz/svg-line-plot
+        :attribs {:stroke "#333333"
+                  :stroke-width 1
+                  :fill "none"
+                  :opacity alpha}}])))
+
+(defn- render-regression-viz
+  "Render linear regression visualization data."
+  [points fitted alpha]
+  (let [color-groups (group-by :color points)]
+    (if (> (count color-groups) 1)
+      ;; Regression per group
+      (keep (fn [[color group-points]]
+              (when-let [group-fitted (compute-linear-regression group-points)]
+                (let [colors (color-scale (keys color-groups))
+                      line-data (mapv (fn [p] [(:x p) (:y p)]) group-fitted)]
+                  {:values line-data
+                   :layout viz/svg-line-plot
+                   :attribs {:stroke (get colors color)
+                             :stroke-width 2
+                             :fill "none"
+                             :opacity alpha}})))
+            color-groups)
+      ;; Single regression
+      (when fitted
+        [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
+          :layout viz/svg-line-plot
+          :attribs {:stroke "#333333"
+                    :stroke-width 2
+                    :fill "none"
+                    :opacity alpha}}]))))
+
+(defn- render-histogram-viz
+  "Render histogram visualization data."
+  [bars alpha]
+  (when bars
+    (mapv (fn [bar]
+            {:type :rect
+             :x-min (:x-min bar)
+             :x-max (:x-max bar)
+             :height (:height bar)
+             :attribs {:fill "#619CFF"
+                       :stroke "#FFFFFF"
+                       :stroke-width 1
+                       :opacity alpha}})
+          bars)))
+
+(defn- transform->viz-data
+  "Convert transform result to visualization data.
+  
+  Returns vector of viz specs ready for rendering."
+  [layer transform-result alpha]
+  (case (:type transform-result)
+    :regression
+    (render-regression-viz (:points transform-result)
+                           (:fitted transform-result)
+                           alpha)
+
+    :histogram
+    (render-histogram-viz (:bars transform-result) alpha)
+
+    :raw
+    (case (:aog/plottype layer)
+      :scatter (render-scatter-viz (:points transform-result) alpha)
+      :line (render-line-viz (:points transform-result) alpha)
+      [])))
+
 (defn- color-scale
   "ggplot2-like color scale for categorical data."
   [categories]
@@ -720,6 +897,84 @@
     (every? number? values) [(apply min values) (apply max values)]
     :else (vec (distinct values))))
 
+(defn- render-single-panel
+  "Render a single plot panel (for use in both faceted and non-faceted plots).
+  
+  Args:
+  - layers: Vector of layers to render in this panel
+  - x-domain, y-domain: Domain for x and y axes
+  - width, height: Panel dimensions
+  - x-offset: Horizontal offset for this panel (0 for non-faceted)
+  
+  Returns: Vector of SVG elements [background plot-group hist-rects]"
+  [layers x-domain y-domain width height x-offset]
+  (let [x-range (clojure.core/- (second x-domain) (first x-domain))
+        y-range (clojure.core/- (second y-domain) (first y-domain))
+        x-major (max 1 (clojure.core/* x-range 0.2))
+        y-major (max 1 (clojure.core/* y-range 0.2))
+
+        ;; Adjust x-axis range for panel offset
+        panel-left (clojure.core/+ 50 x-offset)
+        panel-right (clojure.core/+ panel-left (clojure.core/- width 100))
+
+        ;; Create axes
+        x-axis (viz/linear-axis
+                {:domain x-domain
+                 :range [panel-left panel-right]
+                 :major x-major
+                 :pos (clojure.core/- height 50)})
+        y-axis (viz/linear-axis
+                {:domain y-domain
+                 :range [(clojure.core/- height 50) 50]
+                 :major y-major
+                 :pos panel-left})
+
+;; Process each layer to viz data
+        layer-data (mapcat (fn [layer]
+                             (let [points (layer->points layer)
+                                   alpha (or (:aog/alpha layer) 1.0)
+                                   transform-result (apply-transform layer points)]
+                               (transform->viz-data layer transform-result alpha)))
+                           layers)
+
+        ;; Separate regular viz data from histogram rectangles
+        {viz-data true rect-data false} (group-by #(not= (:type %) :rect) layer-data)
+
+        ;; Create the plot spec for regular data
+        plot-spec {:x-axis x-axis
+                   :y-axis y-axis
+                   :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}
+                   :data (vec viz-data)}
+
+        ;; Background rectangle for this panel
+        bg-rect (svg/rect [panel-left 50]
+                          (clojure.core/- width 100)
+                          (clojure.core/- height 100)
+                          {:fill "#EBEBEB"
+                           :stroke "#FFFFFF"
+                           :stroke-width 1})
+
+        ;; Convert histogram rectangles to SVG
+        x-scale (fn [x] (clojure.core/+ panel-left
+                                        (clojure.core/* (/ (clojure.core/- x (first x-domain))
+                                                           (clojure.core/- (second x-domain) (first x-domain)))
+                                                        (clojure.core/- width 100))))
+        y-scale (fn [y] (clojure.core/- (clojure.core/- height 50)
+                                        (clojure.core/* (/ (clojure.core/- y (first y-domain))
+                                                           (clojure.core/- (second y-domain) (first y-domain)))
+                                                        (clojure.core/- height 100))))
+
+        hist-rects (mapv (fn [r]
+                           (svg/rect [(x-scale (:x-min r)) (y-scale (:height r))]
+                                     (clojure.core/- (x-scale (:x-max r)) (x-scale (:x-min r)))
+                                     (clojure.core/- (y-scale 0) (y-scale (:height r)))
+                                     (:attribs r)))
+                         (or rect-data []))]
+
+    {:background bg-rect
+     :plot (viz/svg-plot2d-cartesian plot-spec)
+     :hist-rects hist-rects}))
+
 ;; This is a placeholder - full implementation coming
 (defmethod plot-impl :geom
   [layers opts]
@@ -727,40 +982,33 @@
         width (or (:width opts) 600)
         height (or (:height opts) 400)
 
-        ;; IMPORTANT: We need to compute domains AFTER transforms
-        ;; because statistical transforms (like regression) can extend beyond raw data!
+        ;; Organize layers by facets
+        facet-groups (organize-by-facets layers-vec)
+        num-facets (count facet-groups)
+        is-faceted? (> num-facets 1)
 
-        ;; First, compute all transformed points
+        ;; Calculate panel dimensions
+        panel-width (if is-faceted?
+                      (/ width num-facets)
+                      width)
+
+        ;; Compute transformed points for ALL facets (for shared domain)
         all-transformed-points
-        (mapcat (fn [layer]
-                  (let [points (layer->points layer)
-                        transformation (:aog/transformation layer)]
-                    (cond
-                      (= transformation :linear)
-                      ;; For linear regression, use fitted points for domain
-                      (or (compute-linear-regression points) points)
+        (mapcat (fn [{:keys [layers]}]
+                  (mapcat (fn [layer]
+                            (let [points (layer->points layer)
+                                  transform-result (apply-transform layer points)]
+                              (transform->domain-points transform-result)))
+                          layers))
+                facet-groups)
 
-                      (= transformation :histogram)
-                      ;; For histogram, use bin data for domain
-                      (let [bins-method (:aog/bins layer)
-                            bars (compute-histogram points bins-method)]
-                        (mapcat (fn [bar]
-                                  [{:x (:x-min bar) :y 0}
-                                   {:x (:x-max bar) :y (:height bar)}])
-                                bars))
-
-                      :else
-                      ;; Otherwise use raw points
-                      points)))
-                layers-vec)
-
-        ;; Now compute domain from ALL points (including transformed)
+        ;; Compute shared domains
         x-vals (keep :x all-transformed-points)
         y-vals (keep :y all-transformed-points)
         x-domain (infer-domain x-vals)
         y-domain (infer-domain y-vals)
 
-        ;; Only proceed if we have valid numeric domains
+        ;; Validate domains
         valid? (and (vector? x-domain) (vector? y-domain)
                     (every? number? x-domain) (every? number? y-domain))]
 
@@ -770,162 +1018,40 @@
         [:p "Cannot render: non-numeric data or empty dataset"]
         [:pre (pr-str {:x-domain x-domain :y-domain y-domain})]])
 
-      ;; Render with thi.ng/geom
-      (let [x-range (clojure.core/- (second x-domain) (first x-domain))
-            y-range (clojure.core/- (second y-domain) (first y-domain))
-            x-major (max 1 (clojure.core/* x-range 0.2))
-            y-major (max 1 (clojure.core/* y-range 0.2))
+      ;; Render panels
+      (let [;; Render each facet panel
+            panels (map-indexed
+                    (fn [idx {:keys [facet-label layers]}]
+                      (let [x-offset (clojure.core/* idx panel-width)
+                            panel (render-single-panel layers x-domain y-domain
+                                                       panel-width height x-offset)]
+                        (assoc panel :facet-label facet-label :x-offset x-offset)))
+                    facet-groups)
 
-            ;; Create axes - thi.ng/geom handles tick placement
-            x-axis (viz/linear-axis
-                    {:domain x-domain
-                     :range [50 (clojure.core/- width 50)]
-                     :major x-major
-                     :pos (clojure.core/- height 50)})
-            y-axis (viz/linear-axis
-                    {:domain y-domain
-                     :range [(clojure.core/- height 50) 50]
-                     :major y-major
-                     :pos 50})
+            ;; Collect all elements
+            all-backgrounds (mapv :background panels)
+            all-plots (mapv :plot panels)
+            all-hist-rects (mapcat :hist-rects panels)
 
-            ;; Process each layer to viz data
-            layer-data (mapcat (fn [layer]
-                                 (let [points (layer->points layer)
-                                       plottype (:aog/plottype layer)
-                                       alpha (or (:aog/alpha layer) 1.0)
-                                       transformation (:aog/transformation layer)]
+            ;; Add facet labels if faceted
+            facet-labels (when is-faceted?
+                           (map-indexed
+                            (fn [idx {:keys [facet-label x-offset]}]
+                              (let [label-x (clojure.core/+ x-offset (/ panel-width 2))]
+                                (svg/text [label-x 30] (str facet-label)
+                                          {:text-anchor "middle"
+                                           :font-family "Arial, sans-serif"
+                                           :font-size 12
+                                           :font-weight "bold"})))
+                            panels))
 
-                                   (cond
-                                     ;; Histogram transformation
-                                     (= transformation :histogram)
-                                     (let [bins-method (:aog/bins layer)
-                                           bars (compute-histogram points bins-method)]
-                                       (when bars
-                                         (mapv (fn [bar]
-                                                 ;; Create rectangle for each bar
-                                                 {:type :rect
-                                                  :x-min (:x-min bar)
-                                                  :x-max (:x-max bar)
-                                                  :height (:height bar)
-                                                  :attribs {:fill "#619CFF"
-                                                            :stroke "#FFFFFF"
-                                                            :stroke-width 1
-                                                            :opacity alpha}})
-                                               bars)))
-
-                                     ;; Linear regression transformation
-                                     (= transformation :linear)
-                                     (let [color-groups (group-by :color points)]
-                                       (if (> (count color-groups) 1)
-                                         ;; Regression per group
-                                         (keep (fn [[color group-points]]
-                                                 (when-let [fitted (compute-linear-regression group-points)]
-                                                   (let [colors (color-scale (keys color-groups))
-                                                         line-data (mapv (fn [p] [(:x p) (:y p)]) fitted)]
-                                                     {:values line-data
-                                                      :layout viz/svg-line-plot
-                                                      :attribs {:stroke (get colors color)
-                                                                :stroke-width 2
-                                                                :fill "none"
-                                                                :opacity alpha}})))
-                                               color-groups)
-                                         ;; Single regression
-                                         (when-let [fitted (compute-linear-regression points)]
-                                           [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
-                                             :layout viz/svg-line-plot
-                                             :attribs {:stroke "#333333"
-                                                       :stroke-width 2
-                                                       :fill "none"
-                                                       :opacity alpha}}])))
-
-                                     ;; Scatter plot
-                                     (= plottype :scatter)
-                                     (let [color-groups (group-by :color points)]
-                                       (if (> (count color-groups) 1)
-                                         ;; Colored scatter
-                                         (let [colors (color-scale (keys color-groups))]
-                                           (mapv (fn [[color group-points]]
-                                                   {:values (mapv (fn [p] [(:x p) (:y p)]) group-points)
-                                                    :layout viz/svg-scatter-plot
-                                                    :attribs {:fill (get colors color)
-                                                              :stroke (get colors color)
-                                                              :stroke-width 0.5
-                                                              :opacity alpha}})
-                                                 color-groups))
-                                         ;; Simple scatter
-                                         [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
-                                           :layout viz/svg-scatter-plot
-                                           :attribs {:fill "#333333"
-                                                     :stroke "#333333"
-                                                     :stroke-width 0.5
-                                                     :opacity alpha}}]))
-
-                                     ;; Line plot
-                                     (= plottype :line)
-                                     (let [sorted-points (sort-by :x points)
-                                           color-groups (group-by :color sorted-points)]
-                                       (if (> (count color-groups) 1)
-                                         ;; Colored lines
-                                         (let [colors (color-scale (keys color-groups))]
-                                           (mapv (fn [[color group-points]]
-                                                   {:values (mapv (fn [p] [(:x p) (:y p)])
-                                                                  (sort-by :x group-points))
-                                                    :layout viz/svg-line-plot
-                                                    :attribs {:stroke (get colors color)
-                                                              :stroke-width 1
-                                                              :fill "none"
-                                                              :opacity alpha}})
-                                                 color-groups))
-                                         ;; Simple line
-                                         [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
-                                           :layout viz/svg-line-plot
-                                           :attribs {:stroke "#333333"
-                                                     :stroke-width 1
-                                                     :fill "none"
-                                                     :opacity alpha}}]))
-
-                                     :else [])))
-                               layers-vec)
-
-            ;; Separate regular viz data from histogram rectangles
-            {viz-data true rect-data false} (group-by #(not= (:type %) :rect) layer-data)
-
-            ;; Create the plot spec for regular data
-            plot-spec {:x-axis x-axis
-                       :y-axis y-axis
-                       :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}
-                       :data (vec viz-data)}
-
-            ;; Render to SVG with ggplot2-style background
-            bg-rect (svg/rect [50 50]
-                              (clojure.core/- width 100)
-                              (clojure.core/- height 100)
-                              {:fill "#EBEBEB"
-                               :stroke "#FFFFFF"
-                               :stroke-width 1})
-
-            ;; Convert histogram rectangles to SVG
-            ;; Need to map data coordinates to pixel coordinates
-            x-scale (fn [x] (clojure.core/+ 50 (clojure.core/* (/ (clojure.core/- x (first x-domain))
-                                                                  (clojure.core/- (second x-domain) (first x-domain)))
-                                                               (clojure.core/- width 100))))
-            y-scale (fn [y] (clojure.core/- (clojure.core/- height 50)
-                                            (clojure.core/* (/ (clojure.core/- y (first y-domain))
-                                                               (clojure.core/- (second y-domain) (first y-domain)))
-                                                            (clojure.core/- height 100))))
-
-            hist-rects (mapv (fn [r]
-                               (svg/rect [(x-scale (:x-min r)) (y-scale (:height r))]
-                                         (clojure.core/- (x-scale (:x-max r)) (x-scale (:x-min r)))
-                                         (clojure.core/- (y-scale 0) (y-scale (:height r)))
-                                         (:attribs r)))
-                             (or rect-data []))
-
+            ;; Combine into single SVG
             svg-elem (apply svg/svg
                             {:width width :height height}
-                            (concat [bg-rect]
-                                    [(viz/svg-plot2d-cartesian plot-spec)]
-                                    hist-rects))]
+                            (concat all-backgrounds
+                                    all-plots
+                                    all-hist-rects
+                                    (or facet-labels [])))]
 
         (kind/html (svg/serialize svg-elem))))))
 
@@ -1285,26 +1411,19 @@
 ;;
 ;; Facet a scatter plot by species - this should create 3 side-by-side plots.
 
-(comment
-  ;; Test facet data splitting
-  (def test-layer
-    (first (facet (* (data penguins)
-                     (mapping :bill-length-mm :bill-depth-mm)
-                     (scatter))
-                  {:col :species})))
+;; Test faceted scatter plot - 3 side-by-side plots
+(plot
+ (facet (* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm)
+           (scatter))
+        {:col :species}))
 
-  (def groups (split-by-facets test-layer))
-
-  (kind/pprint {:num-groups (count groups)
-                :labels (mapv :facet-label groups)
-                :row-counts (mapv #(tc/row-count (get-in % [:layer :aog/data])) groups)})
-
-  ;; Should render 3 side-by-side scatter plots
-  (plot
-   (facet (* (data penguins)
-             (mapping :bill-length-mm :bill-depth-mm)
-             (scatter))
-          {:col :species})))
+;; Test faceted histogram - per-species histograms with shared scales
+(plot
+ (facet (* (data penguins)
+           (mapping :bill-length-mm nil)
+           (histogram))
+        {:col :species}))
 
 ;; # Faceting Exploration
 ;;
