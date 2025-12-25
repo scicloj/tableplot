@@ -84,11 +84,10 @@
 ;; Some of these limitations will be addressed within the current APIs themselves—
 ;; we're actively working on improvements. But as we always intended, it's valuable
 ;; to explore fresh solutions in parallel. A fresh design lets us ask questions
-;; that are harder to answer incrementally: Can we better separate concerns
-;; between the API layer, the intermediate representation, and the rendering?
-;; Can one API work with multiple rendering targets? Can we use plain Clojure data structures
-;; and standard library operations throughout? Can we make the intermediate
-;; representation easier to inspect and debug?
+;; that are harder to answer incrementally: Can we design an API where the intermediate
+;; representation is plain maps that are easy to inspect and manipulate with standard
+;; operations, while working harmoniously with both a functional interface and multiple
+;; rendering targets?
 ;;
 ;; This notebook prototypes an alternative compositional API to explore these ideas.
 ;; It's not meant to replace the existing Tableplot APIs—it might become an additional
@@ -132,8 +131,8 @@
 ;; plots in different environments ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.). Each rendering target returns
 ;; a Kindly-wrapped spec.
 ;;
-;; [**thi.ng/geom**](https://github.com/thi-ng/geom) gives us the static SVG target for
-;; ggplot2-style visualizations that can be saved as images. We specifically use
+;; [**thi.ng/geom**](https://github.com/thi-ng/geom) gives us the static SVG target for visualizations that can be saved as images.
+;; We specifically use
 ;; [geom.viz](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/viz/demos.org) for data visualization.
 ;;
 ;; [**Fastmath**](https://github.com/generateme/fastmath) handles our statistical computations, particularly linear
@@ -147,7 +146,7 @@
 ;;
 ;; This design is inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/),
 ;; a visualization library that builds on decades of experience from systems
-;; like ggplot2 while introducing clearer compositional principles.
+;; like [ggplot2](https://ggplot2.tidyverse.org/) while introducing clear compositional principles.
 ;;
 ;; As the [AoG philosophy](https://aog.makie.org/stable/philosophy) states:
 
@@ -158,23 +157,26 @@
 ;; ["describing a higher-level 'intent' how your tabular data should be transformed"](https://aog.makie.org/dev/tutorials/intro-i)
 ;; aligns naturally with Clojure's functional and declarative tendencies—something
 ;; we've seen in libraries like Hanami, Oz, and others in the ecosystem.
+;;
+;; We chose AoG because it seemed small enough to grasp and reproduce, while still being
+;; reasonably complete in its scope.
 
 ;; ## Glossary: Visualization Terminology
 ;;
 ;; Before diving deeper, let's clarify some terms we'll use throughout:
 ;;
-;; **Domain** - The range of input values from your data. For a column of bill lengths 
-;; `[32.1, 45.3, 59.6]`, the domain is `[32.1, 59.6]`. This is *data space*.
+;; **Domain** - The extent of input values from your data. For a column of bill lengths 
+;; containing values 32.1, 45.3, and 59.6, the domain extends from 32.1 to 59.6. This is *data space*.
 ;;
-;; **Range** - The range of output values in the visualization. For an x-axis that spans 
-;; from pixel 50 to pixel 550, the range is `[50, 550]`. This is *visual space*.
+;; **Range** - The extent of output values in the visualization. For an x-axis that spans 
+;; from pixel 50 to pixel 550, the range extends from 50 to 550. This is *visual space*.
 ;;
 ;; **Scale** - The mapping function from domain to range. A [linear scale](https://en.wikipedia.org/wiki/Scale_(ratio))
 ;; maps data value 32.1 → pixel 50, and 59.6 → pixel 550, with proportional mapping in between.
 ;; Other scale types include logarithmic, time, and categorical.
 ;;
 ;; **Aesthetic** - A visual property that can encode data. Common aesthetics: `x` position, 
-;; `y` position, `color`, `size`, `shape`, `alpha` (transparency). Each aesthetic needs 
+;; `y` position, `color`, `size`, `shape`, `alpha` (opacity). Each aesthetic needs 
 ;; a scale to map data to visual values.
 ;;
 ;; **Mapping** - The connection between a data column and an aesthetic. "Map `:bill-length` 
@@ -193,8 +195,8 @@
 ;; **Layer** (in AoG sense) - A composable unit containing data, mappings, visual marks, 
 ;; and optional transforms. Different from ggplot2's "layer" (which means overlaid visuals).
 ;;
-;; **Rendering Target** - The library that produces final output: thi.ng/geom (SVG), 
-;; Vega-Lite (JSON spec), or Plotly (JavaScript).
+;; **Rendering Target** - The library that produces final output: thi.ng/geom, 
+;; Vega-Lite, or Plotly.
 
 ;; ## Core Insight: Layers + Operations
 ;;
@@ -208,8 +210,8 @@
 ;; - Visual marks (scatter, line, bar)
 ;; - Statistical transformations (regression, smoothing)
 ;;
-;; *(Note: This is a different notion from "layers" in ggplot2 and Vega-Lite's 
-;; [layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html), 
+;; *(Note: This is a different notion from "layers" in
+;; the [layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html) used by ggplot2 and Vega-Lite,
 ;; where layers specifically refer to overlaid visual marks. In AoG, "layer" is the fundamental 
 ;; compositional unit containing data, mappings, visuals, and transformations.)*
 ;;
@@ -267,7 +269,7 @@
 ;; true to Clojure idioms: using plain data structures (maps, not objects), enabling
 ;; standard library operations like `merge`, `assoc`, and `filter`, maintaining the
 ;; compositional benefits, and making the intermediate representation transparent and
-;; inspectable. How do we get the algebraic elegance of AoG while keeping everything
+;; inspectable. How do we get the compositional approach of AoG while keeping everything
 ;; as simple Clojure data?
 
 ;; # Design Exploration
@@ -319,11 +321,9 @@
 ;; visualization libraries that produce the final output. Each target has different
 ;; strengths:
 ;;
-;; - **`:geom`** ([thi.ng/geom](https://github.com/thi-ng/geom)) - Static SVG, ggplot2-style, publication-quality
-;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Declarative, interactive web visualizations
-;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Rich interactivity, 3D support
-;;
-;; Currently, `:geom` is implemented. The others are planned.
+;; - **`:geom`** ([thi.ng/geom](https://github.com/thi-ng/geom)) - Static SVG, easy to save to files
+;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Interactive web visualizations, some coordinate system limitations
+;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Interactive with 3D support, static export is tricky
 ;;
 ;; The key idea: you write your plot specification once using our API, and it can be
 ;; rendered by different targets. This separates **what** you want to visualize from
@@ -346,29 +346,33 @@
 ;;
 ;; These differ from simple visual mappings (scatter, line) which just render raw data.
 ;;
-;; ### Why Statistical Transforms Drive Everything
+;; ### Statistical Transforms Need Domains First
 ;;
 ;; Consider [histogram](https://en.wikipedia.org/wiki/Histogram) computation:
 ;;
 ;; ```clojure
 ;; (* (data penguins) (mapping :bill-length) (histogram))
 ;; 
-;; ;; Computation sequence:
-;; ;; 1. Must compute domain first: [32.1, 59.6]
-;; ;; 2. Use domain to decide bin edges  
-;; ;; 3. Compute bin counts
-;; ;; 4. Create bar chart from computed bins
 ;; ```
+
+;; Computation sequence:
+;; 1. Must compute domain first: [32.1, 59.6]
+;; 2. Use domain to decide bin edges  
+;; 3. Compute bin counts
+;; 4. Create bar chart from computed bins
 ;;
 ;; **The dependency**: We can't delegate domain to the rendering target because we need it
 ;; BEFORE we can compute bins. Statistical transforms are an **important part of a
 ;; plotting library**, so we accept this dependency.
 ;;
-;; **Why compute on the JVM?** When working with large datasets, we want to compute
-;; statistical summaries on the JVM (where we have access to the full data) and send
-;; only the summarized results to the browser. For example, with a million points, we
-;; compute the histogram bins on the JVM and send ~20 bars to Vega-Lite or Plotly,
-;; not a million points. This keeps visualizations fast and responsive.
+;; **Why compute in our library rather than delegate to rendering targets?** This project is
+;; part of a holistic toolkit for data and science. We need visualizations to be consistent
+;; with statistical algorithms - when you compute a regression or histogram using Clojure's
+;; statistical libraries, the visualization should show exactly the same calculation.
+;; Additionally, when working with large datasets, we want to compute statistical summaries
+;; in our library (where we have access to the full data) and send only the summarized
+;; results to rendering targets. For example, with a million points, we compute the histogram
+;; bins and send ~20 bars to Vega-Lite or Plotly, not a million points.
 ;;
 ;; ## What We Compute (Minimal Set)
 ;;
@@ -1977,7 +1981,7 @@
     (scale :y {:domain [0 40]})))
 
 ;; **What happens here**:
-;; 1. Y-axis forced to [0, 40] instead of auto-computed [10.4, 33.9]
+;; 1. Y-axis forced to extend from 0 to 40 instead of auto-computed range from 10.4 to 33.9
 ;; 2. Useful for starting axes at meaningful values (like 0)
 ;; 3. Custom domains compose via `*` operator
 
