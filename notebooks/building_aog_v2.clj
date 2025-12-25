@@ -42,7 +42,7 @@
 ;;
 ;; This work is also happening in the context of the
 ;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/),
-;; recently initiated by Timothy Pratley with new spirit and a stronger focus on
+;; recently reinitiated by Timothy Pratley with new spirit and a stronger focus on
 ;; open-source collaboration.
 ;;
 ;; With that context in mind, let's explore what we're building.
@@ -101,6 +101,7 @@
 ;; Here's what we use and why:
 
 (ns building-aog-v2
+  (:refer-clojure :exclude [* +])
   (:require
    ;; Tablecloth - Dataset manipulation
    [tablecloth.api :as tc]
@@ -139,8 +140,7 @@
 ;; regression. It's a comprehensive math library for Clojure.
 ;;
 ;; [**RDatasets**](https://vincentarelbundock.github.io/Rdatasets/articles/data.html) provides classic datasets (penguins, mtcars, iris) for examples.
-;; These are the same datasets you'd find in R or Python data science tutorials, made available
-;; in Clojure through [metamorph.ml](https://github.com/scicloj/metamorph.ml).
+;; It is made available in Clojure through [metamorph.ml](https://github.com/scicloj/metamorph.ml).
 
 ;; # Inspiration: AlgebraOfGraphics.jl
 ;;
@@ -458,6 +458,40 @@
        (some #(= "aog" (namespace %))
              (keys (first x)))))
 
+;; ## Composition Operators
+
+(defn *
+  "Merge layer specifications (composition)."
+  ([x] (if (map? x) [x] x))
+  ([x y]
+   (cond
+     (and (map? x) (map? y))
+     [(merge x y)]
+
+     (and (map? x) (vector? y))
+     (mapv #(merge x %) y)
+
+     (and (vector? x) (map? y))
+     (mapv #(merge % y) x)
+
+     (and (vector? x) (vector? y))
+     (vec (for [a x, b y] (merge a b)))))
+  ([x y & more]
+   (reduce * (* x y) more)))
+
+(defn +
+  "Combine multiple layer specifications for overlay (sum).
+  
+  When used in threading with layers as first arg, distributes layers over the rest:
+  (-> layers (+ (scatter) (linear))) → (* layers (+ (scatter) (linear)))"
+  [& layer-specs]
+  (if (and (>= (count layer-specs) 3) ; Threading produces 3+ args
+           (layers? (first layer-specs)))
+    ;; First arg is layers - distribute over the rest
+    (* (first layer-specs) (apply + (rest layer-specs)))
+    ;; Normal concatenation
+    (vec (mapcat #(if (vector? %) % [%]) layer-specs))))
+
 ;; ## Constructors
 
 (defn data
@@ -538,6 +572,96 @@
      [(merge {:aog/plottype :scatter}
              (update-keys attrs-or-layers #(keyword "aog" (name %))))])))
 
+(defn linear
+  "Add linear regression transformation.
+  
+  Computes best-fit line through points.
+  When combined with color aesthetic, computes separate regression per group.
+  
+  Returns a vector containing a linear regression layer.
+  
+  When called with layers-or-data as first arg, merges linear into those layers."
+  ([]
+   [{:aog/transformation :linear
+     :aog/plottype :line}])
+  ([layers-or-data]
+   (let [layers (if (layers? layers-or-data)
+                  layers-or-data
+                  (data layers-or-data))]
+     (* layers (linear)))))
+
+(defn histogram
+  "Add histogram transformation.
+  
+  Bins continuous data and counts occurrences. Requires domain computation
+  to determine bin edges.
+  
+  Options:
+  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number
+  
+  Returns a vector containing a histogram layer.
+  
+  When called with layers-or-data as first arg, merges histogram into those layers."
+  ([]
+   [{:aog/transformation :histogram
+     :aog/plottype :bar
+     :aog/bins :sturges}])
+  ([opts-or-layers]
+   (if (layers? opts-or-layers)
+     (* opts-or-layers (histogram))
+     [(merge {:aog/transformation :histogram
+              :aog/plottype :bar
+              :aog/bins :sturges}
+             (update-keys opts-or-layers #(keyword "aog" (name %))))]))
+  ([layers opts]
+   (* layers (histogram opts))))
+
+(defn facet
+  "Add faceting to a layer specification.
+  
+  Args:
+  - layer-spec: Layer or vector of layers
+  - facet-spec: Map with :row and/or :col keys specifying faceting variables
+  
+  Returns a vector of layers with faceting applied.
+  
+  Examples:
+  (facet layers {:col :species})
+  (facet layers {:row :sex :col :island})
+  
+  Threading-friendly:
+  (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
+  [layer-spec facet-spec]
+  (let [facet-keys (update-keys facet-spec #(keyword "aog" (name %)))]
+    (if (vector? layer-spec)
+      (mapv #(merge % facet-keys) layer-spec)
+      [(merge layer-spec facet-keys)])))
+
+(defn scale
+  "Specify scale properties for an aesthetic.
+  
+  Args:
+  - aesthetic: Keyword like :x, :y, :color
+  - opts: Map with scale options:
+    - :domain - [min max] for continuous, or vector of categories
+    - :transform - :log, :sqrt, :identity (default)
+  
+  Returns a vector containing scale specification.
+  
+  When called with layers as first arg, merges scale into those layers.
+  
+  Examples:
+  (scale :x {:domain [0 100]})
+  (scale :y {:transform :log})
+  
+  Threading-friendly:
+  (-> penguins (mapping :x :y) (scatter) (scale :x {:domain [30 65]}))"
+  ([aesthetic opts]
+   (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
+     [{scale-key opts}]))
+  ([layers aesthetic opts]
+   (* layers (scale aesthetic opts))))
+
 ;; Examples:
 (scatter)
 
@@ -549,51 +673,6 @@
 
 ;; (linear moved to just before first regression example)
 
-;; ## Composition Operators
-
-(defn *
-  "Merge layer specifications (composition)."
-  ([x] (if (map? x) [x] x))
-  ([x y]
-   (cond
-     (and (map? x) (map? y))
-     [(merge x y)]
-
-     (and (map? x) (vector? y))
-     (mapv #(merge x %) y)
-
-     (and (vector? x) (map? y))
-     (mapv #(merge % y) x)
-
-     (and (vector? x) (vector? y))
-     (vec (for [a x, b y] (merge a b)))))
-  ([x y & more]
-   (reduce * (* x y) more)))
-
-;; Examples - demonstrating the distributive property:
-
-;; Map × Map → [Map]
-(* (data {:x [1 2] :y [3 4]}) (mapping :x :y))
-
-;; Full composition
-(* (data {:x [1 2] :y [3 4]}) (mapping :x :y) (scatter))
-
-;; Distributive: a * (b + c) = (a * b) + (a * c)
-;; (Full example with dataset shown later after loading penguins)
-
-(defn +
-  "Combine multiple layer specifications for overlay (sum).
-  
-  When used in threading with layers as first arg, distributes layers over the rest:
-  (-> layers (+ (scatter) (linear))) → (* layers (+ (scatter) (linear)))"
-  [& layer-specs]
-  (if (and (>= (count layer-specs) 3) ; Threading produces 3+ args
-           (layers? (first layer-specs)))
-    ;; First arg is layers - distribute over the rest
-    (* (first layer-specs) (apply + (rest layer-specs)))
-    ;; Normal concatenation
-    (vec (mapcat #(if (vector? %) % [%]) layer-specs))))
-
 ;; ## Type Information (Using Tablecloth)
 
 (defn- infer-from-values
@@ -603,6 +682,43 @@
     (every? number? values) :continuous
     (some #(instance? java.time.temporal.Temporal %) values) :temporal
     :else :categorical))
+
+(defn- categorical-type?
+  "Check if a column type should be treated as categorical.
+
+  Categorical types create groups for statistical transforms.
+  Continuous and temporal types are visual-only by default."
+  [col-type]
+  (contains? #{:string :keyword :boolean :symbol :text} col-type))
+
+(defn- get-grouping-column
+  "Determine which column should be used for grouping statistical transforms.
+
+  Logic (matching AlgebraOfGraphics.jl):
+  1. Explicit :aog/group always wins
+  2. If :aog/color is categorical type, use it for grouping
+  3. Otherwise, no grouping (continuous/temporal color is visual-only)
+
+  Returns the column keyword, or nil if no grouping."
+  [layer dataset]
+  (let [group-col (:aog/group layer)
+        color-col (:aog/color layer)]
+    (cond
+      ;; Explicit group wins
+      group-col group-col
+
+      ;; Check if color column is categorical
+      (and color-col dataset)
+      (let [col-type (try
+                       (col/typeof (get dataset color-col))
+                       (catch Exception _
+                         ;; Fallback for plain Clojure data
+                         (infer-from-values (get dataset color-col))))]
+        (when (categorical-type? col-type)
+          color-col))
+
+      ;; No grouping
+      :else nil)))
 
 ;; Examples moved to after function definitions
 
@@ -818,11 +934,16 @@
         y-vals (when y-col (vec (get dataset y-col)))
         color-col (:aog/color layer)
         color-vals (when color-col
-                     (vec (get dataset color-col)))]
+                     (vec (get dataset color-col)))
+        ;; Get grouping column for statistical transforms
+        group-col (get-grouping-column layer dataset)
+        group-vals (when group-col
+                     (vec (get dataset group-col)))]
     (map-indexed (fn [i _]
                    (cond-> {:x (nth x-vals i)}
                      y-vals (assoc :y (nth y-vals i))
-                     color-vals (assoc :color (nth color-vals i))))
+                     color-vals (assoc :color (nth color-vals i))
+                     group-vals (assoc :group (nth group-vals i))))
                  x-vals)))
 
 (defn- compute-linear-regression
@@ -866,39 +987,76 @@
 
 (defn- apply-transform
   "Apply statistical transform to layer points.
-  
+
+  Handles grouping: if points contain :group key, applies transform per group.
+
   Returns structured result based on transformation type:
   - nil (no transform): {:type :raw :points points}
-  - :linear: {:type :regression :points points :fitted fitted-points}
-  - :histogram: {:type :histogram :points points :bars bar-specs}"
+  - :linear: {:type :regression :points points :fitted fitted-points} or :grouped map
+  - :histogram: {:type :histogram :points points :bars bar-specs} or :grouped map"
   [layer points]
-  (case (:aog/transformation layer)
-    :linear
-    (let [fitted (compute-linear-regression points)]
-      {:type :regression
-       :points points
-       :fitted (or fitted points)})
+  (let [has-groups? (some :group points)]
+    (case (:aog/transformation layer)
+      :linear
+      (if has-groups?
+        ;; Group-wise regression
+        (let [grouped (group-by :group points)
+              group-results (into {}
+                                  (map (fn [[group-val group-points]]
+                                         [group-val
+                                          {:fitted (compute-linear-regression group-points)
+                                           :points group-points}])
+                                       grouped))]
+          {:type :grouped-regression
+           :points points
+           :groups group-results})
+        ;; Single regression
+        (let [fitted (compute-linear-regression points)]
+          {:type :regression
+           :points points
+           :fitted (or fitted points)}))
 
-    :histogram
-    (let [bins-method (:aog/bins layer)
-          bars (compute-histogram points bins-method)]
-      {:type :histogram
-       :points points
-       :bars bars})
+      :histogram
+      (if has-groups?
+        ;; Group-wise histogram
+        (let [grouped (group-by :group points)
+              group-results (into {}
+                                  (map (fn [[group-val group-points]]
+                                         [group-val
+                                          {:bars (compute-histogram group-points (:aog/bins layer))
+                                           :points group-points}])
+                                       grouped))]
+          {:type :grouped-histogram
+           :points points
+           :groups group-results})
+        ;; Single histogram
+        (let [bins-method (:aog/bins layer)
+              bars (compute-histogram points bins-method)]
+          {:type :histogram
+           :points points
+           :bars bars}))
 
-    ;; Default: no transformation
-    {:type :raw
-     :points points}))
+      ;; Default: no transformation
+      {:type :raw
+       :points points})))
 
 (defn- transform->domain-points
   "Convert transform result to points for domain computation."
   [transform-result]
   (case (:type transform-result)
     :regression (:fitted transform-result)
+    :grouped-regression (mapcat (fn [{:keys [fitted]}] fitted)
+                                (vals (:groups transform-result)))
     :histogram (mapcat (fn [bar]
                          [{:x (:x-min bar) :y 0}
                           {:x (:x-max bar) :y (:height bar)}])
                        (:bars transform-result))
+    :grouped-histogram (mapcat (fn [{:keys [bars]}]
+                                 (mapcat (fn [bar]
+                                           [{:x (:x-min bar) :y 0}
+                                            {:x (:x-max bar) :y (:height bar)}])
+                                         bars))
+                               (vals (:groups transform-result)))
     :raw (:points transform-result)))
 
 (defn- color-scale
@@ -976,35 +1134,50 @@
 
 (defmethod render-layer [:geom :linear]
   [target layer transform-result alpha]
-  (let [points (:points transform-result)
-        fitted (:fitted transform-result)
-        color-groups (group-by :color points)]
-    (if (> (count color-groups) 1)
-      ;; Regression per group
-      (keep (fn [[color group-points]]
-              (when-let [group-fitted (compute-linear-regression group-points)]
-                (let [colors (color-scale (keys color-groups))
-                      line-data (mapv (fn [p] [(:x p) (:y p)]) group-fitted)]
-                  {:values line-data
-                   :layout viz/svg-line-plot
-                   :attribs {:stroke (get colors color)
-                             :stroke-width 2
-                             :fill "none"
-                             :opacity alpha}})))
-            color-groups)
-      ;; Single regression
-      (when fitted
-        [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
-          :layout viz/svg-line-plot
-          :attribs {:stroke ggplot2-default-mark
-                    :stroke-width 2
-                    :fill "none"
-                    :opacity alpha}}]))))
+  (if (= :grouped-regression (:type transform-result))
+    ;; Grouped regression - one line per group
+    (let [groups (:groups transform-result)
+          color-groups (group-by :color (:points transform-result))
+          colors (color-scale (keys color-groups))]
+      (keep (fn [[group-val {:keys [fitted]}]]
+              (when fitted
+                {:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
+                 :layout viz/svg-line-plot
+                 :attribs {:stroke (get colors group-val ggplot2-default-mark)
+                           :stroke-width 2
+                           :fill "none"
+                           :opacity alpha}}))
+            groups))
+    ;; Single regression
+    (when-let [fitted (:fitted transform-result)]
+      [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
+        :layout viz/svg-line-plot
+        :attribs {:stroke ggplot2-default-mark
+                  :stroke-width 2
+                  :fill "none"
+                  :opacity alpha}}])))
 
 (defmethod render-layer [:geom :histogram]
   [target layer transform-result alpha]
-  (let [bars (:bars transform-result)]
-    (when bars
+  (if (= :grouped-histogram (:type transform-result))
+    ;; Grouped histogram - bars per group
+    (let [groups (:groups transform-result)
+          color-groups (group-by :color (:points transform-result))
+          colors (color-scale (keys color-groups))]
+      (mapcat (fn [[group-val {:keys [bars]}]]
+                (mapv (fn [bar]
+                        {:type :rect
+                         :x-min (:x-min bar)
+                         :x-max (:x-max bar)
+                         :height (:height bar)
+                         :attribs {:fill (get colors group-val ggplot2-default-mark)
+                                   :stroke ggplot2-grid
+                                   :stroke-width 1
+                                   :opacity alpha}})
+                      bars))
+              groups))
+    ;; Single histogram
+    (when-let [bars (:bars transform-result)]
       (mapv (fn [bar]
               {:type :rect
                :x-min (:x-min bar)
@@ -1314,35 +1487,34 @@
                                   :data {:values (layer->vl-data layer)}
                                   :encoding (layer->vl-encoding layer (layer->vl-data layer))}]
 
-                                ;; Linear regression - send computed line
+                                ;; Single regression - send computed line
                                 :regression
                                 (let [fitted (:fitted transform-result)
                                       fitted-data (mapv (fn [p]
                                                           {(keyword (name (:aog/x layer))) (:x p)
                                                            (keyword (name (:aog/y layer))) (:y p)})
-                                                        fitted)
-                                      ;; Handle color grouping
-                                      color-col (:aog/color layer)]
-                                  (if color-col
-                                    ;; Compute regression per color group
-                                    (let [color-groups (group-by :color points)]
-                                      (mapv (fn [[color-val group-points]]
-                                              (when-let [group-fitted (compute-linear-regression group-points)]
-                                                (let [group-fitted-data (mapv (fn [p]
-                                                                                {(keyword (name (:aog/x layer))) (:x p)
-                                                                                 (keyword (name (:aog/y layer))) (:y p)
-                                                                                 (keyword (name color-col)) color-val})
-                                                                              group-fitted)]
-                                                  {:mark "line"
-                                                   :data {:values group-fitted-data}
-                                                   :encoding (layer->vl-encoding layer group-fitted-data)})))
-                                            color-groups))
-                                    ;; Single regression line
-                                    [{:mark "line"
-                                      :data {:values fitted-data}
-                                      :encoding (layer->vl-encoding layer fitted-data)}]))
+                                                        fitted)]
+                                  [{:mark "line"
+                                    :data {:values fitted-data}
+                                    :encoding (layer->vl-encoding layer fitted-data)}])
 
-                                ;; Histogram - send computed bars
+                                ;; Grouped regression - one line per group
+                                :grouped-regression
+                                (let [groups (:groups transform-result)
+                                      group-col (get-grouping-column layer (ensure-dataset (:aog/data layer)))]
+                                  (mapv (fn [[group-val {:keys [fitted]}]]
+                                          (when fitted
+                                            (let [group-fitted-data (mapv (fn [p]
+                                                                            {(keyword (name (:aog/x layer))) (:x p)
+                                                                             (keyword (name (:aog/y layer))) (:y p)
+                                                                             (keyword (name group-col)) group-val})
+                                                                          fitted)]
+                                              {:mark "line"
+                                               :data {:values group-fitted-data}
+                                               :encoding (layer->vl-encoding layer group-fitted-data)})))
+                                        groups))
+
+                                ;; Single histogram - send computed bars
                                 :histogram
                                 (let [bars (:bars transform-result)
                                       bar-data (mapv (fn [bar]
@@ -1357,7 +1529,32 @@
                                                    :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
                                                    :axis {:title (name (:aog/x layer))}}
                                                :x2 {:field "bin-end"}
-                                               :y {:field "count" :type "quantitative"}}}]))))
+                                               :y {:field "count" :type "quantitative"}}}])
+
+                                ;; Grouped histogram - bars per group
+                                :grouped-histogram
+                                (let [groups (:groups transform-result)
+                                      group-col (get-grouping-column layer (ensure-dataset (:aog/data layer)))]
+                                  (mapcat (fn [[group-val {:keys [bars]}]]
+                                            (when bars
+                                              (let [bar-data (mapv (fn [bar]
+                                                                     {:bin-start (:x-min bar)
+                                                                      :bin-end (:x-max bar)
+                                                                      :count (:height bar)
+                                                                      (keyword (name group-col)) group-val})
+                                                                   bars)]
+                                                [{:mark "bar"
+                                                  :data {:values bar-data}
+                                                  :encoding (merge
+                                                             {:x {:field "bin-start"
+                                                                  :type "quantitative"
+                                                                  :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
+                                                                  :axis {:title (name (:aog/x layer))}}
+                                                              :x2 {:field "bin-end"}
+                                                              :y {:field "count" :type "quantitative"}}
+                                                             (when group-col
+                                                               {:color {:field (name group-col) :type "nominal"}}))}])))
+                                          groups)))))
                           layers-vec)
 
         ;; Remove nils from nested regression per-group
@@ -1470,33 +1667,33 @@
                                         :marker {:color ggplot2-default-mark :size 8}
                                         :showlegend false}])
 
-                                    ;; Linear regression
+                                    ;; Single regression line
                                     :regression
-                                    (if color-col
-                                      ;; Per-group regression
-                                      (let [color-groups (group-by :color points)]
-                                        (map-indexed
-                                         (fn [idx [color-val group-points]]
-                                           (when-let [fitted (compute-linear-regression group-points)]
-                                             {:type "scatter"
-                                              :mode "lines"
-                                              :x (mapv :x fitted)
-                                              :y (mapv :y fitted)
-                                              :name (str color-val " (fit)")
-                                              :line {:color (get ggplot2-colors idx ggplot2-default-mark)
-                                                     :width 2}
-                                              :showlegend false}))
-                                         color-groups))
-                                      ;; Single regression line
-                                      (let [fitted (:fitted transform-result)]
-                                        [{:type "scatter"
-                                          :mode "lines"
-                                          :x (mapv :x fitted)
-                                          :y (mapv :y fitted)
-                                          :line {:color ggplot2-default-mark :width 2}
-                                          :showlegend false}]))
+                                    (let [fitted (:fitted transform-result)]
+                                      [{:type "scatter"
+                                        :mode "lines"
+                                        :x (mapv :x fitted)
+                                        :y (mapv :y fitted)
+                                        :line {:color ggplot2-default-mark :width 2}
+                                        :showlegend false}])
 
-                                    ;; Histogram
+                                    ;; Grouped regression - one line per group
+                                    :grouped-regression
+                                    (let [groups (:groups transform-result)]
+                                      (map-indexed
+                                       (fn [idx [group-val {:keys [fitted]}]]
+                                         (when fitted
+                                           {:type "scatter"
+                                            :mode "lines"
+                                            :x (mapv :x fitted)
+                                            :y (mapv :y fitted)
+                                            :name (str group-val " (fit)")
+                                            :line {:color (get ggplot2-colors idx ggplot2-default-mark)
+                                                   :width 2}
+                                            :showlegend false}))
+                                       groups))
+
+                                    ;; Single histogram
                                     :histogram
                                     (let [bars (:bars transform-result)]
                                       [{:type "bar"
@@ -1505,7 +1702,22 @@
                                         :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
                                         :marker {:color ggplot2-default-mark
                                                  :line {:color ggplot2-grid :width 1}}
-                                        :showlegend false}]))))
+                                        :showlegend false}])
+
+                                    ;; Grouped histogram - bars per group
+                                    :grouped-histogram
+                                    (let [groups (:groups transform-result)]
+                                      (map-indexed
+                                       (fn [idx [group-val {:keys [bars]}]]
+                                         (when bars
+                                           {:type "bar"
+                                            :x (mapv (fn [b] (clojure.core// (clojure.core/+ (:x-min b) (:x-max b)) 2)) bars)
+                                            :y (mapv :height bars)
+                                            :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
+                                            :name (str group-val)
+                                            :marker {:color (get ggplot2-colors idx ggplot2-default-mark)
+                                                     :line {:color ggplot2-grid :width 1}}}))
+                                       groups)))))
                               layers-vec)
 
         ;; Remove nils (mapcat already flattened one level)
@@ -1765,229 +1977,6 @@
 
 ;; First, we need a way to add statistical transforms. Let's add [linear regression](https://en.wikipedia.org/wiki/Linear_regression):
 
-(defn linear
-  "Add linear regression transformation.
-  
-  Computes best-fit line through points.
-  When combined with color aesthetic, computes separate regression per group.
-  
-  Returns a vector containing a linear regression layer.
-  
-  When called with layers-or-data as first arg, merges linear into those layers."
-  ([]
-   [{:aog/transformation :linear
-     :aog/plottype :line}])
-  ([layers-or-data]
-   (let [layers (if (layers? layers-or-data)
-                  layers-or-data
-                  (data layers-or-data))]
-     (* layers (linear)))))
-
-(defn inspect-layers
-  "Inspect what layers are created and what data they contain.
-  
-  Useful for debugging composition and understanding what gets passed to the renderer."
-  [layer-spec]
-  (let [layers-vec (if (vector? layer-spec) layer-spec [layer-spec])]
-    {:num-layers (count layers-vec)
-     :layers (mapv (fn [layer]
-                     {:plottype (:aog/plottype layer)
-                      :transformation (:aog/transformation layer)
-                      :aesthetics (select-keys layer [:aog/x :aog/y :aog/color])
-                      :faceting (select-keys layer [:aog/row :aog/col])
-                      :data-rows (when-let [data (:aog/data layer)]
-                                   (if (tc/dataset? data)
-                                     (tc/row-count data)
-                                     (count data)))})
-                   layers-vec)}))
-
-(plot
- (+ (* (data penguins)
-       (mapping :bill-length-mm :bill-depth-mm)
-       (scatter))
-    (* (data penguins)
-       (mapping :bill-length-mm :bill-depth-mm)
-       (linear))))
-
-;; **What happens here**:
-;; 1. First layer: scatter plot of raw data
-;; 2. Second layer: linear regression line
-;; 3. `+` operator overlays them
-;; 4. Both layers share same data and mapping
-;; 5. Rendering target renders both with delegated domains
-
-;; ## Example 4b: Same Plot Using Distributivity
-
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm)
-    (+ (scatter)
-       (linear))))
-
-;; **What happens here**:
-;; 1. `(+ (scatter) (linear))` creates a vector of two plot specs
-;; 2. `*` distributes over the vector (cartesian product)
-;; 3. Result: same as Example 3, but more succinct.
-;; 4. Factor out common parts (data, mapping), vary only what differs (plottype)
-
-;; ## Example 5: Color Mapping with Categorical Variable
-
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
-    (scatter)))
-
-;; **What happens here**:
-;; 1. `:color :species` maps species to color aesthetic
-;; 2. Type system recognizes :species as categorical (via Tablecloth)
-;; 3. Rendering target creates color scale automatically
-;; 4. Three species = three colors in the scatter plot
-
-;; ## Example 6: Multi-Layer with Color Groups
-
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
-    (+ (scatter)
-       (linear))))
-
-;; **What happens here**:
-;; 1. Scatter plot colored by species
-;; 2. Linear regression per species (separate line for each)
-;; 3. Color scale shared between layers
-;; 4. Demonstrates composition + grouping + statistical transforms
-;; 5. Uses distributivity for succinctness.
-
-;; ## Example 7: Different Dataset (mtcars)
-
-(plot
- (* (data mtcars)
-    (mapping :wt :mpg)
-    (scatter)))
-
-;; **What happens here**:
-;; 1. Works with any dataset
-;; 2. Different column names (:wt, :mpg instead of bill-*)
-;; 3. Type inference works the same way
-;; 4. Rendering target handles domain computation
-
-;; ## Example 8: mtcars with Regression
-
-(plot
- (* (data mtcars)
-    (mapping :wt :mpg)
-    (+ (scatter)
-       (linear))))
-
-;; **What happens here**:
-;; 1. Negative correlation visible (heavier cars have lower MPG)
-;; 2. Regression line captures the trend
-;; 3. Same delegation strategy works across datasets
-;; 4. Uses distributivity for succinctness
-
-;; ## Debugging & Inspection
-
-;; Before moving on to more complex features, let's look at a useful debugging tool
-;; that helps us understand what's happening inside our layer specifications.
-
-(kind/pprint
- (inspect-layers
-  (* (data mtcars)
-     (mapping :wt :mpg)
-     (+ (scatter)
-        (linear)))))
-
-;; **What we see**:
-;; - Two layers created (scatter + linear regression)
-;; - Both share the same data and mappings
-;; - Different plottypes and transformations
-;; - Data row count shown for verification
-
-;; **An insight from building this**:
-;;
-;; During development, we discovered that regression lines need careful domain handling.
-;; If we compute domains from raw scatter points, regression lines can extend beyond
-;; that range (e.g., mtcars regression endpoint y=8.296 falls below the scatter domain
-;; min y=10.4). This is why we compute domains AFTER applying statistical transforms—
-;; transforms can legitimately extend beyond the raw data range.
-
-;; ## Example 9: Histogram
-
-;; Histograms are a key example of why we compute statistical transforms ourselves.
-;; We need the domain to compute bin edges.
-
-(defn histogram
-  "Add histogram transformation.
-  
-  Bins continuous data and counts occurrences. Requires domain computation
-  to determine bin edges.
-  
-  Options:
-  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number
-  
-  Returns a vector containing a histogram layer.
-  
-  When called with layers-or-data as first arg, merges histogram into those layers."
-  ([]
-   [{:aog/transformation :histogram
-     :aog/plottype :bar
-     :aog/bins :sturges}])
-  ([opts-or-layers]
-   (if (layers? opts-or-layers)
-     (* opts-or-layers (histogram))
-     [(merge {:aog/transformation :histogram
-              :aog/plottype :bar
-              :aog/bins :sturges}
-             (update-keys opts-or-layers #(keyword "aog" (name %))))]))
-  ([layers opts]
-   (* layers (histogram opts))))
-
-(defn facet
-  "Add faceting to a layer specification.
-  
-  Args:
-  - layer-spec: Layer or vector of layers
-  - facet-spec: Map with :row and/or :col keys specifying faceting variables
-  
-  Returns a vector of layers with faceting applied.
-  
-  Examples:
-  (facet layers {:col :species})
-  (facet layers {:row :sex :col :island})
-  
-  Threading-friendly:
-  (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
-  [layer-spec facet-spec]
-  (let [facet-keys (update-keys facet-spec #(keyword "aog" (name %)))]
-    (if (vector? layer-spec)
-      (mapv #(merge % facet-keys) layer-spec)
-      [(merge layer-spec facet-keys)])))
-
-(defn scale
-  "Specify scale properties for an aesthetic.
-  
-  Args:
-  - aesthetic: Keyword like :x, :y, :color
-  - opts: Map with scale options:
-    - :domain - [min max] for continuous, or vector of categories
-    - :transform - :log, :sqrt, :identity (default)
-  
-  Returns a vector containing scale specification.
-  
-  When called with layers as first arg, merges scale into those layers.
-  
-  Examples:
-  (scale :x {:domain [0 100]})
-  (scale :y {:transform :log})
-  
-  Threading-friendly:
-  (-> penguins (mapping :x :y) (scatter) (scale :x {:domain [30 65]}))"
-  ([aesthetic opts]
-   (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
-     [{scale-key opts}]))
-  ([layers aesthetic opts]
-   (* layers (scale aesthetic opts))))
-
 ;; Test histogram computation in isolation
 
 (plot
@@ -2008,6 +1997,91 @@
  (* (data penguins)
     (mapping :bill-length-mm nil)
     (histogram {:bins 15})))
+
+;; ## Example 5: Grouping with Categorical Color
+
+;; When you map a **categorical** variable to color, it automatically creates groups
+;; for statistical transforms. This matches AlgebraOfGraphics.jl and ggplot2 behavior.
+
+;; **Categorical color → grouped regression**:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm {:color :species})
+     (+ (scatter {:alpha 0.5})
+        (linear))))
+
+;; **What happens here**:
+;; 1. `:species` is categorical (`:string` type in Tablecloth)
+;; 2. System automatically groups by `:species` for the linear transform
+;; 3. Computes 3 separate regression lines (Adelie, Chinstrap, Gentoo)
+;; 4. Each group gets a different color from the ggplot2 palette
+;; 5. Scatter points are also colored by species
+
+;; **Categorical color → grouped histogram**:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm nil {:color :species})
+     (histogram)))
+
+;; **What happens here**:
+;; 1. Creates 3 separate histograms (one per species)
+;; 2. Each histogram uses the same binning method
+;; 3. Bars are colored by species
+;; 4. This is different from faceting - bars can overlap/stack
+
+;; ## Example 6: Continuous Color (No Grouping)
+
+;; When you map a **continuous** variable to color, it creates a visual gradient
+;; but does NOT create groups for statistical transforms.
+
+;; **Continuous color → single regression with gradient**:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
+     (+ (scatter {:alpha 0.5})
+        (linear))))
+
+;; **What happens here**:
+;; 1. `:body-mass-g` is continuous (`:int64` type in Tablecloth)
+;; 2. System does NOT group by body mass
+;; 3. Computes a single regression line across all points
+;; 4. Scatter points are colored by body mass (continuous gradient)
+;; 5. The regression line shows overall trend, ignoring color grouping
+
+;; This is the key semantic difference:
+;; - Categorical aesthetics → semantic grouping (affects computations)
+;; - Continuous aesthetics → visual mapping only (no grouping)
+
+;; ## Example 7: Explicit Grouping Override
+
+;; You can explicitly control grouping using the `:group` aesthetic.
+;; This lets you group by one variable while coloring by another.
+
+;; **Explicit :group aesthetic**:
+(plot
+ (-> mtcars
+     (mapping :wt :mpg {:group :cyl})
+     (+ (scatter)
+        (linear))))
+
+;; **What happens here**:
+;; 1. `:cyl` (cylinders) could be treated as continuous (it's numeric)
+;; 2. But we explicitly group by `:cyl` using `:group`
+;; 3. Computes separate regression lines for 4, 6, and 8 cylinder cars
+;; 4. No color mapping, so all points/lines use default color
+
+;; **Group different from color**:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
+     (+ (scatter {:alpha 0.5})
+        (linear))))
+
+;; **What happens here**:
+;; 1. Color by `:sex` (2 colors: male/female)
+;; 2. Group by `:species` (3 regression lines: Adelie/Chinstrap/Gentoo)
+;; 3. Points are colored by sex, but regressions computed per species
+;; 4. This shows that grouping and color are independent concepts
 
 ;; ## Debugging & Inspection Utilities
 
