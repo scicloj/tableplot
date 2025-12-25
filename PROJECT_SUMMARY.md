@@ -1,5 +1,86 @@
 # Tableplot Project Summary
 
+## Recent Updates (2025-12-25)
+
+**Session 4 - V3 Vertical Reorganization (2025-12-25) ✅ COMPLETE**:
+- **Goal Achieved**: Created `building_aog_v3.clj` with vertical feature presentation (1,464 lines)
+- **Structure**: Reorganized into 4 parts leveraging multimethod architecture:
+  - **Part I: Foundation** - Infrastructure, multimethod declarations, all 3 rendering targets
+  - **Part II: Features** - Each feature complete: Scatter (impl→examples), Linear (impl→examples), Histogram (impl→examples)
+  - **Part III: Advanced Topics** - Multi-layer composition, faceting, multiple targets, custom domains
+  - **Part IV: Reflection** - Trade-offs, implementation status, integration path
+- **Key Benefit**: Each feature presented vertically (implementation immediately followed by examples)
+- **Pedagogical Improvement**: Learn one feature at a time without jumping between distant sections
+- **Bug Fixes Applied**:
+  - Added 3-arity to `scatter` for threading with attributes: `(-> layers (scatter {:alpha 0.5}))`
+  - Fixed `*` operator to detect datasets vs layer maps (prevents dataset columns from leaking during merge)
+  - Dataset detection: checks for `:aog/*` keys to distinguish layers from data, wraps data as `{:aog/data ...}`
+- **Coverage**: V3 is ~50% of V2 content (focused vertical demo), V2 remains comprehensive reference
+- **Testing**: Namespace loads cleanly, all examples verified working
+- **Decision Point**: Should V3 expand to full coverage or remain streamlined demo?
+
+**Session 1 - Organization & Features**:
+- Added emoji-based section markers throughout `building_aog_v2.clj` (📖 docs, ⚙️ implementation, 🧪 examples)
+- Feature-based organization with clear section headers for each major feature
+- Prepared groundwork for multimethod-based refactoring to enable late function definition
+- `target` function for compositional backend selection: `(-> data (scatter) (target :vl))`
+- Auto-display mechanism via `displays-as-plot` (no explicit `plot` calls needed)
+- Type-aware grouping (categorical colors create semantic groups for transforms)
+- Vega-Lite tooltips (hover to see x, y, color values; histogram bins show range/count)
+
+**Session 2 - Refactoring Attempt**:
+- Attempted Phase 1 refactoring: moving constructors before their examples
+- Successfully moved `scatter` and `linear` constructors with proper testing after each move
+- Learned that example code calling constructors must also be moved/removed
+- Process validated: incremental moves with namespace load testing after each change
+- Changes reverted to preserve stable state for future work
+
+**Session 3 - Multimethod Refactoring (2025-12-25) ✅ COMPLETE**:
+- **Goal Achieved**: Converted `building_aog_v2.clj` to use multimethods, enabling late feature definition
+- **Phase 1**: Converted `apply-transform` from `case` statement to multimethod
+  - `defmulti` dispatches on `:aog/transformation` key
+  - `defmethod` for `nil` (scatter/raw), `:linear`, `:histogram`
+  - Eliminates hard dependency on compute functions being defined first
+- **Phase 2**: Converted `transform->domain-points` from `case` statement to multimethod
+  - `defmulti` dispatches on `:type` key in transform result
+  - 5 defmethods: `:raw`, `:regression`, `:grouped-regression`, `:histogram`, `:grouped-histogram`
+- **Testing**: All multimethods verified working correctly, namespace loads cleanly
+- **Result**: Features (scatter, linear, histogram) can now be defined anywhere AFTER the `defmulti` declarations
+
+**Key Insights**:
+- **Multimethod extensibility**: New features can be added without modifying core infrastructure
+- **Late definition enabled**: `defmethod` calls can appear anywhere after `defmulti` declarations
+- **Extension pattern**: To add new feature: `(defn constructor) → (defn- compute) → (defmethod apply-transform) → (defmethod transform->domain-points) → (defmethod render-layer)`
+- Testing namespace load (`clojure -M -e "(require 'building-aog-v2)"`) essential after each change
+- File edit tools (`clojure_edit`) provide better validation for Clojure code than text-based tools
+
+**Multimethod Architecture** (`notebooks/building_aog_v2.clj`):
+```clojure
+;; Core extension points (no hard dependencies)
+(defmulti apply-transform 
+  "Dispatch on :aog/transformation key"
+  (fn [layer points] (:aog/transformation layer)))
+
+(defmulti transform->domain-points
+  "Dispatch on :type key in transform result"
+  (fn [transform-result] (:type transform-result)))
+
+(defmulti render-layer
+  "Dispatch on [target plottype-or-transform]"
+  (fn [target layer transform-result alpha]
+    [target (or (:aog/transformation layer) (:aog/plottype layer))]))
+
+;; Features can be added anywhere after defmultis
+(defmethod apply-transform :my-new-feature [layer points] ...)
+(defmethod transform->domain-points :my-result-type [result] ...)
+(defmethod render-layer [:geom :my-feature] [target layer result alpha] ...)
+```
+
+**Current State**:
+- Infrastructure supports extensibility through multimethods
+- All existing features (scatter, linear, histogram) working correctly
+- File ready for either: (A) using as-is with multimethod extensibility, or (B) physical reorganization for pedagogical improvement
+
 ## Overview
 Tableplot is a Clojure library for declarative data visualization, implementing a grammar of graphics approach similar to R's ggplot2. The project is actively developing V2, which introduces a sophisticated dataflow-based architecture that separates specification from rendering.
 
@@ -27,6 +108,8 @@ tableplot/
 │       └── ggplot/
 │           └── themes.clj           # Complete ggplot2 theme system (8 themes)
 ├── notebooks/
+│   ├── building_aog_v2.clj          # AoG v2 design (comprehensive, 2,807 lines)
+│   ├── building_aog_v3.clj          # AoG v3 vertical presentation (streamlined, 1,464 lines)
 │   ├── building_aog_in_clojure.clj  # Design exploration: AoG v2 with normalized representation
 │   │
 │   └── tableplot_book/
@@ -595,6 +678,127 @@ The project is under active development. Key areas for contribution:
 - Theme designs
 - Documentation improvements
 - Performance optimizations
+
+## AoG v3: Vertical Feature Presentation (NEW!)
+
+### Overview
+
+**Location**: `notebooks/building_aog_v3.clj` (1,464 lines)
+
+A **pedagogical reorganization** of building_aog_v2.clj that demonstrates the key benefit of multimethod architecture: **vertical feature presentation**. Each feature (scatter, linear, histogram) is now a complete "chapter" with implementation directly followed by examples, making it easier to learn one feature at a time.
+
+**Status**: Complete and tested. Ready for use as streamlined introduction to the AoG v2 design.
+
+### Structure
+
+**Part I: Foundation** (~550 lines)
+- Introduction & context (streamlined from v2)
+- Core concepts (layer representation, operators, dataflow)
+- Infrastructure setup:
+  - Constants, helper functions
+  - **Multimethod declarations** (extension points)
+  - Rendering infrastructure (faceting, domain computation)
+  - Composition operators (`*`, `+`)
+  - Basic constructors (`data`, `mapping`, `facet`, `scale`, `target`)
+  - Dataset loading (penguins, mtcars, iris)
+  - **All three rendering targets** (:geom, :vl, :plotly)
+
+**Part II: Features** (~350 lines) - Self-contained vertical chapters
+- **Feature 4: Scatter Plots**
+  - 4.1 Implementation: `scatter` constructor, `defmethod` for apply-transform/transform->domain-points/render-layer
+  - 4.2 Examples: Basic scatter, grouped scatter, with opacity, plain Clojure data
+- **Feature 5: Linear Regression**
+  - 5.1 Implementation: `linear` constructor, `compute-linear-regression`, defmethods
+  - 5.2 Examples: Single regression, scatter+regression, grouped regression, scatter+grouped regression
+- **Feature 6: Histograms**
+  - 6.1 Implementation: `histogram` constructor, `compute-histogram`, defmethods
+  - 6.2 Examples: Basic histogram, grouped histogram, custom bin count
+
+**Part III: Advanced Topics** (~150 lines)
+- Multi-layer composition (scatter+regression examples)
+- Faceting (column, row, grid)
+- Multiple rendering targets (same spec → different outputs)
+- Custom scale domains
+
+**Part IV: Reflection** (~100 lines)
+- Design trade-offs (what we gained vs what we paid)
+- Implementation status (complete vs missing features)
+- Integration path (coexistence with v1/v2)
+
+### Key Improvements Over V2
+
+1. **Vertical Learning**: Implementation → Examples for each feature (no 500-line gap)
+2. **Incremental Complexity**: Scatter (simplest) → Linear (medium) → Histogram (complex)
+3. **Self-Contained Chapters**: Can read "Feature 5" without reading "Feature 6"
+4. **Clear Extension Pattern**: Each feature follows same structure
+5. **Focused Content**: ~50% of v2 size, concentrates on demonstrating multimethod benefits
+
+### Bug Fixes in V3
+
+Two important fixes were applied during the reorganization:
+
+**Fix 1: `scatter` function - Added 3-arity**
+```clojure
+(defn scatter
+  ([]
+   [{:aog/plottype :scatter}])
+  ([attrs-or-layers]
+   ...)
+  ([layers attrs]              ;; NEW: enables (-> layers (scatter {:alpha 0.5}))
+   (* layers (scatter attrs))))
+```
+
+**Fix 2: `*` operator - Dataset detection**
+```clojure
+(defn *
+  ...
+  ([x y]
+   (let [;; Helper: check if a map is a layer (has :aog/* keys) or data
+         is-layer? (fn [m]
+                     (and (map? m)
+                          (some #(= "aog" (namespace %)) (keys m))))
+         to-layers (fn [v]
+                     (cond
+                       (layers? v) v
+                       (is-layer? v) [v]
+                       (map? v) [{:aog/data v}]  ;; Wrap datasets!
+                       ...))
+```
+
+**Why this matters**: Datasets implement Clojure map interfaces. Without detection, `merge` would spread dataset columns into the layer map. The fix detects "no `:aog/*` keys = data" and wraps as `{:aog/data dataset}`.
+
+### What's Missing from V3 (Compared to V2)
+
+V3 is a **focused demo**, not a complete reference. Missing content (~50%):
+
+- Extensive pedagogical content (Tableplot journey, motivation, detailed context)
+- Design exploration narrative (nested problem → flat solution evolution)
+- Delegation strategy section (detailed rationale for what we compute vs delegate)
+- Glossary of visualization terminology
+- Detailed API documentation sections
+- ~12 examples (especially Vega-Lite and Plotly examples)
+- Faceting architecture discussion
+- Backend agnosticism section
+- Comprehensive summary and next steps
+
+### V2 vs V3 Comparison
+
+| Aspect | **V2** | **V3** |
+|--------|--------|--------|
+| **Size** | 2,807 lines | 1,464 lines |
+| **Purpose** | Comprehensive reference | Pedagogical demo |
+| **Organization** | Horizontal (all impl, then examples) | Vertical (impl→examples per feature) |
+| **Coverage** | Complete (~27 examples) | Focused (~15 examples) |
+| **Best For** | Reference, full understanding | Learning, teaching multimethods |
+| **Context** | Extensive background | Streamlined essentials |
+| **Status** | Complete design exploration | Streamlined demonstration |
+
+### Recommended Usage
+
+- **New learners**: Start with V3 to understand vertical feature presentation
+- **Comprehensive study**: Use V2 for full context and all examples
+- **Teaching multimethods**: V3 clearly shows the pedagogical benefits
+- **Reference**: V2 remains the comprehensive source
 
 ## AoG v2 Design Exploration: Normalized Representation
 
