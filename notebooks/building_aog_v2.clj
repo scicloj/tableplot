@@ -599,6 +599,11 @@
 (def ^:private ggplot2-colors
   ["#F8766D" "#00BA38" "#619CFF" "#F564E3"])
 
+;; ggplot2 theme colors
+(def ^:private ggplot2-background "#EBEBEB")
+(def ^:private ggplot2-grid "#FFFFFF")
+(def ^:private ggplot2-default-mark "#333333")
+
 ;; ## Type Information Example
 ;;
 ;; Let's see Tablecloth's type information in action:
@@ -618,6 +623,11 @@
 
 ;; ### Helper Functions
 
+(defn- ensure-dataset
+  "Convert data to a tablecloth dataset if it isn't already."
+  [data]
+  (if (tc/dataset? data) data (tc/dataset data)))
+
 (defn- split-by-facets
   "Split a layer's data by facet variables.
   
@@ -634,7 +644,7 @@
       [{:row-label nil :col-label nil :layer layer}]
 
       ;; Has faceting
-      (let [dataset (if (tc/dataset? data) data (tc/dataset data))
+      (let [dataset (ensure-dataset data)
 
             ;; Get unique values for each facet dimension
             col-categories (when col-var (sort (distinct (get dataset col-var))))
@@ -715,7 +725,7 @@
   "Convert layer to point data for rendering."
   [layer]
   (let [data (:aog/data layer)
-        dataset (if (tc/dataset? data) data (tc/dataset data))
+        dataset (ensure-dataset data)
         x-vals (vec (get dataset (:aog/x layer)))
         y-col (:aog/y layer)
         y-vals (when y-col (vec (get dataset y-col)))
@@ -827,8 +837,8 @@
       ;; Simple scatter
       [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
         :layout viz/svg-scatter-plot
-        :attribs {:fill "#333333"
-                  :stroke "#333333"
+        :attribs {:fill ggplot2-default-mark
+                  :stroke ggplot2-default-mark
                   :stroke-width 0.5
                   :opacity alpha}}])))
 
@@ -852,7 +862,7 @@
       ;; Simple line
       [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
         :layout viz/svg-line-plot
-        :attribs {:stroke "#333333"
+        :attribs {:stroke ggplot2-default-mark
                   :stroke-width 1
                   :fill "none"
                   :opacity alpha}}])))
@@ -878,7 +888,7 @@
       (when fitted
         [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
           :layout viz/svg-line-plot
-          :attribs {:stroke "#333333"
+          :attribs {:stroke ggplot2-default-mark
                     :stroke-width 2
                     :fill "none"
                     :opacity alpha}}]))))
@@ -892,8 +902,8 @@
              :x-min (:x-min bar)
              :x-max (:x-max bar)
              :height (:height bar)
-             :attribs {:fill "#333333"
-                       :stroke "#FFFFFF"
+             :attribs {:fill ggplot2-default-mark
+                       :stroke ggplot2-grid
                        :stroke-width 1
                        :opacity alpha}})
           bars)))
@@ -976,18 +986,18 @@
         ;; Separate regular viz data from histogram rectangles
         {viz-data true rect-data false} (group-by #(not= (:type %) :rect) layer-data)
 
-        ;; Create the plot spec for regular data
+;; Create the plot spec for regular data
         plot-spec {:x-axis x-axis
                    :y-axis y-axis
-                   :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}}
+                   :grid {:attribs {:stroke ggplot2-grid :stroke-width 1}}
                    :data (vec viz-data)}
 
         ;; Background rectangle for this panel
         bg-rect (svg/rect [panel-left panel-top]
                           (clojure.core/- width 100)
                           (clojure.core/- height 100)
-                          {:fill "#EBEBEB"
-                           :stroke "#FFFFFF"
+                          {:fill ggplot2-background
+                           :stroke ggplot2-grid
                            :stroke-width 1})
 
         ;; Convert histogram rectangles to SVG
@@ -1159,7 +1169,7 @@
         ;; Helper to convert layer to VL data format
         layer->vl-data (fn [layer]
                          (let [data (:aog/data layer)
-                               dataset (if (tc/dataset? data) data (tc/dataset data))
+                               dataset (ensure-dataset data)
                                x-col (:aog/x layer)
                                y-col (:aog/y layer)
                                color-col (:aog/color layer)
@@ -1265,13 +1275,13 @@
         ;; Remove nils from nested regression per-group
         vl-layers (remove nil? (flatten vl-layers))
 
-        ;; ggplot2-compatible theme config
+;; ggplot2-compatible theme config
         ggplot2-config {:view {:stroke "transparent"}
-                        :background "#EBEBEB"
-                        :axis {:gridColor "#FFFFFF"
-                               :domainColor "#FFFFFF"
-                               :tickColor "#FFFFFF"}
-                        :mark {:color "#333333"}}
+                        :background ggplot2-background
+                        :axis {:gridColor ggplot2-grid
+                               :domainColor ggplot2-grid
+                               :tickColor ggplot2-grid}
+                        :mark {:color ggplot2-default-mark}}
 
         ;; Build final spec
         spec (cond
@@ -1326,7 +1336,7 @@
         ;; Helper to convert layer to Plotly data
         layer->plotly-data (fn [layer]
                              (let [data (:aog/data layer)
-                                   dataset (if (tc/dataset? data) data (tc/dataset data))
+                                   dataset (ensure-dataset data)
                                    x-col (:aog/x layer)
                                    y-col (:aog/y layer)
                                    color-col (:aog/color layer)
@@ -1361,7 +1371,7 @@
                                             :x (mapv :x group-points)
                                             :y (mapv :y group-points)
                                             :name (str color-val)
-                                            :marker {:color (get ggplot2-colors idx "#333333")
+                                            :marker {:color (get ggplot2-colors idx ggplot2-default-mark)
                                                      :size 8}})
                                          color-groups))
                                       ;; Single scatter trace
@@ -1369,7 +1379,7 @@
                                         :mode "markers"
                                         :x (:x-vals plotly-data)
                                         :y (:y-vals plotly-data)
-                                        :marker {:color "#333333" :size 8}
+                                        :marker {:color ggplot2-default-mark :size 8}
                                         :showlegend false}])
 
                                     ;; Linear regression
@@ -1385,7 +1395,7 @@
                                               :x (mapv :x fitted)
                                               :y (mapv :y fitted)
                                               :name (str color-val " (fit)")
-                                              :line {:color (get ggplot2-colors idx "#333333")
+                                              :line {:color (get ggplot2-colors idx ggplot2-default-mark)
                                                      :width 2}
                                               :showlegend false}))
                                          color-groups))
@@ -1395,7 +1405,7 @@
                                           :mode "lines"
                                           :x (mapv :x fitted)
                                           :y (mapv :y fitted)
-                                          :line {:color "#333333" :width 2}
+                                          :line {:color ggplot2-default-mark :width 2}
                                           :showlegend false}]))
 
                                     ;; Histogram
@@ -1405,8 +1415,8 @@
                                         :x (mapv (fn [b] (clojure.core// (clojure.core/+ (:x-min b) (:x-max b)) 2)) bars)
                                         :y (mapv :height bars)
                                         :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
-                                        :marker {:color "#333333"
-                                                 :line {:color "#FFFFFF" :width 1}}
+                                        :marker {:color ggplot2-default-mark
+                                                 :line {:color ggplot2-grid :width 1}}
                                         :showlegend false}]))))
                               layers-vec)
 
@@ -1416,12 +1426,12 @@
         ;; ggplot2-compatible layout
         layout {:width width
                 :height height
-                :plot_bgcolor "#EBEBEB"
-                :paper_bgcolor "#EBEBEB"
-                :xaxis {:gridcolor "#FFFFFF"
+                :plot_bgcolor ggplot2-background
+                :paper_bgcolor ggplot2-background
+                :xaxis {:gridcolor ggplot2-grid
                         :title (or (:x-name (layer->plotly-data (first layers-vec))) "x")
                         :range custom-x-domain}
-                :yaxis {:gridcolor "#FFFFFF"
+                :yaxis {:gridcolor ggplot2-grid
                         :title (or (:y-name (layer->plotly-data (first layers-vec))) "y")
                         :range custom-y-domain}
                 :margin {:l 60 :r 30 :t 30 :b 60}}
@@ -1431,7 +1441,7 @@
                (let [;; Get unique facet values
                      first-layer (first layers-vec)
                      data (:aog/data first-layer)
-                     dataset (if (tc/dataset? data) data (tc/dataset data))
+                     dataset (ensure-dataset data)
                      row-vals (when row-var (sort (distinct (tc/column dataset row-var))))
                      col-vals (when col-var (sort (distinct (tc/column dataset col-var))))
                      num-rows (if row-var (count row-vals) 1)
@@ -1460,7 +1470,7 @@
                             :y (mapv :y facet-points)
                             :xaxis (name xaxis-key)
                             :yaxis (name yaxis-key)
-                            :marker {:color "#333333" :size 6}
+                            :marker {:color ggplot2-default-mark :size 6}
                             :showlegend false}
 
                            :histogram
@@ -1471,8 +1481,8 @@
                               :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
                               :xaxis (name xaxis-key)
                               :yaxis (name yaxis-key)
-                              :marker {:color "#333333"
-                                       :line {:color "#FFFFFF" :width 1}}
+                              :marker {:color ggplot2-default-mark
+                                       :line {:color ggplot2-grid :width 1}}
                               :showlegend false})
 
                            nil)))
@@ -1559,7 +1569,7 @@
   "Infer scale type from values in a layer."
   [layer aesthetic]
   (let [data (:aog/data layer)
-        dataset (if (tc/dataset? data) data (tc/dataset data))
+        dataset (ensure-dataset data)
         col-key (get layer (keyword "aog" (name aesthetic)))
         values (when col-key (tc/column dataset col-key))]
     (cond
