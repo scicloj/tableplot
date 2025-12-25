@@ -445,6 +445,19 @@
 ;; - ✅ ggplot2-compatible theming
 ;; - ⚠️ Additional transforms (smooth/density/contour pending)
 
+;; ## Helper Functions
+
+(defn- layers?
+  "Check if x is a vector of layer maps (not data).
+  
+  Layers have :aog/* namespaced keys, while data vectors contain plain maps."
+  [x]
+  (and (vector? x)
+       (seq x)
+       (map? (first x))
+       (some #(= "aog" (namespace %))
+             (keys (first x)))))
+
 ;; ## Constructors
 
 (defn data
@@ -455,9 +468,13 @@
   - Maps of vectors: {:x [1 2 3] :y [4 5 6]}
   - Vector of maps: [{:x 1 :y 4} {:x 2 :y 5}]
 
-  Returns a layer map with :aog/data."
-  [dataset]
-  {:aog/data dataset})
+  Returns a vector containing a layer map with :aog/data.
+  
+  When called with layers as first arg, merges data into those layers."
+  ([dataset]
+   [{:aog/data dataset}])
+  ([layers dataset]
+   (* layers (data dataset))))
 
 ;; Examples:
 (data {:x [1 2 3] :y [4 5 6]})
@@ -473,12 +490,32 @@
   - x, y: Column names (keywords) for positional aesthetics
   - named: (optional) Map of other aesthetics
   
-  Mappings tell the renderer which columns to use for which visual properties."
+  Returns a vector containing a mapping layer.
+  
+  When called with layers-or-data as first arg:
+  - If layers (vector with :aog/* keys): merges mapping into those layers
+  - If data: converts to layer first, then adds mapping"
   ([x y]
-   {:aog/x x :aog/y y})
+   [{:aog/x x :aog/y y}])
   ([x y named]
-   (merge {:aog/x x :aog/y y}
-          (update-keys named #(keyword "aog" (name %))))))
+   (if (map? named)
+     ;; Regular 3-arg: mapping :x :y {:color :species}
+     [(merge {:aog/x x :aog/y y}
+             (update-keys named #(keyword "aog" (name %))))]
+     ;; Threading-friendly: (-> layers (mapping :x :y))
+     (let [layers-or-data x
+           x-field y
+           y-field named
+           layers (if (layers? layers-or-data)
+                    layers-or-data
+                    (data layers-or-data))]
+       (* layers (mapping x-field y-field)))))
+  ([first-arg x y named]
+   ;; Threading-friendly: (-> layers (mapping :x :y {:color :species}))
+   (let [layers (if (layers? first-arg)
+                  first-arg
+                  (data first-arg))]
+     (* layers (mapping x y named)))))
 
 ;; Examples:
 (mapping :bill-length-mm :bill-depth-mm)
@@ -488,12 +525,18 @@
 (mapping :wt :mpg {:color :cyl :size :hp})
 
 (defn scatter
-  "Create a scatter plot layer."
+  "Create a scatter plot layer.
+  
+  Returns a vector containing a scatter layer.
+  
+  When called with layers-or-data as first arg, merges scatter into those layers."
   ([]
-   {:aog/plottype :scatter})
-  ([attrs]
-   (merge {:aog/plottype :scatter}
-          (update-keys attrs #(keyword "aog" (name %))))))
+   [{:aog/plottype :scatter}])
+  ([attrs-or-layers]
+   (if (layers? attrs-or-layers)
+     (* attrs-or-layers (scatter))
+     [(merge {:aog/plottype :scatter}
+             (update-keys attrs-or-layers #(keyword "aog" (name %))))])))
 
 ;; Examples:
 (scatter)
@@ -539,9 +582,17 @@
 ;; (Full example with dataset shown later after loading penguins)
 
 (defn +
-  "Combine multiple layer specifications for overlay (sum)."
+  "Combine multiple layer specifications for overlay (sum).
+  
+  When used in threading with layers as first arg, distributes layers over the rest:
+  (-> layers (+ (scatter) (linear))) → (* layers (+ (scatter) (linear)))"
   [& layer-specs]
-  (vec (mapcat #(if (vector? %) % [%]) layer-specs)))
+  (if (and (>= (count layer-specs) 3) ; Threading produces 3+ args
+           (layers? (first layer-specs)))
+    ;; First arg is layers - distribute over the rest
+    (* (first layer-specs) (apply + (rest layer-specs)))
+    ;; Normal concatenation
+    (vec (mapcat #(if (vector? %) % [%]) layer-specs))))
 
 ;; ## Type Information (Using Tablecloth)
 
@@ -1601,6 +1652,77 @@
 ;; This is useful for quick exploration or when working with simple data
 ;; that doesn't need the full power of tech.ml.dataset.
 
+;; ## Example 2b: Threading-Macro Style
+;;
+;; All the API functions support Clojure's threading macro (`->`), providing
+;; a more natural, pipeline-style syntax. This is especially useful for complex
+;; visualizations where you're building up layers incrementally.
+
+;; **Simple scatter plot**:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)))
+
+;; **With color aesthetic**:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm {:color :species})
+     (scatter)))
+
+;; **Multi-layer: scatter + regression**
+;;
+;; The `+` operator distributes when used in threading context, so this
+;; creates two layers (scatter and linear) that both share the data and mapping:
+(plot
+ (-> mtcars
+     (mapping :wt :mpg)
+     (+ (scatter)
+        (linear))))
+
+;; **With custom options**:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm nil)
+     (histogram {:bins 12})))
+
+;; **Combining scale customization**:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (scale :x {:domain [30 65]})
+     (scale :y {:domain [12 23]})))
+
+;; **Works with plain data too**:
+(plot
+ (-> {:x [1 2 3 4 5]
+      :y [2 4 6 8 10]}
+     (mapping :x :y)
+     (scatter)))
+
+;; **What's happening under the hood**:
+;;
+;; 1. Each function detects whether its first argument is layers (vector with `:aog/*` keys)
+;;    or data (dataset, map-of-vectors, vector-of-maps)
+;; 2. If data: converts to layers first via `(data ...)`
+;; 3. If layers: merges the new specification using `*`
+;; 4. Everything returns vectors, so threading works naturally
+;;
+;; **Both styles work**:
+;;
+;; You can use compositional style with `*`:
+;; ```clojure
+;; (* (data penguins) (mapping :x :y) (scatter))
+;; ```
+;;
+;; Or threading style with `->`:
+;; ```clojure
+;; (-> penguins (mapping :x :y) (scatter))
+;; ```
+;;
+;; They produce identical results. Choose whichever feels more natural for your use case.
+
 ;; ## Example 3: Type Information in Action
 
 ;; Now let's see how we can use Tablecloth's type information.
@@ -1647,10 +1769,19 @@
   "Add linear regression transformation.
   
   Computes best-fit line through points.
-  When combined with color aesthetic, computes separate regression per group."
-  []
-  {:aog/transformation :linear
-   :aog/plottype :line})
+  When combined with color aesthetic, computes separate regression per group.
+  
+  Returns a vector containing a linear regression layer.
+  
+  When called with layers-or-data as first arg, merges linear into those layers."
+  ([]
+   [{:aog/transformation :linear
+     :aog/plottype :line}])
+  ([layers-or-data]
+   (let [layers (if (layers? layers-or-data)
+                  layers-or-data
+                  (data layers-or-data))]
+     (* layers (linear)))))
 
 (defn inspect-layers
   "Inspect what layers are created and what data they contain.
@@ -1792,16 +1923,24 @@
   to determine bin edges.
   
   Options:
-  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number"
+  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number
+  
+  Returns a vector containing a histogram layer.
+  
+  When called with layers-or-data as first arg, merges histogram into those layers."
   ([]
-   {:aog/transformation :histogram
-    :aog/plottype :bar
-    :aog/bins :sturges})
-  ([opts]
-   (merge {:aog/transformation :histogram
-           :aog/plottype :bar
-           :aog/bins :sturges}
-          (update-keys opts #(keyword "aog" (name %))))))
+   [{:aog/transformation :histogram
+     :aog/plottype :bar
+     :aog/bins :sturges}])
+  ([opts-or-layers]
+   (if (layers? opts-or-layers)
+     (* opts-or-layers (histogram))
+     [(merge {:aog/transformation :histogram
+              :aog/plottype :bar
+              :aog/bins :sturges}
+             (update-keys opts-or-layers #(keyword "aog" (name %))))]))
+  ([layers opts]
+   (* layers (histogram opts))))
 
 (defn facet
   "Add faceting to a layer specification.
@@ -1810,14 +1949,19 @@
   - layer-spec: Layer or vector of layers
   - facet-spec: Map with :row and/or :col keys specifying faceting variables
   
+  Returns a vector of layers with faceting applied.
+  
   Examples:
-  (facet layer {:col :species})
-  (facet layer {:row :sex :col :island})"
+  (facet layers {:col :species})
+  (facet layers {:row :sex :col :island})
+  
+  Threading-friendly:
+  (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
   [layer-spec facet-spec]
   (let [facet-keys (update-keys facet-spec #(keyword "aog" (name %)))]
     (if (vector? layer-spec)
       (mapv #(merge % facet-keys) layer-spec)
-      (merge layer-spec facet-keys))))
+      [(merge layer-spec facet-keys)])))
 
 (defn scale
   "Specify scale properties for an aesthetic.
@@ -1828,13 +1972,21 @@
     - :domain - [min max] for continuous, or vector of categories
     - :transform - :log, :sqrt, :identity (default)
   
+  Returns a vector containing scale specification.
+  
+  When called with layers as first arg, merges scale into those layers.
+  
   Examples:
   (scale :x {:domain [0 100]})
   (scale :y {:transform :log})
-  (scale :color {:domain [:setosa :versicolor :virginica]})"
-  [aesthetic opts]
-  (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
-    {scale-key opts}))
+  
+  Threading-friendly:
+  (-> penguins (mapping :x :y) (scatter) (scale :x {:domain [30 65]}))"
+  ([aesthetic opts]
+   (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
+     [{scale-key opts}]))
+  ([layers aesthetic opts]
+   (* layers (scale aesthetic opts))))
 
 ;; Test histogram computation in isolation
 
