@@ -593,6 +593,12 @@
 ;; Fisher's Iris - 150 flowers, 3 species
 (def iris (rdatasets/datasets-iris))
 
+;; # Constants
+
+;; ggplot2-compatible color palette for categorical variables
+(def ^:private ggplot2-colors
+  ["#F8766D" "#00BA38" "#619CFF" "#F564E3"])
+
 ;; ## Type Information Example
 ;;
 ;; Let's see Tablecloth's type information in action:
@@ -801,8 +807,7 @@
 (defn- color-scale
   "ggplot2-like color scale for categorical data."
   [categories]
-  (let [colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]]
-    (zipmap categories (cycle colors))))
+  (zipmap categories (cycle ggplot2-colors)))
 
 (defn- render-scatter-viz
   "Render scatter plot visualization data."
@@ -1029,7 +1034,7 @@
         num-cols (count col-labels)
         is-faceted? (or (> num-rows 1) (> num-cols 1))
 
-        ;; Calculate panel dimensions
+;; Calculate panel dimensions
         panel-width (/ width num-cols)
         panel-height (/ height num-rows)
 
@@ -1197,7 +1202,7 @@
                                                                              (when custom-y-domain {:domain custom-y-domain})))))
                                  color-col (assoc :color {:field (name color-col)
                                                           :type "nominal"
-                                                          :scale {:range ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]}})
+                                                          :scale {:range ggplot2-colors}})
                                  alpha (assoc :opacity {:value alpha}))))
 
         ;; Process each layer
@@ -1309,7 +1314,7 @@
         width (or (:width opts) 600)
         height (or (:height opts) 400)
 
-        ;; Check for faceting
+;; Check for faceting
         is-faceted? (has-faceting? layers-vec)
         row-var (when is-faceted? (some :aog/row layers-vec))
         col-var (when is-faceted? (some :aog/col layers-vec))
@@ -1317,9 +1322,6 @@
         ;; Check for custom scale domains
         custom-x-domain (get-scale-domain layers-vec :x)
         custom-y-domain (get-scale-domain layers-vec :y)
-
-        ;; ggplot2 color palette
-        ggplot2-colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]
 
         ;; Helper to convert layer to Plotly data
         layer->plotly-data (fn [layer]
