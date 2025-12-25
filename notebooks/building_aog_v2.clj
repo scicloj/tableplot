@@ -125,7 +125,7 @@
 ;; friendly interface. We use it to manipulate data and access column types.
 ;;
 ;; **Key insight**: Tablecloth provides column type information via `tablecloth.column.api/typeof`,
-;; which eliminates the need for complex type inference!
+;; which eliminates the need for complex type inference.
 ;;
 ;; [**Kindly**](https://scicloj.github.io/kindly-noted/) is the visualization protocol that lets this notebook render
 ;; plots in different environments ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.). Each rendering target returns
@@ -265,7 +265,7 @@
 ;; using multiple dispatch to handle different type combinations with object-oriented
 ;; layer representations. This works in Julia's type system.
 ;;
-;; The key challenge for Clojure is bringing this compositional approach while staying
+;; One of our goals here would be bringing this compositional approach while staying
 ;; true to Clojure idioms: using plain data structures (maps, not objects), enabling
 ;; standard library operations like `merge`, `assoc`, and `filter`, maintaining the
 ;; compositional benefits, and making the intermediate representation transparent and
@@ -292,7 +292,7 @@
 
 (merge {:positional [:x] :named {:color :species}}
        {:positional [:y] :named {:size :body-mass}})
-;; Lost `:x` and `:color`!
+;; Lost `:x` and `:color`.
 
 ;; Nested structure requires a custom `merge-layer` function. Not ideal.
 
@@ -325,7 +325,7 @@
 ;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Interactive web visualizations, some coordinate system limitations
 ;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Interactive with 3D support, static export is tricky
 ;;
-;; The key idea: you write your plot specification once using our API, and it can be
+;; The idea: you write your plot specification once using our API, and it can be
 ;; rendered by different targets. This separates **what** you want to visualize from
 ;; **how** it gets rendered.
 
@@ -412,7 +412,7 @@
 ;; - Multi-layer plots: rendering targets handle shared domains
 ;; - Why: Avoid complex conflict resolution
 
-;; ## The Key Insight: Tablecloth Provides Types!
+;; ## Tablecloth Provides Types
 ;;
 ;; We don't need complex type inference. Tablecloth already knows:
 ;;
@@ -421,7 +421,7 @@
 ;; (col/typeof (penguins :species))         ;; => :string
 ;; ```
 ;;
-;; This eliminates the "context-aware type inference" problem entirely!
+;; This eliminates the "context-aware type inference" problem entirely.
 
 ;; # Proposed Design
 ;;
@@ -620,7 +620,7 @@
   :island-type (col/typeof (penguins :island))})
 
 ;; Notice: We get precise type information (`:float64`, `:string`) without
-;; examining values. This eliminates the need for complex type inference!
+;; examining values. This eliminates the need for complex type inference.
 
 ;; ## Implementation: Helper Functions & :geom Target
 ;;
@@ -1537,11 +1537,11 @@
 ;; 1. We create layer spec with data, mapping, plottype
 ;; 2. We DON'T compute X/Y domains
 ;; 3. Rendering target receives data and computes domain itself
-;; 4. This is simpler - we delegate what rendering targets do well!
+;; 4. This is simpler - we delegate what rendering targets do well.
 
 ;; ## Example 2: Plain Clojure Maps
 
-;; The API works with plain Clojure data structures, not just datasets!
+;; The API works with plain Clojure data structures, not just datasets.
 
 (plot
  (* (data {:x [1 2 3 4 5]
@@ -1553,7 +1553,7 @@
 ;; 1. Simple Clojure map with vectors of data
 ;; 2. No need to convert to tech.ml.dataset
 ;; 3. Type inference falls back to examining values
-;; 4. Everything just works!
+;; 4. Everything works.
 
 ;; This is particularly useful for quick exploration or when working with
 ;; simple data that doesn't need the full power of tech.ml.dataset.
@@ -1561,7 +1561,7 @@
 ;; ## Example 3: Type Information in Action
 
 ;; Now let's see how we can use Tablecloth's type information.
-;; This is a KEY WIN: we get types for free, no complex inference needed!
+;; We get types for free, no complex inference needed.
 
 (defn- infer-from-values
   "Simple fallback type inference for plain Clojure data."
@@ -1594,7 +1594,7 @@
     :color-type (infer-scale-type layer :aog/color)}))
 
 ;; Notice: Type inference is instant (O(1) lookup from Tablecloth metadata),
-;; not O(n) value examination!
+;; not O(n) value examination.
 
 ;; ## Example 4: Multi-Layer Composition (Scatter + Linear Regression)
 
@@ -1653,7 +1653,7 @@
 ;; **What happens here**:
 ;; 1. `(+ (scatter) (linear))` creates a vector of two plot specs
 ;; 2. `*` distributes over the vector (cartesian product)
-;; 3. Result: same as Example 3, but more succinct!
+;; 3. Result: same as Example 3, but more succinct.
 ;; 4. Factor out common parts (data, mapping), vary only what differs (plottype)
 
 ;; ## Example 5: Color Mapping with Categorical Variable
@@ -1682,7 +1682,7 @@
 ;; 2. Linear regression per species (separate line for each)
 ;; 3. Color scale shared between layers
 ;; 4. Demonstrates composition + grouping + statistical transforms
-;; 5. Uses distributivity for succinctness!
+;; 5. Uses distributivity for succinctness.
 
 ;; ## Example 7: Different Dataset (mtcars)
 
@@ -1735,12 +1735,12 @@
 ;; If we compute domains from raw scatter points, regression lines can extend beyond
 ;; that range (e.g., mtcars regression endpoint y=8.296 falls below the scatter domain
 ;; min y=10.4). This is why we compute domains AFTER applying statistical transforms—
-;; transforms can legitimately extend beyond the raw data range!
+;; transforms can legitimately extend beyond the raw data range.
 
 ;; ## Example 9: Histogram
 
 ;; Histograms are a key example of why we compute statistical transforms ourselves.
-;; We need the domain to compute bin edges!
+;; We need the domain to compute bin edges.
 
 (defn histogram
   "Add histogram transformation.
@@ -1805,7 +1805,7 @@
 ;; 2. Histogram transform bins the data using Sturges' rule
 ;; 3. We compute: domain → bin edges → bin counts
 ;; 4. Rendering target receives bars (bin ranges + heights), not raw points
-;; 5. This shows why we can't fully delegate - we need domain BEFORE binning!
+;; 5. This shows why we can't fully delegate - we need domain before binning.
 
 ;; Try different binning methods:
 
@@ -1951,7 +1951,7 @@
 
 ;; ## Example 12: Row × Column Grid Faceting
 ;;
-;; Create a 2D grid of facets - the full power of faceting!
+;; Create a 2D grid of facets.
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
 
 (plot
@@ -2051,7 +2051,7 @@
 ;; 1. Color mapping becomes VL's color encoding
 ;; 2. VL provides interactive legend
 ;; 3. Regression computed per species (3 separate lines)
-;; 4. Click legend to filter interactively!
+;; 4. Click legend to filter interactively.
 
 ;; ## Example 17: Histogram with Vega-Lite
 
