@@ -356,7 +356,7 @@
 ;; ```
 
 ;; Computation sequence:
-;; 1. Must compute domain first: [32.1, 59.6]
+;; 1. Must compute domain first (extent from 32.1 to 59.6)
 ;; 2. Use domain to decide bin edges  
 ;; 3. Compute bin counts
 ;; 4. Create bar chart from computed bins
@@ -375,44 +375,43 @@
 ;; bins and send ~20 bars to Vega-Lite or Plotly, not a million points.
 ;;
 ;; ## What We Compute (Minimal Set)
-;;
+;; 
 ;; **1. Statistical Transforms**
 ;; - Histogram, density, smoothing, regression
 ;; - Why: Core value, consistency across rendering targets, inspectability
-;;
-;; **2. Domain Computation (Only When Needed)**
-;; - Only for aesthetics involved in statistical transforms
-;; - Coordinate-aware ([Cartesian](https://en.wikipedia.org/wiki/Cartesian_coordinate_system), [polar](https://en.wikipedia.org/wiki/Polar_coordinate_system), [geographic](https://en.wikipedia.org/wiki/Geographic_coordinate_system))
-;; - Why: Required by statistical transforms
-;;
+;; 
+;; **2. Domain Computation**
+;; - Always for :geom target (min/max, then :geom handles "nice numbers")
+;; - Only custom domains for :vl and :plotly targets
+;; - Why: Required by statistical transforms, :geom needs explicit domains
+;; 
 ;; **3. Type Information**
 ;; - Use Tablecloth's column types (`col/typeof`)
 ;; - Fallback inference for plain maps
 ;; - Why: Free from Tablecloth, needed for transform selection
-;;
+;; 
+;; **4. Theme Colors**
+;; - ggplot2 color palette, background, and grid colors
+;; - Why: Consistent theming across all rendering targets
+;; 
 ;; ## What We Delegate (Maximize)
-;;
+;; 
 ;; **1. Axis Rendering**
 ;; - Tick placement, "nice numbers", label formatting
 ;; - Why: Rendering targets are polished, edge cases are many
-;;
+;; 
 ;; **2. Range Computation**
 ;; - Pixel/visual coordinates
 ;; - Why: Tightly coupled with layout
-;;
-;; **3. Domains for Simple Plots**
-;; - When no transforms, rendering targets compute from data
+;; 
+;; **3. Domains for :vl and :plotly (when not customized)**
+;; - Rendering targets compute from data we send
 ;; - Why: Rendering targets already do this well
-;;
+;; 
 ;; **4. Scale Merging**
 ;; - Multi-layer plots: rendering targets handle shared domains
 ;; - Why: Avoid complex conflict resolution
-;;
-;; **5. Color Palette Application**
-;; - We provide preferences (`:palette-preference :ggplot2`)
-;; - Rendering targets apply from their libraries
-;; - Why: Rendering targets have palette expertise
-;;
+
 ;; ## The Key Insight: Tablecloth Provides Types!
 ;;
 ;; We don't need complex type inference. Tablecloth already knows:
@@ -2261,7 +2260,6 @@
 ;; **Delegation Strategy**:
 ;; 1. ✅ **We compute**: Statistical transforms, domains (when needed), types (from Tablecloth)
 ;; 2. ❌ **We delegate**: Axis rendering, ranges, ticks, "nice numbers", layout
-;; 3. 🎯 **Result**: ~500 lines of focused code vs ~1500 lines of edge cases
 ;;
 ;; **Key Wins**:
 ;; - Type information from Tablecloth (free!)
