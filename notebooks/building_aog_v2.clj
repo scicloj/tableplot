@@ -1,32 +1,35 @@
-;; # Building a Composable Graphics API in Clojure (v2)
-;; **A Design Exploration for Tableplot with Minimal Delegation**
+;; # Building a Composable Graphics API in Clojure, Part 1
+;; **A Design Exploration for Tableplot**
 ;;
-;; *This notebook explores a fresh approach to composable plot specifications
-;; in Clojure, inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/). 
-;; It implements a **minimal delegation strategy** where we compute statistical transforms
-;; (like regression lines, histograms, smoothing) and leverage rendering target capabilities
-;; for rendering.*
+;; This is the first post in a series documenting the design and implementation of a new
+;; compositional plotting API for Clojure. We're exploring fresh approaches to declarative
+;; data visualization, drawing inspiration from Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/)
+;; while staying true to Clojure's values of simplicity and composability.
+;;
+;; Each post in this series combines narrative explanation with executable code—this is a
+;; working Clojure notebook where every example runs and produces real visualizations.
+;; You'll see the API evolve from basic scatter plots through faceting, statistical transforms,
+;; and support for multiple rendering backends. By the end, we'll have a complete prototype
+;; that handles real-world plotting tasks while maintaining a clean, inspectable design.
 ;;
 ;; ## A Bit of Context: Tableplot's Journey
 ;;
 ;; Before we dive into the technical details, let's talk about where we're coming from.
 ;;
-;; Tableplot was created in mid-2024 as a pragmatic plotting solution for the
+;; [Tableplot](https://scicloj.github.io/tableplot/) was created in mid-2024 as a pragmatic plotting solution for the
 ;; [Noj](https://scicloj.github.io/noj/) toolkit—Clojure's growing data science
 ;; and scientific computing ecosystem. We needed *something* that worked, and we
 ;; needed it soon. The goal was to complete an important piece of Noj's offering:
 ;; a way to visualize data without leaving Clojure or reaching for external tools.
 ;;
-;; And it worked! Tableplot's current APIs 
+;; Since then, Tableplot's current APIs 
 ;; ([`scicloj.tableplot.v1.hanami`](https://scicloj.github.io/tableplot/tableplot_book.hanami_walkthrough.html) and
 ;; [`scicloj.tableplot.v1.plotly`](https://scicloj.github.io/tableplot/tableplot_book.plotly_walkthrough.html)) 
-;; have been used in quite a few serious projects since then. People are actually using it 
-;; to get real work done.
+;; have been used in quite a few serious projects.
 ;;
-;; But here's the thing: **We never intended these APIs to be the final word on
-;; plotting in Clojure.** They were a decent compromise—pragmatic, functional,
-;; good enough to be useful. We knew they had problems. We knew there were
-;; better designs waiting to be explored.
+;; However, we never intended these APIs to be the final word on
+;; plotting in Clojure. They were a decent compromise—pragmatic, functional,
+;; good enough to be useful. Better designs have been waiting to be explored.
 ;;
 ;; ### Learning from Our Users
 ;;
