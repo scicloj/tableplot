@@ -356,6 +356,7 @@
 ;; ```
 
 ;; Computation sequence:
+
 ;; 1. Must compute domain first (extent from 32.1 to 59.6)
 ;; 2. Use domain to decide bin edges  
 ;; 3. Compute bin counts
@@ -1965,6 +1966,7 @@
    (scatter))
 
 ;; **What happens here**:
+
 ;; 1. We create layer spec with data, mapping, plottype
 ;; 2. The `*` operator returns layers annotated to auto-display as a plot
 ;; 3. We DON'T compute X/Y domains
@@ -2001,6 +2003,7 @@
    (scatter))
 
 ;; **What happens here**:
+
 ;; 1. Plain Clojure data (no tech.ml.dataset required)
 ;; 2. Both formats convert seamlessly to datasets internally
 ;; 3. Type inference works by examining values
@@ -2123,6 +2126,7 @@
    (histogram))
 
 ;; **What happens here**:
+
 ;; 1. We map only `:bill-length-mm` to x (no y mapping for histograms)
 ;; 2. Histogram transform bins the data using Sturges' rule
 ;; 3. We compute: domain → bin edges → bin counts
@@ -2147,6 +2151,7 @@
        (linear)))
 
 ;; **What happens here**:
+
 ;; 1. `:species` is categorical (`:string` type in Tablecloth)
 ;; 2. System automatically groups by `:species` for the linear transform
 ;; 3. Computes 3 separate regression lines (Adelie, Chinstrap, Gentoo)
@@ -2159,6 +2164,7 @@
     (histogram))
 
 ;; **What happens here**:
+
 ;; 1. Creates 3 separate histograms (one per species)
 ;; 2. Each histogram uses the same binning method
 ;; 3. Bars are colored by species
@@ -2176,6 +2182,7 @@
        (linear)))
 
 ;; **What happens here**:
+
 ;; 1. `:body-mass-g` is continuous (`:int64` type in Tablecloth)
 ;; 2. System does NOT group by body mass
 ;; 3. Computes a single regression line across all points
@@ -2198,6 +2205,7 @@
        (linear)))
 
 ;; **What happens here**:
+
 ;; 1. `:cyl` (cylinders) could be treated as continuous (it's numeric)
 ;; 2. But we explicitly group by `:cyl` using `:group`
 ;; 3. Computes separate regression lines for 4, 6, and 8 cylinder cars
@@ -2210,6 +2218,7 @@
        (linear)))
 
 ;; **What happens here**:
+
 ;; 1. Color by `:sex` (2 colors: male/female)
 ;; 2. Group by `:species` (3 regression lines: Adelie/Chinstrap/Gentoo)
 ;; 3. Points are colored by sex, but regressions computed per species
@@ -2246,6 +2255,7 @@
           :font {:family "Arial, sans-serif"}}))
 
 ;; Here we:
+
 ;; 1. Use `plot` to get the Plotly.js spec
 ;; 2. Add custom title, hover mode, and font (not in layer API yet)
 ;; 3. Display with `kind/plotly`
@@ -2300,6 +2310,7 @@
 ;; **Challenge**: thi.ng/geom-viz doesn't support multi-panel layouts
 ;;
 ;; **Needed**:
+
 ;; 1. Calculate panel dimensions (width / num-facets)
 ;; 2. Calculate panel positions (x-offsets)
 ;; 3. Create mini-plot for each facet at its position
@@ -2324,6 +2335,7 @@
 ;; ```
 ;;
 ;; This requires:
+
 ;; 1. Split data by species (3 groups)
 ;; 2. Compute histogram for EACH group (per-facet transforms)
 ;; 3. Collect domains across all groups (shared scales)
@@ -2391,6 +2403,7 @@
        {:row :island :col :sex})
 
 ;; **What happens here**:
+
 ;; 1. Data split by both `:island` (3 values) and `:sex` (2 values)
 ;; 2. Creates 3×2 = 6 panels in a grid
 ;; 3. Column labels at top, row labels on left (rotated)
@@ -2408,6 +2421,7 @@
    (scale :y {:domain [0 40]}))
 
 ;; **What happens here**:
+
 ;; 1. Y-axis forced to extend from 0 to 40 instead of auto-computed range from 10.4 to 33.9
 ;; 2. Useful for starting axes at meaningful values (like 0)
 ;; 3. Custom domains compose via `*` operator
@@ -2420,6 +2434,7 @@
    (scale :y {:domain [10 25]}))
 
 ;; **What happens here**:
+
 ;; 1. Both axes use custom ranges
 ;; 2. Zooms into a specific region of the data
 ;; 3. Useful for focusing on areas of interest or ensuring consistent scales across multiple plots
@@ -2442,6 +2457,7 @@
     (target :vl))
 
 ;; **What's different**:
+
 ;; 1. Interactive tooltips on hover
 ;; 2. Vega-Lite's polished default styling
 ;; 3. Same data, same API, different rendering
@@ -2457,6 +2473,7 @@
     (target :vl))
 
 ;; **What happens here**:
+
 ;; 1. Scatter plot rendered as VL `point` mark
 ;; 2. Regression computed on JVM (our delegation strategy!)
 ;; 3. Fitted line sent to VL as `line` mark
@@ -2471,6 +2488,7 @@
     (target :vl))
 
 ;; **What happens here**:
+
 ;; 1. Color mapping becomes VL's color encoding
 ;; 2. VL provides interactive legend
 ;; 3. Regression computed per species (3 separate lines)
@@ -2484,6 +2502,7 @@
     (target :vl))
 
 ;; **What happens here**:
+
 ;; 1. Histogram bins computed on JVM using fastmath
 ;; 2. Bar data sent to VL
 ;; 3. VL renders as bar chart
@@ -2498,6 +2517,7 @@
     (target :vl))
 
 ;; **What happens here**:
+
 ;; 1. Our API detects faceting specification
 ;; 2. Delegates to VL's native column faceting
 ;; 3. VL handles layout and labels
@@ -2516,6 +2536,7 @@
  {:width 800 :height 600})
 
 ;; **What happens here**:
+
 ;; 1. 2D grid faceting using VL's row × column faceting
 ;; 2. VL handles all layout computation
 ;; 3. Shared scales across all panels
@@ -2531,6 +2552,7 @@
     (target :vl))
 
 ;; **What happens here**:
+
 ;; 1. Custom domains passed to VL's scale specification
 ;; 2. VL respects our domain constraints
 ;; 3. Same composition semantics across targets
@@ -2568,6 +2590,7 @@
     (target :plotly))
 
 ;; **What's different from :geom and :vl**:
+
 ;; 1. Hover tooltips showing exact x/y values
 ;; 2. Toolbar with zoom, pan, and download options
 ;; 3. Smooth animations and transitions
@@ -2582,6 +2605,7 @@
     (target :plotly))
 
 ;; **What happens here**:
+
 ;; 1. Scatter plot rendered as Plotly scatter trace
 ;; 2. Regression computed on JVM (our minimal delegation!)
 ;; 3. Both traces combined in single Plotly spec
@@ -2596,6 +2620,7 @@
     (target :plotly))
 
 ;; **What happens here**:
+
 ;; 1. Three scatter traces (one per species) with ggplot2 colors
 ;; 2. Three regression lines (computed per-group on JVM)
 ;; 3. Matching colors for scatter points and regression lines
@@ -2612,6 +2637,7 @@
  {:width 500})
 
 ;; **What happens here**:
+
 ;; 1. Histogram computed on JVM using Sturges' rule
 ;; 2. Pre-computed bins sent to Plotly as bar trace
 ;; 3. White bar borders (ggplot2 theme)
@@ -2628,6 +2654,7 @@
  {:width 800 :height 400})
 
 ;; **What happens here**:
+
 ;; 1. Data split by species (3 facets)
 ;; 2. Each facet rendered in separate subplot
 ;; 3. Shared axes for easy comparison
@@ -2644,6 +2671,7 @@
     (target :plotly))
 
 ;; **What happens here**:
+
 ;; 1. Custom domain constraints respected
 ;; 2. Zoom/pan constrained to specified ranges
 ;; 3. Same composition semantics across all targets
@@ -2661,6 +2689,7 @@
  {:width 900 :height 350})
 
 ;; **What happens here**:
+
 ;; 1. Per-species histograms (computed on JVM)
 ;; 2. Faceted layout (3 columns)
 ;; 3. Shared y-axis for easy comparison
@@ -2680,6 +2709,7 @@
 ;; - Backend-agnostic IR
 ;;
 ;; **Delegation Strategy**:
+
 ;; 1. ✅ **We compute**: Statistical transforms, domains (when needed), types (from Tablecloth)
 ;; 2. ❌ **We delegate**: Axis rendering, ranges, ticks, "nice numbers", layout
 ;;
