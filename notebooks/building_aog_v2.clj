@@ -685,19 +685,7 @@
 
 ;; ## ⚙️ Scatter Constructor
 
-(defn scatter
-  "Create a scatter plot layer.
-  
-  Returns a vector containing a scatter layer.
-  
-  When called with layers-or-data as first arg, merges scatter into those layers."
-  ([]
-   [{:aog/plottype :scatter}])
-  ([attrs-or-layers]
-   (if (layers? attrs-or-layers)
-     (* attrs-or-layers (scatter))
-     [(merge {:aog/plottype :scatter}
-             (update-keys attrs-or-layers #(keyword "aog" (name %))))])))
+;; (scatter moved to dedicated Basic Scatter Plots section below)
 
 ;; (linear moved to dedicated Linear Regression section below)
 
@@ -779,14 +767,7 @@
   ([layers target-kw]
    (* layers (target target-kw))))
 
-;; Examples:
-(scatter)
-
-(scatter {:alpha 0.7})
-
-(scatter {:alpha 0.5 :size 10})
-
-;; (Removed line, histogram, smooth, density, target - not yet implemented in examples)
+;; (scatter examples moved to Basic Scatter Plots section)
 
 ;; (linear moved to just before first regression example)
 
@@ -1118,28 +1099,7 @@ iris
 
 ;; ### ⚙️ Geom Target Rendering Methods
 
-(defmethod render-layer [:geom :scatter]
-  [target layer transform-result alpha]
-  (let [points (:points transform-result)
-        color-groups (group-by :color points)]
-    (if (> (count color-groups) 1)
-      ;; Colored scatter
-      (let [colors (color-scale (keys color-groups))]
-        (mapv (fn [[color group-points]]
-                {:values (mapv (fn [p] [(:x p) (:y p)]) group-points)
-                 :layout viz/svg-scatter-plot
-                 :attribs {:fill (get colors color)
-                           :stroke (get colors color)
-                           :stroke-width 0.5
-                           :opacity alpha}})
-              color-groups))
-      ;; Simple scatter
-      [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
-        :layout viz/svg-scatter-plot
-        :attribs {:fill ggplot2-default-mark
-                  :stroke ggplot2-default-mark
-                  :stroke-width 0.5
-                  :opacity alpha}}])))
+;; (render-layer [:geom :scatter] moved to Basic Scatter Plots section)
 
 (defmethod render-layer [:geom :line]
   [target layer transform-result alpha]
@@ -1817,6 +1777,51 @@ iris
 ;; # 📊 Basic Scatter Plots
 ;; 
 ;; Simple scatter plots demonstrating the core API.
+
+;; ## ⚙️ Implementation
+
+;; ### Constructor
+
+(defn scatter
+  "Create a scatter plot layer.
+  
+  Returns a vector containing a scatter layer.
+  
+  When called with layers-or-data as first arg, merges scatter into those layers."
+  ([]
+   [{:aog/plottype :scatter}])
+  ([attrs-or-layers]
+   (if (layers? attrs-or-layers)
+     (* attrs-or-layers (scatter))
+     [(merge {:aog/plottype :scatter}
+             (update-keys attrs-or-layers #(keyword "aog" (name %))))])))
+
+;; ### Rendering Multimethod
+
+(defmethod render-layer [:geom :scatter]
+  [target layer transform-result alpha]
+  (let [points (:points transform-result)
+        color-groups (group-by :color points)]
+    (if (> (count color-groups) 1)
+      ;; Colored scatter
+      (let [colors (color-scale (keys color-groups))]
+        (mapv (fn [[color group-points]]
+                {:values (mapv (fn [p] [(:x p) (:y p)]) group-points)
+                 :layout viz/svg-scatter-plot
+                 :attribs {:fill (get colors color)
+                           :stroke (get colors color)
+                           :stroke-width 0.5
+                           :opacity alpha}})
+              color-groups))
+      ;; Simple scatter
+      [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
+        :layout viz/svg-scatter-plot
+        :attribs {:fill ggplot2-default-mark
+                  :stroke ggplot2-default-mark
+                  :stroke-width 0.5
+                  :opacity alpha}}])))
+
+;; ## 🧪 Examples
 
 ;; ## 🧪 Example 1: Simple Scatter Plot (Delegated Domain)
 
