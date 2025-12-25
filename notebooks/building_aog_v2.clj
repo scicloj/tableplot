@@ -436,20 +436,73 @@
 ;; **Current Implementation Status**:
 ;;
 ;; - ✅ Core composition (`*`, `+`, layer merging)
+;; - ✅ Threading-macro friendly API (`->` works naturally)
 ;; - ✅ Minimal delegation (compute transforms, delegate rendering)
 ;; - ✅ Type information from Tablecloth
+;; - ✅ Type-aware grouping (categorical color groups, continuous doesn't)
+;; - ✅ Explicit `:group` aesthetic for override control
 ;; - ✅ Three rendering targets (:geom, :vl, :plotly - all with full feature parity)
-;; - ✅ Statistical transforms (linear regression, histograms complete)
+;; - ✅ Statistical transforms: linear regression, histograms (with grouping support)
 ;; - ✅ Faceting (row, column, and grid faceting across all targets)
 ;; - ✅ Custom scale domains
 ;; - ✅ ggplot2-compatible theming
-;; - ⚠️ Additional transforms (smooth/density/contour pending)
+;; - ✅ Plain Clojure data structures (maps, vectors - no dataset required)
+;;
+;; **What's Missing (compared to tableplot.v1.plotly)**:
+;;
+;; - ⚠️ Plot types: line, bar, box, violin, density, smooth, heatmap, text, segment
+;; - ⚠️ Additional aesthetics: size, symbol/shape, opacity, fill, line-width
+;; - ⚠️ Statistical transforms: density estimation, smooth (loess/spline), correlation
+;; - ⚠️ Coordinate systems: 3D, polar, geo
+;; - ⚠️ Advanced layouts: subplots, secondary axes, insets
+;; - ⚠️ Interactivity: hover templates, click events, selections
+;;
+;; **Design Philosophy Differences**:
+;;
+;; This API prioritizes composability and algebraic clarity over feature completeness.
+;; The focus is on a minimal, well-understood core that can be extended incrementally.
+;; Missing features are deferred, not abandoned - they can be added as needed while
+;; maintaining the compositional design.
+
+;; ## How Plots are Displayed
+;;
+;; Layer specifications returned by `*` and `+` are **automatically displayed as plots**
+;; in the notebook. This means you typically don't need to call `plot` explicitly.
+;;
+;; ```clojure
+;; ;; Auto-displays as plot:
+;; (-> penguins
+;;     (mapping :bill-length-mm :bill-depth-mm)
+;;     (scatter))
+;;
+;; ;; To inspect the raw layer data, use kind/pprint:
+;; (kind/pprint
+;;   (-> penguins
+;;       (mapping :bill-length-mm :bill-depth-mm)
+;;       (scatter)))
+;;
+;; ;; To get the target spec (for debugging or customization):
+;; (plot
+;;   (-> penguins
+;;       (mapping :bill-length-mm :bill-depth-mm)
+;;       (scatter)))
+;; ```
+;;
+;; **When to use `plot` explicitly**:
+;; - Debugging: Inspect the Plotly.js/Vega-Lite/SVG spec
+;; - Customization: Post-process the spec with target-specific features
+;; - Extension: Add features not yet supported by the layer API
+;;
+;; **When to use `kind/pprint`**:
+;; - Inspect the raw layer specification (`:aog/*` keys)
+;; - Understand how composition merges layers
+;; - Debug layer construction before rendering
 
 ;; ## Helper Functions
 
 (defn- layers?
   "Check if x is a vector of layer maps (not data).
-  
+
   Layers have :aog/* namespaced keys, while data vectors contain plain maps."
   [x]
   (and (vector? x)
@@ -458,26 +511,91 @@
        (some #(= "aog" (namespace %))
              (keys (first x)))))
 
+;; ## Renderer
+
+(defmulti plot-impl
+  "Internal multimethod for plot dispatch."
+  (fn [layers opts]
+    (let [layers-vec (if (vector? layers) layers [layers])
+          spec-target (some :aog/target layers-vec)]
+      (or (:target opts) spec-target :geom))))
+
+(defn plot
+  "Unified rendering function supporting multiple targets.
+
+  Args:
+  - layers: Vector of layer maps or single layer map
+  - opts: Optional map with:
+    - :target - :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
+    - :width - Width in pixels (default 600)
+    - :height - Height in pixels (default 400)
+
+  Returns:
+  - Kindly-wrapped visualization specification
+
+  Examples:
+  (plot layers)                    ;; Uses :geom target by default
+  (plot layers {:target :vl})      ;; Vega-Lite specification"
+  ([layers]
+   (plot-impl layers {}))
+  ([layers opts]
+   (plot-impl layers opts)))
+
+(defn displays-as-plot
+  "Annotate layers to auto-display as a plot in notebooks.
+
+  Wraps layer specifications with Kindly metadata that tells the notebook
+  rendering system to call `plot` automatically when displaying the value.
+
+  This enables the compositional workflow where layer specs auto-display:
+
+  ```clojure
+  ;; Auto-displays as plot (no explicit plot call needed):
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (scatter))
+  ```
+
+  The `*` and `+` operators automatically apply this annotation to their
+  return values, so most users never call this function directly.
+
+  Args:
+  - layers: Vector of layer maps (with :aog/* keys)
+
+  Returns:
+  - The same layers, wrapped with Kindly auto-display metadata
+
+  See also:
+  - Use `kind/pprint` to inspect raw layers without auto-display
+  - Use `plot` explicitly when you need the target spec for customization"
+  [layers]
+  (kind/fn layers
+    {:kindly/f #'plot}))
+
 ;; ## Composition Operators
 
 (defn *
   "Merge layer specifications (composition)."
-  ([x] (if (map? x) [x] x))
+  ([x]
+   (displays-as-plot
+    (if (map? x) [x] x)))
   ([x y]
-   (cond
-     (and (map? x) (map? y))
-     [(merge x y)]
+   (displays-as-plot
+    (cond
+      (and (map? x) (map? y))
+      [(merge x y)]
 
-     (and (map? x) (vector? y))
-     (mapv #(merge x %) y)
+      (and (map? x) (vector? y))
+      (mapv #(merge x %) y)
 
-     (and (vector? x) (map? y))
-     (mapv #(merge % y) x)
+      (and (vector? x) (map? y))
+      (mapv #(merge % y) x)
 
-     (and (vector? x) (vector? y))
-     (vec (for [a x, b y] (merge a b)))))
+      (and (vector? x) (vector? y))
+      (vec (for [a x, b y] (merge a b))))))
   ([x y & more]
-   (reduce * (* x y) more)))
+   (displays-as-plot
+    (reduce * (* x y) more))))
 
 (defn +
   "Combine multiple layer specifications for overlay (sum).
@@ -485,12 +603,13 @@
   When used in threading with layers as first arg, distributes layers over the rest:
   (-> layers (+ (scatter) (linear))) → (* layers (+ (scatter) (linear)))"
   [& layer-specs]
-  (if (and (>= (count layer-specs) 3) ; Threading produces 3+ args
-           (layers? (first layer-specs)))
-    ;; First arg is layers - distribute over the rest
-    (* (first layer-specs) (apply + (rest layer-specs)))
-    ;; Normal concatenation
-    (vec (mapcat #(if (vector? %) % [%]) layer-specs))))
+  (displays-as-plot
+   (if (and (>= (count layer-specs) 3) ; Threading produces 3+ args
+            (layers? (first layer-specs)))
+     ;; First arg is layers - distribute over the rest
+     (* (first layer-specs) (apply + (rest layer-specs)))
+     ;; Normal concatenation
+     (vec (mapcat #(if (vector? %) % [%]) layer-specs)))))
 
 ;; ## Constructors
 
@@ -725,36 +844,6 @@
 ;; (Type Information section moved to just before example that demonstrates it)
 
 ;; (Removed Domain Computation section - compute-domain was unused, we use infer-domain instead)
-
-;; ## Renderer
-
-(defmulti plot-impl
-  "Internal multimethod for plot dispatch."
-  (fn [layers opts]
-    (let [layers-vec (if (vector? layers) layers [layers])
-          spec-target (some :aog/target layers-vec)]
-      (or (:target opts) spec-target :geom))))
-
-(defn plot
-  "Unified rendering function supporting multiple targets.
-
-  Args:
-  - layers: Vector of layer maps or single layer map
-  - opts: Optional map with:
-    - :target - :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
-    - :width - Width in pixels (default 600)
-    - :height - Height in pixels (default 400)
-
-  Returns:
-  - Kindly-wrapped visualization specification
-
-  Examples:
-  (plot layers)                    ;; Uses :geom target by default
-  (plot layers {:target :vl})      ;; Vega-Lite specification"
-  ([layers]
-   (plot-impl layers {}))
-  ([layers opts]
-   (plot-impl layers opts)))
 
 ;; # Examples
 ;;
@@ -1822,16 +1911,25 @@
 
 ;; ## Example 1: Simple Scatter Plot (Delegated Domain)
 
-(plot
+(* (data penguins)
+   (mapping :bill-length-mm :bill-depth-mm)
+   (scatter))
+
+;; **What happens here**:
+;; 1. We create layer spec with data, mapping, plottype
+;; 2. The `*` operator returns layers annotated to auto-display as a plot
+;; 3. We DON'T compute X/Y domains
+;; 4. Rendering target receives data and computes domain itself
+;; 5. This is simpler - we delegate what rendering targets do well.
+
+;; **Inspecting the raw layer specification**:
+(kind/pprint
  (* (data penguins)
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)))
 
-;; **What happens here**:
-;; 1. We create layer spec with data, mapping, plottype
-;; 2. We DON'T compute X/Y domains
-;; 3. Rendering target receives data and computes domain itself
-;; 4. This is simpler - we delegate what rendering targets do well.
+;; Notice the `:aog/data`, `:aog/x`, `:aog/y`, `:aog/plottype` keys.
+;; This is the compositional layer specification before rendering.
 
 ;; ## Example 2: Plain Clojure Data Structures
 
@@ -1839,21 +1937,19 @@
 ;; Two formats are supported:
 
 ;; **Map of vectors** (most common for columnar data):
-(plot
- (* (data {:x [1 2 3 4 5]
-           :y [2 4 6 8 10]})
-    (mapping :x :y)
-    (scatter)))
+(* (data {:x [1 2 3 4 5]
+          :y [2 4 6 8 10]})
+   (mapping :x :y)
+   (scatter))
 
 ;; **Vector of maps** (row-oriented data):
-(plot
- (* (data [{:x 1 :y 2}
-           {:x 2 :y 4}
-           {:x 3 :y 6}
-           {:x 4 :y 8}
-           {:x 5 :y 10}])
-    (mapping :x :y)
-    (scatter)))
+(* (data [{:x 1 :y 2}
+          {:x 2 :y 4}
+          {:x 3 :y 6}
+          {:x 4 :y 8}
+          {:x 5 :y 10}])
+   (mapping :x :y)
+   (scatter))
 
 ;; **What happens here**:
 ;; 1. Plain Clojure data (no tech.ml.dataset required)
@@ -1871,47 +1967,41 @@
 ;; visualizations where you're building up layers incrementally.
 
 ;; **Simple scatter plot**:
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm)
-     (scatter)))
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter))
 
 ;; **With color aesthetic**:
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm {:color :species})
-     (scatter)))
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (scatter))
 
 ;; **Multi-layer: scatter + regression**
 ;;
 ;; The `+` operator distributes when used in threading context, so this
 ;; creates two layers (scatter and linear) that both share the data and mapping:
-(plot
- (-> mtcars
-     (mapping :wt :mpg)
-     (+ (scatter)
-        (linear))))
+(-> mtcars
+    (mapping :wt :mpg)
+    (+ (scatter)
+       (linear)))
 
 ;; **With custom options**:
-(plot
- (-> penguins
-     (mapping :bill-length-mm nil)
-     (histogram {:bins 12})))
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram {:bins 12}))
 
 ;; **Combining scale customization**:
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm)
-     (scatter)
-     (scale :x {:domain [30 65]})
-     (scale :y {:domain [12 23]})))
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (scale :x {:domain [30 65]})
+    (scale :y {:domain [12 23]}))
 
 ;; **Works with plain data too**:
-(plot
- (-> {:x [1 2 3 4 5]
-      :y [2 4 6 8 10]}
-     (mapping :x :y)
-     (scatter)))
+(-> {:x [1 2 3 4 5]
+     :y [2 4 6 8 10]}
+    (mapping :x :y)
+    (scatter))
 
 ;; **What's happening under the hood**:
 ;;
@@ -1979,10 +2069,9 @@
 
 ;; Test histogram computation in isolation
 
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm nil)
-    (histogram)))
+(* (data penguins)
+   (mapping :bill-length-mm nil)
+   (histogram))
 
 ;; **What happens here**:
 ;; 1. We map only `:bill-length-mm` to x (no y mapping for histograms)
@@ -1993,10 +2082,9 @@
 
 ;; Try different binning methods:
 
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm nil)
-    (histogram {:bins 15})))
+(* (data penguins)
+   (mapping :bill-length-mm nil)
+   (histogram {:bins 15}))
 
 ;; ## Example 5: Grouping with Categorical Color
 
@@ -2004,11 +2092,10 @@
 ;; for statistical transforms. This matches AlgebraOfGraphics.jl and ggplot2 behavior.
 
 ;; **Categorical color → grouped regression**:
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm {:color :species})
-     (+ (scatter {:alpha 0.5})
-        (linear))))
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (+ (scatter {:alpha 0.5})
+       (linear)))
 
 ;; **What happens here**:
 ;; 1. `:species` is categorical (`:string` type in Tablecloth)
@@ -2018,10 +2105,9 @@
 ;; 5. Scatter points are also colored by species
 
 ;; **Categorical color → grouped histogram**:
-(plot
- (-> penguins
-     (mapping :bill-length-mm nil {:color :species})
-     (histogram)))
+(-> penguins
+    (mapping :bill-length-mm nil {:color :species})
+    (histogram))
 
 ;; **What happens here**:
 ;; 1. Creates 3 separate histograms (one per species)
@@ -2035,11 +2121,10 @@
 ;; but does NOT create groups for statistical transforms.
 
 ;; **Continuous color → single regression with gradient**:
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
-     (+ (scatter {:alpha 0.5})
-        (linear))))
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
+    (+ (scatter {:alpha 0.5})
+       (linear)))
 
 ;; **What happens here**:
 ;; 1. `:body-mass-g` is continuous (`:int64` type in Tablecloth)
@@ -2058,11 +2143,10 @@
 ;; This lets you group by one variable while coloring by another.
 
 ;; **Explicit :group aesthetic**:
-(plot
- (-> mtcars
-     (mapping :wt :mpg {:group :cyl})
-     (+ (scatter)
-        (linear))))
+(-> mtcars
+    (mapping :wt :mpg {:group :cyl})
+    (+ (scatter)
+       (linear)))
 
 ;; **What happens here**:
 ;; 1. `:cyl` (cylinders) could be treated as continuous (it's numeric)
@@ -2071,11 +2155,10 @@
 ;; 4. No color mapping, so all points/lines use default color
 
 ;; **Group different from color**:
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
-     (+ (scatter {:alpha 0.5})
-        (linear))))
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
+    (+ (scatter {:alpha 0.5})
+       (linear)))
 
 ;; **What happens here**:
 ;; 1. Color by `:sex` (2 colors: male/female)
@@ -2083,9 +2166,43 @@
 ;; 3. Points are colored by sex, but regressions computed per species
 ;; 4. This shows that grouping and color are independent concepts
 
-;; ## Debugging & Inspection Utilities
+;; ## Example 8: Using `plot` for Spec Inspection and Customization
 
-;; inspect-layers moved earlier to before its first use
+;; Most of the time, layers auto-display and you don't need `plot`.
+;; But sometimes you want the raw target spec for debugging or customization.
+
+;; **Getting the Plotly.js spec**:
+(def my-spec
+  (plot
+   (-> penguins
+       (mapping :bill-length-mm :bill-depth-mm {:color :species})
+       (scatter))
+   {:target :plotly}))
+
+;; Inspect it:
+(kind/pprint my-spec)
+
+;; **Why use `plot` explicitly?**
+;;
+;; 1. **Debugging**: See exactly what's being sent to the rendering target
+;; 2. **Customization**: Post-process with target-specific features
+;; 3. **Extension**: Add features not yet supported by the layer API
+;;
+;; **Example: Custom Plotly.js features**:
+(kind/plotly
+ (update my-spec :layout
+         merge
+         {:title "Palmer Penguins"
+          :hovermode "closest"
+          :font {:family "Arial, sans-serif"}}))
+
+;; Here we:
+;; 1. Use `plot` to get the Plotly.js spec
+;; 2. Add custom title, hover mode, and font (not in layer API yet)
+;; 3. Display with `kind/plotly`
+;;
+;; This is the "escape hatch" - when the layer API doesn't support
+;; something yet, you can drop down to the target spec and customize it.
 
 ;; # Faceting: Architectural Questions Revealed
 ;;
@@ -2194,41 +2311,35 @@
 ;; Facet a scatter plot by species - this creates 3 side-by-side plots.
 
 ;; Test faceted scatter plot - 3 side-by-side plots
-(plot
- (facet (* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-        {:col :species}))
+(facet (* (data penguins)
+          (mapping :bill-length-mm :bill-depth-mm)
+          (scatter))
+       {:col :species})
 
 ;; Test faceted histogram - per-species histograms with shared scales
-(plot
- (facet (* (data penguins)
-           (mapping :bill-length-mm nil)
-           (histogram))
-        {:col :species}))
+(facet (* (data penguins)
+          (mapping :bill-length-mm nil)
+          (histogram))
+       {:col :species})
 
 ;; ## Example 11: Row Faceting
 ;;
 ;; Facet by rows creates vertically stacked panels
 
-(plot
- (facet (* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-        {:row :species})
- {:height 600})
+(facet (* (data penguins)
+          (mapping :bill-length-mm :bill-depth-mm)
+          (scatter))
+       {:row :species})
 
 ;; ## Example 12: Row × Column Grid Faceting
 ;;
 ;; Create a 2D grid of facets.
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
 
-(plot
- (facet (* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-        {:row :island :col :sex})
- {:width 800 :height 900})
+(facet (* (data penguins)
+          (mapping :bill-length-mm :bill-depth-mm)
+          (scatter))
+       {:row :island :col :sex})
 
 ;; **What happens here**:
 ;; 1. Data split by both `:island` (3 values) and `:sex` (2 values)
@@ -2242,11 +2353,10 @@
 ;; Override auto-computed domains to control axis ranges
 
 ;; Force y-axis to start at 0
-(plot
- (* (data mtcars)
-    (mapping :wt :mpg)
-    (scatter)
-    (scale :y {:domain [0 40]})))
+(* (data mtcars)
+   (mapping :wt :mpg)
+   (scatter)
+   (scale :y {:domain [0 40]}))
 
 ;; **What happens here**:
 ;; 1. Y-axis forced to extend from 0 to 40 instead of auto-computed range from 10.4 to 33.9
@@ -2254,12 +2364,11 @@
 ;; 3. Custom domains compose via `*` operator
 
 ;; Custom domains on both axes
-(plot
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm)
-    (scatter)
-    (scale :x {:domain [30 65]})
-    (scale :y {:domain [10 25]})))
+(* (data penguins)
+   (mapping :bill-length-mm :bill-depth-mm)
+   (scatter)
+   (scale :x {:domain [30 65]})
+   (scale :y {:domain [10 25]}))
 
 ;; **What happens here**:
 ;; 1. Both axes use custom ranges
@@ -2271,12 +2380,12 @@
 ;; One of the key benefits of our API design is **backend agnosticism**. The same
 ;; plot specification can be rendered by different visualization libraries.
 ;;
-;; So far, all examples have used the `:geom` target (thi.ng/geom for static SVG).
-;; Now let's demonstrate the `:vl` target (Vega-Lite for interactive web visualizations).
+;; So far, all examples have used the `:geom` target (thi.ng/geom for static SVG),
+;; which is the default. To select a different target, use `plot` with `:target`.
 
 ;; ## Example 14: Simple Scatter with Vega-Lite
 
-;; The exact same specification, just with `:target :vl`:
+;; Use `plot` to select the `:vl` target (Vega-Lite):
 
 (plot
  (* (data penguins)
