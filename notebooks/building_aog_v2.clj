@@ -10,7 +10,7 @@
 ;; working Clojure notebook where every example runs and produces real visualizations.
 ;; You'll see the API evolve from basic scatter plots through faceting, statistical transforms,
 ;; and support for multiple rendering backends. By the end, we'll have a complete prototype
-;; that handles real-world plotting tasks while maintaining a clean, inspectable design.
+;; that handles real-world plotting tasks while maintaining an inspectable design.
 ;;
 ;; ## A Bit of Context: Tableplot's Journey
 ;;
@@ -19,7 +19,7 @@
 ;; [Tableplot](https://scicloj.github.io/tableplot/) was created in mid-2024 as a pragmatic plotting solution for the
 ;; [Noj](https://scicloj.github.io/noj/) toolkit—Clojure's growing data science
 ;; and scientific computing ecosystem. We needed *something* that worked, and we
-;; needed it soon. The goal was to complete an important piece of Noj's offering:
+;; needed it soon. The goal was to add to Noj's offering:
 ;; a way to visualize data without leaving Clojure or reaching for external tools.
 ;;
 ;; Since then, Tableplot's current APIs 
@@ -64,27 +64,27 @@
 ;; fundamental, you have to consider the impact across multiple layers.
 ;;
 ;; Each API is also tied to a specific rendering target. If you choose `hanami`,
-;; you get Vega-Lite—which is excellent for many use cases but has limitations
-;; with certain coordinate systems. If you choose `plotly`, you get rich interactivity
+;; you get Vega-Lite—which works for many use cases but has limitations
+;; with certain coordinate systems. If you choose `plotly`, you get interactivity
 ;; but rendering static images programmatically becomes tricky. When you hit a
 ;; limitation of your chosen rendering target, switching means learning a different API.
 ;;
 ;; The intermediate representation between the API and the renderers uses Hanami
-;; templates. Template substitution is powerful and flexible, but it can be
+;; templates. Template substitution is flexible, but it can be
 ;; open-ended and difficult to understand when debugging. Error messages sometimes
 ;; reference template internals rather than your code, and it's not always clear
 ;; which substitution parameters are valid in which contexts.
 ;;
 ;; The APIs also currently expect [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) 
 ;; datasets. If you have a simple Clojure map or vector, you need to convert it 
-;; first—even for trivial visualizations.
+;; first—even for simple visualizations.
 ;;
 ;; ## What We're Exploring
 ;;
 ;; Some of these limitations will be addressed within the current APIs themselves—
 ;; we're actively working on improvements. But as we always intended, it's valuable
-;; to explore fresh solutions in parallel. A clean-slate design lets us ask questions
-;; that are harder to answer incrementally: Can we separate concerns more cleanly 
+;; to explore fresh solutions in parallel. A fresh design lets us ask questions
+;; that are harder to answer incrementally: Can we better separate concerns
 ;; between the API layer, the intermediate representation, and the rendering?
 ;; Can one API work with multiple rendering targets? Can we use plain Clojure data structures
 ;; and standard library operations throughout? Can we make the intermediate
@@ -132,8 +132,8 @@
 ;; plots in different environments ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.). Each rendering target returns
 ;; a Kindly-wrapped spec.
 ;;
-;; [**thi.ng/geom**](https://github.com/thi-ng/geom) gives us the static SVG target. It's excellent for
-;; ggplot2-style visualizations that can be saved as publication-quality images. We specifically use
+;; [**thi.ng/geom**](https://github.com/thi-ng/geom) gives us the static SVG target for
+;; ggplot2-style visualizations that can be saved as images. We specifically use
 ;; [geom.viz](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/viz/demos.org) for data visualization.
 ;;
 ;; [**Fastmath**](https://github.com/generateme/fastmath) handles our statistical computations, particularly linear
@@ -161,7 +161,7 @@
 
 ;; ## Glossary: Visualization Terminology
 ;;
-;; Before diving deeper, let's clarify some key terms we'll use throughout:
+;; Before diving deeper, let's clarify some terms we'll use throughout:
 ;;
 ;; **Domain** - The range of input values from your data. For a column of bill lengths 
 ;; `[32.1, 45.3, 59.6]`, the domain is `[32.1, 59.6]`. This is *data space*.
@@ -255,15 +255,15 @@
 ;; ```
 ;;
 ;; **Why two operators?** The separation brings clarity—`*` means "combine properties" 
-;; while `+` means "overlay visuals"—and enables powerful composability.
+;; while `+` means "overlay visuals"—and enables composability.
 
 ;; ## Translating to Clojure
 ;;
 ;; Julia's approach relies on custom `*` and `+` operators defined on Layer types,
 ;; using multiple dispatch to handle different type combinations with object-oriented
-;; layer representations. This works beautifully in Julia's type system.
+;; layer representations. This works in Julia's type system.
 ;;
-;; The key challenge for Clojure is bringing this compositional elegance while staying
+;; The key challenge for Clojure is bringing this compositional approach while staying
 ;; true to Clojure idioms: using plain data structures (maps, not objects), enabling
 ;; standard library operations like `merge`, `assoc`, and `filter`, maintaining the
 ;; compositional benefits, and making the intermediate representation transparent and
@@ -361,7 +361,7 @@
 ;; ```
 ;;
 ;; **The dependency**: We can't delegate domain to the rendering target because we need it
-;; BEFORE we can compute bins. Statistical transforms are an **important part of a good
+;; BEFORE we can compute bins. Statistical transforms are an **important part of a
 ;; plotting library**, so we accept this dependency.
 ;;
 ;; **Why compute on the JVM?** When working with large datasets, we want to compute
@@ -1726,7 +1726,7 @@
 ;; - Different plottypes and transformations
 ;; - Data row count shown for verification
 
-;; **An important insight from building this**:
+;; **An insight from building this**:
 ;;
 ;; During development, we discovered that regression lines need careful domain handling.
 ;; If we compute domains from raw scatter points, regression lines can extend beyond
@@ -2111,7 +2111,7 @@
 
 ;; ## The Power of Backend Agnosticism
 ;;
-;; **Key insight**: Our flat map representation with `:aog/*` keys creates a clean
+;; **Key insight**: Our flat map representation with `:aog/*` keys creates a
 ;; separation between plot semantics and rendering implementation.
 ;;
 ;; **What we control** (across all targets):
@@ -2131,7 +2131,7 @@
 
 ;; # Plotly.js Target Examples
 ;;
-;; Now let's explore the `:plotly` target, which provides rich interactivity
+;; Now let's explore the `:plotly` target, which provides interactivity
 ;; and is particularly strong for dashboards and web applications.
 
 ;; ## Example 21: Simple Scatter with Plotly
@@ -2274,7 +2274,7 @@
 ;; - ✅ Custom scale domains
 ;; - ✅ :geom rendering target (thi.ng/geom with SVG output)
 ;; - ✅ :vl rendering target (Vega-Lite with interactive web viz)
-;; - ✅ :plotly rendering target (Plotly.js with rich interactivity)
+;; - ✅ :plotly rendering target (Plotly.js with interactivity)
 ;; - ✅ ggplot2-compatible theming across all targets
 ;; - ✅ Full feature parity (scatter, regression, histogram, faceting) across all three targets
 ;; - ⚠️ Additional transforms (smooth, density, contour - planned)
