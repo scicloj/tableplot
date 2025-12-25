@@ -1,4 +1,4 @@
-;; # Building a Composable Graphics API in Clojure, Part 1
+;; # Building a Composable Graphics API in Clojure, Version 1
 ;; **A Design Exploration for Tableplot**
 ;;
 ;; This is the first post in a series documenting the design and implementation of a new
@@ -422,8 +422,6 @@
 ;; (col/typeof (penguins :species))         ;; => :string
 ;; ```
 ;;
-;; This eliminates the "context-aware type inference" problem entirely.
-
 ;; # Proposed Design
 ;;
 ;; ## API Overview
@@ -562,14 +560,7 @@
   Wraps layer specifications with Kindly metadata that tells the notebook
   rendering system to call `plot` automatically when displaying the value.
 
-  This enables the compositional workflow where layer specs auto-display:
-
-  ```clojure
-  ;; Auto-displays as plot (no explicit plot call needed):
-  (-> penguins
-      (mapping :bill-length-mm :bill-depth-mm)
-      (scatter))
-  ```
+  This enables the compositional workflow where layer specs auto-display.
 
   The `*` and `+` operators automatically apply this annotation to their
   return values, so most users never call this function directly.
@@ -892,11 +883,17 @@
 ;; Palmer Penguins - 344 observations, 3 species
 (def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
 
+penguins
+
 ;; Motor Trend Car Road Tests - 32 automobiles
 (def mtcars (rdatasets/datasets-mtcars))
 
+mtcars
+
 ;; Fisher's Iris - 150 flowers, 3 species
 (def iris (rdatasets/datasets-iris))
+
+iris
 
 ;; # Constants
 
