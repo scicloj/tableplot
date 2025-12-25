@@ -523,19 +523,33 @@
 (defn plot
   "Unified rendering function supporting multiple targets.
 
+  Most users should use the `target` function for auto-display instead:
+    (-> data (mapping :x :y) (scatter) (target :vl))
+
+  Use `plot` explicitly when you need:
+  - Custom width/height options
+  - Access to the raw target specification for debugging or customization
+
   Args:
   - layers: Vector of layer maps or single layer map
   - opts: Optional map with:
-    - :target - :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
     - :width - Width in pixels (default 600)
     - :height - Height in pixels (default 400)
+
+  The rendering target is determined by:
+  1. `:aog/target` key in layers (set via `target` function)
+  2. :geom (static SVG) as default
 
   Returns:
   - Kindly-wrapped visualization specification
 
   Examples:
-  (plot layers)                    ;; Uses :geom target by default
-  (plot layers {:target :vl})      ;; Vega-Lite specification"
+  ;; Get raw spec for customization:
+  (plot layers {:width 800 :height 600})
+  
+  ;; Override dimensions for a plot with target already set:
+  (plot (-> data (mapping :x :y) (scatter) (target :vl))
+        {:width 1000})"
   ([layers]
    (plot-impl layers {}))
   ([layers opts]
@@ -780,6 +794,28 @@
      [{scale-key opts}]))
   ([layers aesthetic opts]
    (* layers (scale aesthetic opts))))
+
+(defn target
+  "Specify the rendering target for layers.
+  
+  Args:
+  - target-kw: One of :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
+  
+  Returns a vector containing target specification.
+  
+  When called with layers as first arg, merges target into those layers.
+  
+  Examples:
+  (target :vl)
+  (target :plotly)
+  
+  Threading-friendly:
+  (-> penguins (mapping :x :y) (scatter) (target :vl))  ;; Auto-displays as Vega-Lite
+  (-> mtcars (mapping :wt :mpg) (scatter) (target :plotly))  ;; Auto-displays as Plotly"
+  ([target-kw]
+   [{:aog/target target-kw}])
+  ([layers target-kw]
+   (* layers (target target-kw))))
 
 ;; Examples:
 (scatter)
@@ -1552,7 +1588,12 @@
                                    y-col (:aog/y layer)
                                    color-col (:aog/color layer)
                                    alpha (:aog/alpha layer)
-                                   transform (:aog/transformation layer)]
+                                   transform (:aog/transformation layer)
+                                   ;; Build tooltip fields
+                                   tooltip-fields (cond-> []
+                                                    x-col (conj {:field (name x-col) :type "quantitative"})
+                                                    y-col (conj {:field (name y-col) :type "quantitative"})
+                                                    color-col (conj {:field (name color-col) :type "nominal"}))]
                                (cond-> {}
                                  x-col (assoc :x (cond-> {:field (name x-col) :type "quantitative"}
                                                    true (assoc :scale (merge {:zero false}
@@ -1563,7 +1604,8 @@
                                  color-col (assoc :color {:field (name color-col)
                                                           :type "nominal"
                                                           :scale {:range ggplot2-colors}})
-                                 alpha (assoc :opacity {:value alpha}))))
+                                 alpha (assoc :opacity {:value alpha})
+                                 (seq tooltip-fields) (assoc :tooltip tooltip-fields))))
 
         ;; Process each layer
         vl-layers (mapcat (fn [layer]
@@ -1618,7 +1660,10 @@
                                                    :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
                                                    :axis {:title (name (:aog/x layer))}}
                                                :x2 {:field "bin-end"}
-                                               :y {:field "count" :type "quantitative"}}}])
+                                               :y {:field "count" :type "quantitative"}
+                                               :tooltip [{:field "bin-start" :type "quantitative" :title "Min"}
+                                                         {:field "bin-end" :type "quantitative" :title "Max"}
+                                                         {:field "count" :type "quantitative" :title "Count"}]}}])
 
                                 ;; Grouped histogram - bars per group
                                 :grouped-histogram
@@ -1640,7 +1685,11 @@
                                                                   :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
                                                                   :axis {:title (name (:aog/x layer))}}
                                                               :x2 {:field "bin-end"}
-                                                              :y {:field "count" :type "quantitative"}}
+                                                              :y {:field "count" :type "quantitative"}
+                                                              :tooltip [{:field "bin-start" :type "quantitative" :title "Min"}
+                                                                        {:field "bin-end" :type "quantitative" :title "Max"}
+                                                                        {:field "count" :type "quantitative" :title "Count"}
+                                                                        {:field (name group-col) :type "nominal"}]}
                                                              (when group-col
                                                                {:color {:field (name group-col) :type "nominal"}}))}])))
                                           groups)))))
@@ -1649,7 +1698,7 @@
         ;; Remove nils from nested regression per-group
         vl-layers (remove nil? (flatten vl-layers))
 
-;; ggplot2-compatible theme config
+        ;; ggplot2-compatible theme config
         ggplot2-config {:view {:stroke "transparent"}
                         :background ggplot2-background
                         :axis {:gridColor ggplot2-grid
@@ -2381,34 +2430,31 @@
 ;; plot specification can be rendered by different visualization libraries.
 ;;
 ;; So far, all examples have used the `:geom` target (thi.ng/geom for static SVG),
-;; which is the default. To select a different target, use `plot` with `:target`.
+;; which is the default. To select a different target, use the `target` function.
 
 ;; ## Example 14: Simple Scatter with Vega-Lite
 
-;; Use `plot` to select the `:vl` target (Vega-Lite):
+;; Use `target` to select the `:vl` target (Vega-Lite):
 
-(plot
- (* (data penguins)
+(-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
-    (scatter))
- {:target :vl})
+    (scatter)
+    (target :vl))
 
 ;; **What's different**:
 ;; 1. Interactive tooltips on hover
-;; 2. Pan and zoom capabilities
-;; 3. Vega-Lite's polished default styling
-;; 4. Same data, same API, different rendering
+;; 2. Vega-Lite's polished default styling
+;; 3. Same data, same API, different rendering
 
 ;; ## Example 15: Multi-Layer with Vega-Lite
 
 ;; Scatter + regression works too:
 
-(plot
- (* (data mtcars)
+(-> mtcars
     (mapping :wt :mpg)
     (+ (scatter)
-       (linear)))
- {:target :vl})
+       (linear))
+    (target :vl))
 
 ;; **What happens here**:
 ;; 1. Scatter plot rendered as VL `point` mark
@@ -2418,12 +2464,11 @@
 
 ;; ## Example 16: Color Mapping with Vega-Lite
 
-(plot
- (* (data penguins)
+(-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (+ (scatter)
-       (linear)))
- {:target :vl})
+       (linear))
+    (target :vl))
 
 ;; **What happens here**:
 ;; 1. Color mapping becomes VL's color encoding
@@ -2433,11 +2478,10 @@
 
 ;; ## Example 17: Histogram with Vega-Lite
 
-(plot
- (* (data penguins)
+(-> penguins
     (mapping :bill-length-mm nil)
-    (histogram))
- {:target :vl})
+    (histogram)
+    (target :vl))
 
 ;; **What happens here**:
 ;; 1. Histogram bins computed on JVM using fastmath
@@ -2447,12 +2491,11 @@
 
 ;; ## Example 18: Faceting with Vega-Lite
 
-(plot
- (facet (* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-        {:col :species})
- {:target :vl})
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:col :species})
+    (target :vl))
 
 ;; **What happens here**:
 ;; 1. Our API detects faceting specification
@@ -2462,12 +2505,15 @@
 
 ;; ## Example 19: Grid Faceting with Vega-Lite
 
+;; When you need custom dimensions, use `plot` with options:
+
 (plot
- (facet (* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-        {:row :island :col :sex})
- {:target :vl :width 800 :height 600})
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (facet {:row :island :col :sex})
+     (target :vl))
+ {:width 800 :height 600})
 
 ;; **What happens here**:
 ;; 1. 2D grid faceting using VL's row × column faceting
@@ -2477,13 +2523,12 @@
 
 ;; ## Example 20: Custom Domains with Vega-Lite
 
-(plot
- (* (data penguins)
+(-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
     (scale :x {:domain [30 65]})
-    (scale :y {:domain [10 25]}))
- {:target :vl})
+    (scale :y {:domain [10 25]})
+    (target :vl))
 
 ;; **What happens here**:
 ;; 1. Custom domains passed to VL's scale specification
@@ -2517,11 +2562,10 @@
 
 ;; ## Example 21: Simple Scatter with Plotly
 
-(plot
- (* (data penguins)
+(-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
-    (scatter))
- {:target :plotly})
+    (scatter)
+    (target :plotly))
 
 ;; **What's different from :geom and :vl**:
 ;; 1. Hover tooltips showing exact x/y values
@@ -2531,12 +2575,11 @@
 
 ;; ## Example 22: Multi-Layer with Plotly
 
-(plot
- (* (data mtcars)
+(-> mtcars
     (mapping :wt :mpg)
     (+ (scatter)
-       (linear)))
- {:target :plotly})
+       (linear))
+    (target :plotly))
 
 ;; **What happens here**:
 ;; 1. Scatter plot rendered as Plotly scatter trace
@@ -2546,12 +2589,11 @@
 
 ;; ## Example 23: Color-Grouped Regression with Plotly
 
-(plot
- (* (data penguins)
+(-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (+ (scatter)
-       (linear)))
- {:target :plotly})
+       (linear))
+    (target :plotly))
 
 ;; **What happens here**:
 ;; 1. Three scatter traces (one per species) with ggplot2 colors
@@ -2563,10 +2605,11 @@
 ;; ## Example 24: Histogram with Plotly
 
 (plot
- (* (data penguins)
-    (mapping :bill-length-mm nil)
-    (histogram))
- {:target :plotly :width 500})
+ (-> penguins
+     (mapping :bill-length-mm nil)
+     (histogram)
+     (target :plotly))
+ {:width 500})
 
 ;; **What happens here**:
 ;; 1. Histogram computed on JVM using Sturges' rule
@@ -2577,11 +2620,12 @@
 ;; ## Example 25: Faceted Scatter with Plotly
 
 (plot
- (facet (* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-        {:col :species})
- {:target :plotly :width 800 :height 400})
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (facet {:col :species})
+     (target :plotly))
+ {:width 800 :height 400})
 
 ;; **What happens here**:
 ;; 1. Data split by species (3 facets)
@@ -2592,13 +2636,12 @@
 
 ;; ## Example 26: Custom Domains with Plotly
 
-(plot
- (* (data penguins)
+(-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
     (scale :x {:domain [30 65]})
-    (scale :y {:domain [10 25]}))
- {:target :plotly})
+    (scale :y {:domain [10 25]})
+    (target :plotly))
 
 ;; **What happens here**:
 ;; 1. Custom domain constraints respected
@@ -2610,11 +2653,12 @@
 ;; All features together - histogram faceted by species:
 
 (plot
- (facet (* (data penguins)
-           (mapping :bill-length-mm nil)
-           (histogram {:bins 12}))
-        {:col :species})
- {:target :plotly :width 900 :height 350})
+ (-> penguins
+     (mapping :bill-length-mm nil)
+     (histogram {:bins 12})
+     (facet {:col :species})
+     (target :plotly))
+ {:width 900 :height 350})
 
 ;; **What happens here**:
 ;; 1. Per-species histograms (computed on JVM)
