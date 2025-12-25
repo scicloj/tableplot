@@ -1190,9 +1190,11 @@
                                    transform (:aog/transformation layer)]
                                (cond-> {}
                                  x-col (assoc :x (cond-> {:field (name x-col) :type "quantitative"}
-                                                   custom-x-domain (assoc :scale {:domain custom-x-domain})))
+                                                   true (assoc :scale (merge {:zero false}
+                                                                             (when custom-x-domain {:domain custom-x-domain})))))
                                  y-col (assoc :y (cond-> {:field (name y-col) :type "quantitative"}
-                                                   custom-y-domain (assoc :scale {:domain custom-y-domain})))
+                                                   true (assoc :scale (merge {:zero false}
+                                                                             (when custom-y-domain {:domain custom-y-domain})))))
                                  color-col (assoc :color {:field (name color-col)
                                                           :type "nominal"
                                                           :scale {:range ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]}})
@@ -1458,6 +1460,19 @@
                             :yaxis (name yaxis-key)
                             :marker {:color "#333333" :size 6}
                             :showlegend false}
+
+                           :histogram
+                           (let [bars (:bars transform-result)]
+                             {:type "bar"
+                              :x (mapv (fn [b] (clojure.core// (clojure.core/+ (:x-min b) (:x-max b)) 2)) bars)
+                              :y (mapv :height bars)
+                              :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
+                              :xaxis (name xaxis-key)
+                              :yaxis (name yaxis-key)
+                              :marker {:color "#333333"
+                                       :line {:color "#FFFFFF" :width 1}}
+                              :showlegend false})
+
                            nil)))
 
                      ;; Create subplot layout
