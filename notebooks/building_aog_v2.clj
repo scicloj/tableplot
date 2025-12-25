@@ -448,15 +448,21 @@
 ;; ## Constructors
 
 (defn data
-  "Attach a dataset to a layer.
-  
-  Accepts plain Clojure maps or tech.ml.dataset datasets.
+  "Attach data to a layer.
+
+  Accepts:
+  - tech.ml.dataset datasets
+  - Maps of vectors: {:x [1 2 3] :y [4 5 6]}
+  - Vector of maps: [{:x 1 :y 4} {:x 2 :y 5}]
+
   Returns a layer map with :aog/data."
   [dataset]
   {:aog/data dataset})
 
 ;; Examples:
 (data {:x [1 2 3] :y [4 5 6]})
+
+(data [{:x 1 :y 4} {:x 2 :y 5} {:x 3 :y 6}])
 
 ;; Works with datasets too (shown later when we load penguins)
 
@@ -630,9 +636,33 @@
 ;; ### Helper Functions
 
 (defn- ensure-dataset
-  "Convert data to a tablecloth dataset if it isn't already."
+  "Convert data to a tablecloth dataset if it isn't already.
+
+  Accepts:
+  - tech.ml.dataset datasets (passed through)
+  - Maps of vectors: {:x [1 2 3] :y [4 5 6]}
+  - Vector of maps: [{:x 1 :y 4} {:x 2 :y 5}]
+
+  Returns a tablecloth dataset."
   [data]
-  (if (tc/dataset? data) data (tc/dataset data)))
+  (cond
+    (tc/dataset? data) data
+
+    (map? data)
+    (let [values (vals data)]
+      (when-not (every? sequential? values)
+        (throw (ex-info "Map data must have sequential values (vectors or lists)"
+                        {:data data
+                         :invalid-keys (filter #(not (sequential? (get data %))) (keys data))})))
+      (tc/dataset data))
+
+    (and (sequential? data) (every? map? data))
+    (tc/dataset data)
+
+    :else
+    (throw (ex-info "Data must be a dataset, map of vectors, or vector of maps"
+                    {:data data
+                     :type (type data)}))))
 
 (defn- split-by-facets
   "Split a layer's data by facet variables.
@@ -825,10 +855,30 @@
   [categories]
   (zipmap categories (cycle ggplot2-colors)))
 
-(defn- render-scatter-viz
-  "Render scatter plot visualization data."
-  [points alpha]
-  (let [color-groups (group-by :color points)]
+;; ## Rendering Multimethod
+;;
+;; The render-layer multimethod dispatches on [target plottype-or-transform].
+;; This allows us to define each rendering strategy separately and introduce
+;; them incrementally as examples need them.
+;;
+;; Design: Transform computation (apply-transform) is target-independent and shared.
+;; Rendering is target-specific - each [target plottype] combination is a separate method.
+;; This makes it easy to add new targets: define [:vl :scatter], [:plotly :scatter], etc.
+
+(defmulti render-layer
+  "Render a layer for a specific target.
+  
+  Dispatches on [target plottype-or-transform], where plottype-or-transform
+  is the transformation type if present, otherwise the plottype."
+  (fn [target layer transform-result alpha]
+    [target (or (:aog/transformation layer) (:aog/plottype layer))]))
+
+;; ### Geom Target Rendering Methods
+
+(defmethod render-layer [:geom :scatter]
+  [target layer transform-result alpha]
+  (let [points (:points transform-result)
+        color-groups (group-by :color points)]
     (if (> (count color-groups) 1)
       ;; Colored scatter
       (let [colors (color-scale (keys color-groups))]
@@ -848,10 +898,10 @@
                   :stroke-width 0.5
                   :opacity alpha}}])))
 
-(defn- render-line-viz
-  "Render line plot visualization data."
-  [points alpha]
-  (let [sorted-points (sort-by :x points)
+(defmethod render-layer [:geom :line]
+  [target layer transform-result alpha]
+  (let [points (:points transform-result)
+        sorted-points (sort-by :x points)
         color-groups (group-by :color sorted-points)]
     (if (> (count color-groups) 1)
       ;; Colored lines
@@ -873,10 +923,11 @@
                   :fill "none"
                   :opacity alpha}}])))
 
-(defn- render-regression-viz
-  "Render linear regression visualization data."
-  [points fitted alpha]
-  (let [color-groups (group-by :color points)]
+(defmethod render-layer [:geom :linear]
+  [target layer transform-result alpha]
+  (let [points (:points transform-result)
+        fitted (:fitted transform-result)
+        color-groups (group-by :color points)]
     (if (> (count color-groups) 1)
       ;; Regression per group
       (keep (fn [[color group-points]]
@@ -899,40 +950,20 @@
                     :fill "none"
                     :opacity alpha}}]))))
 
-(defn- render-histogram-viz
-  "Render histogram visualization data."
-  [bars alpha]
-  (when bars
-    (mapv (fn [bar]
-            {:type :rect
-             :x-min (:x-min bar)
-             :x-max (:x-max bar)
-             :height (:height bar)
-             :attribs {:fill ggplot2-default-mark
-                       :stroke ggplot2-grid
-                       :stroke-width 1
-                       :opacity alpha}})
-          bars)))
-
-(defn- transform->viz-data
-  "Convert transform result to visualization data.
-  
-  Returns vector of viz specs ready for rendering."
-  [layer transform-result alpha]
-  (case (:type transform-result)
-    :regression
-    (render-regression-viz (:points transform-result)
-                           (:fitted transform-result)
-                           alpha)
-
-    :histogram
-    (render-histogram-viz (:bars transform-result) alpha)
-
-    :raw
-    (case (:aog/plottype layer)
-      :scatter (render-scatter-viz (:points transform-result) alpha)
-      :line (render-line-viz (:points transform-result) alpha)
-      [])))
+(defmethod render-layer [:geom :histogram]
+  [target layer transform-result alpha]
+  (let [bars (:bars transform-result)]
+    (when bars
+      (mapv (fn [bar]
+              {:type :rect
+               :x-min (:x-min bar)
+               :x-max (:x-max bar)
+               :height (:height bar)
+               :attribs {:fill ggplot2-default-mark
+                         :stroke ggplot2-grid
+                         :stroke-width 1
+                         :opacity alpha}})
+            bars))))
 
 ;; ### Simple :geom Target (Delegating Domain Computation)
 
@@ -981,18 +1012,18 @@
                  :major y-major
                  :pos panel-left})
 
-        ;; Process each layer to viz data
+        ;; Process each layer using render-layer multimethod
         layer-data (mapcat (fn [layer]
                              (let [points (layer->points layer)
                                    alpha (or (:aog/alpha layer) 1.0)
                                    transform-result (apply-transform layer points)]
-                               (transform->viz-data layer transform-result alpha)))
+                               (render-layer :geom layer transform-result alpha)))
                            layers)
 
         ;; Separate regular viz data from histogram rectangles
         {viz-data true rect-data false} (group-by #(not= (:type %) :rect) layer-data)
 
-;; Create the plot spec for regular data
+        ;; Create the plot spec for regular data
         plot-spec {:x-axis x-axis
                    :y-axis y-axis
                    :grid {:attribs {:stroke ggplot2-grid :stroke-width 1}}
@@ -1539,24 +1570,36 @@
 ;; 3. Rendering target receives data and computes domain itself
 ;; 4. This is simpler - we delegate what rendering targets do well.
 
-;; ## Example 2: Plain Clojure Maps
+;; ## Example 2: Plain Clojure Data Structures
 
 ;; The API works with plain Clojure data structures, not just datasets.
+;; Two formats are supported:
 
+;; **Map of vectors** (most common for columnar data):
 (plot
  (* (data {:x [1 2 3 4 5]
            :y [2 4 6 8 10]})
     (mapping :x :y)
     (scatter)))
 
-;; **What happens here**:
-;; 1. Simple Clojure map with vectors of data
-;; 2. No need to convert to tech.ml.dataset
-;; 3. Type inference falls back to examining values
-;; 4. Everything works.
+;; **Vector of maps** (row-oriented data):
+(plot
+ (* (data [{:x 1 :y 2}
+           {:x 2 :y 4}
+           {:x 3 :y 6}
+           {:x 4 :y 8}
+           {:x 5 :y 10}])
+    (mapping :x :y)
+    (scatter)))
 
-;; This is particularly useful for quick exploration or when working with
-;; simple data that doesn't need the full power of tech.ml.dataset.
+;; **What happens here**:
+;; 1. Plain Clojure data (no tech.ml.dataset required)
+;; 2. Both formats convert seamlessly to datasets internally
+;; 3. Type inference works by examining values
+;; 4. Helpful errors if data format is invalid
+
+;; This is useful for quick exploration or when working with simple data
+;; that doesn't need the full power of tech.ml.dataset.
 
 ;; ## Example 3: Type Information in Action
 

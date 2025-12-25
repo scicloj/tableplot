@@ -777,6 +777,80 @@ The notebook follows a clear narrative (~1,600 lines):
 11. **Decision Points** - Open questions for community feedback
 12. **Summary** - Key insights and implementation status
 
+### Multimethod Rendering Architecture (2025-12-25)
+
+**Major Refactoring**: Introduced multimethod-based rendering for extensibility and pedagogical clarity.
+
+**Key Design Decision**: Transform computation is target-independent, rendering is target-specific.
+
+**Implementation** (`notebooks/building_aog_v2.clj`):
+```clojure
+;; Multimethod dispatches on [target plottype-or-transform]
+(defmulti render-layer
+  (fn [target layer transform-result alpha]
+    [target (or (:aog/transformation layer) (:aog/plottype layer))]))
+
+;; Geom target methods
+(defmethod render-layer [:geom :scatter] [target layer transform-result alpha] ...)
+(defmethod render-layer [:geom :line] [target layer transform-result alpha] ...)
+(defmethod render-layer [:geom :linear] [target layer transform-result alpha] ...)
+(defmethod render-layer [:geom :histogram] [target layer transform-result alpha] ...)
+
+;; Future: Add methods for other targets
+(defmethod render-layer [:vl :scatter] [target layer transform-result alpha] ...)
+(defmethod render-layer [:plotly :scatter] [target layer transform-result alpha] ...)
+```
+
+**Benefits**:
+1. **Pedagogical**: Can introduce scatter plot with only `[:geom :scatter]` method, then add others incrementally
+2. **Extensible**: Adding new targets is straightforward (define methods for each plottype)
+3. **Separation**: Transform computation (`apply-transform`) shared across targets
+4. **Cleaner**: Eliminates nested `case` statements
+
+**Code Changes**:
+- Removed 5 old functions: `render-scatter-viz`, `render-line-viz`, `render-regression-viz`, `render-histogram-viz`, `transform->viz-data`
+- Added multimethod with 4 implementations for `:geom` target
+- Updated `render-single-panel` to use multimethod
+
+### Plain Data Structure Support (2025-12-25)
+
+**Enhanced Validation and Documentation** for plain Clojure data structures:
+
+**Supported Formats** (via `ensure-dataset`):
+```clojure
+;; tech.ml.dataset (passed through unchanged)
+(data penguins-dataset)
+
+;; Map of vectors (columnar data)
+(data {:x [1 2 3] :y [4 5 6]})
+
+;; Vector of maps (row-oriented data)
+(data [{:x 1 :y 4} {:x 2 :y 5} {:x 3 :y 6}])
+```
+
+**Validation**: Helpful error messages for invalid data:
+- "Map data must have sequential values (vectors or lists)" - with list of invalid keys
+- "Data must be a dataset, map of vectors, or vector of maps" - with type info
+
+**Implementation** (`notebooks/building_aog_v2.clj`):
+```clojure
+(defn- ensure-dataset
+  "Convert data to tablecloth dataset with validation."
+  [data]
+  (cond
+    (tc/dataset? data) data
+    (map? data)
+    (do (when-not (every? sequential? (vals data))
+          (throw (ex-info "Map data must have sequential values..." {...})))
+        (tc/dataset data))
+    (and (sequential? data) (every? map? data))
+    (tc/dataset data)
+    :else
+    (throw (ex-info "Data must be a dataset, map of vectors, or vector of maps" {...}))))
+```
+
+**Documentation**: Example 2 in notebook shows both formats with clear explanations.
+
 ### Recent Simplifications (2025-12-23)
 
 The notebook underwent code simplification to focus on demonstrating design directions:
