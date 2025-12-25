@@ -12,7 +12,7 @@
 ;; and support for multiple rendering backends. By the end, we'll have a complete prototype
 ;; that handles real-world plotting tasks while maintaining an inspectable design.
 ;;
-;; ## A Bit of Context: Tableplot's Journey
+;; ## 📖 A Bit of Context: Tableplot's Journey
 ;;
 ;; Before we dive into the technical details, let's talk about where we're coming from.
 ;;
@@ -49,7 +49,7 @@
 
 ;; # Context & Motivation
 ;;
-;; ## Why Explore a New Approach?
+;; ## 📖 Why Explore a New Approach?
 ;;
 ;; Tableplot currently provides two visualization APIs: `scicloj.tableplot.v1.hanami`
 ;; for [Vega-Lite](https://vega.github.io/vega-lite/) visualizations, and 
@@ -79,7 +79,7 @@
 ;; datasets. If you have a simple Clojure map or vector, you need to convert it 
 ;; first—even for simple visualizations.
 ;;
-;; ## What We're Exploring
+;; ## 📖 What We're Exploring
 ;;
 ;; Some of these limitations will be addressed within the current APIs themselves—
 ;; we're actively working on improvements. But as we always intended, it's valuable
@@ -161,7 +161,7 @@
 ;; We chose AoG because it seemed small enough to grasp and reproduce, while still being
 ;; reasonably complete in its scope.
 
-;; ## Glossary: Visualization Terminology
+;; ## 📖 Glossary: Visualization Terminology
 ;;
 ;; Before diving deeper, let's clarify some terms we'll use throughout:
 ;;
@@ -198,7 +198,7 @@
 ;; **Rendering Target** - The library that produces final output: thi.ng/geom, 
 ;; Vega-Lite, or Plotly.
 
-;; ## Core Insight: Layers + Operations
+;; ## 📖 Core Insight: Layers + Operations
 ;;
 ;; AlgebraOfGraphics.jl treats visualization with two key ideas:
 ;;
@@ -242,7 +242,7 @@
 ;; This allows factoring out common properties and applying them to
 ;; multiple plot types without repetition.
 
-;; ## Comparison to ggplot2
+;; ## 📖 Comparison to ggplot2
 ;;
 ;; ggplot2 uses `+` for everything:
 ;; ```r
@@ -259,7 +259,7 @@
 ;; **Why two operators?** The separation brings clarity—`*` means "combine properties" 
 ;; while `+` means "overlay visuals"—and enables composability.
 
-;; ## Translating to Clojure
+;; ## 📖 Translating to Clojure
 ;;
 ;; Julia's approach relies on custom `*` and `+` operators defined on Layer types,
 ;; using multiple dispatch to handle different type combinations with object-oriented
@@ -277,7 +277,7 @@
 ;; The core design question: how should we structure layer specifications
 ;; so they compose naturally with Clojure's standard library?
 
-;; ## The Problem: Nested Doesn't Merge
+;; ## 📖 The Problem: Nested Doesn't Merge
 
 (def nested-layer-example
   {:transformation nil
@@ -296,7 +296,7 @@
 
 ;; Nested structure requires a custom `merge-layer` function. Not ideal.
 
-;; ## The Solution: Flat Structure with Namespaced Keys
+;; ## 📖 The Solution: Flat Structure with Namespaced Keys
 
 (def flat-layer-example
   #:aog{:data {:bill-length-mm [39.1 39.5 40.3]
@@ -333,7 +333,7 @@
 ;;
 ;; A key architectural decision: **What do we compute vs. what do rendering targets handle?**
 ;;
-;; ## The Core Principle
+;; ## 📖 The Core Principle
 ;;
 ;; **Statistical transforms require domain computation. Everything else can delegate.**
 ;;
@@ -375,7 +375,7 @@
 ;; results to rendering targets. For example, with a million points, we compute the histogram
 ;; bins and send ~20 bars to Vega-Lite or Plotly, not a million points.
 ;;
-;; ## What We Compute (Minimal Set)
+;; ## 📖 What We Compute (Minimal Set)
 ;; 
 ;; **1. Statistical Transforms**
 ;; - Histogram, density, smoothing, regression
@@ -395,7 +395,7 @@
 ;; - ggplot2 color palette, background, and grid colors
 ;; - Why: Consistent theming across all rendering targets
 ;; 
-;; ## What We Delegate (Maximize)
+;; ## 📖 What We Delegate (Maximize)
 ;; 
 ;; **1. Axis Rendering**
 ;; - Tick placement, "nice numbers", label formatting
@@ -413,7 +413,7 @@
 ;; - Multi-layer plots: rendering targets handle shared domains
 ;; - Why: Avoid complex conflict resolution
 
-;; ## Tablecloth Provides Types
+;; ## 📖 Tablecloth Provides Types
 ;;
 ;; We don't need complex type inference. Tablecloth already knows:
 ;;
@@ -424,7 +424,7 @@
 ;;
 ;; # Proposed Design
 ;;
-;; ## API Overview
+;; ## 📖 API Overview
 ;;
 ;; The API consists of three parts:
 ;;
@@ -463,7 +463,7 @@
 ;; Missing features are deferred, not abandoned - they can be added as needed while
 ;; maintaining the compositional design.
 
-;; ## How Plots are Displayed
+;; ## 📖 How Plots are Displayed
 ;;
 ;; Layer specifications returned by `*` and `+` are **automatically displayed as plots**
 ;; in the notebook. This means you typically don't need to call `plot` explicitly.
@@ -497,7 +497,7 @@
 ;; - Understand how composition merges layers
 ;; - Debug layer construction before rendering
 
-;; ## Helper Functions
+;; ## ⚙️ Helper Functions
 
 (defn- layers?
   "Check if x is a vector of layer maps (not data).
@@ -510,7 +510,7 @@
        (some #(= "aog" (namespace %))
              (keys (first x)))))
 
-;; ## Renderer
+;; ## ⚙️ Renderer
 
 (defmulti plot-impl
   "Internal multimethod for plot dispatch."
@@ -578,7 +578,7 @@
   (kind/fn layers
     {:kindly/f #'plot}))
 
-;; ## Composition Operators
+;; ## ⚙️ Composition Operators
 
 (defn *
   "Merge layer specifications (composition)."
@@ -617,7 +617,7 @@
      ;; Normal concatenation
      (vec (mapcat #(if (vector? %) % [%]) layer-specs)))))
 
-;; ## Constructors
+;; ## ⚙️ Constructors
 
 (defn data
   "Attach data to a layer.
@@ -683,6 +683,8 @@
 
 (mapping :wt :mpg {:color :cyl :size :hp})
 
+;; ## ⚙️ Scatter Constructor
+
 (defn scatter
   "Create a scatter plot layer.
   
@@ -699,6 +701,8 @@
 
 (defn linear
   "Add linear regression transformation.
+;; ## ⚙️ Linear Regression Constructor
+
   
   Computes best-fit line through points.
   When combined with color aesthetic, computes separate regression per group.
@@ -714,6 +718,8 @@
                   layers-or-data
                   (data layers-or-data))]
      (* layers (linear)))))
+
+;; ## ⚙️ Histogram Constructor
 
 (defn histogram
   "Add histogram transformation.
@@ -743,6 +749,8 @@
 
 (defn facet
   "Add faceting to a layer specification.
+;; ## ⚙️ Facet Constructor
+
   
   Args:
   - layer-spec: Layer or vector of layers
@@ -766,6 +774,8 @@
   "Specify scale properties for an aesthetic.
   
   Args:
+;; ## ⚙️ Scale Constructor
+
   - aesthetic: Keyword like :x, :y, :color
   - opts: Map with scale options:
     - :domain - [min max] for continuous, or vector of categories
@@ -792,6 +802,8 @@
   
   Args:
   - target-kw: One of :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
+;; ## ⚙️ Target Constructor
+
   
   Returns a vector containing target specification.
   
@@ -820,7 +832,7 @@
 
 ;; (linear moved to just before first regression example)
 
-;; ## Type Information (Using Tablecloth)
+;; ## ⚙️ Type Information (Using Tablecloth)
 
 (defn- infer-from-values
   "Simple fallback type inference for plain Clojure data."
@@ -878,7 +890,7 @@
 ;; These examples demonstrate the design in practice, showing how minimal
 ;; delegation works.
 
-;; ## Setup: Load Datasets
+;; ## ⚙️ Setup: Load Datasets
 
 ;; Palmer Penguins - 344 observations, 3 species
 (def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
@@ -906,7 +918,7 @@ iris
 (def ^:private ggplot2-grid "#FFFFFF")
 (def ^:private ggplot2-default-mark "#333333")
 
-;; ## Type Information Example
+;; ## 🧪 Type Information Example
 ;;
 ;; Let's see Tablecloth's type information in action:
 
@@ -918,12 +930,12 @@ iris
 ;; Notice: We get precise type information (`:float64`, `:string`) without
 ;; examining values. This eliminates the need for complex type inference.
 
-;; ## Implementation: Helper Functions & :geom Target
+;; ## ⚙️ Implementation: Helper Functions & :geom Target
 ;;
 ;; Before we can render examples, we need basic implementation.
 ;; This version follows the minimal delegation strategy.
 
-;; ### Helper Functions
+;; ### ⚙️ Helper Functions
 
 (defn- ensure-dataset
   "Convert data to a tablecloth dataset if it isn't already.
@@ -1187,7 +1199,7 @@ iris
   [categories]
   (zipmap categories (cycle ggplot2-colors)))
 
-;; ## Rendering Multimethod
+;; ## ⚙️ Rendering Multimethod
 ;;
 ;; The render-layer multimethod dispatches on [target plottype-or-transform].
 ;; This allows us to define each rendering strategy separately and introduce
@@ -1205,7 +1217,7 @@ iris
   (fn [target layer transform-result alpha]
     [target (or (:aog/transformation layer) (:aog/plottype layer))]))
 
-;; ### Geom Target Rendering Methods
+;; ### ⚙️ Geom Target Rendering Methods
 
 (defmethod render-layer [:geom :scatter]
   [target layer transform-result alpha]
@@ -1312,7 +1324,7 @@ iris
                          :opacity alpha}})
             bars))))
 
-;; ### Simple :geom Target (Delegating Domain Computation)
+;; ### ⚙️ Simple :geom Target (Delegating Domain Computation)
 
 (defn- infer-domain
   "Infer domain from data values.
@@ -1956,7 +1968,11 @@ iris
 
     (kind/plotly spec)))
 
-;; ## Example 1: Simple Scatter Plot (Delegated Domain)
+;; # 📊 Basic Scatter Plots
+;; 
+;; Simple scatter plots demonstrating the core API.
+
+;; ## 🧪 Example 1: Simple Scatter Plot (Delegated Domain)
 
 (* (data penguins)
    (mapping :bill-length-mm :bill-depth-mm)
@@ -1979,7 +1995,7 @@ iris
 ;; Notice the `:aog/data`, `:aog/x`, `:aog/y`, `:aog/plottype` keys.
 ;; This is the compositional layer specification before rendering.
 
-;; ## Example 2: Plain Clojure Data Structures
+;; ## 🧪 Example 2: Plain Clojure Data Structures
 
 ;; The API works with plain Clojure data structures, not just datasets.
 ;; Two formats are supported:
@@ -2009,7 +2025,7 @@ iris
 ;; This is useful for quick exploration or when working with simple data
 ;; that doesn't need the full power of tech.ml.dataset.
 
-;; ## Example 2b: Threading-Macro Style
+;; ## 🧪 Example 2b: Threading-Macro Style
 ;;
 ;; All the API functions support Clojure's threading macro (`->`), providing
 ;; a more natural, pipeline-style syntax. This is especially useful for complex
@@ -2074,7 +2090,7 @@ iris
 ;;
 ;; They produce identical results. Choose whichever feels more natural for your use case.
 
-;; ## Example 3: Type Information in Action
+;; ## 🧪 Example 3: Type Information in Action
 
 ;; Now let's see how we can use Tablecloth's type information.
 ;; We get types for free, no complex inference needed.
@@ -2112,7 +2128,11 @@ iris
 ;; Notice: Type inference is instant (O(1) lookup from Tablecloth metadata),
 ;; not O(n) value examination.
 
-;; ## Example 4: Multi-Layer Composition (Scatter + Linear Regression)
+;; # 📊 Linear Regression
+;; 
+;; Statistical transformation: computing and overlaying regression lines.
+
+;; ## 🧪 Example 4: Multi-Layer Composition (Scatter + Linear Regression)
 
 ;; First, we need a way to add statistical transforms. Let's add [linear regression](https://en.wikipedia.org/wiki/Linear_regression):
 
@@ -2136,7 +2156,11 @@ iris
    (mapping :bill-length-mm nil)
    (histogram {:bins 15}))
 
-;; ## Example 5: Grouping with Categorical Color
+;; # 📊 Grouping & Color
+;; 
+;; Type-aware grouping: categorical colors create groups for statistical transforms.
+
+;; ## 🧪 Example 5: Grouping with Categorical Color
 
 ;; When you map a **categorical** variable to color, it automatically creates groups
 ;; for statistical transforms. This matches AlgebraOfGraphics.jl and ggplot2 behavior.
@@ -2167,7 +2191,7 @@ iris
 ;; 3. Bars are colored by species
 ;; 4. This is different from faceting - bars can overlap/stack
 
-;; ## Example 6: Continuous Color (No Grouping)
+;; ## 🧪 Example 6: Continuous Color (No Grouping)
 
 ;; When you map a **continuous** variable to color, it creates a visual gradient
 ;; but does NOT create groups for statistical transforms.
@@ -2190,7 +2214,7 @@ iris
 ;; - Categorical aesthetics → semantic grouping (affects computations)
 ;; - Continuous aesthetics → visual mapping only (no grouping)
 
-;; ## Example 7: Explicit Grouping Override
+;; ## 🧪 Example 7: Explicit Grouping Override
 
 ;; You can explicitly control grouping using the `:group` aesthetic.
 ;; This lets you group by one variable while coloring by another.
@@ -2221,7 +2245,7 @@ iris
 ;; 3. Points are colored by sex, but regressions computed per species
 ;; 4. This shows that grouping and color are independent concepts
 
-;; ## Example 8: Using `plot` for Spec Inspection and Customization
+;; ## 🧪 Example 8: Using `plot` for Spec Inspection and Customization
 
 ;; Most of the time, layers auto-display and you don't need `plot`.
 ;; But sometimes you want the raw target spec for debugging or customization.
@@ -2264,7 +2288,7 @@ iris
 ;;
 ;; Implementing faceting has exposed several important design questions:
 ;;
-;; ## 1. Statistical Transforms Must Be Per-Facet
+;; ## 📖 1. Statistical Transforms Must Be Per-Facet
 ;;
 ;; **Example**: Histogram of bill-length faceted by species
 ;; - Semantically: User expects 3 separate histograms (one per species)
@@ -2274,7 +2298,7 @@ iris
 ;; **Current architecture**: We apply transforms in `plot-impl` after extracting points
 ;; **Needed**: Apply transforms to each facet group separately
 ;;
-;; ## 2. Domain Computation: Shared vs Free Scales
+;; ## 📖 2. Domain Computation: Shared vs Free Scales
 ;;
 ;; **Shared scales** (ggplot2 default):
 ;; - All facets use same x/y domain
@@ -2288,7 +2312,7 @@ iris
 ;;
 ;; **Decision**: Start with shared scales (simpler), add `:scales` option later
 ;;
-;; ## 3. Delegation Strategy: Control vs Leverage
+;; ## 📖 3. Delegation Strategy: Control vs Leverage
 ;;
 ;; **Our principle**: We control semantics, targets handle presentation
 ;;
@@ -2302,7 +2326,7 @@ iris
 ;; - `:geom` - we compute layout positions manually
 ;; - `:vl`/`:plotly` - could use their grid layout features
 ;;
-;; ## 4. Rendering Architecture for :geom
+;; ## 📖 4. Rendering Architecture for :geom
 ;;
 ;; **Challenge**: thi.ng/geom-viz doesn't support multi-panel layouts
 ;;
@@ -2316,7 +2340,7 @@ iris
 ;;
 ;; **Complexity**: Significant refactoring of plot-impl :geom
 ;;
-;; ## 5. The Core Insight
+;; ## 📖 5. The Core Insight
 ;;
 ;; **Faceting reveals the same pattern as statistical transforms**:
 ;; - We MUST control the semantics (data splitting, per-group computation)
@@ -2345,7 +2369,7 @@ iris
 ;;
 ;; Let's explore faceting to see what architectural questions emerge.
 
-;; ## Faceting Design Decisions
+;; ## 📖 Faceting Design Decisions
 ;;
 ;; After prototyping, we've decided:
 ;;
@@ -2354,7 +2378,7 @@ iris
 ;; 3. **Shared scales by default** - All facets use same domain (easier comparison)
 ;; 4. **Statistical transforms per-facet** - Histogram by species = 3 separate histograms
 ;;
-;; ## Implementation Strategy
+;; ## ⚙️ Implementation Strategy
 ;;
 ;; 1. `split-by-facets` - Groups data by facet variable(s)
 ;; 2. Apply transforms to each facet group separately
@@ -2364,9 +2388,13 @@ iris
 ;; For :geom target - compute layout positions manually
 ;; For :vl/:plotly targets - could use their grid layout features
 
-;; ## Example 10: Simple Column Faceting
+;; ## 🧪 Example 10: Simple Column Faceting
 ;;
 ;; Facet a scatter plot by species - this creates 3 side-by-side plots.
+;; # 📊 Faceting
+;; 
+;; Small multiples: splitting data across rows and columns.
+
 
 ;; Test faceted scatter plot - 3 side-by-side plots
 (facet (* (data penguins)
@@ -2380,7 +2408,7 @@ iris
           (histogram))
        {:col :species})
 
-;; ## Example 11: Row Faceting
+;; ## 🧪 Example 11: Row Faceting
 ;;
 ;; Facet by rows creates vertically stacked panels
 
@@ -2389,7 +2417,7 @@ iris
           (scatter))
        {:row :species})
 
-;; ## Example 12: Row × Column Grid Faceting
+;; ## 🧪 Example 12: Row × Column Grid Faceting
 ;;
 ;; Create a 2D grid of facets.
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
@@ -2407,12 +2435,16 @@ iris
 ;; 4. Shared scales across all panels for easy comparison
 ;; 5. Per-panel rendering with proper x and y offsets
 
-;; ## Example 13: Custom Scale Domains
+;; ## 🧪 Example 13: Custom Scale Domains
 ;;
 ;; Override auto-computed domains to control axis ranges
 
 ;; Force y-axis to start at 0
 (* (data mtcars)
+;; # 📊 Scale Customization
+;; 
+;; Custom scale domains for precise control over axis ranges.
+
    (mapping :wt :mpg)
    (scatter)
    (scale :y {:domain [0 40]}))
@@ -2444,7 +2476,7 @@ iris
 ;; So far, all examples have used the `:geom` target (thi.ng/geom for static SVG),
 ;; which is the default. To select a different target, use the `target` function.
 
-;; ## Example 14: Simple Scatter with Vega-Lite
+;; ## 🧪 Example 14: Simple Scatter with Vega-Lite
 
 ;; Use `target` to select the `:vl` target (Vega-Lite):
 
@@ -2453,13 +2485,17 @@ iris
     (scatter)
     (target :vl))
 
+;; # 📊 Multi-Target Rendering
+;; 
+;; Same API, different backends: :geom (SVG), :vl (Vega-Lite), :plotly (Plotly.js).
+
 ;; **What's different**:
 
 ;; 1. Interactive tooltips on hover
 ;; 2. Vega-Lite's polished default styling
 ;; 3. Same data, same API, different rendering
 
-;; ## Example 15: Multi-Layer with Vega-Lite
+;; ## 🧪 Example 15: Multi-Layer with Vega-Lite
 
 ;; Scatter + regression works too:
 
@@ -2476,7 +2512,7 @@ iris
 ;; 3. Fitted line sent to VL as `line` mark
 ;; 4. VL layers them together
 
-;; ## Example 16: Color Mapping with Vega-Lite
+;; ## 🧪 Example 16: Color Mapping with Vega-Lite
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
@@ -2491,7 +2527,7 @@ iris
 ;; 3. Regression computed per species (3 separate lines)
 ;; 4. Click legend to filter interactively.
 
-;; ## Example 17: Histogram with Vega-Lite
+;; ## 🧪 Example 17: Histogram with Vega-Lite
 
 (-> penguins
     (mapping :bill-length-mm nil)
@@ -2505,7 +2541,7 @@ iris
 ;; 3. VL renders as bar chart
 ;; 4. Interactive tooltips show bin ranges and counts
 
-;; ## Example 18: Faceting with Vega-Lite
+;; ## 🧪 Example 18: Faceting with Vega-Lite
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -2520,7 +2556,7 @@ iris
 ;; 3. VL handles layout and labels
 ;; 4. Each panel is independently interactive
 
-;; ## Example 19: Grid Faceting with Vega-Lite
+;; ## 🧪 Example 19: Grid Faceting with Vega-Lite
 
 ;; When you need custom dimensions, use `plot` with options:
 
@@ -2539,7 +2575,7 @@ iris
 ;; 3. Shared scales across all panels
 ;; 4. Interactive exploration across the grid
 
-;; ## Example 20: Custom Domains with Vega-Lite
+;; ## 🧪 Example 20: Custom Domains with Vega-Lite
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -2554,7 +2590,7 @@ iris
 ;; 2. VL respects our domain constraints
 ;; 3. Same composition semantics across targets
 
-;; ## The Power of Backend Agnosticism
+;; ## 📖 The Power of Backend Agnosticism
 ;;
 ;; **Key insight**: Our flat map representation with `:aog/*` keys creates a
 ;; separation between plot semantics and rendering implementation.
@@ -2579,7 +2615,7 @@ iris
 ;; Now let's explore the `:plotly` target, which provides interactivity
 ;; and is particularly strong for dashboards and web applications.
 
-;; ## Example 21: Simple Scatter with Plotly
+;; ## 🧪 Example 21: Simple Scatter with Plotly
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -2593,7 +2629,7 @@ iris
 ;; 3. Smooth animations and transitions
 ;; 4. Same ggplot2 theming (grey background, white grid)
 
-;; ## Example 22: Multi-Layer with Plotly
+;; ## 🧪 Example 22: Multi-Layer with Plotly
 
 (-> mtcars
     (mapping :wt :mpg)
@@ -2608,7 +2644,7 @@ iris
 ;; 3. Both traces combined in single Plotly spec
 ;; 4. Interactive hover works for both layers
 
-;; ## Example 23: Color-Grouped Regression with Plotly
+;; ## 🧪 Example 23: Color-Grouped Regression with Plotly
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
@@ -2624,7 +2660,7 @@ iris
 ;; 4. Interactive legend - click to show/hide species
 ;; 5. Demonstrates full composability with color aesthetics
 
-;; ## Example 24: Histogram with Plotly
+;; ## 🧪 Example 24: Histogram with Plotly
 
 (plot
  (-> penguins
@@ -2640,7 +2676,7 @@ iris
 ;; 3. White bar borders (ggplot2 theme)
 ;; 4. Hover shows bin range and count
 
-;; ## Example 25: Faceted Scatter with Plotly
+;; ## 🧪 Example 25: Faceted Scatter with Plotly
 
 (plot
  (-> penguins
@@ -2658,7 +2694,7 @@ iris
 ;; 4. Species names as column headers
 ;; 5. Independent zoom/pan for each subplot
 
-;; ## Example 26: Custom Domains with Plotly
+;; ## 🧪 Example 26: Custom Domains with Plotly
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -2673,7 +2709,7 @@ iris
 ;; 2. Zoom/pan constrained to specified ranges
 ;; 3. Same composition semantics across all targets
 
-;; ## Example 27: Full Feature Demo with Plotly
+;; ## 🧪 Example 27: Full Feature Demo with Plotly
 
 ;; All features together - histogram faceted by species:
 
@@ -2695,7 +2731,7 @@ iris
 
 ;; # Summary
 ;;
-;; ## What We've Explored
+;; ## 📖 What We've Explored
 ;;
 ;; This notebook demonstrates a composable graphics API with **minimal delegation**:
 ;;
@@ -2716,7 +2752,7 @@ iris
 ;; - Leverage rendering target polish for rendering
 ;; - Simple, focused implementation
 ;;
-;; ## Implementation Status
+;; ## 📖 Implementation Status
 ;;
 ;; - ✅ Core composition (`*`, `+`, layer merging)
 ;; - ✅ Type inference via Tablecloth
@@ -2730,7 +2766,7 @@ iris
 ;; - ✅ Full feature parity (scatter, regression, histogram, faceting) across all three targets
 ;; - ⚠️ Additional transforms (smooth, density, contour - planned)
 ;;
-;; ## Next Steps
+;; ## 📖 Next Steps
 ;;
 ;; 1. Add smooth (LOESS) and density (kernel density estimation) transforms
 ;; 2. Add free scales option for faceting
