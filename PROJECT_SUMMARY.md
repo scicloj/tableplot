@@ -1,9 +1,71 @@
 # Tableplot Project Summary
 
-## Recent Updates (2025-12-25)
+## Recent Updates (2025-12-26)
+
+**Session 7 - V2 Histogram Vertical Reorganization (2025-12-26) ✅ COMPLETE**:
+- **Goal Achieved**: Reorganized histogram implementation and examples in `building_aog_v2.clj` following vertical organization principles
+- **Changes Made**:
+  1. **Created dedicated Histograms section** after Linear Regression, before Grouping & Color
+     - **## ⚙️ Implementation** subsection: Constructor, compute function, 4 defmethods (apply-transform, transform->domain-points x2, render-layer)
+     - **## 🧪 Examples** subsection: Simple histogram, custom bin count
+  2. **Moved grouped histogram example** to Grouping & Color section (Example 5)
+     - Placed after grouped regression to show categorical color creates groups for histograms too
+  3. **Moved faceted histogram example** to Faceting section (Example 10)
+     - Placed after faceted scatter to demonstrate faceting works with histograms
+  4. **Added multi-target histogram examples**:
+     - Vega-Lite: Added histogram example to VL section
+     - Plotly: Added simple histogram + faceted histogram with custom bins
+  5. **Removed scattered references**:
+     - Removed histogram constructor from Constructors section
+     - Removed compute-histogram and all defmethods from scattered locations
+     - Removed misplaced histogram examples from Linear Regression section
+     - Removed histogram from threading examples section
+- **Pedagogical Flow**: Learn basic histogram → Learn grouping → See grouped histogram → Learn faceting → See faceted histogram → Learn targets → See histogram works across all targets
+- **Verification**: Namespace loads cleanly ✓
+- **Result**: Histogram now follows same vertical organization as scatter and linear regression, with implementation immediately followed by basic examples, then advanced examples appearing in their respective conceptual sections
+
+**Session 5 - V3 Content Integration and Polish (2025-12-26) ✅ COMPLETE**:
+- **Goal**: Integrate core V2 narrative content into V3 while maintaining vertical organization
+- **Completed Actions**:
+  1. **Content Integration** (~450 lines added):
+     - Complete opening narrative (Tableplot's Journey, user feedback, Real-World Data dev group)
+     - Context & Motivation section
+     - Detailed library explanations (Tablecloth type system insight)
+     - Inspiration: AlgebraOfGraphics.jl
+     - Complete Glossary of visualization terms
+     - Core Insight: Layers + Operations
+     - Comparison to ggplot2
+     - Translating to Clojure (nested → flat → namespaced evolution)
+     - Design Exploration
+     - Rendering Targets section
+     - **The Delegation Strategy** (~180 lines - critical architectural decision section)
+     - Proposed Design with API Overview
+     - How Plots are Displayed
+  2. **File Growth**: V3 grew from 1,464 → 1,927 lines (contains ~69% of V2 content)
+  3. **Backup Created**: `building_aog_v3.clj.backup` before major integration
+  4. **Narrative Polish** (coherence improvements):
+     - Added transition section between "How Plots are Displayed" and code implementation
+     - Clarified "Proposed Design" section as implementation preview
+     - Improved flow between conceptual and technical sections
+  5. **Verification**: Namespace loads cleanly after all changes
+- **Result**: V3 is a **streamlined, pedagogically-reorganized version** preserving all code but with 31% less content than V2 (removed: faceting architecture discussion, 14 target-specific examples, detailed example explanations)
+- **Title Clarification**: "Version 1" is intentional (first blog post in a series, not related to internal v3 naming)
+
+**Session 6 - V2/V3 Content Verification (2025-12-26) ✅ COMPLETE**:
+- **Discovery**: Detailed comparison revealed V3 is NOT just a reorganization
+- **Findings**:
+  - V2: 2,807 lines | V3: 1,927 lines (880 lines removed, 31% reduction)
+  - Missing: Faceting architecture discussion (~150 lines)
+  - Missing: 7 Vega-Lite examples (~200 lines)
+  - Missing: 7 Plotly examples (~200 lines)  
+  - Missing: Detailed "What happens here" explanations (~200 lines)
+  - Missing: Backend agnosticism discussion, escape hatch examples (~130 lines)
+- **Corrected Understanding**: V3 is a condensed pedagogical version, not a complete migration
+- **Updated Documentation**: PROJECT_SUMMARY.md corrected to reflect actual content differences
+- **Recommendation**: Use V2 for comprehensive reference, V3 for streamlined learning
 
 **Session 4 - V3 Vertical Reorganization (2025-12-25) ✅ COMPLETE**:
-- **Goal Achieved**: Created `building_aog_v3.clj` with vertical feature presentation (1,464 lines)
+- **Goal Achieved**: Created `building_aog_v3.clj` with vertical feature presentation (1,464 lines initially)
 - **Structure**: Reorganized into 4 parts leveraging multimethod architecture:
   - **Part I: Foundation** - Infrastructure, multimethod declarations, all 3 rendering targets
   - **Part II: Features** - Each feature complete: Scatter (impl→examples), Linear (impl→examples), Histogram (impl→examples)
@@ -781,24 +843,57 @@ V3 is a **focused demo**, not a complete reference. Missing content (~50%):
 - Backend agnosticism section
 - Comprehensive summary and next steps
 
-### V2 vs V3 Comparison
+### V2 vs V3 Comparison (Corrected 2025-12-26)
 
 | Aspect | **V2** | **V3** |
 |--------|--------|--------|
-| **Size** | 2,807 lines | 1,464 lines |
-| **Purpose** | Comprehensive reference | Pedagogical demo |
-| **Organization** | Horizontal (all impl, then examples) | Vertical (impl→examples per feature) |
-| **Coverage** | Complete (~27 examples) | Focused (~15 examples) |
-| **Best For** | Reference, full understanding | Learning, teaching multimethods |
-| **Context** | Extensive background | Streamlined essentials |
-| **Status** | Complete design exploration | Streamlined demonstration |
+| **Size** | 2,807 lines | 1,927 lines |
+| **Purpose** | Comprehensive reference with all examples | Pedagogically reorganized with focused examples |
+| **Organization** | Horizontal (all impl, then all examples) | Vertical (impl→examples per feature) |
+| **Narrative Content** | Complete (~1,400 lines) | Core narrative (~950 lines) |
+| **Code Examples** | 27 numbered examples | 15 focused examples |
+| **Coverage** | 100% (all content) | ~69% (31% reduction) |
+| **Best For** | Complete reference, all variations | Learning resource, streamlined introduction |
+| **Target Examples** | Dedicated sections for :vl and :plotly (14 examples) | Brief demonstration (2 examples) |
+| **Status** | Comprehensive original | Condensed pedagogical version |
 
-### Recommended Usage
+### Content Actually Missing from V3 (880 lines, 31%)
 
-- **New learners**: Start with V3 to understand vertical feature presentation
-- **Comprehensive study**: Use V2 for full context and all examples
-- **Teaching multimethods**: V3 clearly shows the pedagogical benefits
-- **Reference**: V2 remains the comprehensive source
+V3 is **NOT** just a reorganization—significant content has been intentionally removed:
+
+**1. Faceting Architecture Discussion (~150 lines)**
+- "Statistical Transforms Must Be Per-Facet"
+- "Domain Computation: Shared vs Free Scales"  
+- "Delegation Strategy: Control vs Leverage"
+- "Rendering Architecture for :geom"
+- "The Core Insight"
+
+**2. Vega-Lite Examples Section (~200 lines)**
+- V2 has 7 dedicated :vl examples (Examples 14-20)
+- V3 has 1 brief :vl demonstration
+
+**3. Plotly Examples Section (~200 lines)**
+- V2 has 7 dedicated :plotly examples (Examples 21-27)
+- V3 has 1 brief :plotly demonstration
+
+**4. Detailed Example Explanations (~200 lines)**
+- V2 includes "What happens here:" sections after most examples
+- V3 uses more concise explanations
+
+**5. Additional Narrative (~130 lines)**
+- Extended backend agnosticism discussion
+- "Escape hatch" examples (using `plot` for spec customization)
+- More detailed sections throughout
+
+**Key Point**: V3 is a **streamlined, pedagogically-reorganized version** with 31% less content. It preserves all CODE (functions, multimethods) but removes extensive narrative and most target-specific examples for clarity and focus.
+
+### Recommended Usage (Updated)
+
+- **Primary learning resource**: V3 - complete story with vertical organization
+- **Blog post / publication**: V3 - polished narrative with focused examples
+- **Teaching multimethods**: V3 - clearly demonstrates pedagogical benefits
+- **Additional examples**: V2 - more variations of each feature
+- **Historical reference**: V2 - original comprehensive exploration
 
 ## AoG v2 Design Exploration: Normalized Representation
 

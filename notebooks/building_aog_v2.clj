@@ -699,53 +699,11 @@
      [(merge {:aog/plottype :scatter}
              (update-keys attrs-or-layers #(keyword "aog" (name %))))])))
 
-(defn linear
-  "Add linear regression transformation.
-;; ## ⚙️ Linear Regression Constructor
-
-  
-  Computes best-fit line through points.
-  When combined with color aesthetic, computes separate regression per group.
-  
-  Returns a vector containing a linear regression layer.
-  
-  When called with layers-or-data as first arg, merges linear into those layers."
-  ([]
-   [{:aog/transformation :linear
-     :aog/plottype :line}])
-  ([layers-or-data]
-   (let [layers (if (layers? layers-or-data)
-                  layers-or-data
-                  (data layers-or-data))]
-     (* layers (linear)))))
+;; (linear moved to dedicated Linear Regression section below)
 
 ;; ## ⚙️ Histogram Constructor
 
-(defn histogram
-  "Add histogram transformation.
-  
-  Bins continuous data and counts occurrences. Requires domain computation
-  to determine bin edges.
-  
-  Options:
-  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number
-  
-  Returns a vector containing a histogram layer.
-  
-  When called with layers-or-data as first arg, merges histogram into those layers."
-  ([]
-   [{:aog/transformation :histogram
-     :aog/plottype :bar
-     :aog/bins :sturges}])
-  ([opts-or-layers]
-   (if (layers? opts-or-layers)
-     (* opts-or-layers (histogram))
-     [(merge {:aog/transformation :histogram
-              :aog/plottype :bar
-              :aog/bins :sturges}
-             (update-keys opts-or-layers #(keyword "aog" (name %))))]))
-  ([layers opts]
-   (* layers (histogram opts))))
+;; histogram moved to dedicated section below
 
 (defn facet
   "Add faceting to a layer specification.
@@ -834,50 +792,11 @@
 
 ;; ## ⚙️ Type Information (Using Tablecloth)
 
-(defn- infer-from-values
-  "Simple fallback type inference for plain Clojure data."
-  [values]
-  (cond
-    (every? number? values) :continuous
-    (some #(instance? java.time.temporal.Temporal %) values) :temporal
-    :else :categorical))
+;; (Type information helpers moved closer to layer->points where they're first used)
 
-(defn- categorical-type?
-  "Check if a column type should be treated as categorical.
+;; (categorical-type? moved with other helpers)
 
-  Categorical types create groups for statistical transforms.
-  Continuous and temporal types are visual-only by default."
-  [col-type]
-  (contains? #{:string :keyword :boolean :symbol :text} col-type))
-
-(defn- get-grouping-column
-  "Determine which column should be used for grouping statistical transforms.
-
-  Logic (matching AlgebraOfGraphics.jl):
-  1. Explicit :aog/group always wins
-  2. If :aog/color is categorical type, use it for grouping
-  3. Otherwise, no grouping (continuous/temporal color is visual-only)
-
-  Returns the column keyword, or nil if no grouping."
-  [layer dataset]
-  (let [group-col (:aog/group layer)
-        color-col (:aog/color layer)]
-    (cond
-      ;; Explicit group wins
-      group-col group-col
-
-      ;; Check if color column is categorical
-      (and color-col dataset)
-      (let [col-type (try
-                       (col/typeof (get dataset color-col))
-                       (catch Exception _
-                         ;; Fallback for plain Clojure data
-                         (infer-from-values (get dataset color-col))))]
-        (when (categorical-type? col-type)
-          color-col))
-
-      ;; No grouping
-      :else nil)))
+;; (get-grouping-column moved with other helpers)
 
 ;; Examples moved to after function definitions
 
@@ -1059,6 +978,53 @@ iris
                :layers (mapv :layer (get by-labels [r c]))})
             combinations))))
 
+;; Type information helpers (for grouping logic)
+
+(defn- infer-from-values
+  "Simple fallback type inference for plain Clojure data."
+  [values]
+  (cond
+    (every? number? values) :continuous
+    (some #(instance? java.time.temporal.Temporal %) values) :temporal
+    :else :categorical))
+
+(defn- categorical-type?
+  "Check if a column type should be treated as categorical.
+
+  Categorical types create groups for statistical transforms.
+  Continuous and temporal types are visual-only by default."
+  [col-type]
+  (contains? #{:string :keyword :boolean :symbol :text} col-type))
+
+(defn- get-grouping-column
+  "Determine which column should be used for grouping statistical transforms.
+
+  Logic (matching AlgebraOfGraphics.jl):
+  1. Explicit :aog/group always wins
+  2. If :aog/color is categorical type, use it for grouping
+  3. Otherwise, no grouping (continuous/temporal color is visual-only)
+
+  Returns the column keyword, or nil if no grouping."
+  [layer dataset]
+  (let [group-col (:aog/group layer)
+        color-col (:aog/color layer)]
+    (cond
+      ;; Explicit group wins
+      group-col group-col
+
+      ;; Check if color column is categorical
+      (and color-col dataset)
+      (let [col-type (try
+                       (col/typeof (get dataset color-col))
+                       (catch Exception _
+                         ;; Fallback for plain Clojure data
+                         (infer-from-values (get dataset color-col))))]
+        (when (categorical-type? col-type)
+          color-col))
+
+      ;; No grouping
+      :else nil)))
+
 (defn- layer->points
   "Convert layer to point data for rendering."
   [layer]
@@ -1081,44 +1047,9 @@ iris
                      group-vals (assoc :group (nth group-vals i))))
                  x-vals)))
 
-(defn- compute-linear-regression
-  "Compute linear regression using fastmath.
-  
-  Returns: Vector of 2 points representing the fitted line."
-  [points]
-  (when (>= (count points) 2)
-    (let [x-vals (mapv :x points)
-          y-vals (mapv :y points)
-          x-min (apply min x-vals)
-          x-max (apply max x-vals)]
-      (try
-        (let [xss (mapv vector x-vals)
-              model (regr/lm y-vals xss)
-              intercept (:intercept model)
-              slope (first (:beta model))]
-          ;; A straight line only needs 2 points
-          [{:x x-min :y (clojure.core/+ intercept (clojure.core/* slope x-min))}
-           {:x x-max :y (clojure.core/+ intercept (clojure.core/* slope x-max))}])
-        (catch Exception e
-          nil)))))
+;; (compute-linear-regression moved to Linear Regression section)
 
-(defn- compute-histogram
-  "Compute histogram bins using fastmath.stats/histogram.
-  
-  Returns: Vector of bar specifications with x-min, x-max, and height."
-  [points bins-method]
-  (when (seq points)
-    (let [x-vals (mapv :x points)]
-      (when (every? number? x-vals)
-        (let [hist-result (stats/histogram x-vals (or bins-method :sturges))]
-          (mapv (fn [bin]
-                  (let [x-min (:min bin)
-                        x-max (:max bin)]
-                    {:x-min x-min
-                     :x-max x-max
-                     :x-center (clojure.core// (clojure.core/+ x-min x-max) 2.0)
-                     :height (:count bin)}))
-                (:bins-maps hist-result)))))))
+;; compute-histogram moved to Histograms section below
 
 (defmulti apply-transform
   "Apply statistical transform to layer points.
@@ -1139,50 +1070,9 @@ iris
   {:type :raw
    :points points})
 
-;; Linear regression transformation
-(defmethod apply-transform :linear
-  [layer points]
-  (let [has-groups? (some :group points)]
-    (if has-groups?
-      ;; Group-wise regression
-      (let [grouped (group-by :group points)
-            group-results (into {}
-                                (map (fn [[group-val group-points]]
-                                       [group-val
-                                        {:fitted (compute-linear-regression group-points)
-                                         :points group-points}])
-                                     grouped))]
-        {:type :grouped-regression
-         :points points
-         :groups group-results})
-      ;; Single regression
-      (let [fitted (compute-linear-regression points)]
-        {:type :regression
-         :points points
-         :fitted (or fitted points)}))))
+;; (apply-transform :linear moved to Linear Regression section)
 
-;; Histogram transformation
-(defmethod apply-transform :histogram
-  [layer points]
-  (let [has-groups? (some :group points)]
-    (if has-groups?
-      ;; Group-wise histogram
-      (let [grouped (group-by :group points)
-            group-results (into {}
-                                (map (fn [[group-val group-points]]
-                                       [group-val
-                                        {:bars (compute-histogram group-points (:aog/bins layer))
-                                         :points group-points}])
-                                     grouped))]
-        {:type :grouped-histogram
-         :points points
-         :groups group-results})
-      ;; Single histogram
-      (let [bins-method (:aog/bins layer)
-            bars (compute-histogram points bins-method)]
-        {:type :histogram
-         :points points
-         :bars bars}))))
+;; defmethod apply-transform :histogram moved to Histograms section below
 
 (defmulti transform->domain-points
   "Convert transform result to points for domain computation.
@@ -1195,34 +1085,13 @@ iris
   [transform-result]
   (:points transform-result))
 
-;; Single regression
-(defmethod transform->domain-points :regression
-  [transform-result]
-  (:fitted transform-result))
+;; (transform->domain-points :regression moved to Linear Regression section)
 
-;; Grouped regression
-(defmethod transform->domain-points :grouped-regression
-  [transform-result]
-  (mapcat (fn [{:keys [fitted]}] fitted)
-          (vals (:groups transform-result))))
+;; (transform->domain-points :grouped-regression moved to Linear Regression section)
 
-;; Single histogram
-(defmethod transform->domain-points :histogram
-  [transform-result]
-  (mapcat (fn [bar]
-            [{:x (:x-min bar) :y 0}
-             {:x (:x-max bar) :y (:height bar)}])
-          (:bars transform-result)))
+;; defmethod transform->domain-points :histogram moved to Histograms section below
 
-;; Grouped histogram
-(defmethod transform->domain-points :grouped-histogram
-  [transform-result]
-  (mapcat (fn [{:keys [bars]}]
-            (mapcat (fn [bar]
-                      [{:x (:x-min bar) :y 0}
-                       {:x (:x-max bar) :y (:height bar)}])
-                    bars))
-          (vals (:groups transform-result))))
+;; defmethod transform->domain-points :grouped-histogram moved to Histograms section below
 
 (defn- color-scale
   "ggplot2-like color scale for categorical data."
@@ -1297,62 +1166,9 @@ iris
                   :fill "none"
                   :opacity alpha}}])))
 
-(defmethod render-layer [:geom :linear]
-  [target layer transform-result alpha]
-  (if (= :grouped-regression (:type transform-result))
-    ;; Grouped regression - one line per group
-    (let [groups (:groups transform-result)
-          color-groups (group-by :color (:points transform-result))
-          colors (color-scale (keys color-groups))]
-      (keep (fn [[group-val {:keys [fitted]}]]
-              (when fitted
-                {:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
-                 :layout viz/svg-line-plot
-                 :attribs {:stroke (get colors group-val ggplot2-default-mark)
-                           :stroke-width 2
-                           :fill "none"
-                           :opacity alpha}}))
-            groups))
-    ;; Single regression
-    (when-let [fitted (:fitted transform-result)]
-      [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
-        :layout viz/svg-line-plot
-        :attribs {:stroke ggplot2-default-mark
-                  :stroke-width 2
-                  :fill "none"
-                  :opacity alpha}}])))
+;; (render-layer [:geom :linear] moved to Linear Regression section)
 
-(defmethod render-layer [:geom :histogram]
-  [target layer transform-result alpha]
-  (if (= :grouped-histogram (:type transform-result))
-    ;; Grouped histogram - bars per group
-    (let [groups (:groups transform-result)
-          color-groups (group-by :color (:points transform-result))
-          colors (color-scale (keys color-groups))]
-      (mapcat (fn [[group-val {:keys [bars]}]]
-                (mapv (fn [bar]
-                        {:type :rect
-                         :x-min (:x-min bar)
-                         :x-max (:x-max bar)
-                         :height (:height bar)
-                         :attribs {:fill (get colors group-val ggplot2-default-mark)
-                                   :stroke ggplot2-grid
-                                   :stroke-width 1
-                                   :opacity alpha}})
-                      bars))
-              groups))
-    ;; Single histogram
-    (when-let [bars (:bars transform-result)]
-      (mapv (fn [bar]
-              {:type :rect
-               :x-min (:x-min bar)
-               :x-max (:x-max bar)
-               :height (:height bar)
-               :attribs {:fill ggplot2-default-mark
-                         :stroke ggplot2-grid
-                         :stroke-width 1
-                         :opacity alpha}})
-            bars))))
+;; defmethod render-layer [:geom :histogram] moved to Histograms section below
 
 ;; ### ⚙️ Simple :geom Target (Delegating Domain Computation)
 
@@ -2071,19 +1887,7 @@ iris
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (scatter))
 
-;; **Multi-layer: scatter + regression**
-;;
-;; The `+` operator distributes when used in threading context, so this
-;; creates two layers (scatter and linear) that both share the data and mapping:
-(-> mtcars
-    (mapping :wt :mpg)
-    (+ (scatter)
-       (linear)))
-
-;; **With custom options**:
-(-> penguins
-    (mapping :bill-length-mm nil)
-    (histogram {:bins 12}))
+;; (Multi-layer example with linear moved to Linear Regression section)
 
 ;; **Combining scale customization**:
 (-> penguins
@@ -2125,13 +1929,7 @@ iris
 ;; Now let's see how we can use Tablecloth's type information.
 ;; We get types for free, no complex inference needed.
 
-(defn- infer-from-values
-  "Simple fallback type inference for plain Clojure data."
-  [values]
-  (cond
-    (every? number? values) :continuous
-    (some #(instance? java.time.temporal.Temporal %) values) :temporal
-    :else :categorical))
+;; Note: infer-from-values is defined above with other type helpers
 
 (defn infer-scale-type
   "Infer scale type from values in a layer."
@@ -2162,15 +1960,265 @@ iris
 ;; 
 ;; Statistical transformation: computing and overlaying regression lines.
 
+;; ## ⚙️ Implementation
+
+;; ### Constructor
+
+(defn linear
+  "Add linear regression transformation.
+  
+  Computes best-fit line through points.
+  When combined with color aesthetic, computes separate regression per group.
+  
+  Returns a vector containing a linear regression layer.
+  
+  When called with layers-or-data as first arg, merges linear into those layers."
+  ([]
+   [{:aog/transformation :linear
+     :aog/plottype :line}])
+  ([layers-or-data]
+   (let [layers (if (layers? layers-or-data)
+                  layers-or-data
+                  (data layers-or-data))]
+     (* layers (linear)))))
+
+;; ### Compute Function
+
+(defn- compute-linear-regression
+  "Compute linear regression using fastmath.
+  
+  Returns: Vector of 2 points representing the fitted line."
+  [points]
+  (when (>= (count points) 2)
+    (let [x-vals (mapv :x points)
+          y-vals (mapv :y points)
+          x-min (apply min x-vals)
+          x-max (apply max x-vals)]
+      (try
+        (let [xss (mapv vector x-vals)
+              model (regr/lm y-vals xss)
+              intercept (:intercept model)
+              slope (first (:beta model))]
+          ;; A straight line only needs 2 points
+          [{:x x-min :y (clojure.core/+ intercept (clojure.core/* slope x-min))}
+           {:x x-max :y (clojure.core/+ intercept (clojure.core/* slope x-max))}])
+        (catch Exception e
+          nil)))))
+
+;; ### Transform Multimethod
+
+;; Linear regression transformation
+(defmethod apply-transform :linear
+  [layer points]
+  (let [has-groups? (some :group points)]
+    (if has-groups?
+      ;; Group-wise regression
+      (let [grouped (group-by :group points)
+            group-results (into {}
+                                (map (fn [[group-val group-points]]
+                                       [group-val
+                                        {:fitted (compute-linear-regression group-points)
+                                         :points group-points}])
+                                     grouped))]
+        {:type :grouped-regression
+         :points points
+         :groups group-results})
+      ;; Single regression
+      (let [fitted (compute-linear-regression points)]
+        {:type :regression
+         :points points
+         :fitted (or fitted points)}))))
+
+;; ### Domain Points Multimethods
+
+;; Single regression
+(defmethod transform->domain-points :regression
+  [transform-result]
+  (:fitted transform-result))
+
+;; Grouped regression
+(defmethod transform->domain-points :grouped-regression
+  [transform-result]
+  (mapcat (fn [{:keys [fitted]}] fitted)
+          (vals (:groups transform-result))))
+
+;; ### Rendering Multimethod
+
+(defmethod render-layer [:geom :linear]
+  [target layer transform-result alpha]
+  (if (= :grouped-regression (:type transform-result))
+    ;; Grouped regression - one line per group
+    (let [groups (:groups transform-result)
+          color-groups (group-by :color (:points transform-result))
+          colors (color-scale (keys color-groups))]
+      (keep (fn [[group-val {:keys [fitted]}]]
+              (when fitted
+                {:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
+                 :layout viz/svg-line-plot
+                 :attribs {:stroke (get colors group-val ggplot2-default-mark)
+                           :stroke-width 2
+                           :fill "none"
+                           :opacity alpha}}))
+            groups))
+    ;; Single regression
+    (when-let [fitted (:fitted transform-result)]
+      [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
+        :layout viz/svg-line-plot
+        :attribs {:stroke ggplot2-default-mark
+                  :stroke-width 2
+                  :fill "none"
+                  :opacity alpha}}])))
+
+;; ## 🧪 Examples
+
 ;; ## 🧪 Example 4: Multi-Layer Composition (Scatter + Linear Regression)
 
-;; First, we need a way to add statistical transforms. Let's add [linear regression](https://en.wikipedia.org/wiki/Linear_regression):
+;; Multi-layer plots using the `+` operator:
 
-;; Test histogram computation in isolation
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (+ (scatter {:alpha 0.5})
+       (linear)))
 
-(* (data penguins)
-   (mapping :bill-length-mm nil)
-   (histogram))
+;; # 📊 Histograms
+;;
+;; Statistical transformation: binning continuous data and counting occurrences.
+
+;; ## ⚙️ Implementation
+
+;; ### Constructor
+
+(defn histogram
+  "Add histogram transformation.
+  
+  Bins continuous data and counts occurrences. Requires domain computation
+  to determine bin edges.
+  
+  Options:
+  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number
+  
+  Returns a vector containing a histogram layer.
+  
+  When called with layers-or-data as first arg, merges histogram into those layers."
+  ([]
+   [{:aog/transformation :histogram
+     :aog/plottype :bar
+     :aog/bins :sturges}])
+  ([opts-or-layers]
+   (if (layers? opts-or-layers)
+     (* opts-or-layers (histogram))
+     [(merge {:aog/transformation :histogram
+              :aog/plottype :bar
+              :aog/bins :sturges}
+             (update-keys opts-or-layers #(keyword "aog" (name %))))]))
+  ([layers opts]
+   (* layers (histogram opts))))
+
+;; ### Compute Function
+
+(defn- compute-histogram
+  "Compute histogram bins using fastmath.stats/histogram.
+  
+  Returns: Vector of bar specifications with x-min, x-max, and height."
+  [points bins-method]
+  (when (seq points)
+    (let [x-vals (mapv :x points)]
+      (when (every? number? x-vals)
+        (let [hist-result (stats/histogram x-vals (or bins-method :sturges))]
+          (mapv (fn [bin]
+                  (let [x-min (:min bin)
+                        x-max (:max bin)]
+                    {:x-min x-min
+                     :x-max x-max
+                     :x-center (clojure.core// (clojure.core/+ x-min x-max) 2.0)
+                     :height (:count bin)}))
+                (:bins-maps hist-result)))))))
+
+;; ### Transform Multimethod
+
+(defmethod apply-transform :histogram
+  [layer points]
+  (let [has-groups? (some :group points)]
+    (if has-groups?
+      ;; Group-wise histogram
+      (let [grouped (group-by :group points)
+            group-results (into {}
+                                (map (fn [[group-val group-points]]
+                                       [group-val
+                                        {:bars (compute-histogram group-points (:aog/bins layer))
+                                         :points group-points}])
+                                     grouped))]
+        {:type :grouped-histogram
+         :points points
+         :groups group-results})
+      ;; Single histogram
+      (let [bins-method (:aog/bins layer)
+            bars (compute-histogram points bins-method)]
+        {:type :histogram
+         :points points
+         :bars bars}))))
+
+;; ### Domain Points Multimethods
+
+(defmethod transform->domain-points :histogram
+  [transform-result]
+  (mapcat (fn [bar]
+            [{:x (:x-min bar) :y 0}
+             {:x (:x-max bar) :y (:height bar)}])
+          (:bars transform-result)))
+
+(defmethod transform->domain-points :grouped-histogram
+  [transform-result]
+  (mapcat (fn [{:keys [bars]}]
+            (mapcat (fn [bar]
+                      [{:x (:x-min bar) :y 0}
+                       {:x (:x-max bar) :y (:height bar)}])
+                    bars))
+          (vals (:groups transform-result))))
+
+;; ### Rendering Multimethod
+
+(defmethod render-layer [:geom :histogram]
+  [target layer transform-result alpha]
+  (if (= :grouped-histogram (:type transform-result))
+    ;; Grouped histogram - bars per group
+    (let [groups (:groups transform-result)
+          color-groups (group-by :color (:points transform-result))
+          colors (color-scale (keys color-groups))]
+      (mapcat (fn [[group-val {:keys [bars]}]]
+                (mapv (fn [bar]
+                        {:type :rect
+                         :x-min (:x-min bar)
+                         :x-max (:x-max bar)
+                         :height (:height bar)
+                         :attribs {:fill (get colors group-val ggplot2-default-mark)
+                                   :stroke ggplot2-grid
+                                   :stroke-width 1
+                                   :opacity alpha}})
+                      bars))
+              groups))
+    ;; Single histogram
+    (when-let [bars (:bars transform-result)]
+      (mapv (fn [bar]
+              {:type :rect
+               :x-min (:x-min bar)
+               :x-max (:x-max bar)
+               :height (:height bar)
+               :attribs {:fill ggplot2-default-mark
+                         :stroke ggplot2-grid
+                         :stroke-width 1
+                         :opacity alpha}})
+            bars))))
+
+;; ## 🧪 Examples
+
+;; ### 🧪 Simple Histogram
+
+;; Basic histogram showing distribution of bill lengths:
+
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram))
 
 ;; **What happens here**:
 
@@ -2180,11 +2228,13 @@ iris
 ;; 4. Rendering target receives bars (bin ranges + heights), not raw points
 ;; 5. This shows why we can't fully delegate - we need domain before binning.
 
+;; ### 🧪 Custom Bin Count
+
 ;; Try different binning methods:
 
-(* (data penguins)
-   (mapping :bill-length-mm nil)
-   (histogram {:bins 15}))
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram {:bins 15}))
 
 ;; # 📊 Grouping & Color
 ;; 
@@ -2210,6 +2260,7 @@ iris
 ;; 5. Scatter points are also colored by species
 
 ;; **Categorical color → grouped histogram**:
+
 (-> penguins
     (mapping :bill-length-mm nil {:color :species})
     (histogram))
@@ -2431,10 +2482,11 @@ iris
           (scatter))
        {:col :species})
 
-;; Test faceted histogram - per-species histograms with shared scales
-(facet (* (data penguins)
-          (mapping :bill-length-mm nil)
-          (histogram))
+;; Faceted histogram - per-species histograms with shared scales:
+
+(facet (-> penguins
+           (mapping :bill-length-mm nil)
+           (histogram))
        {:col :species})
 
 ;; ## 🧪 Example 11: Row Faceting
@@ -2556,7 +2608,7 @@ iris
 ;; 3. Regression computed per species (3 separate lines)
 ;; 4. Click legend to filter interactively.
 
-;; ## 🧪 Example 17: Histogram with Vega-Lite
+;; **Histogram with Vega-Lite**:
 
 (-> penguins
     (mapping :bill-length-mm nil)
@@ -2570,7 +2622,7 @@ iris
 ;; 3. VL renders as bar chart
 ;; 4. Interactive tooltips show bin ranges and counts
 
-;; ## 🧪 Example 18: Faceting with Vega-Lite
+;; ## 🧪 Example 17: Faceting with Vega-Lite
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -2689,7 +2741,7 @@ iris
 ;; 4. Interactive legend - click to show/hide species
 ;; 5. Demonstrates full composability with color aesthetics
 
-;; ## 🧪 Example 24: Histogram with Plotly
+;; **Simple Histogram with Plotly**:
 
 (plot
  (-> penguins
@@ -2705,7 +2757,25 @@ iris
 ;; 3. White bar borders (ggplot2 theme)
 ;; 4. Hover shows bin range and count
 
-;; ## 🧪 Example 25: Faceted Scatter with Plotly
+;; **Faceted Histogram with Custom Bins (Plotly)**:
+
+(plot
+ (-> penguins
+     (mapping :bill-length-mm nil)
+     (histogram {:bins 12})
+     (facet {:col :species})
+     (target :plotly))
+ {:width 900 :height 350})
+
+;; **What happens here**:
+
+;; 1. Per-species histograms (computed on JVM)
+;; 2. Faceted layout (3 columns)
+;; 3. Shared y-axis for easy comparison
+;; 4. Custom bin count (12 bins)
+;; 5. Full interactivity with hover tooltips
+
+;; ## 🧪 Example 24: Faceted Scatter with Plotly
 
 (plot
  (-> penguins
@@ -2737,26 +2807,6 @@ iris
 ;; 1. Custom domain constraints respected
 ;; 2. Zoom/pan constrained to specified ranges
 ;; 3. Same composition semantics across all targets
-
-;; ## 🧪 Example 27: Full Feature Demo with Plotly
-
-;; All features together - histogram faceted by species:
-
-(plot
- (-> penguins
-     (mapping :bill-length-mm nil)
-     (histogram {:bins 12})
-     (facet {:col :species})
-     (target :plotly))
- {:width 900 :height 350})
-
-;; **What happens here**:
-
-;; 1. Per-species histograms (computed on JVM)
-;; 2. Faceted layout (3 columns)
-;; 3. Shared y-axis for easy comparison
-;; 4. Custom bin count (12 bins)
-;; 5. Full interactivity with hover tooltips
 
 ;; # Summary
 ;;

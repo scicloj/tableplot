@@ -424,7 +424,9 @@
 
 ;; # Proposed Design
 ;;
-;; ## 📖 API Overview
+;; ## 📖 Implementation Preview
+;;
+;; Before diving into the code, here's what this prototype implements:
 ;;
 ;; The API consists of three parts:
 ;;
@@ -496,6 +498,15 @@
 ;; - Inspect the raw layer specification (`:aog/*` keys)
 ;; - Understand how composition merges layers
 ;; - Debug layer construction before rendering
+
+;; # Implementation
+;;
+;; With the design principles established, let's see how this works in practice.
+;; The implementation is organized in three parts:
+;;
+;; **Part I: Infrastructure** - Core machinery (multimethods, operators, targets)
+;; **Part II: Features** - Individual features presented vertically (scatter, linear, histogram)  
+;; **Part III: Advanced** - Composition, faceting, multiple targets
 
 ;; # Part I: Infrastructure Setup
 ;;
