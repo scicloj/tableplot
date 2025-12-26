@@ -2,6 +2,37 @@
 
 ## Recent Updates (2025-12-26)
 
+**Session 16 - AoG V2 Decision Implementation Attempt (2025-12-26) ⚠️ INCOMPLETE**:
+- **Goal**: Systematically implement the 6 design decisions from AOG_V2_DESIGN_DECISIONS.md in building_aog_v2.clj
+- **Decisions Implemented**:
+  1. ✅ **Decision 1 - Operators**: Renamed `*` → `=*` and `+` → `=+` (removed `:refer-clojure :exclude [* +]` from namespace)
+  2. ✅ **Decision 2 - Auto-wrapping**: Added `ensure-vec` helper and updated `=*` and `=+` to auto-wrap single items
+  3. ⚠️ **Decision 3 - Keyword prefix**: INCOMPLETE - Started replacing `:aog/*` → `:=*` but encountered namespace loading issues
+- **Technical Challenges**:
+  - Used `sed` to replace 273 occurrences of `:aog/` with `:=`
+  - Updated `update-keys` functions to create `:=` prefixed keywords
+  - Added `clojure.string` require for `str/starts-with?` in `layers?` function
+  - Wrapped validation examples in `comment` blocks to prevent load-time execution
+  - Fixed `layers?` function to check for `:=` prefix instead of `"aog"` namespace
+- **Critical Issue**: Session ended with file reverted to state before Decision 3 changes
+  - Changes were applied to file during session
+  - File was restored from backup `building_aog_v2.clj.backup_before_keyword_rename` 
+  - This reverted ALL Decision 3 work (keyword replacement, namespace fixes, comment wrapping)
+  - File verified loading successfully but without the changes
+- **Backup Files**:
+  - `building_aog_v2.clj.backup_before_keyword_rename` - State before keyword changes
+  - Multiple other backups exist from previous sessions
+- **Remaining Decisions** (not started):
+  4. Decision 4: Replace dual validation flags with single `*validate*`
+  5. Decision 5: Remove custom type inference, delegate to tablecloth
+  6. Decision 6: Verify ensure-dataset flexibility is maintained
+- **Next Session Actions**:
+  1. Re-implement Decision 3 more carefully (avoid sed, use targeted edits)
+  2. Ensure namespace loads after each change
+  3. Handle examples that execute at load time (wrap in `comment` or move)
+  4. Rediscuss Decision 4 (user wanted to change it)
+  5. Implement remaining decisions 5-6
+
 **Session 15 - AoG V2 Design Decisions Discussion (2025-12-26) ✅ COMPLETE**:
 - **Goal Achieved**: Systematically reviewed and documented design decisions for the AoG V2 implementation
 - **Decisions Made**:
