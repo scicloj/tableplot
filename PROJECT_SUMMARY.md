@@ -2,6 +2,43 @@
 
 ## Recent Updates (2025-12-26)
 
+**Session 13 - Compositional Size Specification & Design Discussion (2025-12-26) ✅ COMPLETE**:
+- **Goal Achieved**: Made width/height compositional like `:target`, enabling full threading chains with `plot`
+- **Core Changes**:
+  1. **Added `size` constructor function** (after `target` at ~line 780):
+     - 2-arity: `(size 800 600)` returns `[{:aog/width 800 :aog/height 600}]`
+     - 3-arity: `(size layers 800 600)` merges size into layers via `*` operator
+     - Enables: `(-> ... (size 800 600) (plot))`
+  2. **Updated all three `plot-impl` methods** (:geom, :vl, :plotly):
+     - Priority chain: `:aog/width` in layers > `:width` in opts > `default-plot-width`
+     - Same for height: `:aog/height` > `:height opts` > `default-plot-height`
+     - Uses `(some :aog/width layers-vec)` to extract from any layer
+  3. **Fixed `scatter` function** for threading with attributes:
+     - Added 2-arity: `([layers attrs] (* layers (scatter attrs)))`
+     - Enables: `(-> penguins (mapping :x :y) (scatter {:alpha 0.7}))`
+  4. **Added Example 15**: Demonstrates compositional size specification patterns
+  5. **Updated 4 existing examples** to use new `size` pattern:
+     - Example 19 (line ~3046): Grid faceting with VL
+     - Example 22 (line ~3171): Simple histogram with Plotly
+     - Example 23 (line ~3187): Faceted histogram with Plotly
+     - Example 24 (line ~3205): Faceted scatter with Plotly
+- **Design Discussion Section Added** (before Summary at ~line 3292):
+  - Documents tension: `:aog/target`, `:aog/width`, `:aog/height` appear in every layer but apply to all layers together
+  - This is a consequence of using vector-of-maps as the intermediate representation
+  - **Four alternatives considered**:
+    1. **Metadata on vector** - Conceptually clean (plot-level config is metadata) but fragile (easily lost during operations)
+    2. **Wrapper map** - Explicit separation `{:plot-config {...} :layers [...]}` but breaks the algebra (no more `*` and `+`)
+    3. **Special marker layer** - Keep vectors but add `{:aog/type :plot-config ...}` - still mixed concerns
+    4. **Accept duplication (current)** - Simple, works, revisable; duplication overhead is negligible
+  - **Current decision**: Alternative 4 because it's simple, works reliably with `some` extraction, and can migrate to metadata later if needed
+  - **Key insight**: This is a limitation of the IR choice, not a flaw - documents trade-offs honestly
+- **Pattern Evolution**:
+  - **Before**: `(plot (-> ... (target :vl)) {:width 800 :height 600})`
+  - **After**: `(-> ... (target :vl) (size 800 600) (plot))`
+  - **Backwards compatibility**: Old pattern still works via opts map
+- **Verification**: All changes tested in REPL, namespace loads successfully ✓
+- **Impact**: Completes the compositional API vision - everything can be in the threading chain
+
 **Session 12 - Comprehensive Test Coverage for building_aog_v2.clj (2025-12-26) ✅ COMPLETE**:
 - **Goal Achieved**: Added thorough `kind/test-last` assertions to all 28 examples in `building_aog_v2.clj`
 - **Test Coverage**: 28 test assertions following the pattern from `plotly_walkthrough.clj`
