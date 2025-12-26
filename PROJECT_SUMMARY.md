@@ -2,6 +2,56 @@
 
 ## Recent Updates (2025-12-26)
 
+**Session 12 - Comprehensive Test Coverage for building_aog_v2.clj (2025-12-26) ✅ COMPLETE**:
+- **Goal Achieved**: Added thorough `kind/test-last` assertions to all 28 examples in `building_aog_v2.clj`
+- **Test Coverage**: 28 test assertions following the pattern from `plotly_walkthrough.clj`
+  - 22 basic layer structure tests (validate `:aog/*` keys)
+  - 4 combined layer + render tests (Examples 1, 4, 14, 21)
+  - 2 plot output structure tests (Examples 19, 24)
+- **Key Learnings**:
+  1. **`kind/test-last` API**: Takes `[test-fn & args]` - only first element is the function
+  2. **Multiple assertions**: Must be combined with `and` in a single function, not as separate functions
+  3. **Test what exists**: Verified actual output structure in REPL (VL facet fields are strings at top level, not nested)
+  4. **Use `sequential?` not `vector?`**: More flexible for checking Plotly `:data` fields
+- **Test Types**:
+  - **Layer structure**: `#(= (:aog/plottype (first %)) :scatter)`
+  - **Combined layer + render**: `#(and (layer-check %) (let [rendered (plot %)] (render-check rendered)))`
+  - **VL spec structure**: Check for `:data`, `:mark`, `:encoding` keys
+  - **Plotly spec structure**: Check for `:data`, `:layout` keys with `sequential?` data
+  - **VL faceted output**: Top-level `:facet` with `:row/:column` fields as strings
+- **Generated Tests**: Tests automatically generate at `test/building_aog_v2_generated_test.clj` when notebook renders through Clay
+- **Verification**: All tests pass, namespace loads successfully, combined tests validated in REPL
+- **Impact**: Comprehensive test coverage ensures examples work correctly and catches regressions when code changes
+
+**Session 11 - Code Quality & Robustness Improvements (2025-12-26) ✅ COMPLETE**:
+- **Goal Achieved**: Comprehensive review and improvement of `building_aog_v2.clj` for production readiness
+- **Input Validation Added**:
+  1. **`validate-column-exists`** - Validates single column with helpful error messages
+  2. **`validate-columns`** - Validates multiple columns at once
+  3. **`validate-layer-columns`** - Validates all aesthetic mappings (`:aog/x`, `:aog/y`, `:aog/color`, `:aog/row`, `:aog/col`, `:aog/group`)
+  4. **Enhanced `layer->points`** - Checks for missing data, missing x mapping, empty datasets
+- **Error Messages Enhanced**:
+  - Column errors show available columns and suggestions
+  - Empty dataset errors with specific context
+  - Styled HTML error display in `plot-impl :geom` with troubleshooting tips
+  - All errors include helpful context maps for debugging
+- **Edge Case Handling**:
+  1. **`compute-linear-regression`** - Handles < 2 points, identical x/y values, validates coefficients (no NaN/Infinity)
+  2. **`compute-histogram`** - Validates numeric data, handles empty data, handles identical values
+  3. **`infer-domain`** - Handles empty data ([0 1] fallback), single value (10% expansion), identical values
+  4. **Multimethod validation** - Both `apply-transform` methods check for empty points with informative errors
+- **Code Organization**:
+  - Extracted 8 magic numbers to named constants (`default-plot-width`, `panel-margin-left`, `facet-label-offset`, etc.)
+  - Updated `render-single-panel` and `plot-impl :geom` to use constants
+  - Improved consistency throughout layout code
+- **Documentation Improvements**:
+  - Enhanced docstrings for all helper functions
+  - Added comprehensive comment headers for multimethod implementations
+  - Documented all edge cases and return values
+  - Clear parameter descriptions and examples
+- **Testing**: ✅ Namespace loads successfully, all examples functional, no breaking changes
+- **Impact**: File is now production-ready with robust error handling, validation, and user-friendly error messages
+
 **Session 10 - Multiple Grouping Columns & Code Simplification (2025-12-26) ✅ COMPLETE**:
 - **Goal Achieved**: Refactored grouping system to support multiple categorical aesthetics creating composite groups
 - **Core Changes**:

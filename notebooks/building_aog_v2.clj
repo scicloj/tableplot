@@ -467,6 +467,7 @@
 ;; - ⚠️ Coordinate systems: 3D, polar, geo
 ;; - ⚠️ Advanced layouts: subplots, secondary axes, insets
 ;; - ⚠️ Interactivity: hover templates, click events, selections
+;; - ⚠️ Handling missing data
 ;;
 ;; **Design Philosophy Differences**:
 ;;
@@ -603,6 +604,13 @@
   ([x y & more]
    (displays-as-plot
     (reduce * (* x y) more))))
+
+;; Test helper: check if result is a valid layer vector
+(defn- valid-layers? [x]
+  (and (vector? x)
+       (seq x)
+       (every? map? x)
+       (every? #(some (fn [[k _]] (= "aog" (namespace k))) %) x)))
 
 (defn +
   "Combine multiple layer specifications for overlay (sum).
@@ -752,6 +760,25 @@
    [{:aog/target target-kw}])
   ([layers target-kw]
    (* layers (target target-kw))))
+
+(defn size
+  "Specify width and height for the plot.
+  
+  Args:
+  - width: Plot width in pixels
+  - height: Plot height in pixels
+  
+  Returns a vector containing size specification.
+  
+  When called with layers as first arg, merges size into those layers.
+  
+  Examples:
+  (size 800 600)
+  (-> penguins (mapping :x :y) (scatter) (size 800 600))"
+  ([width height]
+   [{:aog/width width :aog/height height}])
+  ([layers width height]
+   (* layers (size width height))))
 
 ;; # Examples
 ;;
@@ -1372,8 +1399,13 @@ iris
 (defmethod plot-impl :geom
   [layers opts]
   (let [layers-vec (if (vector? layers) layers [layers])
-        width (or (:width opts) default-plot-width)
-        height (or (:height opts) default-plot-height)
+        ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
+        width (or (some :aog/width layers-vec)
+                  (:width opts)
+                  default-plot-width)
+        height (or (some :aog/height layers-vec)
+                   (:height opts)
+                   default-plot-height)
 
         ;; Organize layers by facets
         facet-groups (organize-by-facets layers-vec)
@@ -1519,7 +1551,10 @@ iris
    (if (layers? attrs-or-layers)
      (* attrs-or-layers (scatter))
      [(merge {:aog/plottype :scatter}
-             (update-keys attrs-or-layers #(keyword "aog" (name %))))])))
+             (update-keys attrs-or-layers #(keyword "aog" (name %))))]))
+  ([layers attrs]
+   ;; Threading-friendly: (-> layers (scatter {:alpha 0.5}))
+   (* layers (scatter attrs))))
 
 ;; ### Rendering Multimethod
 
@@ -1554,6 +1589,18 @@ iris
    (mapping :bill-length-mm :bill-depth-mm)
    (scatter))
 
+(kind/test-last [#(and (vector? %)
+                       (map? (first %))
+                       (contains? (first %) :aog/data)
+                       (contains? (first %) :aog/x)
+                       (contains? (first %) :aog/y)
+                       (contains? (first %) :aog/plottype)
+                       (= (:aog/plottype (first %)) :scatter)
+                       ;; Also test that it renders to valid HTML
+                       (let [rendered (plot %)]
+                         (and (map? (meta rendered))
+                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+
 ;; **What happens here**:
 
 ;; 1. We create layer spec with data, mapping, plottype
@@ -1582,6 +1629,11 @@ iris
    (mapping :x :y)
    (scatter))
 
+(kind/test-last [#(and (vector? %)
+                       (= (:aog/x (first %)) :x)
+                       (= (:aog/y (first %)) :y)
+                       (map? (:aog/data (first %))))])
+
 ;; **Vector of maps** (row-oriented data):
 (* (data [{:x 1 :y 2}
           {:x 2 :y 4}
@@ -1590,6 +1642,10 @@ iris
           {:x 5 :y 10}])
    (mapping :x :y)
    (scatter))
+
+(kind/test-last [#(and (vector? %)
+                       (= (:aog/x (first %)) :x)
+                       (= (:aog/y (first %)) :y))])
 
 ;; **What happens here**:
 
@@ -1612,10 +1668,18 @@ iris
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter))
 
+(kind/test-last [#(and (vector? %)
+                       (= (:aog/x (first %)) :bill-length-mm)
+                       (= (:aog/y (first %)) :bill-depth-mm)
+                       (= (:aog/plottype (first %)) :scatter))])
+
 ;; **With color aesthetic**:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (scatter))
+
+(kind/test-last [#(and (= (:aog/color (first %)) :species)
+                       (= (:aog/x (first %)) :bill-length-mm))])
 
 ;; **Combining scale customization**:
 (-> penguins
@@ -1624,11 +1688,17 @@ iris
     (scale :x {:domain [30 65]})
     (scale :y {:domain [12 23]}))
 
+(kind/test-last [#(and (= (get-in (first %) [:aog/scale-x :domain]) [30 65])
+                       (= (get-in (first %) [:aog/scale-y :domain]) [12 23]))])
+
 ;; **Works with plain data too**:
 (-> {:x [1 2 3 4 5]
      :y [2 4 6 8 10]}
     (mapping :x :y)
     (scatter))
+
+(kind/test-last [#(and (= (:aog/x (first %)) :x)
+                       (= (:aog/plottype (first %)) :scatter))])
 
 ;; **What's happening under the hood**:
 ;;
@@ -1857,6 +1927,16 @@ iris
     (+ (scatter {:alpha 0.5})
        (linear)))
 
+(kind/test-last [#(and (vector? %)
+                       (= (count %) 2)
+                       (= (:aog/plottype (first %)) :scatter)
+                       (= (:aog/transformation (second %)) :linear)
+                       (= (:aog/alpha (first %)) 0.5)
+                       ;; Test that multi-layer renders to valid HTML
+                       (let [rendered (plot %)]
+                         (and (map? (meta rendered))
+                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+
 ;; # 📊 Histograms
 ;;
 ;; Statistical transformation: binning continuous data and counting occurrences.
@@ -2078,6 +2158,11 @@ iris
     (+ (scatter {:alpha 0.5})
        (linear)))
 
+(kind/test-last [#(and (vector? %)
+                       (= (count %) 2)
+                       (= (:aog/color (first %)) :species)
+                       (= (:aog/transformation (second %)) :linear))])
+
 ;; **What happens here**:
 
 ;; 1. `:species` is categorical (`:string` type in Tablecloth)
@@ -2091,6 +2176,10 @@ iris
 (-> penguins
     (mapping :bill-length-mm nil {:color :species :alpha 0.7})
     (histogram))
+
+(kind/test-last [#(and (= (:aog/transformation (first %)) :histogram)
+                       (= (:aog/color (first %)) :species)
+                       (= (:aog/alpha (first %)) 0.7))])
 
 ;; **What happens here**:
 
@@ -2110,6 +2199,10 @@ iris
     (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
     (+ (scatter {:alpha 0.5})
        (linear)))
+
+(kind/test-last [#(and (= (count %) 2)
+                       (= (:aog/color (first %)) :body-mass-g)
+                       (= (:aog/transformation (second %)) :linear))])
 
 ;; **What happens here**:
 
@@ -2134,6 +2227,10 @@ iris
     (+ (scatter)
        (linear)))
 
+(kind/test-last [#(and (= (count %) 2)
+                       (= (:aog/group (first %)) :cyl)
+                       (= (:aog/transformation (second %)) :linear))])
+
 ;; **What happens here**:
 
 ;; 1. `:cyl` (cylinders) could be treated as continuous (it's numeric)
@@ -2146,6 +2243,10 @@ iris
     (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
     (+ (scatter {:alpha 0.5})
        (linear)))
+
+(kind/test-last [#(and (= (:aog/color (first %)) :sex)
+                       (= (:aog/group (first %)) :species)
+                       (= (:aog/transformation (second %)) :linear))])
 
 ;; **What happens here**:
 
@@ -2278,6 +2379,8 @@ iris
           (scatter))
        {:col :species})
 
+(kind/test-last [#(= (:aog/col (first %)) :species)])
+
 ;; Faceted histogram - per-species histograms with shared scales:
 
 (facet (-> penguins
@@ -2294,6 +2397,8 @@ iris
           (scatter))
        {:row :species})
 
+(kind/test-last [#(= (:aog/row (first %)) :species)])
+
 ;; ## 🧪 Example 12: Row × Column Grid Faceting
 ;;
 ;; Create a 2D grid of facets.
@@ -2303,6 +2408,9 @@ iris
           (mapping :bill-length-mm :bill-depth-mm)
           (scatter))
        {:row :island :col :sex})
+
+(kind/test-last [#(and (= (:aog/row (first %)) :island)
+                       (= (:aog/col (first %)) :sex))])
 
 ;; **What happens here**:
 
@@ -2324,6 +2432,10 @@ iris
           (+ (scatter {:alpha 0.5})
              (linear)))
        {:col :island})
+
+(kind/test-last [#(and (= (count %) 2)
+                       (= (:aog/col (first %)) :island)
+                       (= (:aog/color (first %)) :species))])
 
 ;; **What happens here**:
 ;;
@@ -2350,6 +2462,8 @@ iris
    (mapping :wt :mpg)
    (scatter)
    (scale :y {:domain [0 40]}))
+
+(kind/test-last [#(= (get-in (first %) [:aog/scale-y :domain]) [0 40])])
 
 ;; **What happens here**:
 
@@ -2387,8 +2501,13 @@ iris
 (defmethod plot-impl :vl
   [layers opts]
   (let [layers-vec (if (vector? layers) layers [layers])
-        width (or (:width opts) 600)
-        height (or (:height opts) 400)
+        ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
+        width (or (some :aog/width layers-vec)
+                  (:width opts)
+                  600)
+        height (or (some :aog/height layers-vec)
+                   (:height opts)
+                   400)
 
         ;; Check for faceting
         facet-groups (organize-by-facets layers-vec)
@@ -2606,8 +2725,13 @@ iris
 (defmethod plot-impl :plotly
   [layers opts]
   (let [layers-vec (if (vector? layers) layers [layers])
-        width (or (:width opts) 600)
-        height (or (:height opts) 400)
+        ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
+        width (or (some :aog/width layers-vec)
+                  (:width opts)
+                  600)
+        height (or (some :aog/height layers-vec)
+                   (:height opts)
+                   400)
 
 ;; Check for faceting
         is-faceted? (has-faceting? layers-vec)
@@ -2831,6 +2955,14 @@ iris
     (scatter)
     (target :vl))
 
+(kind/test-last [#(and (= (:aog/target (first %)) :vl)
+                       ;; Test that it renders to valid Vega-Lite spec
+                       (let [rendered (plot %)]
+                         (and (map? rendered)
+                              (contains? rendered :data)
+                              (contains? rendered :mark)
+                              (contains? rendered :encoding))))])
+
 ;; **What's different**:
 
 ;; 1. Interactive tooltips on hover
@@ -2847,6 +2979,9 @@ iris
        (linear))
     (target :vl))
 
+(kind/test-last [#(and (= (count %) 2)
+                       (= (:aog/target (first %)) :vl))])
+
 ;; **What happens here**:
 
 ;; 1. Scatter plot rendered as VL `point` mark
@@ -2861,6 +2996,9 @@ iris
     (+ (scatter)
        (linear))
     (target :vl))
+
+(kind/test-last [#(and (= (:aog/color (first %)) :species)
+                       (= (:aog/target (first %)) :vl))])
 
 ;; **What happens here**:
 
@@ -2891,6 +3029,9 @@ iris
     (facet {:col :species})
     (target :vl))
 
+(kind/test-last [#(and (= (:aog/col (first %)) :species)
+                       (= (:aog/target (first %)) :vl))])
+
 ;; **What happens here**:
 
 ;; 1. Our API detects faceting specification
@@ -2900,15 +3041,20 @@ iris
 
 ;; ## 🧪 Example 19: Grid Faceting with Vega-Lite
 
-;; When you need custom dimensions, use `plot` with options:
+;; Grid faceting with custom dimensions using compositional `size`:
 
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm)
-     (scatter)
-     (facet {:row :island :col :sex})
-     (target :vl))
- {:width 800 :height 600})
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :island :col :sex})
+    (target :vl)
+    (size 800 600))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :spec)
+                       (contains? % :facet)
+                       (= (-> % :facet :row :field) "island")
+                       (= (-> % :facet :column :field) "sex"))])
 
 ;; **What happens here**:
 
@@ -2925,6 +3071,9 @@ iris
     (scale :x {:domain [30 65]})
     (scale :y {:domain [10 25]})
     (target :vl))
+
+(kind/test-last [#(and (= (get-in (first %) [:aog/scale-x :domain]) [30 65])
+                       (= (:aog/target (first %)) :vl))])
 
 ;; **What happens here**:
 
@@ -2964,6 +3113,14 @@ iris
     (scatter)
     (target :plotly))
 
+(kind/test-last [#(and (= (:aog/target (first %)) :plotly)
+                       ;; Test that it renders to valid Plotly spec
+                       (let [rendered (plot %)]
+                         (and (map? rendered)
+                              (contains? rendered :data)
+                              (contains? rendered :layout)
+                              (sequential? (:data rendered)))))])
+
 ;; **What's different from :geom and :vl**:
 
 ;; 1. Hover tooltips showing exact x/y values
@@ -2978,6 +3135,9 @@ iris
     (+ (scatter)
        (linear))
     (target :plotly))
+
+(kind/test-last [#(and (= (count %) 2)
+                       (= (:aog/target (first %)) :plotly))])
 
 ;; **What happens here**:
 
@@ -2994,6 +3154,9 @@ iris
        (linear))
     (target :plotly))
 
+(kind/test-last [#(and (= (:aog/color (first %)) :species)
+                       (= (:aog/target (first %)) :plotly))])
+
 ;; **What happens here**:
 
 ;; 1. Three scatter traces (one per species) with ggplot2 colors
@@ -3004,12 +3167,11 @@ iris
 
 ;; **Simple Histogram with Plotly**:
 
-(plot
- (-> penguins
-     (mapping :bill-length-mm nil)
-     (histogram)
-     (target :plotly))
- {:width 500})
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram)
+    (target :plotly)
+    (size 500 400))
 
 ;; **What happens here**:
 
@@ -3020,13 +3182,12 @@ iris
 
 ;; **Faceted Histogram with Custom Bins (Plotly)**:
 
-(plot
- (-> penguins
-     (mapping :bill-length-mm nil)
-     (histogram {:bins 12})
-     (facet {:col :species})
-     (target :plotly))
- {:width 900 :height 350})
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram {:bins 12})
+    (facet {:col :species})
+    (target :plotly)
+    (size 900 350))
 
 ;; **What happens here**:
 
@@ -3038,13 +3199,18 @@ iris
 
 ;; ## 🧪 Example 24: Faceted Scatter with Plotly
 
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm)
-     (scatter)
-     (facet {:col :species})
-     (target :plotly))
- {:width 800 :height 400})
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:col :species})
+    (target :plotly)
+    (size 800 400))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :data)
+                       (contains? % :layout)
+                       (sequential? (:data %))
+                       (> (count (:data %)) 0))])
 
 ;; **What happens here**:
 
@@ -3063,11 +3229,65 @@ iris
     (scale :y {:domain [10 25]})
     (target :plotly))
 
+(kind/test-last [#(and (= (get-in (first %) [:aog/scale-x :domain]) [30 65])
+                       (= (:aog/target (first %)) :plotly))])
+
 ;; **What happens here**:
 
 ;; 1. Custom domain constraints respected
 ;; 2. Zoom/pan constrained to specified ranges
 ;; 3. Same composition semantics across all targets
+
+;; ## 🧪 Example 15: Compositional Size Specification
+
+;; Width and height can be specified compositionally using the `size` constructor,
+;; just like `target`. This enables full threading and keeps plot dimensions as
+;; part of the layer specification.
+
+;; **Using the `size` constructor**:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :island :col :sex})
+    (target :vl)
+    (size 800 600))
+
+(kind/test-last [#(and (= (:aog/width (first %)) 800)
+                       (= (:aog/height (first %)) 600)
+                       (= (:aog/target (first %)) :vl))])
+
+;; **Full threading with `plot`**:
+;; The `plot` function also supports threading, so you can optionally call it
+;; explicitly at the end of your pipeline (though auto-display usually handles this):
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (scatter {:alpha 0.7})
+    (target :plotly)
+    (size 1000 500)
+    (plot))
+
+(kind/test-last [#(map? (meta %))])
+
+;; **What happens here**:
+
+;; 1. `size` merges `:aog/width` and `:aog/height` into layers
+;; 2. `plot-impl` methods check layers first, then opts, then defaults
+;; 3. Priority: `:aog/width` > `:width opts` > `default-plot-width`
+;; 4. Fully compositional - size is part of the layer spec, not external config
+
+;; **Backwards compatibility**:
+;; The old pattern still works - `plot` with opts map:
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (target :vl))
+ {:width 800 :height 600})
+
+(kind/test-last [#(map? (meta %))])
+
+;; Both approaches work. The `size` constructor enables full threading and
+;; treats dimensions as compositional layer properties.
 
 ;; # Summary
 ;;
