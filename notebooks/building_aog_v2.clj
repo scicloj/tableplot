@@ -120,7 +120,6 @@
 ;; Here's what we use and why:
 
 (ns building-aog-v2
-  (:refer-clojure :exclude [* +])
   (:require
    ;; Tablecloth - Dataset manipulation
    [tablecloth.api :as tc]
@@ -739,7 +738,7 @@
 ;; Consider [histogram](https://en.wikipedia.org/wiki/Histogram) computation:
 ;;
 ;; ```clojure
-;; (* (data penguins) (mapping :bill-length) (histogram))
+;; (=* (data penguins) (mapping :bill-length) (histogram))
 ;; 
 ;; ```
 
@@ -968,20 +967,38 @@
   (kind/fn layers
     {:kindly/f #'plot}))
 
+(defn- ensure-vec
+  "Wrap single items in a vector if not already sequential.
+  
+  This enables auto-wrapping for ergonomic API:
+  - (=* data mapping geom) instead of (=* [data] [mapping] [geom])
+  
+  Args:
+  - x: Either a vector/seq of layers, or a single layer map
+  
+  Returns:
+  - Vector of layers"
+  [x]
+  (if (sequential? x) x [x]))
+
 ;; ### ⚙️ Composition Operators
 
-(defn *
+(defn =*
   "Merge layer specifications (composition).
   
-  Since all constructors return vectors, this always operates on vectors."
+  Auto-wraps single items for cleaner API. These are equivalent:
+  - (=* data mapping geom)
+  - (=* [data] [mapping] [geom])"
   ([x]
-   (displays-as-plot x))
+   (displays-as-plot (ensure-vec x)))
   ([x y]
-   (displays-as-plot
-    (vec (for [a x, b y] (merge a b)))))
+   (let [xs (ensure-vec x)
+         ys (ensure-vec y)]
+     (displays-as-plot
+      (vec (for [a xs, b ys] (merge a b))))))
   ([x y & more]
    (displays-as-plot
-    (reduce * (* x y) more))))
+    (reduce =* (=* x y) more))))
 
 ;; Test helper: check if result is a valid layer vector
 (defn- valid-layers? [x]
@@ -990,21 +1007,24 @@
        (every? map? x)
        (every? #(some (fn [[k _]] (= "aog" (namespace k))) %) x)))
 
-(defn +
+(defn =+
   "Combine multiple layer specifications for overlay (sum).
   
-  Since all constructors return vectors, this concatenates vectors.
+  Auto-wraps single items for cleaner API. These are equivalent:
+  - (=+ scatter-layer linear-layer)
+  - (=+ [scatter-layer] [linear-layer])
   
   When used in threading with layers as first arg, distributes layers over the rest:
-  (-> layers (+ (scatter) (linear))) → (* layers (+ (scatter) (linear)))"
+  (-> layers (=+ (scatter) (linear))) → (=* layers (=+ (scatter) (linear)))"
   [& layer-specs]
-  (displays-as-plot
-   (if (and (>= (count layer-specs) 3) ; Threading produces 3+ args
-            (layers? (first layer-specs)))
-     ;; First arg is layers - distribute over the rest
-     (* (first layer-specs) (apply + (rest layer-specs)))
-     ;; Normal concatenation
-     (vec (apply concat layer-specs)))))
+  (let [wrapped (map ensure-vec layer-specs)]
+    (displays-as-plot
+     (if (and (>= (count layer-specs) 3) ; Threading produces 3+ args
+              (layers? (first layer-specs)))
+       ;; First arg is layers - distribute over the rest
+       (=* (first layer-specs) (apply =+ (rest layer-specs)))
+       ;; Normal concatenation
+       (vec (apply concat wrapped))))))
 
 ;; ### ⚙️ Constructors
 
@@ -1024,7 +1044,7 @@
      (validate! Dataset dataset))
    [{:aog/data dataset}])
   ([layers dataset]
-   (* layers (data dataset))))
+   (=* layers (data dataset))))
 
 ;; Examples:
 (data {:x [1 2 3] :y [4 5 6]})
@@ -1059,13 +1079,13 @@
            layers (if (layers? layers-or-data)
                     layers-or-data
                     (data layers-or-data))]
-       (* layers (mapping x-field y-field)))))
+       (=* layers (mapping x-field y-field)))))
   ([first-arg x y named]
    ;; Threading-friendly: (-> layers (mapping :x :y {:color :species}))
    (let [layers (if (layers? first-arg)
                   first-arg
                   (data first-arg))]
-     (* layers (mapping x y named)))))
+     (=* layers (mapping x y named)))))
 
 ;; Examples:
 (mapping :bill-length-mm :bill-depth-mm)
@@ -1119,7 +1139,7 @@
    (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
      [{scale-key opts}]))
   ([layers aesthetic opts]
-   (* layers (scale aesthetic opts))))
+   (=* layers (scale aesthetic opts))))
 
 (defn target
   "Specify the rendering target for layers.
@@ -1135,7 +1155,7 @@
   ([target-kw]
    [{:aog/target target-kw}])
   ([layers target-kw]
-   (* layers (target target-kw))))
+   (=* layers (target target-kw))))
 
 (defn size
   "Specify width and height for the plot.
@@ -1154,7 +1174,7 @@
   ([width height]
    [{:aog/width width :aog/height height}])
   ([layers width height]
-   (* layers (size width height))))
+   (=* layers (size width height))))
 
 ;; # Examples
 ;;
@@ -1928,7 +1948,7 @@ iris
    [{:aog/plottype :scatter}])
   ([attrs-or-layers]
    (if (layers? attrs-or-layers)
-     (* attrs-or-layers (scatter))
+     (=* attrs-or-layers (scatter))
      (let [result (merge {:aog/plottype :scatter}
                          (update-keys attrs-or-layers #(keyword "aog" (name %))))]
        (when *validate-on-construction*
@@ -1936,7 +1956,7 @@ iris
        [result])))
   ([layers attrs]
    ;; Threading-friendly: (-> layers (scatter {:alpha 0.5}))
-   (* layers (scatter attrs))))
+   (=* layers (scatter attrs))))
 
 ;; ### ⚙️ Rendering Multimethod
 
@@ -1967,9 +1987,9 @@ iris
 
 ;; ### 🧪 Example 1: Simple Scatter Plot (Delegated Domain)
 
-(* (data penguins)
-   (mapping :bill-length-mm :bill-depth-mm)
-   (scatter))
+(=* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter))
 
 (kind/test-last [#(and (vector? %)
                        (map? (first %))
@@ -1993,9 +2013,9 @@ iris
 
 ;; **Inspecting the raw layer specification**:
 (kind/pprint
- (* (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm)
-    (scatter)))
+ (=* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)))
 
 ;; Notice the `:aog/data`, `:aog/x`, `:aog/y`, `:aog/plottype` keys.
 ;; This is the compositional layer specification before rendering.
@@ -2006,10 +2026,10 @@ iris
 ;; Two formats are supported:
 
 ;; **Map of vectors** (most common for columnar data):
-(* (data {:x [1 2 3 4 5]
-          :y [2 4 6 8 10]})
-   (mapping :x :y)
-   (scatter))
+(=* (data {:x [1 2 3 4 5]
+           :y [2 4 6 8 10]})
+    (mapping :x :y)
+    (scatter))
 
 (kind/test-last [#(and (vector? %)
                        (= (:aog/x (first %)) :x)
@@ -2017,13 +2037,13 @@ iris
                        (map? (:aog/data (first %))))])
 
 ;; **Vector of maps** (row-oriented data):
-(* (data [{:x 1 :y 2}
-          {:x 2 :y 4}
-          {:x 3 :y 6}
-          {:x 4 :y 8}
-          {:x 5 :y 10}])
-   (mapping :x :y)
-   (scatter))
+(=* (data [{:x 1 :y 2}
+           {:x 2 :y 4}
+           {:x 3 :y 6}
+           {:x 4 :y 8}
+           {:x 5 :y 10}])
+    (mapping :x :y)
+    (scatter))
 
 (kind/test-last [#(and (vector? %)
                        (= (:aog/x (first %)) :x)
@@ -2094,7 +2114,7 @@ iris
 ;;
 ;; You can use compositional style with `*`:
 ;; ```clojure
-;; (* (data penguins) (mapping :x :y) (scatter))
+;; (=* (data penguins) (mapping :x :y) (scatter))
 ;; ```
 ;;
 ;; Or threading style with `->`:
@@ -2124,9 +2144,9 @@ iris
       (some #(instance? java.time.temporal.Temporal %) values) :temporal
       :else :categorical)))
 
-(let [layer (* (data penguins)
-               (mapping :bill-length-mm :bill-depth-mm {:color :species})
-               (scatter))
+(let [layer (=* (data penguins)
+                (mapping :bill-length-mm :bill-depth-mm {:color :species})
+                (scatter))
       layer (first layer)]
   {:x-type (infer-scale-type layer :aog/x)
    :y-type (infer-scale-type layer :aog/y)
@@ -2162,7 +2182,7 @@ iris
    (let [layers (if (layers? layers-or-data)
                   layers-or-data
                   (data layers-or-data))]
-     (* layers (linear)))))
+     (=* layers (linear)))))
 
 ;; ### ⚙️ Compute Function
 
@@ -2304,12 +2324,12 @@ iris
 
 ;; ### 🧪 Example 4: Multi-Layer Composition (Scatter + Linear Regression)
 
-;; Multi-layer plots using the `+` operator:
+;; Multi-layer plots using the `=+` operator:
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
-    (+ (scatter {:alpha 0.5})
-       (linear)))
+    (=+ (scatter {:alpha 0.5})
+        (linear)))
 
 (kind/test-last [#(and (vector? %)
                        (= (count %) 2)
@@ -2347,7 +2367,7 @@ iris
      :aog/bins :sturges}])
   ([opts-or-layers]
    (if (layers? opts-or-layers)
-     (* opts-or-layers (histogram))
+     (=* opts-or-layers (histogram))
      (let [result (merge {:aog/transformation :histogram
                           :aog/plottype :bar
                           :aog/bins :sturges}
@@ -2356,7 +2376,7 @@ iris
          (validate! Layer result))
        [result])))
   ([layers opts]
-   (* layers (histogram opts))))
+   (=* layers (histogram opts))))
 
 ;; ### ⚙️ Compute Function
 
@@ -2542,8 +2562,8 @@ iris
 ;; **Categorical color → grouped regression**:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
-    (+ (scatter {:alpha 0.5})
-       (linear)))
+    (=+ (scatter {:alpha 0.5})
+        (linear)))
 
 (kind/test-last [#(and (vector? %)
                        (= (count %) 2)
@@ -2584,8 +2604,8 @@ iris
 ;; **Continuous color → single regression with gradient**:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
-    (+ (scatter {:alpha 0.5})
-       (linear)))
+    (=+ (scatter {:alpha 0.5})
+        (linear)))
 
 (kind/test-last [#(and (= (count %) 2)
                        (= (:aog/color (first %)) :body-mass-g)
@@ -2611,8 +2631,8 @@ iris
 ;; **Explicit :group aesthetic**:
 (-> mtcars
     (mapping :wt :mpg {:group :cyl})
-    (+ (scatter)
-       (linear)))
+    (=+ (scatter)
+        (linear)))
 
 (kind/test-last [#(and (= (count %) 2)
                        (= (:aog/group (first %)) :cyl)
@@ -2628,8 +2648,8 @@ iris
 ;; **Group different from color**:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
-    (+ (scatter {:alpha 0.5})
-       (linear)))
+    (=+ (scatter {:alpha 0.5})
+        (linear)))
 
 (kind/test-last [#(and (= (:aog/color (first %)) :sex)
                        (= (:aog/group (first %)) :species)
@@ -2714,9 +2734,9 @@ iris
 ;;
 ;; **For statistical transforms + faceting**:
 ;; ```clojure
-;; (plot (facet (* (data penguins)
-;;                 (mapping :bill-length-mm nil)
-;;                 (histogram))
+;; (plot (facet (=* (data penguins)
+;;                  (mapping :bill-length-mm nil)
+;;                  (histogram))
 ;;              {:col :species}))
 ;; ```
 ;;
@@ -2761,9 +2781,9 @@ iris
 ;; Small multiples: splitting data across rows and columns.
 
 ;; Test faceted scatter plot - 3 side-by-side plots
-(facet (* (data penguins)
-          (mapping :bill-length-mm :bill-depth-mm)
-          (scatter))
+(facet (=* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm)
+           (scatter))
        {:col :species})
 
 (kind/test-last [#(= (:aog/col (first %)) :species)])
@@ -2779,9 +2799,9 @@ iris
 ;;
 ;; Facet by rows creates vertically stacked panels
 
-(facet (* (data penguins)
-          (mapping :bill-length-mm :bill-depth-mm)
-          (scatter))
+(facet (=* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm)
+           (scatter))
        {:row :species})
 
 (kind/test-last [#(= (:aog/row (first %)) :species)])
@@ -2791,9 +2811,9 @@ iris
 ;; Create a 2D grid of facets.
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
 
-(facet (* (data penguins)
-          (mapping :bill-length-mm :bill-depth-mm)
-          (scatter))
+(facet (=* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm)
+           (scatter))
        {:row :island :col :sex})
 
 (kind/test-last [#(and (= (:aog/row (first %)) :island)
@@ -2814,10 +2834,10 @@ iris
 ;; by species (color) AND island (facet column), computing separate
 ;; regressions for each (species × island) combination.
 
-(facet (* (data penguins)
-          (mapping :bill-length-mm :bill-depth-mm {:color :species})
-          (+ (scatter {:alpha 0.5})
-             (linear)))
+(facet (=* (data penguins)
+           (mapping :bill-length-mm :bill-depth-mm {:color :species})
+           (=+ (scatter {:alpha 0.5})
+               (linear)))
        {:col :island})
 
 (kind/test-last [#(and (= (count %) 2)
@@ -2841,14 +2861,14 @@ iris
 ;; Override auto-computed domains to control axis ranges
 
 ;; Force y-axis to start at 0
-(* (data mtcars)
+(=* (data mtcars)
 ;; # Scale Customization
 ;; 
 ;; Custom scale domains for precise control over axis ranges.
 
-   (mapping :wt :mpg)
-   (scatter)
-   (scale :y {:domain [0 40]}))
+    (mapping :wt :mpg)
+    (scatter)
+    (scale :y {:domain [0 40]}))
 
 (kind/test-last [#(= (get-in (first %) [:aog/scale-y :domain]) [0 40])])
 
@@ -2859,11 +2879,11 @@ iris
 ;; 3. Custom domains compose via `*` operator
 
 ;; Custom domains on both axes
-(* (data penguins)
-   (mapping :bill-length-mm :bill-depth-mm)
-   (scatter)
-   (scale :x {:domain [30 65]})
-   (scale :y {:domain [10 25]}))
+(=* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (scale :x {:domain [30 65]})
+    (scale :y {:domain [10 25]}))
 
 ;; **What happens here**:
 
@@ -3370,8 +3390,8 @@ iris
 
 (-> mtcars
     (mapping :wt :mpg)
-    (+ (scatter)
-       (linear))
+    (=+ (scatter)
+        (linear))
     (target :vl))
 
 (kind/test-last [#(and (= (count %) 2)
@@ -3388,8 +3408,8 @@ iris
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
-    (+ (scatter)
-       (linear))
+    (=+ (scatter)
+        (linear))
     (target :vl))
 
 (kind/test-last [#(and (= (:aog/color (first %)) :species)
@@ -3528,8 +3548,8 @@ iris
 
 (-> mtcars
     (mapping :wt :mpg)
-    (+ (scatter)
-       (linear))
+    (=+ (scatter)
+        (linear))
     (target :plotly))
 
 (kind/test-last [#(and (= (count %) 2)
@@ -3546,8 +3566,8 @@ iris
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
-    (+ (scatter)
-       (linear))
+    (=+ (scatter)
+        (linear))
     (target :plotly))
 
 (kind/test-last [#(and (= (:aog/color (first %)) :species)
@@ -3716,8 +3736,8 @@ iris
 ;; It's a consequence of our choice to use **vectors of maps** as the IR:
 ;;
 ;; - The `*` operator merges maps: `(merge layer-a layer-b)`
-;; - When we do `(* layers (target :vl))`, the target gets merged into all layers
-;; - Same for `(* layers (size 800 600))` - dimensions merge into every layer
+;; - When we do `(=* layers (target :vl))`, the target gets merged into all layers
+;; - Same for `(=* layers (size 800 600))` - dimensions merge into every layer
 ;;
 ;; The current workaround: `plot-impl` extracts the first occurrence:
 ;; ```clojure
