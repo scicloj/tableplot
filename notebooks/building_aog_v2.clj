@@ -1,4 +1,4 @@
-;; # Building a Composable Graphics API in Clojure, Version 1
+;; # Building a Composable Graphics API in Clojure, Part 1
 ;; **A Design Exploration for Tableplot**
 ;;
 ;; This is the first post in a series documenting the design and implementation of a new
@@ -364,9 +364,11 @@
   
   Accepts:
   - Plain Clojure map with keyword keys and sequential values
+  - Vector of maps (row-oriented data)
   - tech.ml.dataset (tablecloth dataset)"
   [:or
    [:map-of :keyword [:sequential any?]]
+   [:sequential map?]
    [:fn {:error/message "Must be a tablecloth dataset"}
     tc/dataset?]])
 
@@ -617,9 +619,22 @@
 
    ;; Check data-related validations if data is present
    (when-let [data (:aog/data layer)]
-     (let [column-keys (if (tc/dataset? data)
+     (let [column-keys (cond
+                         ;; Tablecloth dataset
+                         (tc/dataset? data)
                          (set (tc/column-names data))
-                         (set (keys data)))
+
+                         ;; Vector of maps (row-oriented)
+                         (and (vector? data) (map? (first data)))
+                         (set (keys (first data)))
+
+                         ;; Map of columns (column-oriented)
+                         (map? data)
+                         (set (keys data))
+
+                         ;; Unknown format, skip validation
+                         :else
+                         nil)
 
            ;; Collect all column references from aesthetics
            aesthetic-cols (filter keyword?
@@ -631,9 +646,10 @@
                                    (:aog/col layer)])
 
            ;; Find missing columns
-           missing-cols (remove column-keys aesthetic-cols)]
+           missing-cols (when column-keys
+                          (remove column-keys aesthetic-cols))]
 
-       (when (seq missing-cols)
+       (when (and column-keys (seq missing-cols))
          {:type :missing-columns
           :missing (vec missing-cols)
           :available (vec (sort column-keys))
@@ -3419,12 +3435,13 @@ iris
 
 ;; Grid faceting with custom dimensions using compositional `size`:
 
-(-> penguins
-    (mapping :bill-length-mm :bill-depth-mm)
-    (scatter)
-    (facet {:row :island :col :sex})
-    (target :vl)
-    (size 800 600))
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (facet {:row :island :col :sex})
+     (target :vl)
+     (size 800 600)))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :spec)
@@ -3575,12 +3592,13 @@ iris
 
 ;; ## 🧪 Example 24: Faceted Scatter with Plotly
 
-(-> penguins
-    (mapping :bill-length-mm :bill-depth-mm)
-    (scatter)
-    (facet {:col :species})
-    (target :plotly)
-    (size 800 400))
+(plot
+ (-> penguins
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (facet {:col :species})
+     (target :plotly)
+     (size 800 400)))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :data)
