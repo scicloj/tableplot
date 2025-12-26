@@ -3289,6 +3289,110 @@ iris
 ;; Both approaches work. The `size` constructor enables full threading and
 ;; treats dimensions as compositional layer properties.
 
+;; # Design Discussion
+;;
+;; ## 📖 Plot-Level Properties in Layer Vectors
+;;
+;; ### The Tension
+;;
+;; Our current design uses a vector of layer maps as the intermediate representation:
+;;
+;; ```clojure
+;; (-> penguins
+;;     (mapping :x :y)
+;;     (scatter)
+;;     (target :vl)
+;;     (size 800 600))
+;; ;; => [{:aog/data ... :aog/x :x :aog/y :y :aog/plottype :scatter 
+;; ;;      :aog/target :vl :aog/width 800 :aog/height 600}]
+;; ```
+;;
+;; Notice that `:aog/target`, `:aog/width`, and `:aog/height` appear in every layer,
+;; even though their meaning applies to **all layers together**, not individual layers.
+;; These are plot-level properties, not layer-level properties.
+;;
+;; This creates a conceptual impurity: properties about "how to render the whole plot"
+;; are stored alongside properties about "what data to show and how to transform it."
+;;
+;; ### Why This Happens
+;;
+;; It's a consequence of our choice to use **vectors of maps** as the IR:
+;;
+;; - The `*` operator merges maps: `(merge layer-a layer-b)`
+;; - When we do `(* layers (target :vl))`, the target gets merged into all layers
+;; - Same for `(* layers (size 800 600))` - dimensions merge into every layer
+;;
+;; The current workaround: `plot-impl` extracts the first occurrence:
+;; ```clojure
+;; (some :aog/target layers-vec)  ;; Get first non-nil target
+;; (some :aog/width layers-vec)   ;; Get first non-nil width
+;; ```
+;;
+;; ### Alternative Approaches Considered
+;;
+;; **1. Metadata on the Vector**
+;;
+;; ```clojure
+;; (defn target [target-kw]
+;;   (with-meta [] {:aog/target target-kw}))
+;;
+;; ;; Result:
+;; ^{:aog/target :vl :aog/width 800 :aog/height 600}
+;; [{:aog/data ... :aog/x :x :aog/plottype :scatter}]
+;; ```
+;;
+;; **Pros**: Conceptually clean separation - layers are grammar, metadata is rendering config
+;;
+;; **Cons**: Metadata easily lost, less inspectable, threading needs special handling
+;;
+;; **2. Wrapper Map**
+;;
+;; ```clojure
+;; {:layers [{:aog/data ... :aog/x :x}
+;;           {:aog/transformation :linear}]
+;;  :config {:target :vl :width 800 :height 600}}
+;; ```
+;;
+;; **Pros**: Explicit separation, no duplication, easy to inspect
+;;
+;; **Cons**: Breaks the algebra (`*` and `+` work on vectors), operators become complex
+;;
+;; **3. Special Marker Layer**
+;;
+;; ```clojure
+;; [{:aog/data ... :aog/x :x :aog/plottype :scatter}
+;;  {:aog/plot-config true
+;;   :aog/target :vl :aog/width 800 :aog/height 600}]
+;; ```
+;;
+;; **Pros**: Keeps vector structure, filterable
+;;
+;; **Cons**: Still mixed concerns, just specially marked
+;;
+;; **4. Accept the Duplication (Current)**
+;;
+;; Keep plot-level properties duplicated in every layer.
+;;
+;; **Pros**: Simple, works with current algebra, extraction via `some` is straightforward
+;;
+;; **Cons**: Conceptually impure, wasteful (though negligible), could confuse on inspection
+;;
+;; ### Current Decision
+;;
+;; We've chosen **Alternative 4** (accept duplication) for now because:
+;;
+;; 1. **Simplicity**: No special cases in `*` and `+` operators
+;; 2. **Works**: The `some` extraction pattern is fast and reliable
+;; 3. **Practical**: The duplication overhead is negligible in practice
+;; 4. **Revisable**: If this becomes problematic, we can migrate to metadata later
+;;
+;; The key insight: this is a **limitation of using vectors of maps as IR**, not a
+;; fundamental flaw. If plot-level configuration grows significantly, the metadata
+;; approach (Alternative 1) would be the natural evolution, as it mirrors Clojure's
+;; philosophy of metadata for "information about the thing" vs "the thing itself."
+;;
+;; For now, the simplicity trade-off is worth it.
+
 ;; # Summary
 ;;
 ;; ## 📖 What We've Explored
