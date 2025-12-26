@@ -130,6 +130,10 @@
    [fastmath.ml.regression :as regr]
    [fastmath.stats :as stats]
 
+   ;; Malli - Schema validation
+   [malli.core :as m]
+   [malli.error :as me]
+
    ;; RDatasets - Example datasets
    [scicloj.metamorph.ml.rdatasets :as rdatasets]))
 
@@ -319,6 +323,355 @@
         :color :species
         :alpha 0.5
         :plottype :scatter})
+
+;; # 📐 Malli Schemas
+;;
+;; Schemas define the structure and valid values for layers, aesthetics, and inputs.
+;; They provide:
+;; - Documentation of expected data shapes
+;; - Runtime validation with clear error messages
+;; - Type safety for layer construction and composition
+
+;; ## Core Type Schemas
+
+(def DataType
+  "Schema for column data types.
+  
+  - :quantitative - Continuous numeric values
+  - :nominal - Categorical/discrete unordered values
+  - :ordinal - Categorical/discrete ordered values
+  - :temporal - Date/time values"
+  [:enum :quantitative :nominal :ordinal :temporal])
+
+(def PlotType
+  "Schema for plot/mark types."
+  [:enum :scatter :line :area :bar :histogram])
+
+(def Transformation
+  "Schema for statistical transformations."
+  [:enum :linear :smooth :density :bin :histogram])
+
+(def BinsMethod
+  "Schema for histogram binning methods."
+  [:or
+   [:enum :sturges :sqrt :rice :freedman-diaconis]
+   pos-int?])
+
+;; ## Data Schemas
+
+(def Dataset
+  "Schema for dataset input.
+  
+  Accepts:
+  - Plain Clojure map with keyword keys and sequential values
+  - tech.ml.dataset (tablecloth dataset)"
+  [:or
+   [:map-of :keyword [:sequential any?]]
+   [:fn {:error/message "Must be a tablecloth dataset"}
+    tc/dataset?]])
+
+;; ## Aesthetic Schemas
+
+(def ColumnReference
+  "Schema for referencing a column in the dataset."
+  :keyword)
+
+(def ColumnOrConstant
+  "Schema for aesthetics that can be either mapped to a column or set to a constant value.
+  
+  - Keyword → map from column (e.g., :species)
+  - Other value → constant (e.g., \"red\", 0.5)"
+  [:or ColumnReference string? number? boolean?])
+
+(def PositionalAesthetic
+  "Schema for x or y positional aesthetics."
+  [:maybe ColumnReference])
+
+(def ColorAesthetic
+  "Schema for color aesthetic.
+  
+  Can be:
+  - Column reference for mapping
+  - Constant color string
+  - nil (no color mapping)"
+  [:maybe ColumnOrConstant])
+
+(def SizeAesthetic
+  "Schema for size aesthetic."
+  [:maybe ColumnOrConstant])
+
+(def AlphaAttribute
+  "Schema for alpha/opacity attribute (constant only)."
+  [:maybe [:double {:min 0.0 :max 1.0}]])
+
+(def FacetAesthetic
+  "Schema for faceting aesthetics (row, col)."
+  [:maybe ColumnReference])
+
+;; ## Scale Schemas
+
+(def ScaleTransform
+  "Schema for scale transformations."
+  [:enum :identity :log :sqrt])
+
+(def ScaleDomain
+  "Schema for scale domain specification."
+  [:or
+   ;; Continuous domain: [min max]
+   [:tuple number? number?]
+   ;; Categorical domain: vector of values
+   [:vector any?]])
+
+(def ScaleSpec
+  "Schema for scale specification."
+  [:map
+   [:domain {:optional true} ScaleDomain]
+   [:transform {:optional true} ScaleTransform]])
+
+;; ## Backend Schemas
+
+(def Backend
+  "Schema for rendering backend selection."
+  [:enum :geom :vl :plotly])
+
+;; ## Layer Schema
+
+(def Layer
+  "Schema for a complete layer specification.
+  
+  A layer is a flat map with namespaced :aog/* keys containing all the
+  information needed to render a visualization layer:
+  - Data source
+  - Aesthetic mappings (x, y, color, size, etc.)
+  - Plot type
+  - Visual attributes
+  - Optional statistical transformation
+  - Optional faceting"
+  [:map
+   ;; Data (required for most layers)
+   [:aog/data {:optional true} Dataset]
+
+   ;; Positional aesthetics
+   [:aog/x {:optional true} PositionalAesthetic]
+   [:aog/y {:optional true} PositionalAesthetic]
+
+   ;; Other aesthetics
+   [:aog/color {:optional true} ColorAesthetic]
+   [:aog/size {:optional true} SizeAesthetic]
+
+   ;; Faceting
+   [:aog/row {:optional true} FacetAesthetic]
+   [:aog/col {:optional true} FacetAesthetic]
+
+   ;; Attributes (constant visual properties)
+   [:aog/alpha {:optional true} AlphaAttribute]
+
+   ;; Plot type and transformation
+   [:aog/plottype {:optional true} PlotType]
+   [:aog/transformation {:optional true} Transformation]
+
+   ;; Histogram-specific
+   [:aog/bins {:optional true} BinsMethod]
+
+   ;; Scales
+   [:aog/scale-x {:optional true} ScaleSpec]
+   [:aog/scale-y {:optional true} ScaleSpec]
+   [:aog/scale-color {:optional true} ScaleSpec]
+
+   ;; Rendering
+   [:aog/target {:optional true} Backend]
+   [:aog/width {:optional true} pos-int?]
+   [:aog/height {:optional true} pos-int?]])
+
+(def Layers
+  "Schema for one or more layers.
+  
+  - Single layer map
+  - Vector of layer maps"
+  [:or Layer [:vector Layer]])
+
+;; # ✅ Validation Helpers
+;;
+;; Helper functions for validating layers and providing clear error messages.
+
+;; ## Dynamic Validation Control
+
+(def ^:dynamic *validate-on-construction*
+  "When true, constructors validate their inputs.
+  
+  Useful for development - set to true to catch errors early.
+  Default is false to allow exploratory coding."
+  false)
+
+(def ^:dynamic *validate-on-draw*
+  "When true, plot validates layers before rendering.
+  
+  Default is true - always validate before attempting to render."
+  true)
+
+;; ## Core Validation Functions
+
+(defn validate
+  "Validate a value against a schema.
+  
+  Returns:
+  - nil if valid
+  - Humanized error map if invalid
+  
+  Example:
+  (validate Layer {:aog/data {:x [1 2 3]} :aog/plottype :scatter})
+  ;; => nil (valid)
+  
+  (validate Layer {:aog/plottype :invalid})
+  ;; => {:aog/plottype [\"should be one of: :scatter, :line, :area, :bar, :histogram\"]}"
+  [schema value]
+  (when-not (m/validate schema value)
+    (me/humanize (m/explain schema value))))
+
+(defn validate!
+  "Validate a value against a schema, throwing on error.
+  
+  Throws ex-info with humanized error message if invalid.
+  
+  Example:
+  (validate! Layer my-layer)"
+  [schema value]
+  (when-let [errors (validate schema value)]
+    (throw (ex-info "Validation failed"
+                    {:errors errors
+                     :value value}))))
+
+(defn valid?
+  "Check if a value is valid according to a schema.
+  
+  Returns boolean.
+  
+  Example:
+  (valid? Layer my-layer)"
+  [schema value]
+  (m/validate schema value))
+
+;; ## Layer-Specific Validation
+
+(defn validate-layer
+  "Validate a layer with context-aware checks.
+  
+  Performs:
+  1. Schema validation (structure)
+  2. Semantic validation (required fields for plottype)
+  3. Data validation (columns exist)
+  
+  Returns nil if valid, error map if invalid."
+  [layer]
+  ;; First check schema
+  (or
+   (when-let [schema-errors (validate Layer layer)]
+     {:type :schema-error
+      :errors schema-errors
+      :message "Layer structure is invalid"})
+
+   ;; Check plottype-specific requirements
+   (let [plottype (:aog/plottype layer)]
+     (when plottype
+       (case plottype
+         ;; Scatter/line need x and y
+         (:scatter :line)
+         (when-not (and (:aog/x layer) (:aog/y layer))
+           {:type :missing-required-aesthetic
+            :plottype plottype
+            :missing (cond
+                       (and (nil? (:aog/x layer)) (nil? (:aog/y layer))) [:aog/x :aog/y]
+                       (nil? (:aog/x layer)) [:aog/x]
+                       :else [:aog/y])
+            :message (str plottype " plots require both :aog/x and :aog/y")})
+
+         ;; Bar needs at least x
+         :bar
+         (when-not (:aog/x layer)
+           {:type :missing-required-aesthetic
+            :plottype plottype
+            :missing [:aog/x]
+            :message "Bar plots require :aog/x"})
+
+         ;; Histogram needs just x
+         :histogram
+         (when-not (:aog/x layer)
+           {:type :missing-required-aesthetic
+            :plottype plottype
+            :missing [:aog/x]
+            :message "Histogram requires :aog/x"})
+
+         ;; Area needs x and y
+         :area
+         (when-not (and (:aog/x layer) (:aog/y layer))
+           {:type :missing-required-aesthetic
+            :plottype plottype
+            :missing (cond
+                       (and (nil? (:aog/x layer)) (nil? (:aog/y layer))) [:aog/x :aog/y]
+                       (nil? (:aog/x layer)) [:aog/x]
+                       :else [:aog/y])
+            :message "Area plots require both :aog/x and :aog/y"})
+
+         ;; Default - no specific requirements
+         nil)))
+
+   ;; Check data-related validations if data is present
+   (when-let [data (:aog/data layer)]
+     (let [column-keys (if (tc/dataset? data)
+                         (set (tc/column-names data))
+                         (set (keys data)))
+
+           ;; Collect all column references from aesthetics
+           aesthetic-cols (filter keyword?
+                                  [(:aog/x layer)
+                                   (:aog/y layer)
+                                   (when (keyword? (:aog/color layer)) (:aog/color layer))
+                                   (when (keyword? (:aog/size layer)) (:aog/size layer))
+                                   (:aog/row layer)
+                                   (:aog/col layer)])
+
+           ;; Find missing columns
+           missing-cols (remove column-keys aesthetic-cols)]
+
+       (when (seq missing-cols)
+         {:type :missing-columns
+          :missing (vec missing-cols)
+          :available (vec (sort column-keys))
+          :message (str "Columns not found in dataset: " (vec missing-cols)
+                        "\nAvailable columns: " (vec (sort column-keys)))})))
+
+   ;; All validations passed
+   nil))
+
+(defn validate-layer!
+  "Validate a layer, throwing on error.
+  
+  Throws ex-info with detailed error information."
+  [layer]
+  (when-let [error (validate-layer layer)]
+    (throw (ex-info (:message error "Layer validation failed")
+                    error))))
+
+(defn validate-layers
+  "Validate one or more layers.
+  
+  Returns nil if all valid, map of errors otherwise."
+  [layers]
+  (let [layer-vec (if (vector? layers) layers [layers])
+        errors (keep-indexed (fn [idx layer]
+                               (when-let [error (validate-layer layer)]
+                                 [idx error]))
+                             layer-vec)]
+    (when (seq errors)
+      {:type :layers-validation-failed
+       :errors (into {} errors)})))
+
+(defn validate-layers!
+  "Validate one or more layers, throwing on first error."
+  [layers]
+  (when-let [errors (validate-layers layers)]
+    (throw (ex-info "Layer validation failed"
+                    errors))))
 
 ;; **Why this works**:
 ;;
@@ -642,6 +995,8 @@
   
   When called with layers as first arg, merges data into those layers."
   ([dataset]
+   (when *validate-on-construction*
+     (validate! Dataset dataset))
    [{:aog/data dataset}])
   ([layers dataset]
    (* layers (data dataset))))
@@ -687,7 +1042,7 @@
                   (data first-arg))]
      (* layers (mapping x y named)))))
 
-;; Examples:
+;; Examplesbuilding_aog_v2.clj:
 (mapping :bill-length-mm :bill-depth-mm)
 
 (mapping :bill-length-mm :bill-depth-mm {:color :species})
@@ -1398,6 +1753,10 @@ iris
 ;; Returns: Kindly-wrapped HTML containing SVG
 (defmethod plot-impl :geom
   [layers opts]
+  ;; Validate layers before rendering
+  (when *validate-on-draw*
+    (validate-layers! layers))
+
   (let [layers-vec (if (vector? layers) layers [layers])
         ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
         width (or (some :aog/width layers-vec)
@@ -1550,8 +1909,11 @@ iris
   ([attrs-or-layers]
    (if (layers? attrs-or-layers)
      (* attrs-or-layers (scatter))
-     [(merge {:aog/plottype :scatter}
-             (update-keys attrs-or-layers #(keyword "aog" (name %))))]))
+     (let [result (merge {:aog/plottype :scatter}
+                         (update-keys attrs-or-layers #(keyword "aog" (name %))))]
+       (when *validate-on-construction*
+         (validate! Layer result))
+       [result])))
   ([layers attrs]
    ;; Threading-friendly: (-> layers (scatter {:alpha 0.5}))
    (* layers (scatter attrs))))
@@ -1772,8 +2134,11 @@ iris
   
   When called with layers-or-data as first arg, merges linear into those layers."
   ([]
-   [{:aog/transformation :linear
-     :aog/plottype :line}])
+   (let [result {:aog/transformation :linear
+                 :aog/plottype :line}]
+     (when *validate-on-construction*
+       (validate! Layer result))
+     [result]))
   ([layers-or-data]
    (let [layers (if (layers? layers-or-data)
                   layers-or-data
@@ -1964,10 +2329,13 @@ iris
   ([opts-or-layers]
    (if (layers? opts-or-layers)
      (* opts-or-layers (histogram))
-     [(merge {:aog/transformation :histogram
-              :aog/plottype :bar
-              :aog/bins :sturges}
-             (update-keys opts-or-layers #(keyword "aog" (name %))))]))
+     (let [result (merge {:aog/transformation :histogram
+                          :aog/plottype :bar
+                          :aog/bins :sturges}
+                         (update-keys opts-or-layers #(keyword "aog" (name %))))]
+       (when *validate-on-construction*
+         (validate! Layer result))
+       [result])))
   ([layers opts]
    (* layers (histogram opts))))
 
@@ -2500,6 +2868,10 @@ iris
 
 (defmethod plot-impl :vl
   [layers opts]
+  ;; Validate layers before rendering
+  (when *validate-on-draw*
+    (validate-layers! layers))
+
   (let [layers-vec (if (vector? layers) layers [layers])
         ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
         width (or (some :aog/width layers-vec)
@@ -2724,6 +3096,10 @@ iris
 
 (defmethod plot-impl :plotly
   [layers opts]
+  ;; Validate layers before rendering
+  (when *validate-on-draw*
+    (validate-layers! layers))
+
   (let [layers-vec (if (vector? layers) layers [layers])
         ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
         width (or (some :aog/width layers-vec)
@@ -3437,10 +3813,160 @@ iris
 ;; 1. Add smooth (LOESS) and density (kernel density estimation) transforms
 ;; 2. Add free scales option for faceting
 ;; 3. Add contour plots and heatmaps
-;; 4. Add Malli schemas for validating layer specifications
-;; 5. Add validation for column existence (helpful error messages when columns missing)
+;; 4. ~~Add Malli schemas for validating layer specifications~~ ✅ DONE
+;; 5. ~~Add validation for column existence (helpful error messages when columns missing)~~ ✅ DONE
 ;; 6. Performance optimization for large datasets
 ;; 7. Gather community feedback
+
+;; # 🧪 Validation Examples
+;;
+;; The Malli schemas enable validation at two points:
+;; - Construction time (opt-in, via *validate-on-construction*)
+;; - Draw time (default-on, via *validate-on-draw*)
+
+;; ## Example 1: Valid Layer
+
+(comment
+  ;; A properly constructed layer passes validation silently
+  (validate Layer
+            {:aog/data {:x [1 2 3] :y [4 5 6]}
+             :aog/x :x
+             :aog/y :y
+             :aog/plottype :scatter
+             :aog/alpha 0.7})
+  ;; => nil (valid!)
+  )
+
+;; ## Example 2: Invalid Alpha (Out of Range)
+
+(comment
+  ;; Alpha must be between 0.0 and 1.0
+  (validate Layer
+            {:aog/data {:x [1 2 3]}
+             :aog/plottype :scatter
+             :aog/alpha 1.5}) ;; Out of range!
+  ;; => {:aog/alpha ["should be at most 1.0"]}
+  )
+
+;; ## Example 3: Invalid Plot Type
+
+(comment
+  ;; Plot type must be one of the defined enums
+  (validate Layer
+            {:aog/data {:x [1 2 3]}
+             :aog/plottype :invalid-type})
+  ;; => {:aog/plottype ["should be one of: :scatter, :line, :area, :bar, :histogram"]}
+  )
+
+;; ## Example 4: Missing Required Aesthetics
+
+(comment
+  ;; Scatter plots require both x and y
+  (validate-layer
+   {:aog/data {:x [1 2 3] :y [4 5 6]}
+    :aog/x :x
+    ;; Missing :aog/y!
+    :aog/plottype :scatter})
+  ;; => {:type :missing-required-aesthetic
+  ;;     :plottype :scatter
+  ;;     :missing [:aog/y]
+  ;;     :message "scatter plots require both :aog/x and :aog/y"}
+  )
+
+;; ## Example 5: Missing Column in Dataset
+
+(comment
+  ;; Column references must exist in the data
+  (validate-layer
+   {:aog/data {:x [1 2 3]}
+    :aog/x :x
+    :aog/y :y ;; y column doesn't exist!
+    :aog/plottype :scatter})
+  ;; => {:type :missing-columns
+  ;;     :missing [:y]
+  ;;     :available [:x]
+  ;;     :message "Columns not found in dataset: [:y]\nAvailable columns: [:x]"}
+  )
+
+;; ## Example 6: Construction-Time Validation
+
+;; Enable validation during layer construction for immediate feedback
+(comment
+  (binding [*validate-on-construction* true]
+    ;; This will throw immediately when scatter is called
+    (-> penguins
+        (mapping :invalid-column :bill-depth-mm)
+        (scatter {:alpha 1.5}))) ;; Invalid alpha!
+  ;; Execution error (ExceptionInfo): Validation failed
+  ;; {:errors {:aog/alpha ["should be at most 1.0"]}}
+  )
+
+;; ## Example 7: Draw-Time Validation (Default)
+
+;; By default, validation happens when plot is called
+;; This catches errors before attempting to render
+
+(comment
+  ;; This will fail at plot time with clear error message
+  (plot [{:aog/data penguins
+          :aog/x :bill-length-mm
+          :aog/y :invalid-column ;; Column doesn't exist!
+          :aog/plottype :scatter}])
+  ;; Execution error (ExceptionInfo): Layer validation failed
+  ;; {:type :layers-validation-failed
+  ;;  :errors {0 {:type :missing-columns
+  ;;              :missing [:invalid-column]
+  ;;              :available [:species :island :bill-length-mm ...]
+  ;;              :message "Columns not found in dataset..."}}}
+  )
+
+;; ## Example 8: Disabling Draw-Time Validation
+
+;; Sometimes useful for debugging or performance
+(comment
+  (binding [*validate-on-draw* false]
+    ;; Validation is skipped, might fail later with less clear errors
+    (plot [{:aog/data penguins
+            :aog/x :bill-length-mm
+            :aog/y :invalid-column
+            :aog/plottype :scatter}]))
+  ;; Not recommended! Error messages are less helpful.
+  )
+
+;; ## Example 9: Programmatic Validation
+
+(comment
+  ;; Check validity without throwing
+  (valid? Layer {:aog/data {:x [1 2 3]} :aog/plottype :scatter})
+  ;; => true
+
+  (valid? Layer {:aog/plottype :invalid})
+  ;; => false
+
+  ;; Get detailed error information
+  (validate Layer {:aog/plottype :invalid :aog/alpha 2.0})
+  ;; => {:aog/plottype ["should be one of: :scatter, :line, :area, :bar, :histogram"]
+  ;;     :aog/alpha ["should be at most 1.0"]}
+  )
+
+;; ## Example 10: Validation in Practice
+
+;; Recommended pattern: construct freely, validate at render time
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (scatter {:alpha 0.6})
+    (plot)) ;; Validation happens here automatically
+;; ✅ Valid plot renders successfully
+
+;; For development, enable construction-time validation to catch errors early
+(comment
+  (binding [*validate-on-construction* true]
+    (-> penguins
+        (mapping :bill-length-mm :bill-depth-mm)
+        (scatter {:alpha 0.6})
+        (linear)
+        (plot))) ;; Each constructor validates immediately
+  )
 
 ;; ---
 ;; *This is a design exploration. Feedback welcome!*
