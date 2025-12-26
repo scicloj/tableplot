@@ -573,7 +573,7 @@
 
   This enables the compositional workflow where layer specs auto-display.
 
-  The `*` and `+` operators automatically apply this annotation to their
+  The `*`, `+`, and `facet` operators automatically apply this annotation to their
   return values, so most users never call this function directly.
 
   Args:
@@ -786,6 +786,16 @@ iris
 (def ^:private ggplot2-grid "#FFFFFF")
 (def ^:private ggplot2-default-mark "#333333")
 
+;; Layout constants (extracted magic numbers for maintainability)
+(def ^:private default-plot-width 600)
+(def ^:private default-plot-height 400)
+(def ^:private panel-margin-left 50)
+(def ^:private panel-margin-right 50)
+(def ^:private panel-margin-top 50)
+(def ^:private panel-margin-bottom 50)
+(def ^:private facet-label-offset 30)
+(def ^:private facet-label-side-offset 20)
+
 ;; ## 🧪 Type Information Example
 ;;
 ;; Let's see Tablecloth's type information in action:
@@ -833,6 +843,71 @@ iris
     (throw (ex-info "Data must be a dataset, map of vectors, or vector of maps"
                     {:data data
                      :type (type data)}))))
+
+(defn- validate-column-exists
+  "Validate that a column exists in a dataset.
+  
+  Args:
+  - dataset: tech.ml.dataset instance
+  - col-key: Keyword for column name
+  - context: String describing where this column is used (for error messages)
+  
+  Throws informative exception if column doesn't exist.
+  Returns col-key if valid (for threading)."
+  [dataset col-key context]
+  (when col-key
+    (let [col-names (set (tc/column-names dataset))]
+      (when-not (contains? col-names col-key)
+        (throw (ex-info (str "Column " col-key " not found in dataset")
+                        {:column col-key
+                         :context context
+                         :available-columns (vec col-names)
+                         :suggestion (str "Did you mean one of: " (pr-str (vec col-names)) "?")}))))
+    col-key))
+
+(defn- validate-columns
+  "Validate multiple columns exist in a dataset.
+  
+  Args:
+  - dataset: tech.ml.dataset instance
+  - col-keys: Collection of column keywords
+  - context: String describing where these columns are used
+  
+  Throws informative exception if any column doesn't exist.
+  Returns col-keys if all valid (for threading)."
+  [dataset col-keys context]
+  (doseq [col-key col-keys]
+    (validate-column-exists dataset col-key context))
+  col-keys)
+
+(defn- validate-layer-columns
+  "Validate that all aesthetic mappings in a layer reference existing columns.
+  
+  Checks :aog/x, :aog/y, :aog/color, :aog/row, :aog/col, :aog/group.
+  
+  Args:
+  - layer: Layer map with aesthetic mappings
+  
+  Throws informative exception if any referenced column doesn't exist.
+  Returns layer if valid (for threading)."
+  [layer]
+  (when-let [data (:aog/data layer)]
+    (let [dataset (ensure-dataset data)
+          aesthetics [:aog/x :aog/y :aog/color :aog/row :aog/col]
+          ;; Collect all column references
+          cols (keep #(get layer %) aesthetics)
+          ;; Handle :aog/group which can be keyword or vector
+          group-cols (let [g (:aog/group layer)]
+                       (cond
+                         (keyword? g) [g]
+                         (vector? g) g
+                         :else []))]
+      ;; Validate all referenced columns
+      (doseq [col-key (concat cols group-cols)]
+        (validate-column-exists dataset col-key
+                                (str "aesthetic mapping in layer: "
+                                     (pr-str (select-keys layer aesthetics)))))))
+  layer)
 
 (defn- split-by-facets
   "Split a layer's data by facet variables.
@@ -998,29 +1073,63 @@ iris
     (vec (distinct grouping-cols))))
 
 (defn- layer->points
-  "Convert layer to point data for rendering."
+  "Convert layer to point data for rendering.
+  
+  Validates column existence and handles missing data gracefully.
+  
+  Args:
+  - layer: Layer map with :aog/data and aesthetic mappings
+  
+  Returns: Sequence of point maps with :x, :y (optional), :color (optional), :group (optional)"
   [layer]
-  (let [data (:aog/data layer)
-        dataset (ensure-dataset data)
-        x-vals (vec (get dataset (:aog/x layer)))
-        y-col (:aog/y layer)
-        y-vals (when y-col (vec (get dataset y-col)))
-        color-col (:aog/color layer)
-        color-vals (when color-col
-                     (vec (get dataset color-col)))
-        ;; Get grouping columns for statistical transforms
-        grouping-cols (get-grouping-columns layer dataset)
-        ;; Extract values for each grouping column
-        grouping-vals (when (seq grouping-cols)
-                        (mapv #(vec (get dataset %)) grouping-cols))]
-    (map-indexed (fn [i _]
-                   (cond-> {:x (nth x-vals i)}
-                     y-vals (assoc :y (nth y-vals i))
-                     color-vals (assoc :color (nth color-vals i))
-                     ;; Create composite group key from all grouping columns
-                     (seq grouping-cols)
-                     (assoc :group (mapv #(nth % i) grouping-vals))))
-                 x-vals)))
+  (let [data (:aog/data layer)]
+    (when-not data
+      (throw (ex-info "Layer missing :aog/data"
+                      {:layer (dissoc layer :aog/data)})))
+
+    (let [dataset (ensure-dataset data)
+          _ (validate-layer-columns layer) ;; Validate all columns exist
+
+          x-col (:aog/x layer)
+          _ (when-not x-col
+              (throw (ex-info "Layer missing :aog/x mapping"
+                              {:layer (select-keys layer [:aog/data :aog/y :aog/color])})))
+
+          x-vals (vec (get dataset x-col))
+
+          ;; Y is optional for some plot types (histograms)
+          y-col (:aog/y layer)
+          y-vals (when y-col (vec (get dataset y-col)))
+
+          ;; Color is optional
+          color-col (:aog/color layer)
+          color-vals (when color-col (vec (get dataset color-col)))
+
+          ;; Get grouping columns for statistical transforms
+          grouping-cols (get-grouping-columns layer dataset)
+
+          ;; Extract values for each grouping column
+          grouping-vals (when (seq grouping-cols)
+                          (mapv #(vec (get dataset %)) grouping-cols))
+
+          ;; Check for empty data
+          n (count x-vals)]
+
+      (when (zero? n)
+        (throw (ex-info "Dataset is empty (no rows)"
+                        {:layer-data-summary {:x-column x-col
+                                              :y-column y-col
+                                              :row-count 0}})))
+
+      ;; Build point maps
+      (map-indexed (fn [i _]
+                     (cond-> {:x (nth x-vals i)}
+                       y-vals (assoc :y (nth y-vals i))
+                       color-vals (assoc :color (nth color-vals i))
+                       ;; Create composite group key from all grouping columns
+                       (seq grouping-cols)
+                       (assoc :group (mapv #(nth % i) grouping-vals))))
+                   x-vals))))
 
 (defmulti apply-transform
   "Apply statistical transform to layer points.
@@ -1108,34 +1217,75 @@ iris
   "Infer domain from data values.
   
   For delegation: We compute RAW domain (just min/max).
-  thi.ng/geom handles 'nice numbers' and tick placement."
+  thi.ng/geom handles 'nice numbers' and tick placement.
+  
+  Args:
+  - values: Sequence of values (numeric or categorical)
+  
+  Returns: 
+  - For numeric: [min max] vector
+  - For categorical: vector of distinct values
+  - For empty: [0 1] as fallback (prevents rendering errors)
+  - For single value: [value-10% value+10%] to provide visual range
+  
+  Edge cases handled:
+  - Empty data returns [0 1]
+  - Single value returns expanded range
+  - All identical values returns expanded range
+  - Mixed types returns categorical domain"
   [values]
   (cond
-    (empty? values) [0 1]
-    (every? number? values) [(apply min values) (apply max values)]
-    :else (vec (distinct values))))
+    ;; Empty data - use fallback domain
+    (empty? values)
+    [0 1]
+
+    ;; Numeric data
+    (every? number? values)
+    (let [v-min (apply min values)
+          v-max (apply max values)]
+      (if (= v-min v-max)
+        ;; All values identical - expand domain by 10% for visual clarity
+        (let [expansion (max 1 (* 0.1 (Math/abs v-min)))]
+          [(- v-min expansion) (+ v-max expansion)])
+        ;; Normal range
+        [v-min v-max]))
+
+    ;; Categorical or mixed data
+    :else
+    (vec (distinct values))))
 
 (defn- render-single-panel
   "Render a single plot panel (for use in both faceted and non-faceted plots).
   
   Args:
   - layers: Vector of layers to render in this panel
-  - x-domain, y-domain: Domain for x and y axes
-  - width, height: Panel dimensions
-  - x-offset, y-offset: Horizontal and vertical offsets for this panel
+  - x-domain, y-domain: Domain for x and y axes [min max]
+  - width, height: Panel dimensions in pixels
+  - x-offset, y-offset: Horizontal and vertical offsets for this panel in pixels
   
-  Returns: Map with :background, :plot, :hist-rects"
+  Returns: Map with :background, :plot, :hist-rects keys
+  
+  The function handles:
+  - Multi-layer composition
+  - Statistical transforms via render-layer multimethod
+  - Histogram rectangles separately from regular viz data
+  - Proper scaling and axis setup"
   [layers x-domain y-domain width height x-offset y-offset]
   (let [x-range (clojure.core/- (second x-domain) (first x-domain))
         y-range (clojure.core/- (second y-domain) (first y-domain))
+        ;; Use 20% of range for major gridlines
         x-major (max 1 (clojure.core/* x-range 0.2))
         y-major (max 1 (clojure.core/* y-range 0.2))
 
-        ;; Adjust panel boundaries for offsets
-        panel-left (clojure.core/+ 50 x-offset)
-        panel-right (clojure.core/+ panel-left (clojure.core/- width 100))
-        panel-top (clojure.core/+ 50 y-offset)
-        panel-bottom (clojure.core/+ panel-top (clojure.core/- height 100))
+        ;; Calculate panel boundaries using constants
+        panel-left (clojure.core/+ panel-margin-left x-offset)
+        panel-right (clojure.core/+ panel-left
+                                    (clojure.core/- width
+                                                    (clojure.core/+ panel-margin-left panel-margin-right)))
+        panel-top (clojure.core/+ panel-margin-top y-offset)
+        panel-bottom (clojure.core/+ panel-top
+                                     (clojure.core/- height
+                                                     (clojure.core/+ panel-margin-top panel-margin-bottom)))
 
         ;; Create axes
         x-axis (viz/linear-axis
@@ -1168,8 +1318,10 @@ iris
 
         ;; Background rectangle for this panel
         bg-rect (svg/rect [panel-left panel-top]
-                          (clojure.core/- width 100)
-                          (clojure.core/- height 100)
+                          (clojure.core/- width
+                                          (clojure.core/+ panel-margin-left panel-margin-right))
+                          (clojure.core/- height
+                                          (clojure.core/+ panel-margin-top panel-margin-bottom))
                           {:fill ggplot2-background
                            :stroke ggplot2-grid
                            :stroke-width 1})
@@ -1178,11 +1330,13 @@ iris
         x-scale (fn [x] (clojure.core/+ panel-left
                                         (clojure.core/* (/ (clojure.core/- x (first x-domain))
                                                            (clojure.core/- (second x-domain) (first x-domain)))
-                                                        (clojure.core/- width 100))))
+                                                        (clojure.core/- width
+                                                                        (clojure.core/+ panel-margin-left panel-margin-right)))))
         y-scale (fn [y] (clojure.core/- panel-bottom
                                         (clojure.core/* (/ (clojure.core/- y (first y-domain))
                                                            (clojure.core/- (second y-domain) (first y-domain)))
-                                                        (clojure.core/- height 100))))
+                                                        (clojure.core/- height
+                                                                        (clojure.core/+ panel-margin-top panel-margin-bottom)))))
 
         hist-rects (mapv (fn [r]
                            (svg/rect [(x-scale (:x-min r)) (y-scale (:height r))]
@@ -1201,12 +1355,25 @@ iris
   (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
     (some #(get-in % [scale-key :domain]) layers-vec)))
 
-;; This is a placeholder - full implementation coming
+;; Render plot using thi.ng/geom to static SVG.
+;;
+;; This method handles:
+;; - Single and multi-layer plots
+;; - Faceting (column, row, and grid)
+;; - Custom scale domains
+;; - Statistical transforms (via apply-transform multimethod)
+;; - Proper error messages for invalid data
+;;
+;; Args:
+;; - layers: Vector of layer maps or single layer map
+;; - opts: Map with :width and :height options
+;;
+;; Returns: Kindly-wrapped HTML containing SVG
 (defmethod plot-impl :geom
   [layers opts]
   (let [layers-vec (if (vector? layers) layers [layers])
-        width (or (:width opts) 600)
-        height (or (:height opts) 400)
+        width (or (:width opts) default-plot-width)
+        height (or (:height opts) default-plot-height)
 
         ;; Organize layers by facets
         facet-groups (organize-by-facets layers-vec)
@@ -1218,7 +1385,7 @@ iris
         num-cols (count col-labels)
         is-faceted? (or (> num-rows 1) (> num-cols 1))
 
-;; Calculate panel dimensions
+        ;; Calculate panel dimensions
         panel-width (/ width num-cols)
         panel-height (/ height num-rows)
 
@@ -1248,9 +1415,20 @@ iris
 
     (if-not valid?
       (kind/hiccup
-       [:div {:style {:padding "20px"}}
-        [:p "Cannot render: non-numeric data or empty dataset"]
-        [:pre (pr-str {:x-domain x-domain :y-domain y-domain})]])
+       [:div {:style {:padding "20px"
+                      :background-color "#fff3cd"
+                      :border "1px solid #ffc107"
+                      :border-radius "4px"}}
+        [:h4 {:style {:margin-top "0" :color "#856404"}} "⚠️ Cannot Render Plot"]
+        [:p "The plot could not be rendered due to one of the following reasons:"]
+        [:ul
+         [:li "Dataset is empty (no data rows)"]
+         [:li "Data contains non-numeric values where numbers are expected"]
+         [:li "Column mappings reference non-existent columns"]]
+        [:p [:strong "Domains computed:"]]
+        [:pre {:style {:background-color "#f8f9fa" :padding "10px" :border-radius "4px"}}
+         (pr-str {:x-domain x-domain :y-domain y-domain})]
+        [:p [:em "Tip: Use " [:code "kind/pprint"] " to inspect layer specifications and verify column names."]]])
 
       ;; Render panels
       (let [;; Create row/col position lookup
@@ -1290,7 +1468,7 @@ iris
                                      (let [col-idx (get col-positions col-label)
                                            label-x (clojure.core/+ (clojure.core/* col-idx panel-width)
                                                                    (/ panel-width 2))]
-                                       (svg/text [label-x 30] (str col-label)
+                                       (svg/text [label-x facet-label-offset] (str col-label)
                                                  {:text-anchor "middle"
                                                   :font-family "Arial, sans-serif"
                                                   :font-size 12
@@ -1303,12 +1481,12 @@ iris
                                      (let [row-idx (get row-positions row-label)
                                            label-y (clojure.core/+ (clojure.core/* row-idx panel-height)
                                                                    (/ panel-height 2))]
-                                       (svg/text [20 label-y] (str row-label)
+                                       (svg/text [facet-label-side-offset label-y] (str row-label)
                                                  {:text-anchor "middle"
                                                   :font-family "Arial, sans-serif"
                                                   :font-size 12
                                                   :font-weight "bold"
-                                                  :transform (str "rotate(-90 20 " label-y ")")})))
+                                                  :transform (str "rotate(-90 " facet-label-side-offset " " label-y ")")})))
                                    row-labels))))
 
             ;; Combine into single SVG
@@ -1537,29 +1715,78 @@ iris
 (defn- compute-linear-regression
   "Compute linear regression using fastmath.
   
-  Returns: Vector of 2 points representing the fitted line."
+  Args:
+  - points: Sequence of point maps with :x and :y keys
+  
+  Returns: Vector of 2 points representing the fitted line, or nil if regression fails.
+  
+  Edge cases:
+  - Returns nil if fewer than 2 points
+  - Returns nil if all x values are identical (vertical line, undefined slope)
+  - Returns nil if all y values are identical (returns horizontal line at y mean)
+  - Returns nil if regression computation fails"
   [points]
   (when (>= (count points) 2)
     (let [x-vals (mapv :x points)
           y-vals (mapv :y points)
           x-min (apply min x-vals)
           x-max (apply max x-vals)]
-      (try
-        (let [xss (mapv vector x-vals)
-              model (regr/lm y-vals xss)
-              intercept (:intercept model)
-              slope (first (:beta model))]
-          ;; A straight line only needs 2 points
-          [{:x x-min :y (clojure.core/+ intercept (clojure.core/* slope x-min))}
-           {:x x-max :y (clojure.core/+ intercept (clojure.core/* slope x-max))}])
-        (catch Exception e
-          nil)))))
+
+      ;; Check for degenerate cases
+      (cond
+        ;; All x values identical - can't fit a line
+        (= x-min x-max)
+        nil
+
+        ;; All y values identical - return horizontal line
+        (apply = y-vals)
+        (let [y-val (first y-vals)]
+          [{:x x-min :y y-val}
+           {:x x-max :y y-val}])
+
+        ;; Normal case - fit regression
+        :else
+        (try
+          (let [xss (mapv vector x-vals)
+                model (regr/lm y-vals xss)
+                intercept (:intercept model)
+                slope (first (:beta model))]
+            ;; Check for valid regression coefficients
+            (when (and (number? intercept) (number? slope)
+                       (not (Double/isNaN intercept))
+                       (not (Double/isNaN slope))
+                       (not (Double/isInfinite slope)))
+              ;; A straight line only needs 2 points (start and end)
+              [{:x x-min :y (clojure.core/+ intercept (clojure.core/* slope x-min))}
+               {:x x-max :y (clojure.core/+ intercept (clojure.core/* slope x-max))}]))
+          (catch Exception e
+            ;; Log the error for debugging but don't crash
+            nil))))))
 
 ;; ### Transform Multimethod
 
-;; Linear regression transformation
+;; Apply linear regression transform to points.
+;;
+;; Handles both single and grouped regression based on :group key in points.
+;;
+;; Args:
+;; - layer: Layer map containing transformation specification
+;; - points: Sequence of point maps with :x, :y, and optional :group keys
+;;
+;; Returns:
+;; - For ungrouped: {:type :regression :points points :fitted [p1 p2]}
+;; - For grouped: {:type :grouped-regression :points points :groups {group-val {:fitted [...] :points [...]}}}
+;;
+;; Edge cases:
+;; - Returns original points if regression fails (< 2 points, degenerate data)
+;; - Handles nil fitted values gracefully (skipped during rendering)
 (defmethod apply-transform :linear
   [layer points]
+  (when-not (seq points)
+    (throw (ex-info "Cannot compute linear regression on empty dataset"
+                    {:layer-transform (:aog/transformation layer)
+                     :point-count 0})))
+
   (let [has-groups? (some :group points)]
     (if has-groups?
       ;; Group-wise regression
@@ -1669,25 +1896,66 @@ iris
 (defn- compute-histogram
   "Compute histogram bins using fastmath.stats/histogram.
   
-  Returns: Vector of bar specifications with x-min, x-max, and height."
+  Args:
+  - points: Sequence of point maps with :x key
+  - bins-method: Binning method - :sturges, :sqrt, :rice, :freedman-diaconis, or integer count
+  
+  Returns: Vector of bar specifications with x-min, x-max, x-center, and height.
+           Returns nil if data is invalid (empty, non-numeric, or all identical values).
+  
+  Edge cases:
+  - Returns nil if no points
+  - Returns nil if x values are not all numeric
+  - Returns nil if all x values are identical (single value, can't bin)"
   [points bins-method]
   (when (seq points)
     (let [x-vals (mapv :x points)]
+      ;; Validate all values are numeric
       (when (every? number? x-vals)
-        (let [hist-result (stats/histogram x-vals (or bins-method :sturges))]
-          (mapv (fn [bin]
-                  (let [x-min (:min bin)
-                        x-max (:max bin)]
-                    {:x-min x-min
-                     :x-max x-max
-                     :x-center (clojure.core// (clojure.core/+ x-min x-max) 2.0)
-                     :height (:count bin)}))
-                (:bins-maps hist-result)))))))
+        ;; Check for degenerate case: all values identical
+        (let [x-min (apply min x-vals)
+              x-max (apply max x-vals)]
+          (when-not (= x-min x-max)
+            ;; Normal case - compute histogram
+            (try
+              (let [hist-result (stats/histogram x-vals (or bins-method :sturges))]
+                (mapv (fn [bin]
+                        (let [bin-min (:min bin)
+                              bin-max (:max bin)]
+                          {:x-min bin-min
+                           :x-max bin-max
+                           :x-center (clojure.core// (clojure.core/+ bin-min bin-max) 2.0)
+                           :height (:count bin)}))
+                      (:bins-maps hist-result)))
+              (catch Exception e
+                ;; Return nil if histogram computation fails
+                nil))))))))
 
 ;; ### Transform Multimethod
 
+;; Apply histogram transform to points.
+;;
+;; Bins continuous x values and counts occurrences per bin.
+;; Handles both single and grouped histograms based on :group key in points.
+;;
+;; Args:
+;; - layer: Layer map containing :aog/bins specification
+;; - points: Sequence of point maps with :x and optional :group keys
+;;
+;; Returns:
+;; - For ungrouped: {:type :histogram :points points :bars [{:x-min :x-max :x-center :height}...]}
+;; - For grouped: {:type :grouped-histogram :points points :groups {group-val {:bars [...] :points [...]}}}
+;;
+;; Edge cases:
+;; - Returns nil bars if compute-histogram fails (empty, non-numeric, or identical values)
+;; - Histogram with nil bars will not render (graceful degradation)
 (defmethod apply-transform :histogram
   [layer points]
+  (when-not (seq points)
+    (throw (ex-info "Cannot compute histogram on empty dataset"
+                    {:layer-transform (:aog/transformation layer)
+                     :point-count 0})))
+
   (let [has-groups? (some :group points)]
     (if has-groups?
       ;; Group-wise histogram
