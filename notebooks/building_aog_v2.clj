@@ -1058,7 +1058,7 @@
                   (data first-arg))]
      (* layers (mapping x y named)))))
 
-;; Examplesbuilding_aog_v2.clj:
+;; Examples:
 (mapping :bill-length-mm :bill-depth-mm)
 
 (mapping :bill-length-mm :bill-depth-mm {:color :species})
@@ -1067,8 +1067,6 @@
 
 (defn facet
   "Add faceting to a layer specification.
-  ;; ## ⚙️ Facet Constructor
-
   
   Args:
   - layer-spec: Layer or vector of layers
@@ -1093,8 +1091,6 @@
   "Specify scale properties for an aesthetic.
   
   Args:
-;; ## ⚙️ Scale Constructor
-
   - aesthetic: Keyword like :x, :y, :color
   - opts: Map with scale options:
     - :domain - [min max] for continuous, or vector of categories
