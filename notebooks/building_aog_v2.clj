@@ -502,21 +502,6 @@
 ;;
 ;; Helper functions for validating layers and providing clear error messages.
 
-;; ### ⚙️ Dynamic Validation Control
-
-(def ^:dynamic *validate-on-construction*
-  "When true, constructors validate their inputs.
-  
-  Useful for development - set to true to catch errors early.
-  Default is false to allow exploratory coding."
-  false)
-
-(def ^:dynamic *validate-on-draw*
-  "When true, plot validates layers before rendering.
-  
-  Default is true - always validate before attempting to render."
-  true)
-
 ;; ### ⚙️ Core Validation Functions
 
 (defn validate
@@ -1040,8 +1025,7 @@
   
   When called with layers as first arg, merges data into those layers."
   ([dataset]
-   (when *validate-on-construction*
-     (validate! Dataset dataset))
+   (validate! Dataset dataset)
    [{:aog/data dataset}])
   ([layers dataset]
    (=* layers (data dataset))))
@@ -1793,9 +1777,7 @@ iris
 ;; Returns: Kindly-wrapped HTML containing SVG
 (defmethod plot-impl :geom
   [layers opts]
-  ;; Validate layers before rendering
-  (when *validate-on-draw*
-    (validate-layers! layers))
+  (validate-layers! layers)
 
   (let [layers-vec (if (vector? layers) layers [layers])
         ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
@@ -1951,8 +1933,7 @@ iris
      (=* attrs-or-layers (scatter))
      (let [result (merge {:aog/plottype :scatter}
                          (update-keys attrs-or-layers #(keyword "aog" (name %))))]
-       (when *validate-on-construction*
-         (validate! Layer result))
+       (validate! Layer result)
        [result])))
   ([layers attrs]
    ;; Threading-friendly: (-> layers (scatter {:alpha 0.5}))
@@ -2175,8 +2156,7 @@ iris
   ([]
    (let [result {:aog/transformation :linear
                  :aog/plottype :line}]
-     (when *validate-on-construction*
-       (validate! Layer result))
+     (validate! Layer result)
      [result]))
   ([layers-or-data]
    (let [layers (if (layers? layers-or-data)
@@ -2372,8 +2352,7 @@ iris
                           :aog/plottype :bar
                           :aog/bins :sturges}
                          (update-keys opts-or-layers #(keyword "aog" (name %))))]
-       (when *validate-on-construction*
-         (validate! Layer result))
+       (validate! Layer result)
        [result])))
   ([layers opts]
    (=* layers (histogram opts))))
@@ -2908,8 +2887,7 @@ iris
 (defmethod plot-impl :vl
   [layers opts]
   ;; Validate layers before rendering
-  (when *validate-on-draw*
-    (validate-layers! layers))
+  (validate-layers! layers)
 
   (let [layers-vec (if (vector? layers) layers [layers])
         ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
@@ -3136,8 +3114,7 @@ iris
 (defmethod plot-impl :plotly
   [layers opts]
   ;; Validate layers before rendering
-  (when *validate-on-draw*
-    (validate-layers! layers))
+  (validate-layers! layers)
 
   (let [layers-vec (if (vector? layers) layers [layers])
         ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
@@ -3148,7 +3125,7 @@ iris
                    (:height opts)
                    400)
 
-;; Check for faceting
+        ;; Check for faceting
         is-faceted? (has-faceting? layers-vec)
         row-var (when is-faceted? (some :aog/row layers-vec))
         col-var (when is-faceted? (some :aog/col layers-vec))
@@ -3836,8 +3813,8 @@ iris
 ;; # 🧪 Validation Examples
 ;;
 ;; The Malli schemas enable validation at two points:
-;; - Construction time (opt-in, via *validate-on-construction*)
-;; - Draw time (default-on, via *validate-on-draw*)
+;; - Construction time
+;; - Draw time
 
 ;; ### 🧪 Example 1: Valid Layer
 
@@ -3882,47 +3859,7 @@ iris
   :aog/y :y ;; y column doesn't exist!
   :aog/plottype :scatter})
 
-;; ### 🧪 Example 6: Construction-Time Validation
-
-;; Enable validation during layer construction for immediate feedback
-;; This will throw immediately when scatter is called
-(try
-  (binding [*validate-on-construction* true]
-    (-> penguins
-        (mapping :invalid-column :bill-depth-mm)
-        (scatter {:alpha 1.5})))
-  (catch Exception e
-    {:error (ex-message e)
-     :data (ex-data e)}))
-
-;; ### 🧪 Example 7: Draw-Time Validation (Default)
-
-;; By default, validation happens when plot is called
-;; This catches errors before attempting to render
-(try
-  (plot [{:aog/data penguins
-          :aog/x :bill-length-mm
-          :aog/y :invalid-column
-          :aog/plottype :scatter}])
-  (catch Exception e
-    {:error (ex-message e)
-     :data (ex-data e)}))
-
-;; ### 🧪 Example 8: Disabling Draw-Time Validation
-
-;; Sometimes useful for debugging or performance
-;; Not recommended! Validation is skipped, errors occur later with less helpful messages
-(try
-  (binding [*validate-on-draw* false]
-    (plot [{:aog/data penguins
-            :aog/x :bill-length-mm
-            :aog/y :invalid-column
-            :aog/plottype :scatter}]))
-  (catch Exception e
-    {:error (ex-message e)
-     :data (ex-data e)}))
-
-;; ### 🧪 Example 9: Programmatic Validation
+;; ### 🧪 Example 6: Programmatic Validation
 
 ;; Check validity without throwing
 (valid? Layer {:aog/data {:x [1 2 3]} :aog/plottype :scatter})
@@ -3931,22 +3868,6 @@ iris
 
 ;; Get detailed error information
 (validate Layer {:aog/plottype :invalid :aog/alpha 2.0})
-
-;; ### 🧪 Example 10: Validation in Practice
-
-;; Recommended pattern: construct freely, validate at render time
-(-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
-    (scatter {:alpha 0.6})
-    (plot))
-
-;; For development, enable construction-time validation to catch errors early
-(binding [*validate-on-construction* true]
-  (-> penguins
-      (mapping :bill-length-mm :bill-depth-mm)
-      (scatter {:alpha 0.6})
-      (linear)
-      (plot)))
 
 ;; ## Design Discussions
 
