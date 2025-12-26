@@ -19,7 +19,7 @@
 ;; You may consider the design and implementation here
 ;; *a draft* for a future library API.
 ;;
-;; ## 📖 A Bit of Context: Tableplot's Journey
+;; ### 📖 A Bit of Context: Tableplot's Journey
 ;;
 ;; Before we dive into the technical details, let's talk about where we're coming from.
 ;;
@@ -56,7 +56,7 @@
 
 ;; # Context & Motivation
 ;;
-;; ## 📖 Why Explore a New Approach?
+;; ### 📖 Why Explore a New Approach?
 ;;
 ;; Tableplot currently provides two visualization APIs: `scicloj.tableplot.v1.hanami`
 ;; for [Vega-Lite](https://vega.github.io/vega-lite/) visualizations, and 
@@ -86,7 +86,7 @@
 ;; datasets. If you have a simple Clojure map or vector, you need to convert it 
 ;; first—even for simple visualizations.
 ;;
-;; ## 📖 What We're Exploring
+;; ### 📖 What We're Exploring
 ;;
 ;; Some of these limitations will be addressed within the current APIs themselves—
 ;; we're actively working on improvements. But as we always intended, it's valuable
@@ -104,7 +104,7 @@
 
 ;; # Setup
 ;;
-;; ## 📖 Reading This Document
+;; ### 📖 Reading This Document
 ;;
 ;; Throughout this document, section headers use emojis to indicate the type of content:
 ;;
@@ -184,7 +184,7 @@
 ;; We chose AoG because it seemed small enough to grasp and reproduce, while still being
 ;; reasonably complete in its scope.
 
-;; ## 📖 Glossary: Visualization Terminology
+;; ### 📖 Glossary: Visualization Terminology
 ;;
 ;; Before diving deeper, let's clarify some terms we'll use throughout:
 ;;
@@ -221,7 +221,7 @@
 ;; **Rendering Target** - The library that produces final output: thi.ng/geom, 
 ;; Vega-Lite, or Plotly.
 
-;; ## 📖 Core Insight: Layers + Operations
+;; ### 📖 Core Insight: Layers + Operations
 ;;
 ;; AlgebraOfGraphics.jl treats visualization with two key ideas:
 ;;
@@ -265,7 +265,7 @@
 ;; This allows factoring out common properties and applying them to
 ;; multiple plot types without repetition.
 
-;; ## 📖 Comparison to ggplot2
+;; ### 📖 Comparison to ggplot2
 ;;
 ;; ggplot2 uses `+` for everything:
 ;; ```r
@@ -282,7 +282,7 @@
 ;; **Why two operators?** The separation brings clarity—`*` means "combine properties" 
 ;; while `+` means "overlay visuals"—and enables composability.
 
-;; ## 📖 Translating to Clojure
+;; ### 📖 Translating to Clojure
 ;;
 ;; Julia's approach relies on custom `*` and `+` operators defined on Layer types,
 ;; using multiple dispatch to handle different type combinations with object-oriented
@@ -300,7 +300,7 @@
 ;; The core design question: how should we structure layer specifications
 ;; so they compose naturally with Clojure's standard library?
 
-;; ## 📖 The Problem: Nested Doesn't Merge
+;; ### 📖 The Problem: Nested Doesn't Merge
 
 (def nested-layer-example
   {:transformation nil
@@ -319,7 +319,7 @@
 
 ;; Nested structure requires a custom `merge-layer` function. Not ideal.
 
-;; ## 📖 The Solution: Flat Structure with Namespaced Keys
+;; ### 📖 The Solution: Flat Structure with Namespaced Keys
 
 (def flat-layer-example
   #:aog{:data {:bill-length-mm [39.1 39.5 40.3]
@@ -331,7 +331,7 @@
         :alpha 0.5
         :plottype :scatter})
 
-;; # 📐 Malli Schemas
+;; # Malli Schemas
 ;;
 ;; Schemas define the structure and valid values for layers, aesthetics, and inputs.
 ;; They provide:
@@ -339,7 +339,7 @@
 ;; - Runtime validation with clear error messages
 ;; - Type safety for layer construction and composition
 
-;; ## Core Type Schemas
+;; ### ⚙️ Core Type Schemas
 
 (def DataType
   "Schema for column data types.
@@ -364,7 +364,7 @@
    [:enum :sturges :sqrt :rice :freedman-diaconis]
    pos-int?])
 
-;; ## Data Schemas
+;; ### ⚙️ Data Schemas
 
 (def Dataset
   "Schema for dataset input.
@@ -379,7 +379,7 @@
    [:fn {:error/message "Must be a tablecloth dataset"}
     tc/dataset?]])
 
-;; ## Aesthetic Schemas
+;; ### ⚙️ Aesthetic Schemas
 
 (def ColumnReference
   "Schema for referencing a column in the dataset."
@@ -417,7 +417,7 @@
   "Schema for faceting aesthetics (row, col)."
   [:maybe ColumnReference])
 
-;; ## Scale Schemas
+;; ### ⚙️ Scale Schemas
 
 (def ScaleTransform
   "Schema for scale transformations."
@@ -437,13 +437,13 @@
    [:domain {:optional true} ScaleDomain]
    [:transform {:optional true} ScaleTransform]])
 
-;; ## Backend Schemas
+;; ### ⚙️ Backend Schemas
 
 (def Backend
   "Schema for rendering backend selection."
   [:enum :geom :vl :plotly])
 
-;; ## Layer Schema
+;; ### ⚙️ Layer Schema
 
 (def Layer
   "Schema for a complete layer specification.
@@ -499,11 +499,11 @@
   - Vector of layer maps"
   [:or Layer [:vector Layer]])
 
-;; # ✅ Validation Helpers
+;; # Validation Helpers
 ;;
 ;; Helper functions for validating layers and providing clear error messages.
 
-;; ## Dynamic Validation Control
+;; ### ⚙️ Dynamic Validation Control
 
 (def ^:dynamic *validate-on-construction*
   "When true, constructors validate their inputs.
@@ -518,7 +518,7 @@
   Default is true - always validate before attempting to render."
   true)
 
-;; ## Core Validation Functions
+;; ### ⚙️ Core Validation Functions
 
 (defn validate
   "Validate a value against a schema.
@@ -560,7 +560,7 @@
   [schema value]
   (m/validate schema value))
 
-;; ## Layer-Specific Validation
+;; ### ⚙️ Layer-Specific Validation
 
 (defn validate-layer
   "Validate a layer with context-aware checks.
@@ -721,7 +721,7 @@
 ;;
 ;; A key architectural decision: **What do we compute vs. what do rendering targets handle?**
 ;;
-;; ## 📖 The Core Principle
+;; ### 📖 The Core Principle
 ;;
 ;; **Statistical transforms require domain computation. Everything else can delegate.**
 ;;
@@ -763,7 +763,7 @@
 ;; results to rendering targets. For example, with a million points, we compute the histogram
 ;; bins and send ~20 bars to Vega-Lite or Plotly, not a million points.
 ;;
-;; ## 📖 What We Compute (Minimal Set)
+;; ### 📖 What We Compute (Minimal Set)
 ;; 
 ;; **1. Statistical Transforms**
 ;; - Histogram, density, smoothing, regression
@@ -783,7 +783,7 @@
 ;; - ggplot2 color palette, background, and grid colors
 ;; - Why: Consistent theming across all rendering targets
 ;; 
-;; ## 📖 What We Delegate (Maximize)
+;; ### 📖 What We Delegate (Maximize)
 ;; 
 ;; **1. Axis Rendering**
 ;; - Tick placement, "nice numbers", label formatting
@@ -801,7 +801,7 @@
 ;; - Multi-layer plots: rendering targets handle shared domains
 ;; - Why: Avoid complex conflict resolution
 
-;; ## 📖 Tablecloth Provides Types
+;; ### 📖 Tablecloth Provides Types
 ;;
 ;; We don't need complex type inference. Tablecloth already knows:
 ;;
@@ -812,7 +812,7 @@
 ;;
 ;; # Proposed Design
 ;;
-;; ## 📖 API Overview
+;; ### 📖 API Overview
 ;;
 ;; The API consists of three parts:
 ;;
@@ -854,7 +854,7 @@
 ;; Missing features are deferred, not abandoned - they can be added as needed while
 ;; maintaining the compositional design.
 
-;; ## 📖 How Plots are Displayed
+;; ### 📖 How Plots are Displayed
 ;;
 ;; Layer specifications returned by `*` and `+` are **automatically displayed as plots**
 ;; in the notebook. This means you typically don't need to call `plot` explicitly.
@@ -888,7 +888,7 @@
 ;; - Understand how composition merges layers
 ;; - Debug layer construction before rendering
 
-;; ## ⚙️ Helper Functions
+;; ### ⚙️ Helper Functions
 
 (defn- layers?
   "Check if x is a vector of layer maps (not data).
@@ -901,7 +901,7 @@
        (some #(= "aog" (namespace %))
              (keys (first x)))))
 
-;; ## ⚙️ Renderer
+;; ### ⚙️ Renderer
 
 (defmulti plot-impl
   "Internal multimethod for plot dispatch."
@@ -968,7 +968,7 @@
   (kind/fn layers
     {:kindly/f #'plot}))
 
-;; ## ⚙️ Composition Operators
+;; ### ⚙️ Composition Operators
 
 (defn *
   "Merge layer specifications (composition).
@@ -1006,7 +1006,7 @@
      ;; Normal concatenation
      (vec (apply concat layer-specs)))))
 
-;; ## ⚙️ Constructors
+;; ### ⚙️ Constructors
 
 (defn data
   "Attach data to a layer.
@@ -1161,7 +1161,7 @@
 ;; These examples demonstrate the design in practice, showing how minimal
 ;; delegation works.
 
-;; ## 🧪 Setup: Load Datasets
+;; ### ⚙️ Setup: Load Datasets
 
 ;; Palmer Penguins - 344 observations, 3 species
 (def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
@@ -1199,7 +1199,7 @@ iris
 (def ^:private facet-label-offset 30)
 (def ^:private facet-label-side-offset 20)
 
-;; ## 🧪 Type Information Example
+;; ### 🧪 Type Information Example
 ;;
 ;; Let's see Tablecloth's type information in action:
 
@@ -1910,13 +1910,13 @@ iris
 
         (kind/html (svg/serialize svg-elem))))))
 
-;; # 📊 Basic Scatter Plots
+;; # Basic Scatter Plots
 ;; 
 ;; Simple scatter plots demonstrating the core API.
 
 ;; ## ⚙️ Implementation
 
-;; ### Constructor
+;; ### ⚙️ Constructor
 
 (defn scatter
   "Create a scatter plot layer.
@@ -1938,7 +1938,7 @@ iris
    ;; Threading-friendly: (-> layers (scatter {:alpha 0.5}))
    (* layers (scatter attrs))))
 
-;; ### Rendering Multimethod
+;; ### ⚙️ Rendering Multimethod
 
 (defmethod render-layer [:geom :scatter]
   [target layer transform-result alpha]
@@ -1965,7 +1965,7 @@ iris
 
 ;; ## 🧪 Examples
 
-;; ## 🧪 Example 1: Simple Scatter Plot (Delegated Domain)
+;; ### 🧪 Example 1: Simple Scatter Plot (Delegated Domain)
 
 (* (data penguins)
    (mapping :bill-length-mm :bill-depth-mm)
@@ -2000,7 +2000,7 @@ iris
 ;; Notice the `:aog/data`, `:aog/x`, `:aog/y`, `:aog/plottype` keys.
 ;; This is the compositional layer specification before rendering.
 
-;; ## 🧪 Example 2: Plain Clojure Data Structures
+;; ### 🧪 Example 2: Plain Clojure Data Structures
 
 ;; The API works with plain Clojure data structures, not just datasets.
 ;; Two formats are supported:
@@ -2039,7 +2039,7 @@ iris
 ;; This is useful for quick exploration or when working with simple data
 ;; that doesn't need the full power of tech.ml.dataset.
 
-;; ## 🧪 Example 2b: Threading-Macro Style
+;; ### 🧪 Example 2b: Threading-Macro Style
 ;;
 ;; All the API functions support Clojure's threading macro (`->`), providing
 ;; a more natural, pipeline-style syntax. This is especially useful for complex
@@ -2104,7 +2104,7 @@ iris
 ;;
 ;; They produce identical results. Choose whichever feels more natural for your use case.
 
-;; ## 🧪 Example 3: Type Information in Action
+;; ### 🧪 Example 3: Type Information in Action
 
 ;; Now let's see how we can use Tablecloth's type information.
 ;; We get types for free, no complex inference needed.
@@ -2135,13 +2135,13 @@ iris
 ;; Notice: Type inference is instant (O(1) lookup from Tablecloth metadata),
 ;; not O(n) value examination.
 
-;; # 📊 Linear Regression
+;; # Linear Regression
 ;; 
 ;; Statistical transformation: computing and overlaying regression lines.
 
 ;; ## ⚙️ Implementation
 
-;; ### Constructor
+;; ### ⚙️ Constructor
 
 (defn linear
   "Add linear regression transformation.
@@ -2164,7 +2164,7 @@ iris
                   (data layers-or-data))]
      (* layers (linear)))))
 
-;; ### Compute Function
+;; ### ⚙️ Compute Function
 
 (defn- compute-linear-regression
   "Compute linear regression using fastmath.
@@ -2217,7 +2217,7 @@ iris
             ;; Log the error for debugging but don't crash
             nil))))))
 
-;; ### Transform Multimethod
+;; ### ⚙️ Transform Multimethod
 
 ;; Apply linear regression transform to points.
 ;;
@@ -2260,7 +2260,7 @@ iris
          :points points
          :fitted (or fitted points)}))))
 
-;; ### Domain Points Multimethods
+;; ### ⚙️ Domain Points Multimethods
 
 ;; Single regression
 (defmethod transform->domain-points :regression
@@ -2273,7 +2273,7 @@ iris
   (mapcat (fn [{:keys [fitted]}] fitted)
           (vals (:groups transform-result))))
 
-;; ### Rendering Multimethod
+;; ### ⚙️ Rendering Multimethod
 
 (defmethod render-layer [:geom :linear]
   [target layer transform-result alpha]
@@ -2302,7 +2302,7 @@ iris
 
 ;; ## 🧪 Examples
 
-;; ## 🧪 Example 4: Multi-Layer Composition (Scatter + Linear Regression)
+;; ### 🧪 Example 4: Multi-Layer Composition (Scatter + Linear Regression)
 
 ;; Multi-layer plots using the `+` operator:
 
@@ -2321,13 +2321,13 @@ iris
                          (and (map? (meta rendered))
                               (= (:kindly/kind (meta rendered)) :kind/html))))])
 
-;; # 📊 Histograms
+;; # Histograms
 ;;
 ;; Statistical transformation: binning continuous data and counting occurrences.
 
 ;; ## ⚙️ Implementation
 
-;; ### Constructor
+;; ### ⚙️ Constructor
 
 (defn histogram
   "Add histogram transformation.
@@ -2358,7 +2358,7 @@ iris
   ([layers opts]
    (* layers (histogram opts))))
 
-;; ### Compute Function
+;; ### ⚙️ Compute Function
 
 (defn- compute-histogram
   "Compute histogram bins using fastmath.stats/histogram.
@@ -2398,7 +2398,7 @@ iris
                 ;; Return nil if histogram computation fails
                 nil))))))))
 
-;; ### Transform Multimethod
+;; ### ⚙️ Transform Multimethod
 
 ;; Apply histogram transform to points.
 ;;
@@ -2443,7 +2443,7 @@ iris
          :points points
          :bars bars}))))
 
-;; ### Domain Points Multimethods
+;; ### ⚙️ Domain Points Multimethods
 
 (defmethod transform->domain-points :histogram
   [transform-result]
@@ -2461,7 +2461,7 @@ iris
                     bars))
           (vals (:groups transform-result))))
 
-;; ### Rendering Multimethod
+;; ### ⚙️ Rendering Multimethod
 
 (defmethod render-layer [:geom :histogram]
   [target layer transform-result alpha]
@@ -2530,11 +2530,11 @@ iris
     (mapping :bill-length-mm nil)
     (histogram {:bins 15}))
 
-;; # 📊 Grouping & Color
+;; # Grouping ;; # 📊 Grouping & Color Color
 ;; 
 ;; Type-aware grouping: categorical colors create groups for statistical transforms.
 
-;; ## 🧪 Example 5: Grouping with Categorical Color
+;; ### 🧪 Example 5: Grouping with Categorical Color
 
 ;; When you map a **categorical** variable to color, it automatically creates groups
 ;; for statistical transforms. This matches AlgebraOfGraphics.jl and ggplot2 behavior.
@@ -2576,7 +2576,7 @@ iris
 ;; 4. Alpha transparency (0.7) lets you see overlapping bars
 ;; 5. This is different from faceting - bars can overlap/stack
 
-;; ## 🧪 Example 6: Continuous Color (No Grouping)
+;; ### 🧪 Example 6: Continuous Color (No Grouping)
 
 ;; When you map a **continuous** variable to color, it creates a visual gradient
 ;; but does NOT create groups for statistical transforms.
@@ -2603,7 +2603,7 @@ iris
 ;; - Categorical aesthetics → semantic grouping (affects computations)
 ;; - Continuous aesthetics → visual mapping only (no grouping)
 
-;; ## 🧪 Example 7: Explicit Grouping Override
+;; ### 🧪 Example 7: Explicit Grouping Override
 
 ;; You can explicitly control grouping using the `:group` aesthetic.
 ;; This lets you group by one variable while coloring by another.
@@ -2642,7 +2642,7 @@ iris
 ;; 3. Points are colored by sex, but regressions computed per species
 ;; 4. This shows that grouping and color are independent concepts
 
-;; ## 🧪 Example 8: Using `plot` for Spec Inspection and Customization
+;; ### 🧪 Example 8: Using `plot` for Spec Inspection and Customization
 
 ;; Most of the time, layers auto-display and you don't need `plot`.
 ;; But sometimes you want the raw target spec for debugging or customization.
@@ -2653,7 +2653,7 @@ iris
 ;;
 ;; Implementing faceting has exposed several important design questions:
 ;;
-;; ## 📖 1. Statistical Transforms Must Be Per-Facet
+;; ### 📖 1. Statistical Transforms Must Be Per-Facet
 ;;
 ;; **Example**: Histogram of bill-length faceted by species
 ;; - Semantically: User expects 3 separate histograms (one per species)
@@ -2663,7 +2663,7 @@ iris
 ;; **Current architecture**: We apply transforms in `plot-impl` after extracting points
 ;; **Needed**: Apply transforms to each facet group separately
 ;;
-;; ## 📖 2. Domain Computation: Shared vs Free Scales
+;; ### 📖 2. Domain Computation: Shared vs Free Scales
 ;;
 ;; **Shared scales** (ggplot2 default):
 ;; - All facets use same x/y domain
@@ -2677,7 +2677,7 @@ iris
 ;;
 ;; **Decision**: Start with shared scales (simpler), add `:scales` option later
 ;;
-;; ## 📖 3. Delegation Strategy: Control vs Leverage
+;; ### 📖 3. Delegation Strategy: Control vs Leverage
 ;;
 ;; **Our principle**: We control semantics, targets handle presentation
 ;;
@@ -2691,7 +2691,7 @@ iris
 ;; - `:geom` - we compute layout positions manually
 ;; - `:vl`/`:plotly` - could use their grid layout features
 ;;
-;; ## 📖 4. Rendering Architecture for :geom
+;; ### 📖 4. Rendering Architecture for :geom
 ;;
 ;; **Challenge**: thi.ng/geom-viz doesn't support multi-panel layouts
 ;;
@@ -2705,7 +2705,7 @@ iris
 ;;
 ;; **Complexity**: Significant refactoring of plot-impl :geom
 ;;
-;; ## 📖 5. The Core Insight
+;; ### 📖 5. The Core Insight
 ;;
 ;; **Faceting reveals the same pattern as statistical transforms**:
 ;; - We MUST control the semantics (data splitting, per-group computation)
@@ -2734,7 +2734,7 @@ iris
 ;;
 ;; Let's explore faceting to see what architectural questions emerge.
 
-;; ## 📖 Faceting Design Decisions
+;; ### 📖 Faceting Design Decisions
 ;;
 ;; After prototyping, we've decided:
 ;;
@@ -2743,7 +2743,7 @@ iris
 ;; 3. **Shared scales by default** - All facets use same domain (easier comparison)
 ;; 4. **Statistical transforms per-facet** - Histogram by species = 3 separate histograms
 ;;
-;; ## ⚙️ Implementation Strategy
+;; ### ⚙️ Implementation Strategy
 ;;
 ;; 1. `split-by-facets` - Groups data by facet variable(s)
 ;; 2. Apply transforms to each facet group separately
@@ -2753,10 +2753,10 @@ iris
 ;; For :geom target - compute layout positions manually
 ;; For :vl/:plotly targets - could use their grid layout features
 
-;; ## 🧪 Example 10: Simple Column Faceting
+;; ### 🧪 Example 10: Simple Column Faceting
 ;;
 ;; Facet a scatter plot by species - this creates 3 side-by-side plots.
-;; # 📊 Faceting
+;; # Faceting
 ;; 
 ;; Small multiples: splitting data across rows and columns.
 
@@ -2775,7 +2775,7 @@ iris
            (histogram))
        {:col :species})
 
-;; ## 🧪 Example 11: Row Faceting
+;; ### 🧪 Example 11: Row Faceting
 ;;
 ;; Facet by rows creates vertically stacked panels
 
@@ -2786,7 +2786,7 @@ iris
 
 (kind/test-last [#(= (:aog/row (first %)) :species)])
 
-;; ## 🧪 Example 12: Row × Column Grid Faceting
+;; ### 🧪 Example 12: Row × Column Grid Faceting
 ;;
 ;; Create a 2D grid of facets.
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
@@ -2807,7 +2807,7 @@ iris
 ;; 4. Shared scales across all panels for easy comparison
 ;; 5. Per-panel rendering with proper x and y offsets
 
-;; ## 🧪 Example 12b: Multiple Grouping Columns (Color + Faceting)
+;; ### 🧪 Example 12b: Multiple Grouping Columns (Color + Faceting)
 ;;
 ;; When you combine color grouping with faceting, statistical transforms
 ;; group by BOTH aesthetics. This example shows linear regression grouped
@@ -2836,13 +2836,13 @@ iris
 ;; categorical aesthetics that create groups (:aog/color, :aog/col, :aog/row, :aog/group)
 ;; and returns a vector. Transforms then group by the combination of all these columns.
 
-;; ## 🧪 Example 13: Custom Scale Domains
+;; ### 🧪 Example 13: Custom Scale Domains
 ;;
 ;; Override auto-computed domains to control axis ranges
 
 ;; Force y-axis to start at 0
 (* (data mtcars)
-;; # 📊 Scale Customization
+;; # Scale Customization
 ;; 
 ;; Custom scale domains for precise control over axis ranges.
 
@@ -2879,7 +2879,7 @@ iris
 ;; So far, all examples have used the `:geom` target (thi.ng/geom for static SVG),
 ;; which is the default. To select a different target, use the `target` function.
 
-;; # 📊 Multi-Target Rendering
+;; # Multi-Target Rendering
 ;; 
 ;; Same API, different backends: :geom (SVG), :vl (Vega-Lite), :plotly (Plotly.js).
 
@@ -3341,7 +3341,7 @@ iris
 
 ;; ## 🧪 Examples
 
-;; ## 🧪 Example 14: Simple Scatter with Vega-Lite
+;; ### 🧪 Example 14: Simple Scatter with Vega-Lite
 
 ;; Use `target` to select the `:vl` target (Vega-Lite):
 
@@ -3364,7 +3364,7 @@ iris
 ;; 2. Vega-Lite's polished default styling
 ;; 3. Same data, same API, different rendering
 
-;; ## 🧪 Example 15: Multi-Layer with Vega-Lite
+;; ### 🧪 Example 15: Multi-Layer with Vega-Lite
 
 ;; Scatter + regression works too:
 
@@ -3384,7 +3384,7 @@ iris
 ;; 3. Fitted line sent to VL as `line` mark
 ;; 4. VL layers them together
 
-;; ## 🧪 Example 16: Color Mapping with Vega-Lite
+;; ### 🧪 Example 16: Color Mapping with Vega-Lite
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
@@ -3416,7 +3416,7 @@ iris
 ;; 3. VL renders as bar chart
 ;; 4. Interactive tooltips show bin ranges and counts
 
-;; ## 🧪 Example 17: Faceting with Vega-Lite
+;; ### 🧪 Example 17: Faceting with Vega-Lite
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -3434,7 +3434,7 @@ iris
 ;; 3. VL handles layout and labels
 ;; 4. Each panel is independently interactive
 
-;; ## 🧪 Example 19: Grid Faceting with Vega-Lite
+;; ### 🧪 Example 19: Grid Faceting with Vega-Lite
 
 ;; Grid faceting with custom dimensions using compositional `size`:
 
@@ -3459,7 +3459,7 @@ iris
 ;; 3. Shared scales across all panels
 ;; 4. Interactive exploration across the grid
 
-;; ## 🧪 Example 20: Custom Domains with Vega-Lite
+;; ### 🧪 Example 20: Custom Domains with Vega-Lite
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -3477,7 +3477,7 @@ iris
 ;; 2. VL respects our domain constraints
 ;; 3. Same composition semantics across targets
 
-;; ## 📖 The Power of Backend Agnosticism
+;; ### 📖 The Power of Backend Agnosticism
 ;;
 ;; **Key insight**: Our flat map representation with `:aog/*` keys creates a
 ;; separation between plot semantics and rendering implementation.
@@ -3502,7 +3502,7 @@ iris
 ;; Now let's explore the `:plotly` target, which provides interactivity
 ;; and is particularly strong for dashboards and web applications.
 
-;; ## 🧪 Example 21: Simple Scatter with Plotly
+;; ### 🧪 Example 21: Simple Scatter with Plotly
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -3524,7 +3524,7 @@ iris
 ;; 3. Smooth animations and transitions
 ;; 4. Same ggplot2 theming (grey background, white grid)
 
-;; ## 🧪 Example 22: Multi-Layer with Plotly
+;; ### 🧪 Example 22: Multi-Layer with Plotly
 
 (-> mtcars
     (mapping :wt :mpg)
@@ -3542,7 +3542,7 @@ iris
 ;; 3. Both traces combined in single Plotly spec
 ;; 4. Interactive hover works for both layers
 
-;; ## 🧪 Example 23: Color-Grouped Regression with Plotly
+;; ### 🧪 Example 23: Color-Grouped Regression with Plotly
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
@@ -3593,7 +3593,7 @@ iris
 ;; 4. Custom bin count (12 bins)
 ;; 5. Full interactivity with hover tooltips
 
-;; ## 🧪 Example 24: Faceted Scatter with Plotly
+;; ### 🧪 Example 24: Faceted Scatter with Plotly
 
 (plot
  (-> penguins
@@ -3617,7 +3617,7 @@ iris
 ;; 4. Species names as column headers
 ;; 5. Independent zoom/pan for each subplot
 
-;; ## 🧪 Example 26: Custom Domains with Plotly
+;; ### 🧪 Example 26: Custom Domains with Plotly
 
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -3635,7 +3635,7 @@ iris
 ;; 2. Zoom/pan constrained to specified ranges
 ;; 3. Same composition semantics across all targets
 
-;; ## 🧪 Example 15: Compositional Size Specification
+;; ### 🧪 Example 15: Compositional Size Specification
 
 ;; Width and height can be specified compositionally using the `size` constructor,
 ;; just like `target`. This enables full threading and keeps plot dimensions as
@@ -3792,7 +3792,7 @@ iris
 
 ;; # Summary
 ;;
-;; ## 📖 What We've Explored
+;; ### 📖 What We've Explored
 ;;
 ;; This notebook demonstrates a composable graphics API with **minimal delegation**:
 ;;
@@ -3819,7 +3819,7 @@ iris
 ;; - Construction time (opt-in, via *validate-on-construction*)
 ;; - Draw time (default-on, via *validate-on-draw*)
 
-;; ## Example 1: Valid Layer
+;; ### 🧪 Example 1: Valid Layer
 
 ;; A properly constructed layer passes validation silently
 (validate Layer
@@ -3829,7 +3829,7 @@ iris
            :aog/plottype :scatter
            :aog/alpha 0.7})
 
-;; ## Example 2: Invalid Alpha (Out of Range)
+;; ### 🧪 Example 2: Invalid Alpha (Out of Range)
 
 ;; Alpha must be between 0.0 and 1.0
 (validate Layer
@@ -3837,14 +3837,14 @@ iris
            :aog/plottype :scatter
            :aog/alpha 1.5})
 
-;; ## Example 3: Invalid Plot Type
+;; ### 🧪 Example 3: Invalid Plot Type
 
 ;; Plot type must be one of the defined enums
 (validate Layer
           {:aog/data {:x [1 2 3]}
            :aog/plottype :invalid-type})
 
-;; ## Example 4: Missing Required Aesthetics
+;; ### 🧪 Example 4: Missing Required Aesthetics
 
 ;; Scatter plots require both x and y
 (validate-layer
@@ -3853,7 +3853,7 @@ iris
   ;; Missing :aog/y!
   :aog/plottype :scatter})
 
-;; ## Example 5: Missing Column in Dataset
+;; ### 🧪 Example 5: Missing Column in Dataset
 
 ;; Column references must exist in the data
 (validate-layer
@@ -3862,7 +3862,7 @@ iris
   :aog/y :y ;; y column doesn't exist!
   :aog/plottype :scatter})
 
-;; ## Example 6: Construction-Time Validation
+;; ### 🧪 Example 6: Construction-Time Validation
 
 ;; Enable validation during layer construction for immediate feedback
 ;; This will throw immediately when scatter is called
@@ -3875,7 +3875,7 @@ iris
     {:error (ex-message e)
      :data (ex-data e)}))
 
-;; ## Example 7: Draw-Time Validation (Default)
+;; ### 🧪 Example 7: Draw-Time Validation (Default)
 
 ;; By default, validation happens when plot is called
 ;; This catches errors before attempting to render
@@ -3888,7 +3888,7 @@ iris
     {:error (ex-message e)
      :data (ex-data e)}))
 
-;; ## Example 8: Disabling Draw-Time Validation
+;; ### 🧪 Example 8: Disabling Draw-Time Validation
 
 ;; Sometimes useful for debugging or performance
 ;; Not recommended! Validation is skipped, errors occur later with less helpful messages
@@ -3902,7 +3902,7 @@ iris
     {:error (ex-message e)
      :data (ex-data e)}))
 
-;; ## Example 9: Programmatic Validation
+;; ### 🧪 Example 9: Programmatic Validation
 
 ;; Check validity without throwing
 (valid? Layer {:aog/data {:x [1 2 3]} :aog/plottype :scatter})
@@ -3912,7 +3912,7 @@ iris
 ;; Get detailed error information
 (validate Layer {:aog/plottype :invalid :aog/alpha 2.0})
 
-;; ## Example 10: Validation in Practice
+;; ### 🧪 Example 10: Validation in Practice
 
 ;; Recommended pattern: construct freely, validate at render time
 (-> penguins
@@ -3927,6 +3927,236 @@ iris
       (scatter {:alpha 0.6})
       (linear)
       (plot)))
+
+;; ## Design Discussions
+
+;; ### 📖 Auto-display vs Explicit Rendering
+
+;; The current design supports two rendering modes:
+;; 1. Auto-display: `(=* ...)` returns an object that automatically renders in notebooks
+;; 2. Explicit rendering: `(plot layers)` explicitly triggers rendering
+
+;; **The Tension:**
+
+;; **Benefits of auto-display:**
+;; - Notebook-friendly: compositions render immediately at the REPL
+;; - Convenience: see results without extra ceremony
+;; - Matches the algebraic metaphor: expressions evaluate to visualizations
+
+;; **Costs of auto-display:**
+;; - Two ways to do the same thing can be confusing
+;; - The display wrapper is invisible but affects behavior
+;; - Debugging difficulty: In Clay, errors during rendering (not evaluation) can be
+;;   harder to track because the `plot` call happens during the display phase rather
+;;   than during code evaluation
+;; - Less control: What if you want to manipulate layers without triggering display?
+
+;; **When to use which:**
+;; - `(=* ...)` - Quick exploration, simple plots, notebook workflows
+;; - `(plot (=* ...))` - When you need rendering options, explicit control, or 
+;;   easier debugging (errors thrown at the point of the `plot` call)
+
+;; This remains an open design question. The tradeoff between convenience and
+;; debuggability may warrant reconsidering the auto-display default.
+
+;; ### 📖 Multimethod Cartesian Expansion
+
+;; The rendering system uses multimethod dispatch on `[target plottype]`:
+;; ```clojure
+;; (defmulti render-layer
+;;   (fn [target layer transform-result alpha]
+;;     [target (or (:aog/transformation layer) (:aog/plottype layer))]))
+;; ```
+
+;; With 3 targets (:geom, :vl, :plotly) and growing plottypes (:scatter, :line,
+;; :histogram, :linear...), this creates a cartesian product of methods.
+
+;; **The Tension:**
+
+;; **Benefits of cartesian dispatch:**
+;; - Full control per combination - optimize each target/plottype pair
+;; - Simple dispatch logic - just a vector
+;; - Clear separation of concerns
+
+;; **Costs of cartesian dispatch:**
+;; - Method explosion: N targets × M plottypes = N×M methods
+;; - Code repetition: Similar logic across targets (e.g., all targets render scatter similarly)
+;; - Maintenance burden: Adding a new plottype requires implementing it for all targets
+;; - Scalability concern: Currently ~10 methods, could reach 50+ as plottypes grow
+;;   (box, violin, density, contour, area, ribbon, etc.)
+
+;; **Alternatives to consider:**
+;; 1. Two-level dispatch: Dispatch on target first, then on plottype within target-specific methods
+;; 2. Shared abstractions: Default method that delegates to target-specific renderers
+;; 3. Hierarchical dispatch: Use Clojure's derive/isa? to share implementations across targets
+;; 4. Spec-based rendering: Translate to intermediate spec format, each target consumes specs
+
+;; This design choice affects the library's extensibility and maintainability as
+;; the number of supported plot types and rendering targets grows.
+
+;; ### 📖 Key Naming Convention
+
+;; Every layer key uses the `:aog/` namespace prefix:
+;; ```clojure
+;; {:aog/data penguins
+;;  :aog/x :bill-length-mm
+;;  :aog/y :bill-depth-mm
+;;  :aog/color :species
+;;  :aog/plottype :scatter}
+;; ```
+
+;; **The Problem:**
+
+;; The `:aog/` namespace prefix is verbose and creates visual noise:
+;; - `:aog/` appears constantly throughout code
+;; - More typing required
+;; - Heavier than necessary for the protection it provides
+
+;; **Decision:** Switch to `:=` prefix convention.
+
+;; Use convention keywords with `=` prefix: `:=color`, `:=x`, `:=data`
+;; ```clojure
+;; {:=data penguins
+;;  :=x :bill-length-mm
+;;  :=y :bill-depth-mm
+;;  :=color :species
+;;  :=plottype :scatter}
+;; ```
+
+;; **Benefits:**
+;; - Distinctive: prevents collision with data column names (`:=color` vs `:color`)
+;; - Consistent with other Tableplot APIs
+;; - Lightweight: less visual noise than `:aog/`
+;; - Clear distinction between layer spec and data
+;; - Less typing required
+
+;; ### 📖 Validation Timing
+
+;; The current design has two validation flags:
+;; - `*validate-on-construction*` (default: false) - validate when calling `scatter`, `linear`, etc.
+;; - `*validate-on-draw*` (default: true) - validate when calling `plot`
+
+;; **The Problem:**
+
+;; The dual flag system is confusing and unnecessary. Having two separate controls creates
+;; complexity without clear benefit.
+
+;; **Current behavior (validate-on-draw):**
+;; - Flexible composition - build invalid intermediate states, validate at the end
+;; - Performance - avoid validating the same layer multiple times
+;; - BUT: Errors discovered late, potentially confusing stacktraces
+;; - BUT: Error points to `plot`, not the construction site where the mistake was made
+
+;; **Better approach (validate-on-construction, true by default):**
+;; - Fail fast - errors caught immediately at the construction site
+;; - Better error context - stacktrace shows exactly where the bad layer was created
+;; - Simpler mental model - one validation flag, early validation by default
+;; - Still allow disabling for performance-critical scenarios if needed
+
+;; **Decision:** Remove dual flags, use single `*validate*` flag (default: true).
+;; Validate eagerly at construction time for better developer experience.
+
+;; ### 📖 Type Inference Strategy
+
+;; The current design attempts to infer data types from plain Clojure data structures:
+;; ```clojure
+;; (defn- infer-from-values [values]
+;;   (cond
+;;     (every? number? values) :numerical
+;;     (every? string? values) :categorical
+;;     (every? keyword? values) :categorical
+;;     :else :categorical))
+;; ```
+
+;; **The Problem:**
+
+;; Maintaining separate type inference logic creates complexity and potential bugs:
+;; - Can guess wrong: `[1 2 3]` might be categories, not numerical
+;; - Silent failures: wrong inference produces incorrect visualizations without warning
+;; - Code duplication: reimplementing what tablecloth already does well
+;; - Two code paths: dataset vs plain data handling
+
+;; **Decision:** Delegate to the dataset library.
+
+;; If users want type control, they should use datasets (tablecloth). If they provide
+;; plain data structures `{:x [1 2 3]}`, the library will convert them internally to
+;; datasets via `ensure-dataset`, and we'll rely on tablecloth's type inference logic.
+
+;; This approach:
+;; - Eliminates duplicate type inference code
+;; - Leverages existing, well-tested tablecloth logic
+;; - Provides escape hatch: users who need type control can construct typed datasets
+;; - Simplifies the codebase
+
+;; ### 📖 Faceting Implementation Complexity
+
+;; The current faceting implementation uses multiple helper functions with manual
+;; grid organization:
+;; - `split-by-facets` - splits layers by facet values
+;; - `has-faceting?` - checks if any layer has facets
+;; - `organize-by-facets` - creates the grid structure
+
+;; **The Tension:**
+
+;; The faceting code feels heavier and more imperative than the rest of the algebra:
+;; ```clojure
+;; (defn- organize-by-facets [layers-vec]
+;;   ;; Complex nested logic to create facet grid
+;;   ...)
+;; ```
+
+;; **Current approach (manual grid organization):**
+;; - Full control over layout and rendering
+;; - Can optimize for specific cases
+;; - BUT: Complex code with nested loops
+;; - BUT: Hard to extend (e.g., free scales, different facet layouts)
+;; - BUT: Doesn't match the compositional spirit of `=*` and `=+`
+
+;; **Question:** Is there a more compositional approach?
+;; - Could transducers simplify the faceting operations?
+;; - Can faceting be expressed more declaratively?
+;; - Should faceting be part of the algebra rather than a special case?
+
+;; The challenge: faceting is inherently about spatial layout (a grid), which is
+;; different from the layer composition that `=*` and `=+` handle. Perhaps some
+;; imperative complexity is unavoidable, or perhaps a different abstraction could
+;; make it feel more algebraic.
+
+;; ### 📖 Error Message Enhancement
+
+;; The current validation system produces structured error messages via Malli:
+;; ```clojure
+;; (validate Layer {:aog/plottype :invalid})
+;; ;; Returns detailed Malli error with path and humanized explanation
+;; ```
+
+;; **Current state (Malli errors):**
+;; - Structured error data via `ex-data` - machine-readable for tooling
+;; - Consistent format across all validation
+;; - BUT: Generic messages like "should be one of :scatter, :point, :line..."
+;; - BUT: May not provide context-specific guidance for common mistakes
+
+;; **Opportunity for enhancement:**
+;; The current Malli errors are functional but could be significantly improved:
+;; ```clojure
+;; ;; Current:
+;; "Invalid value for :aog/plottype. Should be one of :scatter, :point, :line"
+;;
+;; ;; Enhanced:
+;; "Unknown plot type :scater. Did you mean :scatter? 
+;; Available: :scatter, :point, :line, :histogram
+;; See: (doc scatter) or https://..."
+;; ```
+
+;; **Enhancements to consider:**
+;; 1. Did-you-mean suggestions using string distance (typo detection)
+;; 2. Show valid examples when validation fails
+;; 3. Context-specific guidance for common errors
+;; 4. Links to relevant documentation
+;; 5. Better error messages for missing required aesthetics (e.g., "scatter requires both :x and :y")
+
+;; **Decision:** Worth pursuing, but not in this initial design phase.
+;; Keep current Malli errors for now, enhance in future iteration.
 
 ;; ---
 ;; *This is a design exploration. Feedback welcome!*

@@ -2,6 +2,24 @@
 
 ## Recent Updates (2025-12-26)
 
+**Session 15 - AoG V2 Design Decisions Discussion (2025-12-26) ✅ COMPLETE**:
+- **Goal Achieved**: Systematically reviewed and documented design decisions for the AoG V2 implementation
+- **Decisions Made**:
+  1. **Operators**: Use `=*` (compose) and `=+` (overlay) instead of shadowing Clojure's `*` and `+` - preserves algebraic clarity without surprising behavior
+  2. **Auto-wrapping**: Single items automatically wrapped to vectors for cleaner API - reduces verbosity for common cases
+  3. **Key naming**: Switch from `:aog/` namespaced keywords to `:=` convention (`:=color`, `:=x`, `:=data`) - lightweight, distinctive, consistent with other Tableplot APIs
+  4. **Validation**: Remove dual flags (`*validate-on-construction*`, `*validate-on-draw*`), use single `*validate*` flag (default: true) with construction-time validation - fail fast for better developer experience
+  5. **Type inference**: Delegate to tablecloth, remove custom `infer-from-values` logic - leverages existing library, provides escape hatch via typed datasets
+  6. **Plain data support**: Keep `ensure-dataset` flexibility - convenience worth the maintenance
+- **Design Discussions Added** (for future consideration):
+  1. **Auto-display vs explicit rendering** (building_aog_v2.clj:3931-3960) - tension between notebook convenience and debugging clarity (Clay errors during display phase harder to track)
+  2. **Multimethod cartesian expansion** (3962-3998) - `[target plottype]` dispatch creates N×M methods, scalability concern as plottypes grow (currently ~10 methods, could reach 50+)
+  3. **Faceting implementation complexity** (4091-4126) - current manual grid organization feels imperative vs compositional spirit of `=*` and `=+`, question about more declarative approach
+  4. **Error message enhancement** (4125-4162) - opportunity for did-you-mean suggestions, context-specific guidance, doc links (worth pursuing but deferred)
+- **Documentation Created**: `AOG_V2_DESIGN_DECISIONS.md` - comprehensive record of all decisions and open questions for next session
+- **Process**: Fresh reading as curious Clojure developer → identified 10 design dilemmas → systematic discussion → decisions documented
+- **Next Steps**: Implement decisions 1-6 (operators, auto-wrapping, key naming, validation, type inference, plain data), update all examples and schemas
+
 **Session 14 - Quality Review & Documentation Cleanup (2025-12-26) ✅ COMPLETE**:
 - **Goal Achieved**: Comprehensive quality review of `building_aog_v2.clj` focusing on coherence, consistency, code quality, and clarity
 - **Changes Applied** (5 total):
@@ -409,6 +427,7 @@ tableplot/
 ├── test/
 │   └── tableplot/v2/                # V2 test suite
 └── docs/
+    ├── AOG_V2_DESIGN_DECISIONS.md   # Design decisions from Session 15
     ├── GGPLOT2_IMPLEMENTATION.md    # ggplot2 implementation guide
     ├── v2_dataflow_design.md        # V2 dataflow design decisions
     └── v2_refactoring_summary.md    # V2 refactoring history
@@ -902,6 +921,7 @@ The project uses REPL-driven development with Clay notebooks:
 
 ## Documentation
 
+- **AOG_V2_DESIGN_DECISIONS.md**: Design decisions from comprehensive review (Session 15)
 - **GGPLOT2_IMPLEMENTATION.md**: Complete guide to ggplot2 implementation (all 4 phases)
 - **v2_dataflow_design.md**: Design decisions for V2 dataflow architecture
 - **v2_refactoring_summary.md**: History of V2 refactoring process
