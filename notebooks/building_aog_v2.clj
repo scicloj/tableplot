@@ -97,6 +97,18 @@
 
 ;; # Setup
 ;;
+;; ## 📖 Reading This Document
+;;
+;; Throughout this document, section headers use emojis to indicate the type of content:
+;;
+;; - **📖 Narrative sections** - Explanatory text, context, and design discussions
+;; - **⚙️ Implementation sections** - Code that implements features (functions, multimethods, helpers)
+;; - **🧪 Example sections** - Demonstrations showing the API in action
+;;
+;; This convention helps you navigate the document and quickly find what you're looking for:
+;; conceptual explanations (📖), working code (⚙️), or usage examples (🧪).
+
+;;
 ;; This notebook relies on several libraries from the Clojure data science ecosystem.
 ;; Here's what we use and why:
 
@@ -676,7 +688,7 @@
 
 (defn facet
   "Add faceting to a layer specification.
-;; ## ⚙️ Facet Constructor
+  ;; ## ⚙️ Facet Constructor
 
   
   Args:
@@ -692,10 +704,11 @@
   Threading-friendly:
   (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
   [layer-spec facet-spec]
-  (let [facet-keys (update-keys facet-spec #(keyword "aog" (name %)))]
-    (if (vector? layer-spec)
-      (mapv #(merge % facet-keys) layer-spec)
-      [(merge layer-spec facet-keys)])))
+  (displays-as-plot
+   (let [facet-keys (update-keys facet-spec #(keyword "aog" (name %)))]
+     (if (vector? layer-spec)
+       (mapv #(merge % facet-keys) layer-spec)
+       [(merge layer-spec facet-keys)]))))
 
 (defn scale
   "Specify scale properties for an aesthetic.
@@ -745,7 +758,7 @@
 ;; These examples demonstrate the design in practice, showing how minimal
 ;; delegation works.
 
-;; ## ⚙️ Setup: Load Datasets
+;; ## 🧪 Setup: Load Datasets
 
 ;; Palmer Penguins - 344 observations, 3 species
 (def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
@@ -1720,19 +1733,28 @@ iris
   (if (= :grouped-histogram (:type transform-result))
     ;; Grouped histogram - bars per group
     (let [groups (:groups transform-result)
-          color-groups (group-by :color (:points transform-result))
-          colors (color-scale (keys color-groups))]
+          ;; Extract color from first point of each group for coloring
+          ;; group-val is now a vector like [:Adelie] or [:Adelie :Biscoe]
+          ;; We use the first element (typically :color aesthetic) for bar color
+          group-colors (into {} (map (fn [[group-val {:keys [points]}]]
+                                       (let [color-val (if (vector? group-val) (first group-val) group-val)]
+                                         [group-val color-val]))
+                                     groups))
+          ;; Build color scale from unique color values
+          unique-colors (distinct (vals group-colors))
+          colors (color-scale unique-colors)]
       (mapcat (fn [[group-val {:keys [bars]}]]
-                (mapv (fn [bar]
-                        {:type :rect
-                         :x-min (:x-min bar)
-                         :x-max (:x-max bar)
-                         :height (:height bar)
-                         :attribs {:fill (get colors group-val ggplot2-default-mark)
-                                   :stroke ggplot2-grid
-                                   :stroke-width 1
-                                   :opacity alpha}})
-                      bars))
+                (let [color-val (get group-colors group-val)]
+                  (mapv (fn [bar]
+                          {:type :rect
+                           :x-min (:x-min bar)
+                           :x-max (:x-max bar)
+                           :height (:height bar)
+                           :attribs {:fill (get colors color-val ggplot2-default-mark)
+                                     :stroke ggplot2-grid
+                                     :stroke-width 1
+                                     :opacity alpha}})
+                        bars)))
               groups))
     ;; Single histogram
     (when-let [bars (:bars transform-result)]
@@ -1799,7 +1821,7 @@ iris
 ;; **Categorical color → grouped histogram**:
 
 (-> penguins
-    (mapping :bill-length-mm nil {:color :species})
+    (mapping :bill-length-mm nil {:color :species :alpha 0.7})
     (histogram))
 
 ;; **What happens here**:
@@ -1807,7 +1829,8 @@ iris
 ;; 1. Creates 3 separate histograms (one per species)
 ;; 2. Each histogram uses the same binning method
 ;; 3. Bars are colored by species
-;; 4. This is different from faceting - bars can overlap/stack
+;; 4. Alpha transparency (0.7) lets you see overlapping bars
+;; 5. This is different from faceting - bars can overlap/stack
 
 ;; ## 🧪 Example 6: Continuous Color (No Grouping)
 

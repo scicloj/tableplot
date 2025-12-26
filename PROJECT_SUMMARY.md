@@ -2,6 +2,37 @@
 
 ## Recent Updates (2025-12-26)
 
+**Session 10 - Multiple Grouping Columns & Code Simplification (2025-12-26) ✅ COMPLETE**:
+- **Goal Achieved**: Refactored grouping system to support multiple categorical aesthetics creating composite groups
+- **Core Changes**:
+  1. **Refactored `get-grouping-column` → `get-grouping-columns` (plural)**:
+     - Now returns vector of all grouping columns: `[:species :island]`
+     - Supports `:aog/group` as keyword or vector
+     - Collects all categorical aesthetics: `:aog/color`, `:aog/col`, `:aog/row`, `:aog/group`
+     - Removes duplicates, preserves order
+  2. **Updated `layer->points` for composite group keys**:
+     - Group key is now a vector: `{:group [:Adelie :Torgersen]}`
+     - Enables transforms to group by combinations (species × island)
+  3. **Fixed grouped histogram coloring**:
+     - Extracts color from first element of composite group key
+     - Correctly applies ggplot2 color palette to bars
+  4. **Updated Vega-Lite rendering**:
+     - Handles composite group keys in grouped-regression and grouped-histogram
+     - Creates proper field mappings for all grouping columns
+- **Operator Simplification** (vectors-all-the-way convention):
+  1. **Simplified `*` operator**: Removed 4-branch cond, now just vector×vector case (13 lines removed)
+  2. **Simplified `+` operator**: Replaced `mapcat #(if (vector? %) % [%])` with `(apply concat)` (1 line)
+- **Documentation Improvements**:
+  1. **Added emoji legend**: Explains 📖 (narrative), ⚙️ (implementation), 🧪 (examples) convention
+  2. **Fixed emoji usage**: Changed "Setup: Load Datasets" from ⚙️ to 🧪 (it's demonstration code)
+  3. **Added Example 12b**: Demonstrates multiple grouping columns (color + faceting)
+  4. **Updated grouped histogram example**: Added `:alpha 0.7` to show overlapping bars
+- **Validation Items Added to Implementation Status**:
+  - ⚠️ Malli schemas for layer validation (planned)
+  - ⚠️ Column existence validation (planned)
+- **Key Insight**: Grouping is now compositional - any categorical aesthetic creates groups, and they compose multiplicatively (3 species × 3 islands = 9 regression lines)
+- **Testing**: All changes verified, namespace loads cleanly, examples render correctly ✓
+
 **Session 9 - V2 Clarity Review & Cleanup (2025-12-26) ✅ COMPLETE**:
 - **Goal Achieved**: Reviewed `building_aog_v2.clj` for clarity and cleaned up reorganization artifacts
 - **Context Clarification**: Document is a **design document sharing status and dilemmas**, not a tutorial
