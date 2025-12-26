@@ -1,16 +1,23 @@
 ;; # Building a Composable Graphics API in Clojure, Part 1
-;; **A Design Exploration for Tableplot**
+;; **A Design Exploration for a plotting API**
 ;;
 ;; This is the first post in a series documenting the design and implementation of a new
 ;; compositional plotting API for Clojure. We're exploring fresh approaches to declarative
 ;; data visualization, drawing inspiration from Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/)
 ;; while staying true to Clojure's values of simplicity and composability.
 ;;
-;; Each post in this series combines narrative explanation with executable code—this is a
-;; working Clojure notebook where every example runs and produces real visualizations.
+;; Each post in this series combines narrative explanation with executable code — this is a
+;; working Clojure notebook that can be used with
+;; [Kindly](https://scicloj.github.io/kindly/)-compatible
+;; tools like [Clay](https://scicloj.github.io/clay/).
+;; Code examples are tested using
+;; [Clay's test generation](https://scicloj.github.io/clay/clay_book.test_generation.html).
 ;; You'll see the API evolve from basic scatter plots through faceting, statistical transforms,
 ;; and support for multiple rendering backends. By the end, we'll have a complete prototype
 ;; that handles real-world plotting tasks while maintaining an inspectable design.
+
+;; You may consider the design and implementation here
+;; *a draft* for a future library API.
 ;;
 ;; ## 📖 A Bit of Context: Tableplot's Journey
 ;;
@@ -3814,128 +3821,96 @@ iris
 
 ;; ## Example 1: Valid Layer
 
-(comment
-  ;; A properly constructed layer passes validation silently
-  (validate Layer
-            {:aog/data {:x [1 2 3] :y [4 5 6]}
-             :aog/x :x
-             :aog/y :y
-             :aog/plottype :scatter
-             :aog/alpha 0.7})
-  ;; => nil (valid!)
-  )
+;; A properly constructed layer passes validation silently
+(validate Layer
+          {:aog/data {:x [1 2 3] :y [4 5 6]}
+           :aog/x :x
+           :aog/y :y
+           :aog/plottype :scatter
+           :aog/alpha 0.7})
 
 ;; ## Example 2: Invalid Alpha (Out of Range)
 
-(comment
-  ;; Alpha must be between 0.0 and 1.0
-  (validate Layer
-            {:aog/data {:x [1 2 3]}
-             :aog/plottype :scatter
-             :aog/alpha 1.5}) ;; Out of range!
-  ;; => {:aog/alpha ["should be at most 1.0"]}
-  )
+;; Alpha must be between 0.0 and 1.0
+(validate Layer
+          {:aog/data {:x [1 2 3]}
+           :aog/plottype :scatter
+           :aog/alpha 1.5})
 
 ;; ## Example 3: Invalid Plot Type
 
-(comment
-  ;; Plot type must be one of the defined enums
-  (validate Layer
-            {:aog/data {:x [1 2 3]}
-             :aog/plottype :invalid-type})
-  ;; => {:aog/plottype ["should be one of: :scatter, :line, :area, :bar, :histogram"]}
-  )
+;; Plot type must be one of the defined enums
+(validate Layer
+          {:aog/data {:x [1 2 3]}
+           :aog/plottype :invalid-type})
 
 ;; ## Example 4: Missing Required Aesthetics
 
-(comment
-  ;; Scatter plots require both x and y
-  (validate-layer
-   {:aog/data {:x [1 2 3] :y [4 5 6]}
-    :aog/x :x
-    ;; Missing :aog/y!
-    :aog/plottype :scatter})
-  ;; => {:type :missing-required-aesthetic
-  ;;     :plottype :scatter
-  ;;     :missing [:aog/y]
-  ;;     :message "scatter plots require both :aog/x and :aog/y"}
-  )
+;; Scatter plots require both x and y
+(validate-layer
+ {:aog/data {:x [1 2 3] :y [4 5 6]}
+  :aog/x :x
+  ;; Missing :aog/y!
+  :aog/plottype :scatter})
 
 ;; ## Example 5: Missing Column in Dataset
 
-(comment
-  ;; Column references must exist in the data
-  (validate-layer
-   {:aog/data {:x [1 2 3]}
-    :aog/x :x
-    :aog/y :y ;; y column doesn't exist!
-    :aog/plottype :scatter})
-  ;; => {:type :missing-columns
-  ;;     :missing [:y]
-  ;;     :available [:x]
-  ;;     :message "Columns not found in dataset: [:y]\nAvailable columns: [:x]"}
-  )
+;; Column references must exist in the data
+(validate-layer
+ {:aog/data {:x [1 2 3]}
+  :aog/x :x
+  :aog/y :y ;; y column doesn't exist!
+  :aog/plottype :scatter})
 
 ;; ## Example 6: Construction-Time Validation
 
 ;; Enable validation during layer construction for immediate feedback
-(comment
+;; This will throw immediately when scatter is called
+(try
   (binding [*validate-on-construction* true]
-    ;; This will throw immediately when scatter is called
     (-> penguins
         (mapping :invalid-column :bill-depth-mm)
-        (scatter {:alpha 1.5}))) ;; Invalid alpha!
-  ;; Execution error (ExceptionInfo): Validation failed
-  ;; {:errors {:aog/alpha ["should be at most 1.0"]}}
-  )
+        (scatter {:alpha 1.5})))
+  (catch Exception e
+    {:error (ex-message e)
+     :data (ex-data e)}))
 
 ;; ## Example 7: Draw-Time Validation (Default)
 
 ;; By default, validation happens when plot is called
 ;; This catches errors before attempting to render
-
-(comment
-  ;; This will fail at plot time with clear error message
+(try
   (plot [{:aog/data penguins
           :aog/x :bill-length-mm
-          :aog/y :invalid-column ;; Column doesn't exist!
+          :aog/y :invalid-column
           :aog/plottype :scatter}])
-  ;; Execution error (ExceptionInfo): Layer validation failed
-  ;; {:type :layers-validation-failed
-  ;;  :errors {0 {:type :missing-columns
-  ;;              :missing [:invalid-column]
-  ;;              :available [:species :island :bill-length-mm ...]
-  ;;              :message "Columns not found in dataset..."}}}
-  )
+  (catch Exception e
+    {:error (ex-message e)
+     :data (ex-data e)}))
 
 ;; ## Example 8: Disabling Draw-Time Validation
 
 ;; Sometimes useful for debugging or performance
-(comment
+;; Not recommended! Validation is skipped, errors occur later with less helpful messages
+(try
   (binding [*validate-on-draw* false]
-    ;; Validation is skipped, might fail later with less clear errors
     (plot [{:aog/data penguins
             :aog/x :bill-length-mm
             :aog/y :invalid-column
             :aog/plottype :scatter}]))
-  ;; Not recommended! Error messages are less helpful.
-  )
+  (catch Exception e
+    {:error (ex-message e)
+     :data (ex-data e)}))
 
 ;; ## Example 9: Programmatic Validation
 
-(comment
-  ;; Check validity without throwing
-  (valid? Layer {:aog/data {:x [1 2 3]} :aog/plottype :scatter})
-  ;; => true
+;; Check validity without throwing
+(valid? Layer {:aog/data {:x [1 2 3]} :aog/plottype :scatter})
 
-  (valid? Layer {:aog/plottype :invalid})
-  ;; => false
+(valid? Layer {:aog/plottype :invalid})
 
-  ;; Get detailed error information
-  (validate Layer {:aog/plottype :invalid :aog/alpha 2.0})
-  ;; => {:aog/plottype ["should be one of: :scatter, :line, :area, :bar, :histogram"]
-  ;;     :aog/alpha ["should be at most 1.0"]}
-  )
+;; Get detailed error information
+(validate Layer {:aog/plottype :invalid :aog/alpha 2.0})
 
 ;; ## Example 10: Validation in Practice
 
@@ -3943,18 +3918,15 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (scatter {:alpha 0.6})
-    (plot)) ;; Validation happens here automatically
-;; ✅ Valid plot renders successfully
+    (plot))
 
 ;; For development, enable construction-time validation to catch errors early
-(comment
-  (binding [*validate-on-construction* true]
-    (-> penguins
-        (mapping :bill-length-mm :bill-depth-mm)
-        (scatter {:alpha 0.6})
-        (linear)
-        (plot))) ;; Each constructor validates immediately
-  )
+(binding [*validate-on-construction* true]
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (scatter {:alpha 0.6})
+      (linear)
+      (plot)))
 
 ;; ---
 ;; *This is a design exploration. Feedback welcome!*
