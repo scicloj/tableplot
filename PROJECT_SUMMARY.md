@@ -2,6 +2,54 @@
 
 ## Recent Updates (2025-12-26)
 
+**Session 9 - V2 Clarity Review & Cleanup (2025-12-26) ✅ COMPLETE**:
+- **Goal Achieved**: Reviewed `building_aog_v2.clj` for clarity and cleaned up reorganization artifacts
+- **Context Clarification**: Document is a **design document sharing status and dilemmas**, not a tutorial
+  - Mixed voice (tutorial/design doc/code comments) is intentional - reflects different purposes
+  - Early architecture discussions (Delegation Strategy) document reasoning for future reference
+  - "What's Missing" section honestly shares current limitations, not discouraging but transparent
+- **Cleanup Actions**:
+  1. **Removed 21 placeholder comments**: All `;; (moved to X)` and `;; (moved below)` comments removed
+  2. **Removed empty section headers**: `## ⚙️ Scatter Constructor`, `## ⚙️ Histogram Constructor`, `## ⚙️ Type Information`
+  3. **Created backup**: `building_aog_v2.clj.backup_cleanup` before changes
+  4. **Verification**: Namespace loads cleanly after cleanup ✓
+- **Design Document Framing**:
+  - Purpose: Share architectural decisions, current status, and open dilemmas with community
+  - Not selling/teaching - documenting thinking process transparently
+  - Early architectural sections (Delegation Strategy ~line 280) are intentional - frame core design choices upfront
+  - Threading macro explanation (Example 2b) kept as-is - serves as reference for both compositional and threading styles
+- **Key Decisions**:
+  - Kept Delegation Strategy section early - helps understand code architecture
+  - Kept mixed voice - natural for design document (narrative context + technical decisions + working examples)
+  - Skipped "tutorial-oriented" fixes - not applicable to design document format
+  - Threading macro section adequate - shows both `*` and `->` styles for reference
+- **Result**: Cleaner file without reorganization artifacts, maintains honest design document character
+
+**Session 8 - V2 Multi-Target Vertical Reorganization (2025-12-26) ✅ COMPLETE**:
+- **Goal Achieved**: Moved `:vl` and `:plotly` plot-impl methods to Multi-Target Rendering section
+- **Changes Made**:
+  1. **Removed from early infrastructure** (~lines 1350):
+     - Deleted both `(defmethod plot-impl :vl ...)` and `(defmethod plot-impl :plotly ...)`
+     - Left comment marker: `(:vl and :plotly plot-impl methods moved to Multi-Target Rendering section)`
+  2. **Added to Multi-Target Rendering section** (~lines 2360-2580):
+     - **## ⚙️ Implementation: Vega-Lite Target** - Complete `:vl` plot-impl (~210 lines)
+     - **## ⚙️ Implementation: Plotly Target** - Complete `:plotly` plot-impl (~220 lines)
+     - Both implementations placed immediately before their examples
+  3. **Fixed forward references**:
+     - Moved Example 14 (Simple Scatter with Vega-Lite) from before Multi-Target section to after :vl implementation
+     - Simplified Example 8 (removed :vl/:plotly examples to avoid forward references)
+     - Updated `target` function docstring to remove examples using :vl/:plotly
+     - Removed :vl/:plotly examples from `plot` function docstring
+  4. **Verification**: Namespace loads cleanly after all changes ✓
+- **Result**: All three rendering targets now follow vertical organization:
+  - **:geom**: Implementation in infrastructure → Examples throughout (default target, needed early)
+  - **:vl**: Implementation → Examples (lines 2150-2670)
+  - **:plotly**: Implementation → Examples (lines 2360-2800)
+- **Remaining Tasks** (for next session):
+  1. Move faceting helpers (`split-by-facets`, `organize-by-facets`) to Faceting section (~line 1100 → ~line 2250)
+  2. Add "Implementation Note" markers for core infrastructure that must stay early (`layer->points`, multimethod system, etc.)
+- **Key Insight**: Vertical organization dramatically improves narrative flow - each feature tells complete story (implementation → examples) before moving on
+
 **Session 7 - V2 Histogram Vertical Reorganization (2025-12-26) ✅ COMPLETE**:
 - **Goal Achieved**: Reorganized histogram implementation and examples in `building_aog_v2.clj` following vertical organization principles
 - **Changes Made**:
