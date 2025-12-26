@@ -827,6 +827,8 @@
 ;; - ✅ Custom scale domains
 ;; - ✅ ggplot2-compatible theming
 ;; - ✅ Plain Clojure data structures (maps, vectors - no dataset required)
+;; - ✅ Malli schemas for layer validation
+;; - ✅ Column existence validation with helpful error messages
 ;;
 ;; **What's Missing (compared to tableplot.v1.plotly)**:
 ;;
@@ -3805,32 +3807,6 @@ iris
 ;; - Domain computation only for statistical transforms
 ;; - Leverage rendering target polish for rendering
 ;; - Simple, focused implementation
-;;
-;; ## 📖 Implementation Status
-;;
-;; - ✅ Core composition (`*`, `+`, layer merging)
-;; - ✅ Type inference via Tablecloth
-;; - ✅ Statistical transforms (linear regression, histogram)
-;; - ✅ Faceting (column, row, and 2D grid across all targets)
-;; - ✅ Custom scale domains
-;; - ✅ :geom rendering target (thi.ng/geom with SVG output)
-;; - ✅ :vl rendering target (Vega-Lite with interactive web viz)
-;; - ✅ :plotly rendering target (Plotly.js with interactivity)
-;; - ✅ ggplot2-compatible theming across all targets
-;; - ✅ Full feature parity (scatter, regression, histogram, faceting) across all three targets
-;; - ⚠️ Additional transforms (smooth, density, contour - planned)
-;; - ⚠️ Malli schemas for layer validation (planned)
-;; - ⚠️ Column existence validation (checking referenced columns exist in dataset - planned)
-;;
-;; ## 📖 Next Steps
-;;
-;; 1. Add smooth (LOESS) and density (kernel density estimation) transforms
-;; 2. Add free scales option for faceting
-;; 3. Add contour plots and heatmaps
-;; 4. ~~Add Malli schemas for validating layer specifications~~ ✅ DONE
-;; 5. ~~Add validation for column existence (helpful error messages when columns missing)~~ ✅ DONE
-;; 6. Performance optimization for large datasets
-;; 7. Gather community feedback
 
 ;; # 🧪 Validation Examples
 ;;
