@@ -1196,10 +1196,9 @@ iris
 ;;
 ;; Let's see Tablecloth's type information in action:
 
-(kind/pprint
- {:bill-length-type (col/typeof (penguins :bill-length-mm))
-  :species-type (col/typeof (penguins :species))
-  :island-type (col/typeof (penguins :island))})
+{:bill-length-type (col/typeof (penguins :bill-length-mm))
+ :species-type (col/typeof (penguins :species))
+ :island-type (col/typeof (penguins :island))}
 
 ;; Notice: We get precise type information (`:float64`, `:string`) without
 ;; examining values. This eliminates the need for complex type inference.
@@ -2118,14 +2117,13 @@ iris
       (some #(instance? java.time.temporal.Temporal %) values) :temporal
       :else :categorical)))
 
-(kind/pprint
- (let [layer (* (data penguins)
-                (mapping :bill-length-mm :bill-depth-mm {:color :species})
-                (scatter))
-       layer (first layer)]
-   {:x-type (infer-scale-type layer :aog/x)
-    :y-type (infer-scale-type layer :aog/y)
-    :color-type (infer-scale-type layer :aog/color)}))
+(let [layer (* (data penguins)
+               (mapping :bill-length-mm :bill-depth-mm {:color :species})
+               (scatter))
+      layer (first layer)]
+  {:x-type (infer-scale-type layer :aog/x)
+   :y-type (infer-scale-type layer :aog/y)
+   :color-type (infer-scale-type layer :aog/color)})
 
 ;; Notice: Type inference is instant (O(1) lookup from Tablecloth metadata),
 ;; not O(n) value examination.
