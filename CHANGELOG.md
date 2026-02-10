@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. This change
 ## [1-beta15 - 2026-02-10]
 - updated deps: fastmath, kindly, std.lang
 - removed Hanami dependency (consumed transitively through Metamorph.ml anyway)
-- removing nils from the resulting specs
+- removing nils from the resulting specs (this should improve static image rendering)
 
 ## [1-beta14 - 2025-06-06]
 - bugfix: `layer-density` with no specified substitution map should use a density, not a histogram (fixes #41)
