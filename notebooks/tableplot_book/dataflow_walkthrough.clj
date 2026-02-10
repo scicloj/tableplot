@@ -37,6 +37,8 @@
 
 ;; **Rule 6: Value** - Non-collection, non-key values (numbers, strings, datasets) pass through.
 
+;; **Nil Removal** - If a value resolves to `nil`, it is removed from the result (equivalent to `hc/RMV`).
+
 ;; ### Examples
 
 ;; **Lookup and Identity**
@@ -201,6 +203,18 @@
  {:Title "My Chart"
   :Subtitle hc/RMV
   :Footer hc/RMV})
+
+(kind/test-last [#(= % {:title "My Chart"})])
+
+;; `nil` values are also removed:
+
+(xform/xform
+ {:title :Title
+  :subtitle :Subtitle
+  :footer :Footer}
+ {:Title "My Chart"
+  :Subtitle nil
+  :Footer nil})
 
 (kind/test-last [#(= % {:title "My Chart"})])
 

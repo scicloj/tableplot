@@ -11,60 +11,60 @@
   [clojure.test :refer [deftest is]]))
 
 
-(def v3_l44 (xform/xform {:a :B, :c :D} {:B :C, :C 10, :D 20}))
+(def v3_l46 (xform/xform {:a :B, :c :D} {:B :C, :C 10, :D 20}))
 
 
 (deftest
- t4_l51
- (is ((fn* [p1__88975#] (= p1__88975# {:a 10, :c 20})) v3_l44)))
+ t4_l53
+ (is ((fn* [p1__114076#] (= p1__114076# {:a 10, :c 20})) v3_l46)))
 
 
 (def
- v6_l59
+ v6_l61
  (xform/xform
   {:title :Title}
   {:Title "MyTitle", "MyTitle" "Resolved!"}))
 
 
 (deftest
- t7_l64
- (is ((fn* [p1__88976#] (= p1__88976# {:title "Resolved!"})) v6_l59)))
+ t7_l66
+ (is ((fn* [p1__114077#] (= p1__114077# {:title "Resolved!"})) v6_l61)))
 
 
 (def
- v9_l68
+ v9_l70
  (xform/xform {:self-ref :X, :not-found :Y} {:X :X, :Y :Missing}))
 
 
 (deftest
- t11_l74
+ t11_l76
  (is
   ((fn*
-    [p1__88977#]
-    (= p1__88977# {:self-ref :X, :not-found :Missing}))
-   v9_l68)))
+    [p1__114078#]
+    (= p1__114078# {:self-ref :X, :not-found :Missing}))
+   v9_l70)))
 
 
 (def
- v13_l80
+ v13_l82
  (xform/xform
   {:data :Data, :nested {:deep {:data :Data}}}
   {:Data (tc/dataset {:x [1 2 3], :y [4 5 6]})}))
 
 
 (deftest
- t14_l85
+ t14_l87
  (is
   ((fn*
-    [p1__88978#]
+    [p1__114079#]
     (and
-     (= (-> p1__88978# :data tc/column-names) [:x :y])
-     (= (-> p1__88978# :nested :deep :data tc/column-names) [:x :y])))
-   v13_l80)))
+     (= (-> p1__114079# :data tc/column-names) [:x :y])
+     (= (-> p1__114079# :nested :deep :data tc/column-names) [:x :y])))
+   v13_l82)))
 
 
 (def
- v16_l92
+ v16_l94
  (xform/xform
   {:greeting :Greeting}
   {:Name "Alice",
@@ -72,14 +72,14 @@
 
 
 (deftest
- t17_l98
+ t17_l100
  (is
-  ((fn* [p1__88979#] (= p1__88979# {:greeting "Hello, Alice!"}))
-   v16_l92)))
+  ((fn* [p1__114080#] (= p1__114080# {:greeting "Hello, Alice!"}))
+   v16_l94)))
 
 
 (def
- v19_l104
+ v19_l106
  (xform/xform
   {:message :Message,
    :aerial.hanami.templates/defaults
@@ -88,14 +88,14 @@
 
 
 (deftest
- t20_l110
+ t20_l112
  (is
-  ((fn* [p1__88980#] (= p1__88980# {:message "Hello, World!"}))
-   v19_l104)))
+  ((fn* [p1__114081#] (= p1__114081# {:message "Hello, World!"}))
+   v19_l106)))
 
 
 (def
- v22_l114
+ v22_l116
  (xform/xform
   {:message :Message,
    :aerial.hanami.templates/defaults
@@ -106,14 +106,14 @@
 
 
 (deftest
- t23_l121
+ t23_l123
  (is
-  ((fn* [p1__88981#] (= p1__88981# {:message "Hello, Clojure!"}))
-   v22_l114)))
+  ((fn* [p1__114082#] (= p1__114082# {:message "Hello, Clojure!"}))
+   v22_l116)))
 
 
 (def
- v25_l127
+ v25_l129
  (xform/xform
   {:title :Title,
    :section
@@ -123,18 +123,18 @@
 
 
 (deftest
- t26_l133
+ t26_l135
  (is
   ((fn*
-    [p1__88982#]
+    [p1__114083#]
     (=
-     p1__88982#
+     p1__114083#
      {:title "Default Title", :section {:heading "Default Heading"}}))
-   v25_l127)))
+   v25_l129)))
 
 
 (def
- v28_l138
+ v28_l140
  (xform/xform
   {:outer
    {:inner :InnerValue,
@@ -145,16 +145,16 @@
 
 
 (deftest
- t29_l144
+ t29_l146
  (is
   ((fn*
-    [p1__88983#]
-    (= p1__88983# {:outer {:inner "Inner uses: Parent Value"}}))
-   v28_l138)))
+    [p1__114084#]
+    (= p1__114084# {:outer {:inner "Inner uses: Parent Value"}}))
+   v28_l140)))
 
 
 (def
- v31_l148
+ v31_l150
  (xform/xform
   {:section
    {:heading :Heading,
@@ -164,16 +164,16 @@
 
 
 (deftest
- t32_l153
+ t32_l155
  (is
   ((fn*
-    [p1__88984#]
-    (= p1__88984# {:section {:heading "User Heading"}}))
-   v31_l148)))
+    [p1__114085#]
+    (= p1__114085# {:section {:heading "User Heading"}}))
+   v31_l150)))
 
 
 (def
- v34_l157
+ v34_l159
  (xform/xform
   {:config
    {:database {:url :DbUrl, :pool-size :PoolSize},
@@ -195,56 +195,72 @@
 
 
 (deftest
- t35_l169
+ t35_l171
  (is
   ((fn*
-    [p1__88985#]
+    [p1__114086#]
     (=
-     p1__88985#
+     p1__114086#
      {:config
       {:database
        {:url "postgresql://localhost:5432/mydb", :pool-size 50}}}))
-   v34_l157)))
+   v34_l159)))
 
 
 (def
- v37_l174
+ v37_l176
  (xform/xform
   {:user {:name :UserName, :age :UserAge}, :items [{:x :X} {:y :Y}]}
   {:UserName "Bob", :UserAge 30, :X 10, :Y 20}))
 
 
 (deftest
- t38_l183
+ t38_l185
  (is
   ((fn*
-    [p1__88986#]
+    [p1__114087#]
     (=
-     p1__88986#
+     p1__114087#
      {:user {:name "Bob", :age 30}, :items [{:x 10} {:y 20}]}))
-   v37_l174)))
+   v37_l176)))
 
 
-(def v40_l190 (xform/xform {:outer {:middle {:inner []}}}))
+(def v40_l192 (xform/xform {:outer {:middle {:inner []}}}))
 
 
-(deftest t41_l193 (is ((fn* [p1__88987#] (= p1__88987# {})) v40_l190)))
+(deftest
+ t41_l195
+ (is ((fn* [p1__114088#] (= p1__114088# {})) v40_l192)))
 
 
 (def
- v43_l197
+ v43_l199
  (xform/xform
   {:title :Title, :subtitle :Subtitle, :footer :Footer}
   {:Title "My Chart", :Subtitle hc/RMV, :Footer hc/RMV}))
 
 
 (deftest
- t44_l205
- (is ((fn* [p1__88988#] (= p1__88988# {:title "My Chart"})) v43_l197)))
+ t44_l207
+ (is
+  ((fn* [p1__114089#] (= p1__114089# {:title "My Chart"})) v43_l199)))
 
 
 (def
- v46_l209
+ v46_l211
+ (xform/xform
+  {:title :Title, :subtitle :Subtitle, :footer :Footer}
+  {:Title "My Chart", :Subtitle nil, :Footer nil}))
+
+
+(deftest
+ t47_l219
+ (is
+  ((fn* [p1__114090#] (= p1__114090# {:title "My Chart"})) v46_l211)))
+
+
+(def
+ v49_l223
  (xform/xform
   {:plot
    {:data :Data,
@@ -292,20 +308,20 @@
 
 
 (deftest
- t47_l247
+ t50_l261
  (is
   ((fn*
-    [p1__88989#]
+    [p1__114091#]
     (=
-     p1__88989#
+     p1__114091#
      {:plot
       {:data [{:x [1 2 3], :y [4 5 6], :type "scatter"}],
        :layout {:title {:text "Simple Chart"}}}}))
-   v46_l209)))
+   v49_l223)))
 
 
 (def
- v49_l256
+ v52_l270
  (xform/xform
   {:title :Title,
    :subtitle :Subtitle,
@@ -319,16 +335,16 @@
 
 
 (deftest
- t50_l264
+ t53_l278
  (is
   ((fn*
-    [p1__88990#]
-    (= p1__88990# {:title "My Chart", :subtitle "A subtitle"}))
-   v49_l256)))
+    [p1__114092#]
+    (= p1__114092# {:title "My Chart", :subtitle "A subtitle"}))
+   v52_l270)))
 
 
 (def
- v51_l266
+ v54_l280
  (xform/xform
   {:title :Title,
    :subtitle :Subtitle,
@@ -344,12 +360,13 @@
 
 
 (deftest
- t52_l275
- (is ((fn* [p1__88991#] (= p1__88991# {:title "My Chart"})) v51_l266)))
+ t55_l289
+ (is
+  ((fn* [p1__114093#] (= p1__114093# {:title "My Chart"})) v54_l280)))
 
 
 (def
- v54_l285
+ v57_l299
  (xform/xform
   {:b :B,
    :c :C,
@@ -360,12 +377,12 @@
 
 
 (deftest
- t55_l297
- (is ((fn* [p1__88992#] (= p1__88992# {:b 20, :c 25})) v54_l285)))
+ t58_l311
+ (is ((fn* [p1__114094#] (= p1__114094# {:b 20, :c 25})) v57_l299)))
 
 
 (def
- v57_l303
+ v60_l317
  (xform/xform
   {:result :E,
    :aerial.hanami.templates/defaults
@@ -377,12 +394,12 @@
 
 
 (deftest
- t58_l312
- (is ((fn* [p1__88993#] (= p1__88993# {:result 180})) v57_l303)))
+ t61_l326
+ (is ((fn* [p1__114095#] (= p1__114095# {:result 180})) v60_l317)))
 
 
 (def
- v60_l318
+ v63_l332
  (dag/defn-with-deps
   area->radius
   "Compute radius from area"
@@ -391,7 +408,7 @@
 
 
 (def
- v61_l323
+ v64_l337
  (dag/defn-with-deps
   radius->circumference
   "Compute circumference from radius"
@@ -400,7 +417,7 @@
 
 
 (def
- v62_l328
+ v65_l342
  (xform/xform
   {:circumference :Circumference,
    :aerial.hanami.templates/defaults
@@ -410,51 +427,51 @@
 
 
 (deftest
- t63_l335
+ t66_l349
  (is
   ((fn*
-    [p1__88994#]
+    [p1__114096#]
     (let
      [expected (* 2 Math/PI (Math/sqrt (/ 100 Math/PI)))]
-     (< (Math/abs (- (:circumference p1__88994#) expected)) 0.001)))
-   v62_l328)))
+     (< (Math/abs (- (:circumference p1__114096#) expected)) 0.001)))
+   v65_l342)))
 
 
-(def v65_l340 (:scicloj.tableplot.v1.dag/dep-ks (meta area->radius)))
+(def v68_l354 (:scicloj.tableplot.v1.dag/dep-ks (meta area->radius)))
 
 
 (deftest
- t66_l342
- (is ((fn* [p1__88995#] (= p1__88995# [:Area])) v65_l340)))
+ t69_l356
+ (is ((fn* [p1__114097#] (= p1__114097# [:Area])) v68_l354)))
 
 
 (def
- v67_l344
+ v70_l358
  (:scicloj.tableplot.v1.dag/dep-ks (meta radius->circumference)))
 
 
 (deftest
- t68_l346
- (is ((fn* [p1__88996#] (= p1__88996# [:Radius])) v67_l344)))
+ t71_l360
+ (is ((fn* [p1__114098#] (= p1__114098# [:Radius])) v70_l358)))
 
 
 (def
- v69_l348
+ v72_l362
  (def
   complex-fn
   (dag/fn-with-deps "Complex computation" [A B C] (+ A B C))))
 
 
-(def v70_l353 (:scicloj.tableplot.v1.dag/dep-ks (meta complex-fn)))
+(def v73_l367 (:scicloj.tableplot.v1.dag/dep-ks (meta complex-fn)))
 
 
 (deftest
- t71_l355
- (is ((fn* [p1__88997#] (= p1__88997# [:A :B :C])) v70_l353)))
+ t74_l369
+ (is ((fn* [p1__114099#] (= p1__114099# [:A :B :C])) v73_l367)))
 
 
 (def
- v73_l361
+ v76_l375
  (let
   [call-count
    (atom 0)
@@ -470,17 +487,17 @@
     @call-count))))
 
 
-(deftest t74_l372 (is ((fn* [p1__88998#] (= p1__88998# 1)) v73_l361)))
+(deftest t77_l386 (is ((fn* [p1__114100#] (= p1__114100# 1)) v76_l375)))
 
 
-(def v76_l376 (def computation-log (atom [])))
+(def v79_l390 (def computation-log (atom [])))
 
 
-(def v77_l378 (reset! computation-log []))
+(def v80_l392 (reset! computation-log []))
 
 
 (def
- v78_l380
+ v81_l394
  (cache/with-clean-cache
   (do
    (xform/xform
@@ -503,22 +520,22 @@
 
 
 (deftest
- t79_l396
+ t82_l410
  (is
   ((fn*
-    [p1__88999#]
-    (= p1__88999# [:computing-A :computing-B :computing-C]))
-   v78_l380)))
+    [p1__114101#]
+    (= p1__114101# [:computing-A :computing-B :computing-C]))
+   v81_l394)))
 
 
-(def v81_l400 (def detailed-log (atom [])))
+(def v84_l414 (def detailed-log (atom [])))
 
 
-(def v82_l402 (reset! detailed-log []))
+(def v85_l416 (reset! detailed-log []))
 
 
 (def
- v83_l404
+ v86_l418
  (cache/with-clean-cache
   (do
    (xform/xform
@@ -547,21 +564,21 @@
 
 
 (deftest
- t84_l423
+ t87_l437
  (is
   ((fn*
-    [p1__89000#]
+    [p1__114102#]
     (=
-     p1__89000#
+     p1__114102#
      [[:computing :A]
       [:computing :B :with-A 100]
       [:computing :C :with-A 100]
       [:computing :D :with-B 200 :with-C 150]]))
-   v83_l404)))
+   v86_l418)))
 
 
 (def
- v86_l432
+ v89_l446
  (cache/with-clean-cache
   [(dag/cached-xform-k
     :Result
@@ -572,12 +589,12 @@
 
 
 (deftest
- t87_l436
- (is ((fn* [p1__89001#] (= p1__89001# [25 49])) v86_l432)))
+ t90_l450
+ (is ((fn* [p1__114103#] (= p1__114103# [25 49])) v89_l446)))
 
 
 (def
- v89_l442
+ v92_l456
  (def
   viz-pipeline
   {:visualization
@@ -612,7 +629,7 @@
       [RawData MinValue]
       (tc/select-rows
        RawData
-       (fn* [p1__89002#] (> (:y p1__89002#) MinValue)))),
+       (fn* [p1__114104#] (> (:y p1__114104#) MinValue)))),
      :TitleColor
      (dag/fn-with-deps
       nil
@@ -637,7 +654,7 @@
        FilteredData
        :y
        [:y]
-       (fn* [p1__89003#] (* p1__89003# ScaleFactor)))),
+       (fn* [p1__114105#] (* p1__114105# ScaleFactor)))),
      :ScaleFactor 2,
      :GridColor
      (dag/fn-with-deps
@@ -648,52 +665,52 @@
    {:TitleFontSize hc/RMV, :TitleColor hc/RMV, :GridColor hc/RMV}}))
 
 
-(def v90_l482 (cache/with-clean-cache (xform/xform viz-pipeline)))
+(def v93_l496 (cache/with-clean-cache (xform/xform viz-pipeline)))
 
 
 (deftest
- t91_l486
+ t94_l500
  (is
   ((fn*
-    [p1__89004#]
+    [p1__114106#]
     (and
      (=
-      (get-in p1__89004# [:visualization :layout :title :text])
+      (get-in p1__114106# [:visualization :layout :title :text])
       "Filtered & Scaled Data (threshold=12, scale=2)")
      (=
-      (get-in p1__89004# [:visualization :layout :xaxis :title])
+      (get-in p1__114106# [:visualization :layout :xaxis :title])
       "X Values (n=5)")
      (=
-      (get-in p1__89004# [:visualization :layout :yaxis :title])
+      (get-in p1__114106# [:visualization :layout :yaxis :title])
       "Y Values (scaled ×2)")
-     (= (tc/row-count (get-in p1__89004# [:visualization :data])) 4)))
-   v90_l482)))
+     (= (tc/row-count (get-in p1__114106# [:visualization :data])) 4)))
+   v93_l496)))
 
 
 (def
- v92_l495
+ v95_l509
  (cache/with-clean-cache
   (xform/xform viz-pipeline :Environment "presentation" :MinValue 14)))
 
 
 (deftest
- t93_l501
+ t96_l515
  (is
   ((fn*
-    [p1__89005#]
+    [p1__114107#]
     (and
      (=
-      (get-in p1__89005# [:visualization :layout :title :text])
+      (get-in p1__114107# [:visualization :layout :title :text])
       "Filtered & Scaled Data (threshold=14, scale=2)")
      (=
-      (get-in p1__89005# [:visualization :layout :title :font :size])
+      (get-in p1__114107# [:visualization :layout :title :font :size])
       24)
-     (= (tc/row-count (get-in p1__89005# [:visualization :data])) 3)))
-   v92_l495)))
+     (= (tc/row-count (get-in p1__114107# [:visualization :data])) 3)))
+   v95_l509)))
 
 
 (def
- v95_l510
+ v98_l524
  (def
   app-config
   {:Environment "production",
@@ -722,7 +739,7 @@
 
 
 (def
- v96_l529
+ v99_l543
  (xform/xform
   {:db-url :DatabaseURL,
    :log-level :LogLevel,
@@ -731,20 +748,20 @@
 
 
 (deftest
- t97_l535
+ t100_l549
  (is
   ((fn*
-    [p1__89006#]
+    [p1__114108#]
     (=
-     p1__89006#
+     p1__114108#
      {:db-url "postgresql://db.example.com:5432/myapp",
       :log-level "WARN",
       :max-conn 50}))
-   v96_l529)))
+   v99_l543)))
 
 
 (def
- v98_l539
+ v101_l553
  (xform/xform
   {:db-url :DatabaseURL,
    :log-level :LogLevel,
@@ -753,26 +770,26 @@
 
 
 (deftest
- t99_l545
+ t102_l559
  (is
   ((fn*
-    [p1__89007#]
+    [p1__114109#]
     (=
-     p1__89007#
+     p1__114109#
      {:db-url "postgresql://db.example.com:5432/myapp",
       :log-level "DEBUG",
       :max-conn 10}))
-   v98_l539)))
+   v101_l553)))
 
 
-(def v101_l551 (def lazy-counter (atom 0)))
+(def v104_l565 (def lazy-counter (atom 0)))
 
 
-(def v102_l553 (reset! lazy-counter 0))
+(def v105_l567 (reset! lazy-counter 0))
 
 
 (def
- v103_l555
+ v106_l569
  (xform/xform
   {:needed :A,
    :aerial.hanami.templates/defaults
@@ -780,14 +797,16 @@
     :B (fn [_] (swap! lazy-counter inc) "value-b")}}))
 
 
-(def v104_l565 (deref lazy-counter))
+(def v107_l579 (deref lazy-counter))
 
 
-(deftest t105_l567 (is ((fn* [p1__89008#] (= p1__89008# 1)) v104_l565)))
+(deftest
+ t108_l581
+ (is ((fn* [p1__114110#] (= p1__114110# 1)) v107_l579)))
 
 
 (def
- v107_l573
+ v110_l587
  (defn
   simplified-layer-point
   [dataset options]
@@ -803,4 +822,4 @@
       [=x-data =y-data =mark]
       {:type (name =mark), :x =x-data, :y =y-data})}
     options),
-   :kindly/f (fn* [p1__89009#] (xform/xform p1__89009#))}))
+   :kindly/f (fn* [p1__114111#] (xform/xform p1__114111#))}))

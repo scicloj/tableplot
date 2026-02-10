@@ -28,6 +28,10 @@
                 subkeyfn (@hc/subkeyfns v)
                 subval (if subkeyfn (subkeyfn xkv v subval) subval)]
             (cond
+              ;; nils will be removed
+              (nil? v)
+              hc/RMV
+
               ;; leaf value => termination
               (= v subval) v
 
