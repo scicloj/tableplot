@@ -156,6 +156,7 @@ The `transpile.clj` namespace enables cross-backend functionality:
 - Built on Hanami's substitution key system
 - Composable plot specifications
 - Default value propagation and merging
+- `nil` values are removed from output (equivalent to `hc/RMV`)
 
 ### Caching Strategy
 - Intermediate results cached by content hash
