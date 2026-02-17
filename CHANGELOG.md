@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [1-beta16 - 2026-02-17]
+- fixed scaling of 2d histograms - thanks, @holyjak
+
 ## [1-beta15 - 2026-02-10]
 - updated deps: fastmath, kindly, std.lang
 - removed Hanami dependency (consumed transitively through Metamorph.ml anyway)

@@ -1119,12 +1119,12 @@ then the histogram is computed in groups."
                      :count freq})))
         tc/dataset
         (tc/add-column x-colname
-                       #(tcc/* x-gap
-                               (tcc/+ x-min
+                       #(tcc/+ x-min
+                               (tcc/* x-gap
                                       (:mid-normalized-x %))))
         (tc/add-column y-colname
-                       #(tcc/* y-gap
-                               (tcc/+ y-min
+                       #(tcc/+ y-min
+                               (tcc/* y-gap
                                       (:mid-normalized-y %))))
         (tc/select-columns [x-colname y-colname :count]))))
 
@@ -1134,7 +1134,6 @@ then the histogram is computed in groups."
 of columns `:=x` `:=y` in `:=dataset`."
   [=dataset =x =y =histogram-nbins]
   (compute-histogram-2d =dataset =x =y =histogram-nbins))
-
 
 (defn layer-histogram2d
   "Given columns `=x`,`=y`,
