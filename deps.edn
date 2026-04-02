@@ -13,7 +13,8 @@
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
                       io.github.cognitect-labs/test-runner
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}
-                      org.scicloj/noj {:mvn/version "2-beta19.1"}
+                      org.scicloj/scicloj.ml.smile {:mvn/version "7.6.2"}
+                      org.scicloj/scicloj.ml.tribuo {:mvn/version "0.3.1"}
                       org.scicloj/clay {:mvn/version "2.0.9"}}}
   :dev {:extra-paths ["notebooks"]
         :extra-deps {org.scicloj/noj {:mvn/version "2-beta19.1"}
