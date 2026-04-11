@@ -28,8 +28,7 @@
 (deftest
  t4_l55
  (is
-  ((fn* [p1__102102#] (= (-> p1__102102# :mark :type) "circle"))
-   v3_l48)))
+  ((fn* [p1__74849#] (= (-> p1__74849# :mark :type) "circle")) v3_l48)))
 
 
 (def
@@ -47,11 +46,11 @@
  t7_l80
  (is
   ((fn*
-    [p1__102103#]
+    [p1__74850#]
     (let
      [layer-defaults
       (->
-       p1__102103#
+       p1__74850#
        :aerial.hanami.templates/defaults
        :=layer
        first
@@ -80,11 +79,11 @@
  t10_l100
  (is
   ((fn*
-    [p1__102104#]
+    [p1__74851#]
     (and
-     (contains? p1__102104# :data)
-     (contains? p1__102104# :encoding)
-     (= (-> p1__102104# :mark :type) "circle")))
+     (contains? p1__74851# :data)
+     (contains? p1__74851# :encoding)
+     (= (-> p1__74851# :mark :type) "circle")))
    v9_l92)))
 
 
@@ -104,7 +103,7 @@
 (deftest
  t13_l119
  (is
-  ((fn* [p1__102105#] (= (:kindly/kind p1__102105#) :kind/vega-lite))
+  ((fn* [p1__74852#] (= (:kindly/kind p1__74852#) :kind/vega-lite))
    v12_l111)))
 
 
@@ -120,7 +119,7 @@
 (deftest
  t16_l133
  (is
-  ((fn* [p1__102106#] (= (-> p1__102106# :mark :type) "circle"))
+  ((fn* [p1__74853#] (= (-> p1__74853# :mark :type) "circle"))
    v15_l126)))
 
 
@@ -150,11 +149,11 @@
  t20_l156
  (is
   ((fn*
-    [p1__102107#]
+    [p1__74854#]
     (and
-     (= (-> p1__102107# :encoding :x :type) :quantitative)
-     (= (-> p1__102107# :encoding :y :type) :quantitative)
-     (= (-> p1__102107# :encoding :color :type) :nominal)))
+     (= (-> p1__74854# :encoding :x :type) :quantitative)
+     (= (-> p1__74854# :encoding :y :type) :quantitative)
+     (= (-> p1__74854# :encoding :color :type) :nominal)))
    v19_l149)))
 
 
@@ -184,8 +183,8 @@
  t24_l178
  (is
   ((fn*
-    [p1__102108#]
-    (= (-> p1__102108# :encoding :color :type) :quantitative))
+    [p1__74855#]
+    (= (-> p1__74855# :encoding :color :type) :quantitative))
    v23_l171)))
 
 
@@ -216,8 +215,8 @@
  t28_l198
  (is
   ((fn*
-    [p1__102109#]
-    (= (-> p1__102109# :encoding :color :type) :nominal))
+    [p1__74856#]
+    (= (-> p1__74856# :encoding :color :type) :nominal))
    v27_l190)))
 
 
@@ -248,10 +247,10 @@
  t32_l219
  (is
   ((fn*
-    [p1__102110#]
+    [p1__74857#]
     (and
-     (= (-> p1__102110# :mark :type) "boxplot")
-     (= (-> p1__102110# :encoding :x :type) :nominal)))
+     (= (-> p1__74857# :mark :type) "boxplot")
+     (= (-> p1__74857# :encoding :x :type) :nominal)))
    v31_l213)))
 
 
@@ -265,7 +264,7 @@
 (deftest
  t35_l230
  (is
-  ((fn* [p1__102111#] (= (-> p1__102111# :mark :type) "boxplot"))
+  ((fn* [p1__74858#] (= (-> p1__74858# :mark :type) "boxplot"))
    v34_l224)))
 
 
@@ -288,11 +287,11 @@
  t38_l244
  (is
   ((fn*
-    [p1__102112#]
+    [p1__74859#]
     (and
-     (= (-> p1__102112# :mark :type) "rule")
-     (contains? (-> p1__102112# :encoding) :x2)
-     (contains? (-> p1__102112# :encoding) :y2)))
+     (= (-> p1__74859# :mark :type) "rule")
+     (contains? (-> p1__74859# :encoding) :x2)
+     (contains? (-> p1__74859# :encoding) :y2)))
    v37_l234)))
 
 
@@ -316,7 +315,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102113#] (-> p1__102113# :variable (= "unemploy"))))
+   (fn* [p1__74860#] (-> p1__74860# :variable (= "unemploy"))))
   (hanami/plot
    hanami/line-chart
    {:=x :date, :=y :value, :=mark-color "purple"})))
@@ -326,10 +325,10 @@
  t43_l271
  (is
   ((fn*
-    [p1__102114#]
+    [p1__74861#]
     (and
-     (= (-> p1__102114# :mark :type) "line")
-     (= (-> p1__102114# :encoding :x :type) :temporal)))
+     (= (-> p1__74861# :mark :type) "line")
+     (= (-> p1__74861# :encoding :x :type) :temporal)))
    v42_l264)))
 
 
@@ -338,7 +337,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102115#] (-> p1__102115# :variable (= "unemploy"))))
+   (fn* [p1__74862#] (-> p1__74862# :variable (= "unemploy"))))
   (hanami/plot
    hanami/line-chart
    {:=x :date, :=y :value, :=mark-color "purple"})
@@ -350,7 +349,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102116#] (-> p1__102116# :variable (= "unemploy"))))
+   (fn* [p1__74863#] (-> p1__74863# :variable (= "unemploy"))))
   (hanami/base
    hanami/line-chart
    {:=x :date, :=y :value, :=mark-color "purple"})))
@@ -360,9 +359,9 @@
  t48_l297
  (is
   ((fn*
-    [p1__102117#]
+    [p1__74864#]
     (contains?
-     (:aerial.hanami.templates/defaults p1__102117#)
+     (:aerial.hanami.templates/defaults p1__74864#)
      :=dataset))
    v47_l290)))
 
@@ -372,7 +371,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102118#] (-> p1__102118# :variable (= "unemploy"))))
+   (fn* [p1__74865#] (-> p1__74865# :variable (= "unemploy"))))
   (hanami/plot
    hanami/line-chart
    {:=x :date, :=y :value, :=mark-color "purple"})
@@ -384,7 +383,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102119#] (-> p1__102119# :variable (= "unemploy"))))
+   (fn* [p1__74866#] (-> p1__74866# :variable (= "unemploy"))))
   (hanami/base
    hanami/line-chart
    {:=x :date, :=y :value, :=mark-color "purple"})
@@ -396,7 +395,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102120#] (-> p1__102120# :variable (= "unemploy"))))
+   (fn* [p1__74867#] (-> p1__74867# :variable (= "unemploy"))))
   (hanami/base {:=x :date, :=y :value, :=mark-color "purple"})
   hanami/layer-line))
 
@@ -405,9 +404,9 @@
  t54_l340
  (is
   ((fn*
-    [p1__102121#]
+    [p1__74868#]
     (=
-     (-> p1__102121# :aerial.hanami.templates/defaults :=layer count)
+     (-> p1__74868# :aerial.hanami.templates/defaults :=layer count)
      1))
    v53_l333)))
 
@@ -417,7 +416,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102122#] (-> p1__102122# :variable (= "unemploy"))))
+   (fn* [p1__74869#] (-> p1__74869# :variable (= "unemploy"))))
   (hanami/base {:=x :date, :=y :value})
   (hanami/layer-line {:=mark-color "purple"})))
 
@@ -427,7 +426,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102123#] (-> p1__102123# :variable (= "unemploy"))))
+   (fn* [p1__74870#] (-> p1__74870# :variable (= "unemploy"))))
   (hanami/base {:=x :date, :=y :value})
   (hanami/layer-point
    {:=mark-color "green", :=mark-size 200, :=mark-opacity 0.1})
@@ -438,9 +437,9 @@
  t59_l361
  (is
   ((fn*
-    [p1__102124#]
+    [p1__74871#]
     (=
-     (-> p1__102124# :aerial.hanami.templates/defaults :=layer count)
+     (-> p1__74871# :aerial.hanami.templates/defaults :=layer count)
      2))
    v58_l352)))
 
@@ -450,7 +449,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102125#] (-> p1__102125# :variable (= "unemploy"))))
+   (fn* [p1__74872#] (-> p1__74872# :variable (= "unemploy"))))
   (hanami/layer-line {:=x :date, :=y :value, :=mark-color "purple"})))
 
 
@@ -459,7 +458,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102126#] (-> p1__102126# :variable (= "unemploy"))))
+   (fn* [p1__74873#] (-> p1__74873# :variable (= "unemploy"))))
   (hanami/base {:=x :date, :=y :value})
   (hanami/layer-line {:=mark-color "purple"})
   (hanami/update-data tc/random 5)
@@ -470,10 +469,9 @@
  t64_l388
  (is
   ((fn*
-    [p1__102127#]
+    [p1__74874#]
     (let
-     [layers
-      (-> p1__102127# :aerial.hanami.templates/defaults :=layer)]
+     [layers (-> p1__74874# :aerial.hanami.templates/defaults :=layer)]
      (and
       (= (count layers) 2)
       (=
@@ -492,7 +490,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102128#] (-> p1__102128# :variable (= "unemploy"))))
+   (fn* [p1__74875#] (-> p1__74875# :variable (= "unemploy"))))
   (hanami/base {:=x :date, :=y :value})
   (hanami/layer-line {:=mark-color "purple"})
   (hanami/update-data tc/random 5)
@@ -506,7 +504,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102129#] (-> p1__102129# :variable (= "unemploy"))))
+   (fn* [p1__74876#] (-> p1__74876# :variable (= "unemploy"))))
   (hanami/base {:=x :date, :=y :value})
   (hanami/layer-line {:=mark-color "purple"})
   (hanami/update-data tc/random 5)
@@ -518,7 +516,7 @@
 (deftest
  t69_l427
  (is
-  ((fn* [p1__102130#] (= (:background p1__102130#) "lightgrey"))
+  ((fn* [p1__74877#] (= (:background p1__74877#) "lightgrey"))
    v68_l416)))
 
 
@@ -527,7 +525,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102131#] (-> p1__102131# :variable (= "unemploy"))))
+   (fn* [p1__74878#] (-> p1__74878# :variable (= "unemploy"))))
   (hanami/base {:=x :date, :=y :value})
   (hanami/layer-line {:=mark-color "purple"})
   (hanami/update-data tc/random 5)
@@ -540,8 +538,8 @@
  t72_l444
  (is
   ((fn*
-    [p1__102132#]
-    (= (-> p1__102132# :encoding :y :scale :type) "log"))
+    [p1__74879#]
+    (= (-> p1__74879# :encoding :y :scale :type) "log"))
    v71_l433)))
 
 
@@ -562,9 +560,9 @@
  t75_l463
  (is
   ((fn*
-    [p1__102133#]
+    [p1__74880#]
     (=
-     (-> p1__102133# :aerial.hanami.templates/defaults :=layer count)
+     (-> p1__74880# :aerial.hanami.templates/defaults :=layer count)
      2))
    v74_l455)))
 
@@ -582,11 +580,11 @@
  t78_l477
  (is
   ((fn*
-    [p1__102134#]
+    [p1__74881#]
     (let
      [smooth-layer
       (->
-       p1__102134#
+       p1__74881#
        :aerial.hanami.templates/defaults
        :=layer
        second
@@ -612,9 +610,9 @@
  t81_l496
  (is
   ((fn*
-    [p1__102135#]
+    [p1__74882#]
     (let
-     [base-defaults (-> p1__102135# :aerial.hanami.templates/defaults)]
+     [base-defaults (-> p1__74882# :aerial.hanami.templates/defaults)]
      (= (:=color base-defaults) :species)))
    v80_l488)))
 
@@ -638,9 +636,9 @@
  t84_l515
  (is
   ((fn*
-    [p1__102136#]
+    [p1__74883#]
     (let
-     [base-defaults (-> p1__102136# :aerial.hanami.templates/defaults)]
+     [base-defaults (-> p1__74883# :aerial.hanami.templates/defaults)]
      (= (:=group base-defaults) [])))
    v83_l505)))
 
@@ -650,7 +648,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102137#] (-> p1__102137# :variable (= "unemploy"))))
+   (fn* [p1__74884#] (-> p1__74884# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -669,7 +667,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102138#] (-> p1__102138# :variable (= "unemploy"))))
+   (fn* [p1__74885#] (-> p1__74885# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -683,13 +681,13 @@
   (tc/add-column
    :year
    (fn*
-    [p1__102139#]
-    (datetime/long-temporal-field :years (:date p1__102139#))))
+    [p1__74886#]
+    (datetime/long-temporal-field :years (:date p1__74886#))))
   (tc/add-column
    :month
    (fn*
-    [p1__102140#]
-    (datetime/long-temporal-field :months (:date p1__102140#))))
+    [p1__74887#]
+    (datetime/long-temporal-field :months (:date p1__74887#))))
   (tc/map-columns :yearmonth [:year :month] (fn [y m] (+ m (* 12 y))))
   (print/print-range 6)))
 
@@ -699,7 +697,7 @@
  (->
   (rdatasets/ggplot2-economics_long)
   (tc/select-rows
-   (fn* [p1__102141#] (-> p1__102141# :variable (= "unemploy"))))
+   (fn* [p1__74888#] (-> p1__74888# :variable (= "unemploy"))))
   (tc/add-column :relative-time "Past")
   (tc/concat
    (tc/dataset
@@ -713,13 +711,13 @@
   (tc/add-column
    :year
    (fn*
-    [p1__102142#]
-    (datetime/long-temporal-field :years (:date p1__102142#))))
+    [p1__74889#]
+    (datetime/long-temporal-field :years (:date p1__74889#))))
   (tc/add-column
    :month
    (fn*
-    [p1__102143#]
-    (datetime/long-temporal-field :months (:date p1__102143#))))
+    [p1__74890#]
+    (datetime/long-temporal-field :months (:date p1__74890#))))
   (tc/map-columns :yearmonth [:year :month] (fn [y m] (+ m (* 12 y))))
   (hanami/base {:=x :date, :=y :value})
   (hanami/layer-smooth
@@ -747,11 +745,11 @@
  t93_l592
  (is
   ((fn*
-    [p1__102144#]
+    [p1__74891#]
     (let
      [layer-defaults
       (->
-       p1__102144#
+       p1__74891#
        :aerial.hanami.templates/defaults
        :=layer
        first
@@ -771,11 +769,11 @@
  t95_l599
  (is
   ((fn*
-    [p1__102145#]
+    [p1__74892#]
     (let
      [layer-defaults
       (->
-       p1__102145#
+       p1__74892#
        :aerial.hanami.templates/defaults
        :=layer
        first
